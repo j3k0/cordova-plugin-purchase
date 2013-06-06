@@ -5,7 +5,7 @@
  * Copyright (c) Guillaume Charhon 2012
  */
 
-var InAppPurchase = function() { 
+var InAppPurchase = function() {
 	PhoneGap.exec('InAppPurchase.setup');
 }
 
@@ -188,9 +188,13 @@ InAppPurchase.prototype.callbackIdx = 0;
 InAppPurchase.prototype.eventQueue = [];
 InAppPurchase.prototype.timer = null;
 
+/*
 PhoneGap.addConstructor(function()  {
     if(!window.plugins) {
         window.plugins = {};
     }
     window.plugins.inAppPurchase = InAppPurchase.manager = new InAppPurchase();
 });
+*/
+
+module.exports = InAppPurchase;

@@ -11,7 +11,10 @@
         <engine name="cordova" version=">=2.4.0" />
     </engines>
 	
-    <asset src="www/InAppPurchase.js" target="js/InAppPurchase.js" />
+    <!-- asset src="www/InAppPurchase.js" target="js/InAppPurchase.js" / -->
+    <js-module src="InAppPurchase.js" name="InAppPurchase">
+        <clobbers target="InAppPurchase" />
+    </js-module>
 
     <!-- ios -->
     <platform name="ios">
@@ -20,7 +23,7 @@
                     
         <!-- Cordova 2.5+ -->
         <config-file target="config.xml" parent="/widget/plugins">
-                <plugin name="InAppPurchase" value="InAppPurchase"/>
+            <plugin name="InAppPurchase" value="InAppPurchase"/>
         </config-file>
 
         <header-file src="src/ios/InAppPurchase.h" />
