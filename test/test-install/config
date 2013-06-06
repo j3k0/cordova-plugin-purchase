@@ -1,0 +1,56 @@
+#
+# Jackbon.Gap configuration
+#
+PROJECT_NAME="MyProject"
+PROJECT_AUTHOR="Fovea"
+PROJECT_DESCRIPTION="My Jackbone Project"
+
+# List of images to build.
+# Will be looked at in `assets/` and `app/img/` folders.
+BUILD_IMAGES=""
+
+# IOS
+# -----
+
+# Enter "YES" if iOS archive should be built.
+# Then fill the other iOS related fields.
+BUILD_IOS="NO"
+
+# ID of the iOS bundle (should match provisioning profile).
+IOS_BUNDLE_ID="cc.fovea.myproject"
+
+# Provisioning profile to use by the archive command.
+# (This file should be in ios/ folder)
+PROVISIONING_PROFILE="AdHoc.mobileprovision"
+
+# ID of the provisioning profile.
+# (Something like 12345678-9ABC-DEF0-1234-56789ABCDEF0)
+PROVISIONING_PROFILE_ID=""
+
+# Developer signing identity to use.
+DEVELOPER_NAME="iPhone Distribution: Fovea"
+
+# ANDROID
+# -------
+
+# Enter "YES" if Android archive should be built.
+# Then fill other Android related fields.
+BUILD_ANDROID="NO"
+
+# ID of the Android bundle
+ANDROID_BUNDLE_ID="cc.fovea.myproject"
+
+# BLACKBERRY
+# ----------
+
+# Enter "YES" if BlackBerry archives should be built.
+BUILD_BLACKBERRY="NO"
+
+# YES if PlayBook SDK is available
+BUILD_BLACKBERRY_PLAYBOOK="YES"
+
+# YES if BlackBerry 10 SDK is available
+BUILD_BLACKBERRY_10="YES"
+
+# ID of the Blackberry bundle
+BLACKBERRY_BUNDLE_ID="cc.fovea.myproject"

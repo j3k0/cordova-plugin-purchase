@@ -5,8 +5,8 @@
  * Copyright (c) Guillaume Charhon 2012
  */
 
-var InAppPurchaseManager = function() { 
-	PhoneGap.exec('InAppPurchaseManager.setup');
+var InAppPurchase = function() { 
+	PhoneGap.exec('InAppPurchase.setup');
 }
 
 /**
@@ -16,12 +16,12 @@ var InAppPurchaseManager = function() {
  * @param {int} quantity 
  */
 
-InAppPurchaseManager.prototype.makePurchase = function(productId, quantity) {
+InAppPurchase.prototype.makePurchase = function(productId, quantity) {
 	var q = parseInt(quantity);
 	if(!q) {
 		q = 1;
 	}
-    return PhoneGap.exec('InAppPurchaseManager.makePurchase', productId, q);		
+    return PhoneGap.exec('InAppPurchase.makePurchase', productId, q);		
 }
 
 /**
@@ -30,8 +30,8 @@ InAppPurchaseManager.prototype.makePurchase = function(productId, quantity) {
  * 
  */
 
-InAppPurchaseManager.prototype.restoreCompletedTransactions = function() {
-    return PhoneGap.exec('InAppPurchaseManager.restoreCompletedTransactions');		
+InAppPurchase.prototype.restoreCompletedTransactions = function() {
+    return PhoneGap.exec('InAppPurchase.restoreCompletedTransactions');		
 }
 
 
@@ -44,20 +44,20 @@ InAppPurchaseManager.prototype.restoreCompletedTransactions = function() {
  * @param {Function} failCallback Called once for each invalid product id. Signature is function(productId)
  */
 
-InAppPurchaseManager.prototype.requestProductData = function(productId, successCallback, failCallback) {
+InAppPurchase.prototype.requestProductData = function(productId, successCallback, failCallback) {
 	var key = 'f' + this.callbackIdx++;
-	window.plugins.inAppPurchaseManager.callbackMap[key] = {
+	window.plugins.inAppPurchase.callbackMap[key] = {
     success: function(productId, title, description, price ) {
         if (productId == '__DONE') {
-            delete window.plugins.inAppPurchaseManager.callbackMap[key]
+            delete window.plugins.inAppPurchase.callbackMap[key]
             return;
         }
         successCallback(productId, title, description, price);
     },
     fail: failCallback
 	}
-	var callback = 'window.plugins.inAppPurchaseManager.callbackMap.' + key;
-    PhoneGap.exec('InAppPurchaseManager.requestProductData', productId, callback + '.success', callback + '.fail');	
+	var callback = 'window.plugins.inAppPurchase.callbackMap.' + key;
+    PhoneGap.exec('InAppPurchase.requestProductData', productId, callback + '.success', callback + '.fail');	
 }
 
 /**
@@ -84,62 +84,62 @@ InAppPurchaseManager.prototype.requestProductData = function(productId, successC
  *  and invalidProductIds receives an array of product identifier
  *  strings which were rejected by the app store.
  */
-InAppPurchaseManager.prototype.requestProductsData = function(productIds, callback) {
+InAppPurchase.prototype.requestProductsData = function(productIds, callback) {
 	var key = 'b' + this.callbackIdx++;
-	window.plugins.inAppPurchaseManager.callbackMap[key] = function(validProducts, invalidProductIds) {
-		delete window.plugins.inAppPurchaseManager.callbackMap[key];
+	window.plugins.inAppPurchase.callbackMap[key] = function(validProducts, invalidProductIds) {
+		delete window.plugins.inAppPurchase.callbackMap[key];
 		callback(validProducts, invalidProductIds);
 	};
-	var callbackName = 'window.plugins.inAppPurchaseManager.callbackMap.' + key;
-	PhoneGap.exec('InAppPurchaseManager.requestProductsData', callbackName, {productIds: productIds});
+	var callbackName = 'window.plugins.inAppPurchase.callbackMap.' + key;
+	PhoneGap.exec('InAppPurchase.requestProductsData', callbackName, {productIds: productIds});
 };
 
 /* function(transactionIdentifier, productId, transactionReceipt) */
-InAppPurchaseManager.prototype.onPurchased = null;
+InAppPurchase.prototype.onPurchased = null;
 
 /* function(originalTransactionIdentifier, productId, originalTransactionReceipt) */
-InAppPurchaseManager.prototype.onRestored = null;
+InAppPurchase.prototype.onRestored = null;
 
 /* function(errorCode, errorText) */
-InAppPurchaseManager.prototype.onFailed = null;
+InAppPurchase.prototype.onFailed = null;
 
 /* function() */
-InAppPurchaseManager.prototype.onRestoreCompletedTransactionsFinished = null;
+InAppPurchase.prototype.onRestoreCompletedTransactionsFinished = null;
 
 /* function(errorCode) */
-InAppPurchaseManager.prototype.onRestoreCompletedTransactionsFailed = null;
+InAppPurchase.prototype.onRestoreCompletedTransactionsFailed = null;
 
 /* This is called from native.*/
 
-InAppPurchaseManager.prototype.updatedTransactionCallback = function(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
+InAppPurchase.prototype.updatedTransactionCallback = function(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
     alert(state);
 	switch(state) {
 		case "PaymentTransactionStatePurchased":
-			if(window.plugins.inAppPurchaseManager.onPurchased)
-                window.plugins.inAppPurchaseManager.onPurchased(transactionIdentifier, productId, transactionReceipt);
+			if(window.plugins.inAppPurchase.onPurchased)
+                window.plugins.inAppPurchase.onPurchased(transactionIdentifier, productId, transactionReceipt);
 			
 			return; 
 			
 		case "PaymentTransactionStateFailed":
-			if(window.plugins.inAppPurchaseManager.onFailed)
-				window.plugins.inAppPurchaseManager.onFailed(errorCode, errorText);
+			if(window.plugins.inAppPurchase.onFailed)
+				window.plugins.inAppPurchase.onFailed(errorCode, errorText);
 			
 			return;
             
 		case "PaymentTransactionStateRestored":
-            if(window.plugins.inAppPurchaseManager.onRestored)
-                window.plugins.inAppPurchaseManager.onRestored(transactionIdentifier, productId, transactionReceipt);
+            if(window.plugins.inAppPurchase.onRestored)
+                window.plugins.inAppPurchase.onRestored(transactionIdentifier, productId, transactionReceipt);
 			return;
 	}
 };
 
-InAppPurchaseManager.prototype.restoreCompletedTransactionsFinished = function() {
+InAppPurchase.prototype.restoreCompletedTransactionsFinished = function() {
     if (this.onRestoreCompletedTransactionsFinished) {
         this.onRestoreCompletedTransactionsFinished();
     }
 };
 
-InAppPurchaseManager.prototype.restoreCompletedTransactionsFailed = function(errorCode) {
+InAppPurchase.prototype.restoreCompletedTransactionsFailed = function(errorCode) {
     if (this.onRestoreCompletedTransactionsFailed) {
         this.onRestoreCompletedTransactionsFailed(errorCode);
     }
@@ -152,7 +152,7 @@ InAppPurchaseManager.prototype.restoreCompletedTransactionsFailed = function(err
  * in the queue.
  */
 
-InAppPurchaseManager.prototype.runQueue = function() {
+InAppPurchase.prototype.runQueue = function() {
 	if(!this.eventQueue.length || (!this.onPurchased && !this.onFailed && !this.onRestored)) {
 		return;
 	}
@@ -168,14 +168,14 @@ InAppPurchaseManager.prototype.runQueue = function() {
 	}
 }
 
-InAppPurchaseManager.prototype.watchQueue = function() {
+InAppPurchase.prototype.watchQueue = function() {
 	if(this.timer) {
 		return;
 	}
-	this.timer = setInterval("window.plugins.inAppPurchaseManager.runQueue()", 10000);
+	this.timer = setInterval("window.plugins.inAppPurchase.runQueue()", 10000);
 }
 
-InAppPurchaseManager.prototype.unWatchQueue = function() {
+InAppPurchase.prototype.unWatchQueue = function() {
 	if(this.timer) {
 		clearInterval(this.timer);
 		this.timer = null;
@@ -183,14 +183,14 @@ InAppPurchaseManager.prototype.unWatchQueue = function() {
 }
 
 
-InAppPurchaseManager.prototype.callbackMap = {};
-InAppPurchaseManager.prototype.callbackIdx = 0;
-InAppPurchaseManager.prototype.eventQueue = [];
-InAppPurchaseManager.prototype.timer = null;
+InAppPurchase.prototype.callbackMap = {};
+InAppPurchase.prototype.callbackIdx = 0;
+InAppPurchase.prototype.eventQueue = [];
+InAppPurchase.prototype.timer = null;
 
 PhoneGap.addConstructor(function()  {
-                        if(!window.plugins) {
-                        window.plugins = {};
-                        }
-                        window.plugins.inAppPurchaseManager = InAppPurchaseManager.manager = new InAppPurchaseManager();
-                        });
+    if(!window.plugins) {
+        window.plugins = {};
+    }
+    window.plugins.inAppPurchase = InAppPurchase.manager = new InAppPurchase();
+});

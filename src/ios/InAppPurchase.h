@@ -1,29 +1,31 @@
 //
-//  InAppPurchaseManager.h
+//  InAppPurchase.h
 //  beetight
 //
 //  Created by Matt Kane on 20/02/2011.
 //  Copyright 2011 Matt Kane. All rights reserved.
 //
 
+#define CORDOVA_FRAMEWORK
+
 #import <Foundation/Foundation.h>
 #import <StoreKit/StoreKit.h>
 
-#ifdef PHONEGAP_FRAMEWORK
-#import <PhoneGap/PGPlugin.h>
+#ifdef CORDOVA_FRAMEWORK
+#import <Cordova/CDVPlugin.h>
 #else
-#import "PGPlugin.h"
+#import "CDVPlugin.h"
 #endif
 
-#ifdef PHONEGAP_FRAMEWORK
-#import <PhoneGap/NSData+Base64.h>
+#ifdef CORDOVA_FRAMEWORK
+#import <Cordova/NSData+Base64.h>
 #else
 #import "NSData+Base64.h"
 #endif
 
 #import "SKProduct+LocalizedPrice.h"
 
-@interface InAppPurchaseManager : PGPlugin <SKPaymentTransactionObserver> {
+@interface InAppPurchase : CDVPlugin <SKPaymentTransactionObserver> {
 
 }
 - (void) setup:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options;
@@ -40,21 +42,21 @@
 	NSString* successCallback;
 	NSString* failCallback;
 
-	InAppPurchaseManager* command;
+	InAppPurchase* command;
 }
 
 @property (nonatomic, copy) NSString* successCallback;
 @property (nonatomic, copy) NSString* failCallback;
-@property (nonatomic, retain) InAppPurchaseManager* command;
+@property (nonatomic, retain) InAppPurchase* command;
 
 @end;
 
 @interface BatchProductsRequestDelegate : NSObject <SKProductsRequestDelegate> {
 	NSString* callback;
-	InAppPurchaseManager* command;
+	InAppPurchase* command;
 }
 
 @property (nonatomic, copy) NSString* callback;
-@property (nonatomic, retain) InAppPurchaseManager* command;
+@property (nonatomic, retain) InAppPurchase* command;
 
 @end;

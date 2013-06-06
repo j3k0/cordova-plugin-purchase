@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+<plugin
+    xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     id="com.phonegap.plugins.inapppurchase"
-    version="1.0.0">
+    version="2.0.0">
 
     <name>InAppPurchase</name>
 	
     <engines>
-        <engine name="cordova" version="2.4.0" />
+        <engine name="cordova" version=">=2.4.0" />
     </engines>
 	
     <asset src="www/InAppPurchase.js" target="js/InAppPurchase.js" />
