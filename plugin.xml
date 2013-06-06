@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+    id="com.phonegap.plugins.inapppurchase"
+    version="1.0.0">
+
+    <name>InAppPurchaseManager</name>
+	
+    <engines>
+        <engine name="cordova" version="2.4.0" />
+    </engines>
+	
+    <asset src="www/InAppPurchaseManager.js" target="js/InAppPurchaseManager.js" />
+
+    <!-- ios -->
+    <platform name="ios">
+        <!-- Cordova 2.2 -->
+        <plugins-plist key="InAppPurchaseManager" string="InAppPurchaseManager" />
+                    
+        <!-- Cordova 2.5+ -->
+        <config-file target="config.xml" parent="/widget/plugins">
+                <plugin name="InAppPurchaseManager" value="InAppPurchaseManager"/>
+        </config-file>
+
+        <header-file src="src/ios/InAppPurchaseManager.h" />
+        <source-file src="src/ios/InAppPurchaseManager.m" />
+        <header-file src="src/ios/SKProduct+LocalizedPrice.h" />
+        <source-file src="src/ios/SKProduct+LocalizedPrice.m" />
+
+        <!-- framework src="libsqlite3.dylib" -->
+    </platform>
+</plugin>
