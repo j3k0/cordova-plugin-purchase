@@ -3,11 +3,32 @@
  *
  * Copyright (c) Matt Kane 2011
  * Copyright (c) Guillaume Charhon 2012
+ * Copyright (c) Jean-Christophe Hoelt 2013
  */
 
-var InAppPurchase = function() {
-	PhoneGap.exec('InAppPurchase.setup');
-}
+var exec = function (method, options, success, error) {
+    cordova.exec(success, error, "InAppPurchase", method, [options]);
+};
+
+var log = function (msg) {
+    console.log("InAppPurchase: " + msg);
+};
+
+var InAppPurchase = function () {
+};
+
+InAppPurchase.prototype.setup = function (success, error) {
+    var that = this;
+    var setupOk = function () {
+        log('setup ok');
+        if (typeof success === 'function') success.call(this);
+    };
+    var setupFailed = function () {
+        log('setup failed');
+        if (typeof error === 'function') error.call(this, 'setup failed');
+    };
+    exec('setup', [], setupOk, setupFailed);
+};
 
 /**
  * Makes an in-app purchase. 
@@ -15,21 +36,28 @@ var InAppPurchase = function() {
  * @param {String} productId The product identifier. e.g. "com.example.MyApp.myproduct"
  * @param {int} quantity 
  */
-
-InAppPurchase.prototype.makePurchase = function(productId, quantity) {
+InAppPurchase.prototype.makePurchase = function (productId, quantity, success, error) {
 	var q = parseInt(quantity);
-	if(!q) {
+	if (!q) {
 		q = 1;
 	}
-    return PhoneGap.exec('InAppPurchase.makePurchase', productId, q);		
-}
+    var purchaseOk = function () {
+        log('purchased ' + productId);
+        if (typeof success === 'function') success.call(this, productId, quantity);
+    };
+    var purchaseFailed = function () {
+        var msg = 'purchasing ' + productId + ' failed';
+        log(msg);
+        if (typeof error === 'function') error.call(this, m, productId, quantity);
+    };
+    return exec('makePurchase', [productId, q], purchaseOk, purchaseFailed);
+};
 
 /**
  * Asks the payment queue to restore previously completed purchases.
  * The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
  * 
  */
-
 InAppPurchase.prototype.restoreCompletedTransactions = function() {
     return PhoneGap.exec('InAppPurchase.restoreCompletedTransactions');		
 }
@@ -188,13 +216,4 @@ InAppPurchase.prototype.callbackIdx = 0;
 InAppPurchase.prototype.eventQueue = [];
 InAppPurchase.prototype.timer = null;
 
-/*
-PhoneGap.addConstructor(function()  {
-    if(!window.plugins) {
-        window.plugins = {};
-    }
-    window.plugins.inAppPurchase = InAppPurchase.manager = new InAppPurchase();
-});
-*/
-
-module.exports = InAppPurchase;
+module.exports = new InAppPurchase();

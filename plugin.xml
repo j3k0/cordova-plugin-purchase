@@ -11,9 +11,8 @@
         <engine name="cordova" version=">=2.4.0" />
     </engines>
 	
-    <!-- asset src="www/InAppPurchase.js" target="js/InAppPurchase.js" / -->
     <js-module src="InAppPurchase.js" name="InAppPurchase">
-        <clobbers target="InAppPurchase" />
+        <clobbers target="storekit" />
     </js-module>
 
     <!-- ios -->

@@ -1,9 +1,9 @@
 //
 //  InAppPurchase.m
-//  beetight
 //
 //  Created by Matt Kane on 20/02/2011.
-//  Copyright 2011 Matt Kane. All rights reserved.
+//  Copyright (c) Matt Kane 2011. All rights reserved.
+//  Copyright (c) Jean-Christophe Hoelt 2013
 //
 
 #import "InAppPurchase.h"
@@ -31,15 +31,20 @@
 
 @implementation InAppPurchase
 
--(void) setup:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options {
+-(void) setup: (CDVInvokedUrlCommand*)command {
+    CDVPluginResult* pluginResult = nil;
     [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppPurchase initialized"];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    // pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"You must specify database name"];
 }
 
-- (void) requestProductData:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options
+/*
+- (void) requestProductData: (CDVInvokedUrlCommand*)command
 {
-	if([arguments count] < 3) {
-		return;
-	}
+	//if([arguments count] < 3) {
+	//	return;
+	//}
 	NSLog(@"Getting product data");
 	NSSet *productIdentifiers = [NSSet setWithObject:[arguments objectAtIndex:0]];
     SKProductsRequest *productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:productIdentifiers];
@@ -51,19 +56,19 @@
 
     productsRequest.delegate = delegate;
     [productsRequest start];
-
 }
+*/
 
 /**
  * Request product data for the productIds given in the option with
  * key "productIds". See js for further documentation.
  */
-- (void) requestProductsData:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options
+- (void) requestProductsData: (CDVInvokedUrlCommand*)command
 {
-	if([arguments count] < 1) {
+	/* if([arguments count] < 1) {
 		return;
-	}
-
+	} */
+    NSMutableDictionary *options = [command.arguments objectAtIndex:0];
 	NSSet *productIdentifiers = [NSSet setWithArray:[options objectForKey:@"productIds"]];
 
 	NSLog(@"Getting products data");
@@ -77,7 +82,7 @@
 	[productsRequest start];
 }
 
-- (void) makePurchase:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options
+- (void) makePurchase: (CDVInvokedUrlCommand*)command
 {
 	NSLog(@"About to do IAP");
 	if([arguments count] < 1) {
@@ -95,7 +100,7 @@
 	[[SKPaymentQueue defaultQueue] addPayment:payment];
 }
 
-- (void) restoreCompletedTransactions:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options
+- (void) restoreCompletedTransactions: (CDVInvokedUrlCommand*)command
 {
     [[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
 }

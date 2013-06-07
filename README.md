@@ -1,74 +1,81 @@
-# iOS In-App Purchase plugin #
-By Matt Kane
+# iOS In-App Purchase plugin
 
-Allows In-App Purchases to be made from Phonegap. Wraps StoreKit.
+WARNING: I'M CURRENLTY REWRITING PART OF THIS PLUGING. IT'S NOT YET USABLE!
 
-## Adding the Plugin to your project ##
+ * Allows In-App Purchases to be made from a Phonegap Application.
+ * Wraps StoreKit.
 
-Copy the .h and .m file to the Plugins directory in your project. Copy the .js file to your www directory and reference it from your html file(s). Finally, add StoreKit.framework to your Xcode project if you haven't already.
+Original code: Matt Kane
+Maintainer: Jean-Christophe Hoelt
 
+## Install the Plugin
 
-## Using the plugin ##
+### Automatically using Plugman
 
-###NOTE: In-app purchases can be complicated, with very unhelpful error messages and lots of things that need to be configured perfectly for them to work. I cannot provide support for them. Errors are highly unlikely to have been caused by the plugin. Please see the Apple Developer Forums for help! ###
+     plugman --platform ios --project <directory> --plugin git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git
+
+See [Cordova Plugman](https://github.com/apache/cordova-plugman).
+
+### Manually
+
+Copy the .h and .m file from `src/ios/` to the Plugins directory in your project. Copy the .js file to your www directory and reference it from your html file(s). Finally, add StoreKit.framework to your Xcode project if you haven't already.
+
+## Using the plugin
+
+**NOTE: In-app purchases can be complicated, with very unhelpful error messages and lots of things that need to be configured perfectly for them to work. I cannot provide support for them. Errors are highly unlikely to have been caused by the plugin. Please see the Apple Developer Forums for help!**
 
 Please read [the In-App Purchase Programming Guide](http://developer.apple.com/library/ios/#documentation/NetworkingInternet/Conceptual/StoreKitGuide/Introduction/Introduction.html) and the [iTunes Connect Developer Guide](https://itunesconnect.apple.com/docs/iTunesConnect_DeveloperGuide.pdf).
 
-The plugin creates the object `window.plugins.inAppPurchaseManager` with the following methods:
+The plugin adds the `window.storekit` object, with the following methods:
 
-    requestProductData(productId, successCallback, failCallback)
+    storekit.setup(successCallback, errorCallback)
+    storekit.requestProductData(productId, successCallback, failCallback)
+    storekit.makePurchase(productId, quantity)
+    storekit.restoreCompletedTransactions()
  
-    makePurchase(productId, quantity)
- 
-    restoreCompletedTransactions()
- 
-You can also register the following callbacks:
- 
-    window.plugins.inAppPurchaseManager.onPurchased = function(transactionIdentifier, productId, transactionReceipt) {}
+You can also listen to the following events:
 
-    window.plugins.inAppPurchaseManager.onRestored = function(originalTransactionIdentifier, productId, originalTransactionReceipt) {}
-
-    window.plugins.inAppPurchaseManager.onFailed = function(errorCode, errorText);
+    storekit.on('purchased', function (transactionId, productId, transactionReceipt) {})
+    storekit.on('restored',  function (originalTransactionId, productId, originalTransactionReceipt) {})
+    storekit.on('failed',    function (errorCode, errorText) {})
 
 You should register the callbacks early in your app's initialisation process, because StoreKit will automatically attempt to complete any unfinished transactions when you launch the app.
 If the plugin does receive callbacks before you have registered a handler, they will be placed into a queue and executed when you do register one.
 
 Before attempting to make a purchase you should first call `requestProductData` to retrieve the localised product data. If you don't do this, then any attempt to make a purchase will fail.
+
 A basic usage example is below:
 
-    	window.plugins.inAppPurchaseManager.onPurchased = function(transactionIdentifier, productId, transactionReceipt) {
-    		console.log('purchased: ' + productId);
-    		/* Give coins, enable subscriptions etc */
-    	}
-
-    	window.plugins.inAppPurchaseManager.onRestored = function(transactionIdentifier, productId, transactionReceipt) {
-    		console.log('restored: ' + productId);
-    		/* See the developer guide for details of what to do with this */
-    	}
-
-    	window.plugins.inAppPurchaseManager.onFailed = function(errno, errtext) {
-    		console.log('failed: ' + errtext);
-    	}
-
-    	window.plugins.inAppPurchaseManager.requestProductData("com.example.test", function(productId, title, description, price) {
-        		console.log("productId: " + productId + " title: " + title + " description: " + description + " price: " + price);
-        		window.plugins.inAppPurchaseManager.makePurchase(productId, 1);
-        	}, function(id) {
-        		console.log("Invalid product id: " + id);
-    	    }
-    	);
-
+    storekit.on('purchased', function (transactionId, productId, transactionReceipt) {
+        console.log('purchased: ' + productId);
+        /* Give coins, enable subscriptions etc */
+    });
     
+    storekit.on('restored', function (transactionId, productId, transactionReceipt) {
+        console.log('restored: ' + productId);
+        /* See the developer guide for details of what to do with this */
+    });
+    
+    storekit.on('failed', function (errno, errtext) {
+        console.log('failed: ' + errtext);
+    });
 
-
+    storekit.requestProductData("com.example.test", function (productId, title, description, price) {
+        console.log("productId: " + productId);
+        console.log("title: " + title);
+        console.log("description: " + description);
+        console.log("price: " + price);
+        storekit.makePurchase(productId, 1);
+    }, function (id) {
+        console.log("Invalid product id: " + id);
+    });
 	
-## BUGS AND CONTRIBUTIONS ##
+## BUGS AND CONTRIBUTIONS
 For IAP support, please use [the Apple Developer Forum](https://devforums.apple.com/community/ios/integration/storekit).
 
-The latest bleeding-edge version is available [on GitHub](http://github.com/ascorbic/phonegap-plugins/)
-If you have a patch, fork my repo and send me a pull request. Submit bug reports on GitHub, please.
+The latest bleeding-edge version is available [on GitHub](http://github.com/j3k0/PhoneGap-InAppPurchase-iOS/). If you have a patch, fork and send pull requests.
 	
-## Licence ##
+## Licence
 
 The MIT License
 
@@ -91,7 +98,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
-
-
-
