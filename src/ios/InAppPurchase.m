@@ -30,23 +30,46 @@
 @end
 
 @implementation InAppPurchase
+@synthesize list;
 
 -(void) setup: (CDVInvokedUrlCommand*)command {
     CDVPluginResult* pluginResult = nil;
+    self.list = [[NSMutableDictionary alloc] init];
     [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppPurchase initialized"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 /**
- * Request product data for the productIds given in the option with
- * key "productIds". See js for further documentation.
+ * Request product data for the given productIds.
+ * See js for further documentation.
  */
 - (void) load: (CDVInvokedUrlCommand*)command
 {
-    NSSet *productIdentifiers = [NSSet setWithObject:[command.arguments objectAtIndex:0]];
-
 	NSLog(@"InAppPurchase[objc]: Getting products data");
+
+    NSArray *inArray = [command.arguments objectAtIndex:0];
+
+    if ((unsigned long)[inArray count] == 0) {
+        NSLog(@"InAppPurchase[objc]: empty array");
+        NSArray *callbackArgs = [NSArray arrayWithObjects: nil, nil, nil];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:callbackArgs];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        return;
+    }
+
+    if (![[inArray objectAtIndex:0] isKindOfClass:[NSString class]]) {
+        NSLog(@"InAppPurchase[objc]: not an array of NSString");
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid arguments"];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        return;
+    }
+    
+    NSSet *productIdentifiers = [NSSet setWithArray:inArray];
+    NSLog(@"InAppPurchase[objc]: Set has %li elements", (unsigned long)[productIdentifiers count]);
+    for (NSString *item in productIdentifiers) {
+        NSLog(@"InAppPurchase[objc]: - %@", item);
+    }
 	SKProductsRequest *productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:productIdentifiers];
 
 	BatchProductsRequestDelegate* delegate = [[[BatchProductsRequestDelegate alloc] init] retain];
@@ -54,6 +77,7 @@
 	delegate.command = command;
 
 	productsRequest.delegate = delegate;
+	NSLog(@"InAppPurchase[objc]: start");
 	[productsRequest start];
 }
 
@@ -63,9 +87,7 @@
     id identifier = [command.arguments objectAtIndex:0];
     id quantity =   [command.arguments objectAtIndex:1];
 
-    SKMutablePayment *payment =
-      [SKMutablePayment paymentWithProductIdentifier:identifier];
-
+    SKMutablePayment *payment = [SKMutablePayment paymentWithProduct:[self.list objectForKey:identifier]];
     if ([quantity respondsToSelector:@selector(integerValue)]) {
         payment.quantity = [quantity integerValue];
     }
@@ -93,6 +115,7 @@
         switch (transaction.transactionState)
         {
 			case SKPaymentTransactionStatePurchasing:
+				NSLog(@"InAppPurchase[objc]: Purchasing...");
 				continue;
 
             case SKPaymentTransactionStatePurchased:
@@ -165,8 +188,11 @@
 
 - (void)productsRequest:(SKProductsRequest*)request didReceiveResponse:(SKProductsResponse*)response {
 
+    NSLog(@"InAppPurchase[objc]: productsRequest: didReceiveResponse:");
     NSMutableArray *validProducts = [NSMutableArray array];
+    NSLog(@"InAppPurchase[objc]: Has %li validProducts", (unsigned long)[response.products count]);
 	for (SKProduct *product in response.products) {
+        NSLog(@"InAppPurchase[objc]: - %@: %@", product.productIdentifier, product.localizedTitle);
         [validProducts addObject:
          [NSDictionary dictionaryWithObjectsAndKeys:
           NILABLE(product.productIdentifier),    @"id",
@@ -174,6 +200,7 @@
           NILABLE(product.localizedDescription), @"description",
           NILABLE(product.localizedPrice),       @"price",
           nil]];
+        [self.plugin.list setObject:product forKey:[NSString stringWithFormat:@"%@", product.productIdentifier]];
     }
 
     NSArray *callbackArgs = [NSArray arrayWithObjects:
@@ -183,7 +210,8 @@
 
     CDVPluginResult* pluginResult =
       [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:callbackArgs];
-    [plugin.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    NSLog(@"InAppPurchase[objc]: productsRequest: didReceiveResponse: sendPluginResult: %@", callbackArgs);
+    [self.plugin.commandDelegate sendPluginResult:pluginResult callbackId:self.command.callbackId];
 
 	[request release];
 	[self    release];

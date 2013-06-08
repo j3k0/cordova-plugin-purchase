@@ -6,8 +6,8 @@
  * Copyright (c) Jean-Christophe Hoelt 2013
  */
 
-var exec = function (method, options, success, error) {
-    cordova.exec(success, error, "InAppPurchase", method, [options]);
+var exec = function (methodName, options, success, error) {
+    cordova.exec(success, error, "InAppPurchase", methodName, options);
 };
 
 var log = function (msg) {
@@ -108,9 +108,35 @@ InAppPurchase.prototype.restore = function() {
  */
 InAppPurchase.prototype.load = function (productIds, callback) {
     var options = this.options;
-	exec('load', [productIds], callback, function () {
-        options.error(InAppPurchase.ERR_LOAD, 'Failed to load product data');
-    });
+    if (typeof productIds === "string") {
+        productIds = [productIds];
+    }
+    if (!productIds.length) {
+        // Empty array, nothing to do.
+        callback([], []);
+    }
+    else {
+        if (typeof productIds[0] !== 'string') {
+            var msg = 'invalid productIds given to store.load: ' + JSON.stringify(productIds);
+            log(msg);
+            options.error(InAppPurchase.ERR_LOAD, msg);
+            return;
+        }
+        log('load ' + JSON.stringify(productIds));
+
+        var loadOk = function (array) {
+            var valid = array[0];
+            var invalid = array[1];
+            log('load ok: { valid:' + JSON.stringify(valid) + ' invalid:' + JSON.stringify(invalid) + ' }');
+            callback(valid, invalid);
+        };
+        var loadFailed = function (errMessage) {
+            log('load failed: ' + errMessage);
+            options.error(InAppPurchase.ERR_LOAD, 'Failed to load product data: ' + errMessage);
+        };
+
+        exec('load', [productIds], loadOk, loadFailed);
+    }
 };
 
 /* This is called from native.*/

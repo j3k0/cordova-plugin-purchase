@@ -15,7 +15,9 @@
 #import "SKProduct+LocalizedPrice.h"
 
 @interface InAppPurchase : CDVPlugin <SKPaymentTransactionObserver> {
+    NSMutableDictionary* list;
 }
+@property (nonatomic, retain) NSMutableDictionary* list;
 
 - (void) setup: (CDVInvokedUrlCommand*)command;
 - (void) load: (CDVInvokedUrlCommand*)command;
@@ -32,7 +34,7 @@
     CDVInvokedUrlCommand* command;
 }
 
-@property (nonatomic, retain) CDVInvokedUrlCommand* command;
 @property (nonatomic, retain) InAppPurchase* plugin;
+@property (nonatomic, retain) CDVInvokedUrlCommand* command;
 
 @end;
