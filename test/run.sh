@@ -12,12 +12,11 @@ function hasFile() {
 
 cd `dirname $0`/test-install
 jackbone update
-jackbone build ios-dev debug
+jackbone build ios-dev testing
 
-cd ".."
-DIR=test-install/build/ios/MyProject/MyProject/Plugins
-WWW=test-install/build/ios/MyProject/www
-PROJ=test-install/build/ios/MyProject/MyProject.xcodeproj/project.pbxproj
+DIR=build/ios/MyProject/MyProject/Plugins
+WWW=build/ios/MyProject/www
+PROJ=build/ios/MyProject/MyProject.xcodeproj/project.pbxproj
 
 hasFile "$DIR/InAppPurchase.m"
 hasFile "$DIR/InAppPurchase.h"
@@ -31,5 +30,7 @@ else
     echo "ERROR: StoreKit framework missing"
     EXIT=1
 fi
+
+jackbone run
 
 exit $EXIT

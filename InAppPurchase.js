@@ -15,18 +15,38 @@ var log = function (msg) {
 };
 
 var InAppPurchase = function () {
+    this.options = {};
 };
 
-InAppPurchase.prototype.setup = function (success, error) {
+// Error codes.
+InAppPurchase.ERR_SETUP = 1;
+InAppPurchase.ERR_LOAD = 2;
+InAppPurchase.ERR_PURCHASE = 3;
+
+InAppPurchase.prototype.init = function (options) {
+    this.options = {
+        ready:    options.ready || function () {},
+        purchase: options.purchase || function () {},
+        restore:  options.restore || function () {},
+        restoreFailed:  options.restoreFailed || function () {},
+        restoreCompleted:  options.restoreCompleted || function () {},
+        error:    options.error || function () {}
+    };
+
     var that = this;
     var setupOk = function () {
         log('setup ok');
-        if (typeof success === 'function') success.call(this);
+        that.options.ready();
+
+        // Is there a reason why we wouldn't like to do this automatically?
+        // YES! it does ask the user for his password.
+        // that.restore();
     };
     var setupFailed = function () {
         log('setup failed');
-        if (typeof error === 'function') error.call(this, 'setup failed');
+        options.error(InAppPurchase.ERR_SETUP, 'Setup failed');
     };
+
     exec('setup', [], setupOk, setupFailed);
 };
 
@@ -36,21 +56,21 @@ InAppPurchase.prototype.setup = function (success, error) {
  * @param {String} productId The product identifier. e.g. "com.example.MyApp.myproduct"
  * @param {int} quantity 
  */
-InAppPurchase.prototype.makePurchase = function (productId, quantity, success, error) {
-	var q = parseInt(quantity);
-	if (!q) {
-		q = 1;
-	}
+InAppPurchase.prototype.purchase = function (productId, quantity) {
+	quantity = (quantity|0) || 1;
+    var options = this.options;
     var purchaseOk = function () {
-        log('purchased ' + productId);
-        if (typeof success === 'function') success.call(this, productId, quantity);
+        log('Purchased ' + productId);
+        if (typeof options.purchase === 'function')
+            options.purchase(productId, quantity);
     };
     var purchaseFailed = function () {
-        var msg = 'purchasing ' + productId + ' failed';
+        var msg = 'Purchasing ' + productId + ' failed';
         log(msg);
-        if (typeof error === 'function') error.call(this, m, productId, quantity);
+        if (typeof options.error === 'function')
+            options.error(InAppPurchase.ERR_PURCHASE, msg, productId, quantity);
     };
-    return exec('makePurchase', [productId, q], purchaseOk, purchaseFailed);
+    return exec('purchase', [productId, quantity], purchaseOk, purchaseFailed);
 };
 
 /**
@@ -58,38 +78,12 @@ InAppPurchase.prototype.makePurchase = function (productId, quantity, success, e
  * The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
  * 
  */
-InAppPurchase.prototype.restoreCompletedTransactions = function() {
-    return PhoneGap.exec('InAppPurchase.restoreCompletedTransactions');		
-}
-
-
-/**
- * Retrieves the localised product data, including price (as a localised string), name, description.
- * You must call this before attempting to make a purchase.
- *
- * @param {String} productId The product identifier. e.g. "com.example.MyApp.myproduct"
- * @param {Function} successCallback Called once for each returned product id. Signature is function(productId, title, description, price)
- * @param {Function} failCallback Called once for each invalid product id. Signature is function(productId)
- */
-
-InAppPurchase.prototype.requestProductData = function(productId, successCallback, failCallback) {
-	var key = 'f' + this.callbackIdx++;
-	window.plugins.inAppPurchase.callbackMap[key] = {
-    success: function(productId, title, description, price ) {
-        if (productId == '__DONE') {
-            delete window.plugins.inAppPurchase.callbackMap[key]
-            return;
-        }
-        successCallback(productId, title, description, price);
-    },
-    fail: failCallback
-	}
-	var callback = 'window.plugins.inAppPurchase.callbackMap.' + key;
-    PhoneGap.exec('InAppPurchase.requestProductData', productId, callback + '.success', callback + '.fail');	
+InAppPurchase.prototype.restore = function() {
+    return exec('restoreCompletedTransactions', []);
 }
 
 /**
- * Retrieves localised product data, including price (as localised
+ * Retrieves localized product data, including price (as localized
  * string), name, description of multiple products.
  *
  * @param {Array} productIds
@@ -100,77 +94,47 @@ InAppPurchase.prototype.requestProductData = function(productId, successCallback
  *
  *     function(validProducts, invalidProductIds)
  *
- *   where validProducts receives an array of objects of the form
+ *   where validProducts receives an array of objects of the form:
  *
  *     {
- *      id: "<productId>",
- *      title: "<localised title>",
- *      description: "<localised escription>",
- *      price: "<localised price>"
+ *       id: "<productId>",
+ *       title: "<localised title>",
+ *       description: "<localised escription>",
+ *       price: "<localised price>"
  *     }
  *
  *  and invalidProductIds receives an array of product identifier
  *  strings which were rejected by the app store.
  */
-InAppPurchase.prototype.requestProductsData = function(productIds, callback) {
-	var key = 'b' + this.callbackIdx++;
-	window.plugins.inAppPurchase.callbackMap[key] = function(validProducts, invalidProductIds) {
-		delete window.plugins.inAppPurchase.callbackMap[key];
-		callback(validProducts, invalidProductIds);
-	};
-	var callbackName = 'window.plugins.inAppPurchase.callbackMap.' + key;
-	PhoneGap.exec('InAppPurchase.requestProductsData', callbackName, {productIds: productIds});
+InAppPurchase.prototype.load = function (productIds, callback) {
+    var options = this.options;
+	exec('load', [productIds], callback, function () {
+        options.error(InAppPurchase.ERR_LOAD, 'Failed to load product data');
+    });
 };
 
-/* function(transactionIdentifier, productId, transactionReceipt) */
-InAppPurchase.prototype.onPurchased = null;
-
-/* function(originalTransactionIdentifier, productId, originalTransactionReceipt) */
-InAppPurchase.prototype.onRestored = null;
-
-/* function(errorCode, errorText) */
-InAppPurchase.prototype.onFailed = null;
-
-/* function() */
-InAppPurchase.prototype.onRestoreCompletedTransactionsFinished = null;
-
-/* function(errorCode) */
-InAppPurchase.prototype.onRestoreCompletedTransactionsFailed = null;
-
 /* This is called from native.*/
-
-InAppPurchase.prototype.updatedTransactionCallback = function(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
+InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
     alert(state);
 	switch(state) {
 		case "PaymentTransactionStatePurchased":
-			if(window.plugins.inAppPurchase.onPurchased)
-                window.plugins.inAppPurchase.onPurchased(transactionIdentifier, productId, transactionReceipt);
-			
+            this.options.purchase(transactionIdentifier, productId, transactionReceipt);
 			return; 
-			
 		case "PaymentTransactionStateFailed":
-			if(window.plugins.inAppPurchase.onFailed)
-				window.plugins.inAppPurchase.onFailed(errorCode, errorText);
-			
+            this.options.error(errorCode, errorText);
 			return;
-            
 		case "PaymentTransactionStateRestored":
-            if(window.plugins.inAppPurchase.onRestored)
-                window.plugins.inAppPurchase.onRestored(transactionIdentifier, productId, transactionReceipt);
+            this.options.restore(transactionIdentifier, productId, transactionReceipt);
 			return;
 	}
 };
 
 InAppPurchase.prototype.restoreCompletedTransactionsFinished = function() {
-    if (this.onRestoreCompletedTransactionsFinished) {
-        this.onRestoreCompletedTransactionsFinished();
-    }
+    this.options.restoreCompleted();
 };
 
 InAppPurchase.prototype.restoreCompletedTransactionsFailed = function(errorCode) {
-    if (this.onRestoreCompletedTransactionsFailed) {
-        this.onRestoreCompletedTransactionsFailed(errorCode);
-    }
+    this.options.restoreFailed(errorCode);
 };
 
 /*
@@ -179,7 +143,6 @@ InAppPurchase.prototype.restoreCompletedTransactionsFailed = function(errorCode)
  * right away then they may be missed. As soon as a callback has been registered then it will be sent any events waiting
  * in the queue.
  */
-
 InAppPurchase.prototype.runQueue = function() {
 	if(!this.eventQueue.length || (!this.onPurchased && !this.onFailed && !this.onRestored)) {
 		return;
@@ -188,31 +151,30 @@ InAppPurchase.prototype.runQueue = function() {
 	/* We can't work directly on the queue, because we're pushing new elements onto it */
 	var queue = this.eventQueue.slice();
 	this.eventQueue = [];
-	while(args = queue.shift()) {
+	while (args = queue.shift()) {
 		this.updatedTransactionCallback.apply(this, args);
 	}
 	if(!this.eventQueue.length) {	
 		this.unWatchQueue();
 	}
-}
+};
 
 InAppPurchase.prototype.watchQueue = function() {
-	if(this.timer) {
+	if (this.timer) {
 		return;
 	}
-	this.timer = setInterval("window.plugins.inAppPurchase.runQueue()", 10000);
-}
+	this.timer = window.setInterval(function () {
+        window.storekit.runQueue();
+    }, 10000);
+};
 
 InAppPurchase.prototype.unWatchQueue = function() {
-	if(this.timer) {
-		clearInterval(this.timer);
+	if (this.timer) {
+		window.clearInterval(this.timer);
 		this.timer = null;
 	}
 }
 
-
-InAppPurchase.prototype.callbackMap = {};
-InAppPurchase.prototype.callbackIdx = 0;
 InAppPurchase.prototype.eventQueue = [];
 InAppPurchase.prototype.timer = null;
 

@@ -36,67 +36,39 @@
     [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppPurchase initialized"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    // pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"You must specify database name"];
 }
-
-/*
-- (void) requestProductData: (CDVInvokedUrlCommand*)command
-{
-	//if([arguments count] < 3) {
-	//	return;
-	//}
-	NSLog(@"Getting product data");
-	NSSet *productIdentifiers = [NSSet setWithObject:[arguments objectAtIndex:0]];
-    SKProductsRequest *productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:productIdentifiers];
-
-	ProductsRequestDelegate* delegate = [[[ProductsRequestDelegate alloc] init] retain];
-	delegate.command = self;
-	delegate.successCallback = [arguments objectAtIndex:1];
-	delegate.failCallback = [arguments objectAtIndex:2];
-
-    productsRequest.delegate = delegate;
-    [productsRequest start];
-}
-*/
 
 /**
  * Request product data for the productIds given in the option with
  * key "productIds". See js for further documentation.
  */
-- (void) requestProductsData: (CDVInvokedUrlCommand*)command
+- (void) load: (CDVInvokedUrlCommand*)command
 {
-	/* if([arguments count] < 1) {
-		return;
-	} */
-    NSMutableDictionary *options = [command.arguments objectAtIndex:0];
-	NSSet *productIdentifiers = [NSSet setWithArray:[options objectForKey:@"productIds"]];
+    NSSet *productIdentifiers = [command.arguments objectAtIndex:0];
 
 	NSLog(@"Getting products data");
 	SKProductsRequest *productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:productIdentifiers];
 
 	BatchProductsRequestDelegate* delegate = [[[BatchProductsRequestDelegate alloc] init] retain];
 	delegate.command = self;
-	delegate.callback = [arguments objectAtIndex:0];
+	delegate.invoke = command;
 
 	productsRequest.delegate = delegate;
 	[productsRequest start];
 }
 
-- (void) makePurchase: (CDVInvokedUrlCommand*)command
+- (void) purchase: (CDVInvokedUrlCommand*)command
 {
 	NSLog(@"About to do IAP");
-	if([arguments count] < 1) {
-		return;
-	}
+    id identifier = [command.arguments objectAtIndex:0];
+    id quantity =   [command.arguments objectAtIndex:1];
 
-    SKMutablePayment *payment = [SKMutablePayment paymentWithProductIdentifier:[arguments objectAtIndex:0]];
+    SKMutablePayment *payment =
+      [SKMutablePayment paymentWithProductIdentifier:identifier];
 
-	if([arguments count] > 1) {
-		id quantity = [arguments objectAtIndex:1];
-		if ([quantity respondsToSelector:@selector(integerValue)]) {
-			payment.quantity = [quantity integerValue];
-		}
-	}
+    if ([quantity respondsToSelector:@selector(integerValue)]) {
+        payment.quantity = [quantity integerValue];
+    }
 	[[SKPaymentQueue defaultQueue] addPayment:payment];
 }
 
@@ -108,7 +80,7 @@
 // SKPaymentTransactionObserver methods
 // called when the transaction status is updated
 //
-- (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions
+- (void)paymentQueue:(SKPaymentQueue*)queue updatedTransactions:(NSArray*)transactions
 {
 	NSString *state, *error, *transactionIdentifier, *transactionReceipt, *productId;
 	NSInteger errorCode;
@@ -135,7 +107,6 @@
 				error = transaction.error.localizedDescription;
 				errorCode = transaction.error.code;
 				NSLog(@"error %d %@", errorCode, error);
-
                 break;
 
 			case SKPaymentTransactionStateRestored:
@@ -158,70 +129,29 @@
                                  NILABLE(productId),
                                  NILABLE(transactionReceipt),
                                  nil];
-		NSString *js = [NSString stringWithFormat:@"plugins.inAppPurchaseManager.updatedTransactionCallback.apply(plugins.inAppPurchaseManager, %@)", [callbackArgs JSONSerialize]];
+        CDVPluginResult* pluginResult = nil;
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray: callbackArgs];
+		NSString *js = [NSString
+            stringWithFormat:@"window.storekit.updatedTransactionCallback.apply(window.storekit, %@)",
+            [callbackArgs JSONSerialize]];
 		NSLog(@"js: %@", js);
-		[self writeJavascript: js];
+        [self.commandDelegate evalJs:js];
 		[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
-
     }
 }
 
 - (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error
 {
-	NSString *js = [NSString stringWithFormat:@"plugins.inAppPurchaseManager.onRestoreCompletedTransactionsFailed(%d)", error.code];
-	[self writeJavascript: js];
+	/* NSString *js = [NSString stringWithFormat:
+      @"window.storekit.onRestoreCompletedTransactionsFailed(%d)", error.code];
+	[self writeJavascript: js]; */
 }
 
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue
 {
-	NSString *js = @"plugins.inAppPurchaseManager.onRestoreCompletedTransactionsFinished()";
-	[self writeJavascript: js];
+	/* NSString *js = @"window.storekit.onRestoreCompletedTransactionsFinished()";
+	[self writeJavascript: js]; */
 }
-
-@end
-
-@implementation ProductsRequestDelegate
-
-@synthesize successCallback, failCallback, command;
-
-
-- (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response
-{
-	NSLog(@"got iap product response");
-    for (SKProduct *product in response.products) {
-		NSLog(@"sending js for %@", product.productIdentifier);
-        NSArray *callbackArgs = [NSArray arrayWithObjects:
-                                 NILABLE(product.productIdentifier),
-                                 NILABLE(product.localizedTitle),
-                                 NILABLE(product.localizedDescription),
-                                 NILABLE(product.localizedPrice),
-                                 nil];
-		NSString *js = [NSString stringWithFormat:@"%@.apply(plugins.inAppPurchaseManager, %@)", successCallback, [callbackArgs JSONSerialize]];
-		NSLog(@"js: %@", js);
-		[command writeJavascript: js];
-    }
-
-    for (NSString *invalidProductId in response.invalidProductIdentifiers) {
-		NSLog(@"sending fail (%@) js for %@", failCallback, invalidProductId);
-
-		[command writeJavascript: [NSString stringWithFormat:@"%@('%@')", failCallback, invalidProductId]];
-    }
-	NSLog(@"done iap");
-
-	[command writeJavascript: [NSString stringWithFormat:@"%@('__DONE')", successCallback]];
-
-	[request release];
-	[self release];
-}
-
-- (void) dealloc
-{
-    [successCallback release];
-    [failCallback release];
-	[command release];
-    [super dealloc];
-}
-
 
 @end
 
@@ -231,9 +161,9 @@
  */
 @implementation BatchProductsRequestDelegate
 
-@synthesize callback, command;
+@synthesize invoke, command;
 
-- (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response {
+- (void)productsRequest:(SKProductsRequest*)request didReceiveResponse:(SKProductsResponse*)response {
 
     NSMutableArray *validProducts = [NSMutableArray array];
 	for (SKProduct *product in response.products) {
@@ -250,17 +180,19 @@
                              NILABLE(validProducts),
                              NILABLE(response.invalidProductIdentifiers),
                              nil];
-	NSString *js = [NSString stringWithFormat:@"%@.apply(plugins.inAppPurchaseManager, %@);", callback, [callbackArgs JSONSerialize]];
-	[command writeJavascript: js];
+
+    CDVPluginResult* pluginResult =
+      [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:callbackArgs];
+    [command.commandDelegate sendPluginResult:pluginResult callbackId:invoke.callbackId];
 
 	[request release];
-	[self release];
+	[self    release];
 }
 
 - (void) dealloc {
-	[callback release];
+	[invoke  release];
 	[command release];
-	[super dealloc];
+	[super   dealloc];
 }
 
 @end

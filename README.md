@@ -12,7 +12,7 @@ Maintainer: Jean-Christophe Hoelt
 
 ### Automatically using Plugman
 
-     plugman --platform ios --project <directory> --plugin git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git
+    plugman --platform ios --project <directory> --plugin git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git
 
 See [Cordova Plugman](https://github.com/apache/cordova-plugman).
 
@@ -28,21 +28,22 @@ Please read [the In-App Purchase Programming Guide](http://developer.apple.com/l
 
 The plugin adds the `window.storekit` object, with the following methods:
 
-    storekit.setup(successCallback, errorCallback)
-    storekit.requestProductData(productId, successCallback, failCallback)
-    storekit.makePurchase(productId, quantity)
-    storekit.restoreCompletedTransactions()
+    storekit.init({
+        purchase: function (transactionId, productId, transactionReceipt) {},
+        restore:  function (originalTransactionId, productId, originalTransactionReceipt) {},
+        error:    function (errorCode, errorText) {},
+        ready:    function () {}
+    })
+    storekit.load(productIds, callback)
+    storekit.purchase(productId, quantity)
  
-You can also listen to the following events:
+You should also listen to the following events:
 
-    storekit.on('purchased', function (transactionId, productId, transactionReceipt) {})
-    storekit.on('restored',  function (originalTransactionId, productId, originalTransactionReceipt) {})
-    storekit.on('failed',    function (errorCode, errorText) {})
 
 You should register the callbacks early in your app's initialisation process, because StoreKit will automatically attempt to complete any unfinished transactions when you launch the app.
 If the plugin does receive callbacks before you have registered a handler, they will be placed into a queue and executed when you do register one.
 
-Before attempting to make a purchase you should first call `requestProductData` to retrieve the localised product data. If you don't do this, then any attempt to make a purchase will fail.
+Before attempting to make a purchase you should first call `load` to retrieve the localised product data. If you don't do this, then any attempt to make a purchase will fail.
 
 A basic usage example is below:
 

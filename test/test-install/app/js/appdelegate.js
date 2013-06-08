@@ -63,7 +63,23 @@ define([
             T.init(test);
             T.add(0, 1000, function () { Jackbone.router.goto('menu'); });
             T.add(0,    0, function () { ok($('#pagename-menu').length === 1, 'Menu page exists'); }, 1);
-            T.add(0,    0, function () { ok($a('h1').text() === 'Menu', 'Menu page opened'); }, 1);
+
+            var isReady = false;
+            T.add(0,  100, function () { ok(typeof window.storekit !== 'undefined', 'StoreKit available'); });
+            T.add(0, 5000, function () {
+                storekit.init({
+                    ready: function () {
+                        console.log('StoreKit Ready');
+                        isReady = true;
+                    },
+                    error: function (errCode, errMessage) {
+                        console.log('StoreKit Error');
+                        console.log(errMessage);
+                        isReady = false;
+                    }
+                });
+            });
+            T.add(0,    0, function () { ok(isReady === true, 'StoreKit initialized'); }, 1);
             T.finish();
         });
 
