@@ -80,7 +80,7 @@ InAppPurchase.prototype.purchase = function (productId, quantity) {
  */
 InAppPurchase.prototype.restore = function() {
     return exec('restoreCompletedTransactions', []);
-}
+};
 
 /**
  * Retrieves localized product data, including price (as localized
@@ -129,11 +129,11 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
 	}
 };
 
-InAppPurchase.prototype.restoreCompletedTransactionsFinished = function() {
+InAppPurchase.prototype.restoreCompletedTransactionsFinished = function () {
     this.options.restoreCompleted();
 };
 
-InAppPurchase.prototype.restoreCompletedTransactionsFailed = function(errorCode) {
+InAppPurchase.prototype.restoreCompletedTransactionsFailed = function (errorCode) {
     this.options.restoreFailed(errorCode);
 };
 
@@ -143,7 +143,7 @@ InAppPurchase.prototype.restoreCompletedTransactionsFailed = function(errorCode)
  * right away then they may be missed. As soon as a callback has been registered then it will be sent any events waiting
  * in the queue.
  */
-InAppPurchase.prototype.runQueue = function() {
+InAppPurchase.prototype.runQueue = function () {
 	if(!this.eventQueue.length || (!this.onPurchased && !this.onFailed && !this.onRestored)) {
 		return;
 	}
@@ -151,15 +151,17 @@ InAppPurchase.prototype.runQueue = function() {
 	/* We can't work directly on the queue, because we're pushing new elements onto it */
 	var queue = this.eventQueue.slice();
 	this.eventQueue = [];
-	while (args = queue.shift()) {
+    args = queue.shift();
+	while (args) {
 		this.updatedTransactionCallback.apply(this, args);
+        args = queue.shift();
 	}
-	if(!this.eventQueue.length) {	
+	if (!this.eventQueue.length) {	
 		this.unWatchQueue();
 	}
 };
 
-InAppPurchase.prototype.watchQueue = function() {
+InAppPurchase.prototype.watchQueue = function () {
 	if (this.timer) {
 		return;
 	}
@@ -168,12 +170,12 @@ InAppPurchase.prototype.watchQueue = function() {
     }, 10000);
 };
 
-InAppPurchase.prototype.unWatchQueue = function() {
+InAppPurchase.prototype.unWatchQueue = function () {
 	if (this.timer) {
 		window.clearInterval(this.timer);
 		this.timer = null;
 	}
-}
+};
 
 InAppPurchase.prototype.eventQueue = [];
 InAppPurchase.prototype.timer = null;
