@@ -44,14 +44,14 @@
  */
 - (void) load: (CDVInvokedUrlCommand*)command
 {
-    NSSet *productIdentifiers = [command.arguments objectAtIndex:0];
+    NSSet *productIdentifiers = [NSSet setWithObject:[command.arguments objectAtIndex:0]];
 
-	NSLog(@"Getting products data");
+	NSLog(@"InAppPurchase[objc]: Getting products data");
 	SKProductsRequest *productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:productIdentifiers];
 
 	BatchProductsRequestDelegate* delegate = [[[BatchProductsRequestDelegate alloc] init] retain];
-	delegate.command = self;
-	delegate.invoke = command;
+	delegate.plugin = self;
+	delegate.command = command;
 
 	productsRequest.delegate = delegate;
 	[productsRequest start];
@@ -59,7 +59,7 @@
 
 - (void) purchase: (CDVInvokedUrlCommand*)command
 {
-	NSLog(@"About to do IAP");
+	NSLog(@"InAppPurchase[objc]: About to do IAP");
     id identifier = [command.arguments objectAtIndex:0];
     id quantity =   [command.arguments objectAtIndex:1];
 
@@ -106,7 +106,7 @@
 				state = @"PaymentTransactionStateFailed";
 				error = transaction.error.localizedDescription;
 				errorCode = transaction.error.code;
-				NSLog(@"error %d %@", errorCode, error);
+				NSLog(@"InAppPurchase[objc]: error %d %@", errorCode, error);
                 break;
 
 			case SKPaymentTransactionStateRestored:
@@ -117,10 +117,10 @@
                 break;
 
             default:
-				NSLog(@"Invalid state");
+				NSLog(@"InAppPurchase[objc]: Invalid state");
                 continue;
         }
-		NSLog(@"state: %@", state);
+		NSLog(@"InAppPurchase[objc]: state: %@", state);
         NSArray *callbackArgs = [NSArray arrayWithObjects:
                                  NILABLE(state),
                                  [NSNumber numberWithInt:errorCode],
@@ -134,7 +134,7 @@
 		NSString *js = [NSString
             stringWithFormat:@"window.storekit.updatedTransactionCallback.apply(window.storekit, %@)",
             [callbackArgs JSONSerialize]];
-		NSLog(@"js: %@", js);
+		NSLog(@"InAppPurchase[objc]: js: %@", js);
         [self.commandDelegate evalJs:js];
 		[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
     }
@@ -161,7 +161,7 @@
  */
 @implementation BatchProductsRequestDelegate
 
-@synthesize invoke, command;
+@synthesize plugin, command;
 
 - (void)productsRequest:(SKProductsRequest*)request didReceiveResponse:(SKProductsResponse*)response {
 
@@ -183,14 +183,14 @@
 
     CDVPluginResult* pluginResult =
       [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:callbackArgs];
-    [command.commandDelegate sendPluginResult:pluginResult callbackId:invoke.callbackId];
+    [plugin.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
 	[request release];
 	[self    release];
 }
 
 - (void) dealloc {
-	[invoke  release];
+	[plugin  release];
 	[command release];
 	[super   dealloc];
 }

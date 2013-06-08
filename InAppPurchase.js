@@ -11,7 +11,7 @@ var exec = function (method, options, success, error) {
 };
 
 var log = function (msg) {
-    console.log("InAppPurchase: " + msg);
+    console.log("InAppPurchase[js]: " + msg);
 };
 
 var InAppPurchase = function () {

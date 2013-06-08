@@ -28,11 +28,11 @@
 @end
 
 @interface BatchProductsRequestDelegate : NSObject <SKProductsRequestDelegate> {
-	InAppPurchase* command;
-    CDVInvokedUrlCommand* invoke;
+	InAppPurchase* plugin;
+    CDVInvokedUrlCommand* command;
 }
 
-@property (nonatomic, retain) CDVInvokedUrlCommand* invoke;
-@property (nonatomic, retain) InAppPurchase* command;
+@property (nonatomic, retain) CDVInvokedUrlCommand* command;
+@property (nonatomic, retain) InAppPurchase* plugin;
 
 @end;
