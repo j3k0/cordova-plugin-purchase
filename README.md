@@ -1,11 +1,10 @@
 # iOS In-App Purchase plugin
 
-WARNING: I'M CURRENLTY REWRITING PART OF THIS PLUGING. IT'S NOT YET USABLE!
-
  * Allows In-App Purchases to be made from a Phonegap Application.
  * Wraps StoreKit.
 
 Original code: Matt Kane
+
 Maintainer: Jean-Christophe Hoelt
 
 ## Install the Plugin
@@ -26,6 +25,12 @@ Copy the .h and .m file from `src/ios/` to the Plugins directory in your project
 
 Please read [the In-App Purchase Programming Guide](http://developer.apple.com/library/ios/#documentation/NetworkingInternet/Conceptual/StoreKitGuide/Introduction/Introduction.html) and the [iTunes Connect Developer Guide](https://itunesconnect.apple.com/docs/iTunesConnect_DeveloperGuide.pdf).
 
+### Tutorial
+
+For a comprehensive tutorial, Check-out the [complete turorial](http://fovea.cc/blog/index.php/3-steps-tutorial-for-phonegap-in-app-purchase-on-ios/) on Fovea's blog [here](http://fovea.cc/blog/index.php/3-steps-tutorial-for-phonegap-in-app-purchase-on-ios/).
+
+### Documentation
+
 The plugin adds the `window.storekit` object, with the following methods:
 
     storekit.init({
@@ -36,9 +41,10 @@ The plugin adds the `window.storekit` object, with the following methods:
     })
     storekit.load(productIds, callback)
     storekit.purchase(productId, quantity)
- 
+
 You should also listen to the following events:
 
+...
 
 You should register the callbacks early in your app's initialisation process, because StoreKit will automatically attempt to complete any unfinished transactions when you launch the app.
 If the plugin does receive callbacks before you have registered a handler, they will be placed into a queue and executed when you do register one.
