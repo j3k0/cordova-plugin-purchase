@@ -11,7 +11,7 @@ Maintainer: Jean-Christophe Hoelt
 
 ### Automatically using Plugman
 
-    plugman --platform ios --project <directory> --plugin git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git
+    plugman install --platform ios --project <directory> --plugin git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git
 
 See [Cordova Plugman](https://github.com/apache/cordova-plugman).
 
