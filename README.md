@@ -11,13 +11,47 @@ Maintainer: Jean-Christophe Hoelt
 
 ### Automatically using Plugman
 
-    plugman --platform ios --project <directory> --plugin git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git
+    plugman install --platform ios --project <path to Xcode project> --plugin git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git
 
 See [Cordova Plugman](https://github.com/apache/cordova-plugman).
 
+**NOTE: If you plan on using the cordova-cli to build your project, copy the cordova_plugins.js file in the root of the www directory to merges/<platform> directory at the root of the solution folder otherwise the cordova_plugins.js will be overwritten. 
+
+    cp ./cordova_plugins.js ../../../merges/ios/cordova_plugins.js
+
+See [Cordova Cli](https://github.com/apache/cordova-cli).
+
 ### Manually
 
-Copy the .h and .m file from `src/ios/` to the Plugins directory in your project. Copy the .js file to your www directory and reference it from your html file(s). Finally, add StoreKit.framework to your Xcode project if you haven't already.
+ * Copy the .h and .m file from `src/ios/` to the Plugins directory in your Xcode project. 
+ * Create a `plugins` folder in your project's `<path to Xcode project>/www` folder if it does not exist.
+ * Create a `com.phonegap.plugins.inapppurchase` folder inside the `plugins` folder.
+ * Copy InAppPurchase.js into `<path to Xcode project>/www/plugins/com.phonegap.plugins.inapppurchase`
+ * Add the following to the config.xml file in your Xcode project:
+
+```xml
+    <feature name="InAppPurchase">
+       <param name="ios-package" value="InAppPurchase" />
+    </feature>
+```
+
+ * Add the following to the config.xml file in your Xcode project:
+ * Create a new file named `cordova_plugins.js` in the `<path to Xcode project>/www` folder if it does not exist.
+ * Edit `cordova_plugins.js` and add a reference to the plugin to automatically load it:
+
+```javascript
+    cordova.define('cordova/plugin_list', function(require, exports, module) {
+    module.exports = [
+        {
+            "file": "plugins/com.phonegap.plugins.inapppurchase/InAppPurchase.js",
+            "id": "com.phonegap.plugins.inapppurchase.InAppPurchase",
+            "clobbers": [
+                "storekit"
+	    ]
+    	}
+    ]
+    });
+```
 
 ## Using the plugin
 

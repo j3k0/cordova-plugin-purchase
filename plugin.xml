@@ -21,8 +21,10 @@
         <plugins-plist key="InAppPurchase" string="InAppPurchase" />
                     
         <!-- Cordova 2.5+ -->
-        <config-file target="config.xml" parent="/widget/plugins">
-            <plugin name="InAppPurchase" value="InAppPurchase"/>
+        <config-file target="config.xml" parent="/*">
+            <feature name="InAppPurchase">
+                <param name="ios-package" value="InAppPurchase"/>
+            </feature>
         </config-file>
 
         <header-file src="src/ios/InAppPurchase.h" />
