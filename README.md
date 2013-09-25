@@ -71,6 +71,10 @@ Please read [the In-App Purchase Programming Guide](http://developer.apple.com/l
 
 For a comprehensive tutorial, Check-out the [complete turorial](http://fovea.cc/blog/index.php/3-steps-tutorial-for-phonegap-in-app-purchase-on-ios/) on Fovea's blog [here](http://fovea.cc/blog/index.php/3-steps-tutorial-for-phonegap-in-app-purchase-on-ios/).
 
+### Sample project
+
+You can check out this [sample project by jkirkell](https://github.com/jkirkell/cordova-inapp-sample).
+
 ### Documentation
 
 The plugin adds the `window.storekit` object, with the following methods:
