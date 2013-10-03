@@ -77,52 +77,71 @@ You can check out this [sample project by jkirkell](https://github.com/jkirkell/
 
 ### Documentation
 
+**NOTE: For more detailed information about these methods see the InAppPurchaseManager.js file.**
+
 The plugin adds the `window.storekit` object, with the following methods:
 
     storekit.init({
         purchase: function (transactionId, productId, transactionReceipt) {},
-        restore:  function (originalTransactionId, productId, originalTransactionReceipt) {},
-        error:    function (errorCode, errorText) {},
-        ready:    function () {}
+        restore: function (originalTransactionId, productId, originalTransactionReceipt) {},
+        restoreFailed: function (errCode) {},
+        restoreCompleted: function () {},
+        error: function (errorCode, errorText) {},
+        ready: function () {}
     })
     storekit.load(productIds, callback)
+    storekit.restore()
     storekit.purchase(productId, quantity)
-
-You should also listen to the following events:
-
-...
 
 You should register the callbacks early in your app's initialisation process, because StoreKit will automatically attempt to complete any unfinished transactions when you launch the app.
 If the plugin does receive callbacks before you have registered a handler, they will be placed into a queue and executed when you do register one.
 
 Before attempting to make a purchase you should first call `load` to retrieve the localised product data. If you don't do this, then any attempt to make a purchase will fail.
 
-A basic usage example is below:
+Here's a basic usage example:
 
-    storekit.on('purchased', function (transactionId, productId, transactionReceipt) {
-        console.log('purchased: ' + productId);
-        /* Give coins, enable subscriptions etc */
-    });
-    
-    storekit.on('restored', function (transactionId, productId, transactionReceipt) {
-        console.log('restored: ' + productId);
-        /* See the developer guide for details of what to do with this */
-    });
-    
-    storekit.on('failed', function (errno, errtext) {
-        console.log('failed: ' + errtext);
+In your `deviceready` listener, call:
+
+    window.storekit.init({
+        purchase: function (transactionId, productId, transactionReceipt) {
+            console.log('purchased: ' + productId);
+        },
+        restore: function (transactionId, productId, transactionReceipt) {
+            console.log('restored: ' + productId);
+        },
+        restoreCompleted: function () {
+            console.log('restoreCompleted');
+        },
+        restoreFailed: function (errCode) {
+            console.log('Restore Failed: ' + errCode);
+        },
+        error: function (errno, errtext) {
+            console.log('Failed: ' + errtext);
+        },
+        ready: function () {
+            var productIds = [
+                "com.example.app.inappid1", 
+                "com.example.app.inappid2"
+            ];
+            window.storekit.load(productIds, function(validProducts, invalidProductIds) {
+                $.each(validProducts, function (i, val) {
+                    console.log("id: " + val.id + " title: " + val.title + " val: " + val.description + " price: " + val.price);
+                });
+                if(invalidProductIds.length) {
+                    console.log("Invalid Product IDs: " + JSON.stringify(invalidProductIds));
+                }
+            });
+        }
     });
 
-    storekit.requestProductData("com.example.test", function (productId, title, description, price) {
-        console.log("productId: " + productId);
-        console.log("title: " + title);
-        console.log("description: " + description);
-        console.log("price: " + price);
-        storekit.makePurchase(productId, 1);
-    }, function (id) {
-        console.log("Invalid product id: " + id);
-    });
-	
+To restore previous purchases:
+
+    window.storekit.restore();
+
+To make a purchase:
+
+    window.storekit.purchase("com.example.app.inappid1", 1);
+
 ## BUGS AND CONTRIBUTIONS
 For IAP support, please use [the Apple Developer Forum](https://devforums.apple.com/community/ios/integration/storekit).
 
