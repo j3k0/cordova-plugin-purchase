@@ -100,7 +100,7 @@ Before attempting to make a purchase you should first call `load` to retrieve th
 
 Here's a basic usage example:
 
-In your 'deviceready' listener, call:
+In your `deviceready` listener, call:
 
     window.storekit.init({
         purchase: function (transactionId, productId, transactionReceipt) {
