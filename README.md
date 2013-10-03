@@ -100,45 +100,47 @@ Before attempting to make a purchase you should first call `load` to retrieve th
 
 Here's a basic usage example:
 
-In your device ready function call:
+In your 'deviceready' listener, call:
 
-        window.storekit.init({
-            purchase: function (transactionId, productId, transactionReceipt) {
-                console.log('purchased: ' + productId);
-            },
-            restore: function (transactionId, productId, transactionReceipt) {
-                console.log('restored: ' + productId);
-            },
-            restoreCompleted: function () {
-                console.log('restoreCompleted');
-            },
-            restoreFailed: function (errCode) {
-                console.log('Restore Failed: ' + errCode);
-            },
-            error: function (errno, errtext) {
-                console.log('Failed: ' + errtext);
-            },
-            ready: function () {
-                var productIds = [
-                    "com.example.app.inappid1", 
-                    "com.example.app.inappid2"
-                ];
-                window.storekit.load(productIds, function(validProducts, invalidProductIds) {
-                    $.each(validProducts, function (i, val) {
-                        console.log("id: " + val.id + " title: " + val.title + " val: " + val.description + " price: " + val.price);
-                    });
-                    if(invalidProductIds.length) {
-                        console.log("Invalid Product IDs: " + JSON.stringify(invalidProductIds));
-                    }
+    window.storekit.init({
+        purchase: function (transactionId, productId, transactionReceipt) {
+            console.log('purchased: ' + productId);
+        },
+        restore: function (transactionId, productId, transactionReceipt) {
+            console.log('restored: ' + productId);
+        },
+        restoreCompleted: function () {
+            console.log('restoreCompleted');
+        },
+        restoreFailed: function (errCode) {
+            console.log('Restore Failed: ' + errCode);
+        },
+        error: function (errno, errtext) {
+            console.log('Failed: ' + errtext);
+        },
+        ready: function () {
+            var productIds = [
+                "com.example.app.inappid1", 
+                "com.example.app.inappid2"
+            ];
+            window.storekit.load(productIds, function(validProducts, invalidProductIds) {
+                $.each(validProducts, function (i, val) {
+                    console.log("id: " + val.id + " title: " + val.title + " val: " + val.description + " price: " + val.price);
                 });
-            }
-        });
+                if(invalidProductIds.length) {
+                    console.log("Invalid Product IDs: " + JSON.stringify(invalidProductIds));
+                }
+            });
+        }
+    });
 
-To restore previouse purchases:
-        window.storekit.restore();
+To restore previous purchases:
+
+    window.storekit.restore();
 
 To make a purchase:
-        window.storekit.purchase("com.example.app.inappid1", 1);
+
+    window.storekit.purchase("com.example.app.inappid1", 1);
 
 ## BUGS AND CONTRIBUTIONS
 For IAP support, please use [the Apple Developer Forum](https://devforums.apple.com/community/ios/integration/storekit).
