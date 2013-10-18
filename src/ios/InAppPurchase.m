@@ -217,6 +217,12 @@
 	[self    release];
 }
 
+- (void)request:(SKRequest *)request didFailWithError:(NSError *)error
+{
+    NSLog(@"InAppPurchase[objc]: In-App Store unavailable (ERROR %i)", error.code);
+    NSLog(@"InAppPurchase[objc]: %@", [error localizedDescription]);
+}
+
 - (void) dealloc {
 	[plugin  release];
 	[command release];
