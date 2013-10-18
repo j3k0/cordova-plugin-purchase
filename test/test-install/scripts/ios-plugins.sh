@@ -1,1 +1,0 @@
-plugmanInstall "PhoneGap-InAppPurchase-iOS"
