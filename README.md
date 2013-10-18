@@ -13,6 +13,10 @@ Maintainer: Jean-Christophe Hoelt
 
 For PhoneGap >= 3.0 this plugin can be installed with a single command:
 
+    phonegap local add git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git
+
+And that's for Cordova:
+
     cordova plugin add git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git
 
 Then some extra steps need to be done to disable ARC for the plugin's .m files. Follow [those instructions](http://stackoverflow.com/a/6658549/271585) for InAppPurchase.m and SKProduct+LocalizedPrice.m
