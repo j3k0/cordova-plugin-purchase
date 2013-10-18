@@ -6,7 +6,7 @@
     version="2.0.0">
 
     <name>InAppPurchase</name>
-	
+	<description>In app purchase support for iOS</description>
     <engines>
         <engine name="cordova" version=">=2.4.0" />
     </engines>
@@ -14,7 +14,7 @@
     <js-module src="InAppPurchase.js" name="InAppPurchase">
         <clobbers target="storekit" />
     </js-module>
-
+	<license>MIT</license>
     <!-- ios -->
     <platform name="ios">
         <!-- Cordova 2.2 -->
