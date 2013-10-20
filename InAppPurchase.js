@@ -79,6 +79,7 @@ InAppPurchase.prototype.purchase = function (productId, quantity) {
  * 
  */
 InAppPurchase.prototype.restore = function() {
+    this.needRestoreNotification = true;
     return exec('restoreCompletedTransactions', []);
 };
 
@@ -156,10 +157,18 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
 };
 
 InAppPurchase.prototype.restoreCompletedTransactionsFinished = function () {
+    if (this.needRestoreNotification)
+        delete this.needRestoreNotification;
+    else
+        return;
     this.options.restoreCompleted();
 };
 
 InAppPurchase.prototype.restoreCompletedTransactionsFailed = function (errorCode) {
+    if (this.needRestoreNotification)
+        delete this.needRestoreNotification;
+    else
+        return;
     this.options.restoreFailed(errorCode);
 };
 
