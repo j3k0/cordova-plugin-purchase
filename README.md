@@ -154,6 +154,7 @@ To make a purchase:
 The plugin offers a way for you to check if your IAP should work.
 
 Run the following command and follow the instructions:
+
     ./test/run.sh
 
 ## BUGS AND CONTRIBUTIONS
