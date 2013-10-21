@@ -56,6 +56,7 @@
     };
 
     IAP.onRestore = function (transactionId, productId) {
+        console.log("Restored: " + productId);
         var n = (localStorage['storekit.' + productId]|0) + 1;
         localStorage['storekit.' + productId] = n;
     };
