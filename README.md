@@ -86,12 +86,13 @@ You can check out this [sample project by jkirkell](https://github.com/jkirkell/
 The plugin adds the `window.storekit` object, with the following methods:
 
     storekit.init({
-        purchase: function (transactionId, productId, transactionReceipt) {},
-        restore: function (originalTransactionId, productId, originalTransactionReceipt) {},
-        restoreFailed: function (errCode) {},
-        restoreCompleted: function () {},
-        error: function (errorCode, errorText) {},
-        ready: function () {}
+        debug: true,
+        ready:    function () {},
+        error:    function (errorCode, errorText) {},
+        purchase: function (transactionId, productId) {},
+        restore:  function (originalTransactionId, productId) {},
+        restoreFailed:    function (errCode) {},
+        restoreCompleted: function () {}
     })
     storekit.load(productIds, callback)
     storekit.restore()
@@ -107,10 +108,13 @@ Here's a basic usage example:
 In your `deviceready` listener, call:
 
     window.storekit.init({
-        purchase: function (transactionId, productId, transactionReceipt) {
+
+        debug: true, /* Because we like to see logs on the console */
+
+        purchase: function (transactionId, productId) {
             console.log('purchased: ' + productId);
         },
-        restore: function (transactionId, productId, transactionReceipt) {
+        restore: function (transactionId, productId) {
             console.log('restored: ' + productId);
         },
         restoreCompleted: function () {
