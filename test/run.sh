@@ -3,6 +3,9 @@
 TEST_VERSION="3.1"
 TEST_NAME="v31"
 
+#PLUGIN_URL="git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git"
+PLUGIN_URL="/Users/jeko/GitHub/PhoneGap-InAppPurchase-iOS"
+
 # Check PhoneGap version
 V=`phonegap version`
 MAJOR=`echo $V | cut -d. -f1`
