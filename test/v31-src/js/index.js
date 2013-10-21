@@ -43,16 +43,18 @@ var app = {
                 console.log(IAP.list);
                 console.log(IAP.products);
                 var index = 0;
+                var buttonStyle = "display:inline-block; padding: 5px 20px; border: 1px solid black";
                 for (var id in IAP.products) {
                     var p = IAP.products[id];
                     html += "<li>" +
                         "<h3>" + p.title + "</h3>" +
                         "<p>" + p.description + "</p>" +
-                        "<div style='display:inline-block; padding: 5px 20px; border: 1px solid black' id='buy-" + index + "' productId='" + p.id + "' type='button'>" + p.price + "</div>" +
+                        "<div style='" + buttonStyle + "' id='buy-" + index + "' productId='" + p.id + "' type='button'>" + p.price + "</div>" +
                         "</li>";
                     ++index;
                 }
                 html += "</ul>";
+                html += "<div style='" + buttonStyle + "' id='restore'>RESTORE ALL</div>"
                 el.innerHTML = html;
                 while (index > 0) {
                     --index;
@@ -61,6 +63,9 @@ var app = {
                         IAP.buy(pid);
                     };
                 }
+                document.getElementById("restore").onclick = function (event) {
+                    IAP.restore();
+                };
             }
             else {
                 el.innerHTML = "In-App Purchases not available";
