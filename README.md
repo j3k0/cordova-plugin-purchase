@@ -150,6 +150,12 @@ To make a purchase:
 
     window.storekit.purchase("com.example.app.inappid1", 1);
 
+## Test your IAP
+The plugin offers a way for you to check if your IAP should work.
+
+Run the following command and follow the instructions:
+    ./test/run.sh
+
 ## BUGS AND CONTRIBUTIONS
 For IAP support, please use [the Apple Developer Forum](https://devforums.apple.com/community/ios/integration/storekit).
 
