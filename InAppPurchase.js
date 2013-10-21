@@ -18,6 +18,8 @@ var InAppPurchase = function () {
     this.options = {};
 };
 
+var noop = function () {};
+
 // Error codes.
 InAppPurchase.ERR_SETUP = 1;
 InAppPurchase.ERR_LOAD = 2;
@@ -25,12 +27,12 @@ InAppPurchase.ERR_PURCHASE = 3;
 
 InAppPurchase.prototype.init = function (options) {
     this.options = {
-        ready:    options.ready || function () {},
-        purchase: options.purchase || function () {},
-        restore:  options.restore || function () {},
-        restoreFailed:  options.restoreFailed || function () {},
-        restoreCompleted:  options.restoreCompleted || function () {},
-        error:    options.error || function () {}
+        error:    options.error    || noop,
+        ready:    options.ready    || noop,
+        purchase: options.purchase || noop,
+        restore:  options.restore  || noop,
+        restoreFailed:     options.restoreFailed    || noop,
+        restoreCompleted:  options.restoreCompleted || noop
     };
 
     var that = this;
@@ -46,6 +48,10 @@ InAppPurchase.prototype.init = function (options) {
         log('setup failed');
         options.error(InAppPurchase.ERR_SETUP, 'Setup failed');
     };
+
+    if (options.debug) {
+        exec('debug', [], noop, noop);
+    }
 
     exec('setup', [], setupOk, setupFailed);
 };
@@ -142,7 +148,7 @@ InAppPurchase.prototype.load = function (productIds, callback) {
 
 /* This is called from native.*/
 InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
-    // alert(state);
+    transactionReceipt = 'NO RECEIPT';
 	switch(state) {
 		case "PaymentTransactionStatePurchased":
             this.options.purchase(transactionIdentifier, productId, transactionReceipt);
@@ -216,3 +222,4 @@ InAppPurchase.prototype.eventQueue = [];
 InAppPurchase.prototype.timer = null;
 
 module.exports = new InAppPurchase();
+

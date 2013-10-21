@@ -14,6 +14,7 @@
 
         // Initialize
         storekit.init({
+            debug:    true,
             ready:    IAP.onReady,
             purchase: IAP.onPurchase,
             restore:  IAP.onRestore,
@@ -41,7 +42,7 @@
         });
     };
 
-    IAP.onPurchase = function (transactionId, productId/*, receipt*/) {
+    IAP.onPurchase = function (transactionId, productId) {
         var n = (localStorage['storekit.' + productId]|0) + 1;
         localStorage['storekit.' + productId] = n;
         if (IAP.purchaseCallback) {
@@ -54,7 +55,7 @@
         alert('Error: ' + errorMessage);
     };
 
-    IAP.onRestore = function (transactionId, productId/*, transactionReceipt*/) {
+    IAP.onRestore = function (transactionId, productId) {
         var n = (localStorage['storekit.' + productId]|0) + 1;
         localStorage['storekit.' + productId] = n;
     };
