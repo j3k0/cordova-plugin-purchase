@@ -82,8 +82,11 @@ static BOOL g_debugEnabled = NO;
     }
 	SKProductsRequest *productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:productIdentifiers];
 
-	BatchProductsRequestDelegate* delegate = [[[BatchProductsRequestDelegate alloc] init] retain];
-	delegate.plugin = self;
+	BatchProductsRequestDelegate* delegate = [[BatchProductsRequestDelegate alloc] init];
+#if ARC_DISABLED
+    [delegate retain];
+#endif
+	delegate.plugin  = self;
 	delegate.command = command;
 
 	productsRequest.delegate = delegate;
@@ -226,8 +229,10 @@ static BOOL g_debugEnabled = NO;
     DLog(@"productsRequest: didReceiveResponse: sendPluginResult: %@", callbackArgs);
     [self.plugin.commandDelegate sendPluginResult:pluginResult callbackId:self.command.callbackId];
 
+#if ARC_DISABLED
 	[request release];
 	[self    release];
+#endif
 }
 
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error
@@ -236,10 +241,12 @@ static BOOL g_debugEnabled = NO;
     DLog(@"%@", [error localizedDescription]);
 }
 
+#if ARC_DISABLED
 - (void) dealloc {
 	[plugin  release];
 	[command release];
 	[super   dealloc];
 }
+#endif
 
 @end

@@ -9,7 +9,9 @@
     [numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
     [numberFormatter setLocale:self.priceLocale];
     NSString *formattedString = [numberFormatter stringFromNumber:self.price];
+#if ARC_DISABLED
     [numberFormatter release];
+#endif
     return formattedString;
 }
 
