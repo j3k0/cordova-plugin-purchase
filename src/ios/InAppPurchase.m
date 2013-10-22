@@ -37,6 +37,7 @@ static BOOL g_debugEnabled = NO;
 
 @implementation InAppPurchase
 @synthesize list;
+@synthesize retainer;
 
 -(void) debug: (CDVInvokedUrlCommand*)command {
     g_debugEnabled = YES;
@@ -45,6 +46,7 @@ static BOOL g_debugEnabled = NO;
 -(void) setup: (CDVInvokedUrlCommand*)command {
     CDVPluginResult* pluginResult = nil;
     self.list = [[NSMutableDictionary alloc] init];
+    self.retainer = [[NSMutableDictionary alloc] init];
     [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppPurchase initialized"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -60,38 +62,45 @@ static BOOL g_debugEnabled = NO;
 
     NSArray *inArray = [command.arguments objectAtIndex:0];
 
-    if ((unsigned long)[inArray count] == 0) {
-        DLog(@"Empty array");
-        NSArray *callbackArgs = [NSArray arrayWithObjects: nil, nil, nil];
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:callbackArgs];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-        return;
-    }
+    [self.commandDelegate runInBackground:^{
+        if ((unsigned long)[inArray count] == 0) {
+            DLog(@"Empty array");
+            NSArray *callbackArgs = [NSArray arrayWithObjects: nil, nil, nil];
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:callbackArgs];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            return;
+        }
 
-    if (![[inArray objectAtIndex:0] isKindOfClass:[NSString class]]) {
-        DLog(@"Not an array of NSString");
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid arguments"];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-        return;
-    }
-    
-    NSSet *productIdentifiers = [NSSet setWithArray:inArray];
-    DLog(@"Set has %li elements", (unsigned long)[productIdentifiers count]);
-    for (NSString *item in productIdentifiers) {
-        DLog(@" - %@", item);
-    }
-	SKProductsRequest *productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:productIdentifiers];
+        if (![[inArray objectAtIndex:0] isKindOfClass:[NSString class]]) {
+            DLog(@"Not an array of NSString");
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid arguments"];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            return;
+        }
+        
+        NSSet *productIdentifiers = [NSSet setWithArray:inArray];
+        DLog(@"Set has %li elements", (unsigned long)[productIdentifiers count]);
+        for (NSString *item in productIdentifiers) {
+            DLog(@" - %@", item);
+        }
+        SKProductsRequest *productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:productIdentifiers];
 
-	BatchProductsRequestDelegate* delegate = [[BatchProductsRequestDelegate alloc] init];
-#if ARC_DISABLED
-    [delegate retain];
+        BatchProductsRequestDelegate* delegate = [[BatchProductsRequestDelegate alloc] init];
+        productsRequest.delegate = delegate;
+        delegate.plugin  = self;
+        delegate.command = command;
+
+#if ARC_ENABLED
+        self.retainer[@"productsRequest"] = productsRequest;
+        self.retainer[@"productsRequestDelegate"] = delegate;
+#else
+        [delegate retain];
 #endif
-	delegate.plugin  = self;
-	delegate.command = command;
 
-	productsRequest.delegate = delegate;
-	DLog(@"Starting product request...");
-	[productsRequest start];
+        DLog(@"Starting product request...");
+        [productsRequest start];
+        DLog(@"Product request started");
+    }];
 }
 
 - (void) purchase: (CDVInvokedUrlCommand*)command
@@ -166,8 +175,10 @@ static BOOL g_debugEnabled = NO;
                                  NILABLE(productId),
                                  nil, // NILABLE(transactionReceipt),
                                  nil];
+        /*
         CDVPluginResult* pluginResult = nil;
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray: callbackArgs];
+        */
 		NSString *js = [NSString
             stringWithFormat:@"window.storekit.updatedTransactionCallback.apply(window.storekit, %@)",
             [callbackArgs JSONSerialize]];
@@ -229,7 +240,14 @@ static BOOL g_debugEnabled = NO;
     DLog(@"productsRequest: didReceiveResponse: sendPluginResult: %@", callbackArgs);
     [self.plugin.commandDelegate sendPluginResult:pluginResult callbackId:self.command.callbackId];
 
-#if ARC_DISABLED
+#if ARC_ENABLED
+    // For some reason, the system needs to send more messages to the productsRequestDelegate after this.
+    // However, it doesn't retain it which causes a crash!
+    // That's why we need keep references to the productsRequest[Delegate] objects...
+    // It's no big thing anyway, and it's a one time thing.
+    // [self.plugin.retainer removeObjectForKey:@"productsRequest"];
+    // [self.plugin.retainer removeObjectForKey:@"productsRequestDelegate"];
+#else
 	[request release];
 	[self    release];
 #endif

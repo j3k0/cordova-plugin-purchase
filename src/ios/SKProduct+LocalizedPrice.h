@@ -7,10 +7,8 @@
 #endif
 
 #if __has_feature(objc_arc)
-# error PhoneGap-InAppPurchase-iOS is not ARC compliant yet. Please add -fno-objc-arc flag to Target > Build Phases > Compile Sources > InAppPurchase.m and SKProduct+LocalizedPrice.m
 # define ARC_ENABLED 1
 #else
-# error Arc Disabled
 # define ARC_DISABLED 1
 #endif
 

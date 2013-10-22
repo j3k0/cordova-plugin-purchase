@@ -57,6 +57,8 @@ cd $TEST_NAME-build
 
 # Add our plugin
 phonegap local plugin add "$PLUGIN_URL" || exit 1
+cp ../../src/ios/*.[hm] plugins/com.phonegap.plugins.inapppurchase/src/ios/
+
 # Add console debug
 phonegap local plugin add https://git-wip-us.apache.org/repos/asf/cordova-plugin-console.git || exit 1
 
