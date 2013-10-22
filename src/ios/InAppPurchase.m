@@ -62,7 +62,7 @@ static BOOL g_debugEnabled = NO;
 
     NSArray *inArray = [command.arguments objectAtIndex:0];
 
-    [self.commandDelegate runInBackground:^{
+    // [self.commandDelegate runInBackground:^{
         if ((unsigned long)[inArray count] == 0) {
             DLog(@"Empty array");
             NSArray *callbackArgs = [NSArray arrayWithObjects: nil, nil, nil];
@@ -100,7 +100,7 @@ static BOOL g_debugEnabled = NO;
         DLog(@"Starting product request...");
         [productsRequest start];
         DLog(@"Product request started");
-    }];
+    // }];
 }
 
 - (void) purchase: (CDVInvokedUrlCommand*)command
