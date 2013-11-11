@@ -175,10 +175,6 @@ static BOOL g_debugEnabled = NO;
                                  NILABLE(productId),
                                  nil, // NILABLE(transactionReceipt),
                                  nil];
-        /*
-        CDVPluginResult* pluginResult = nil;
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray: callbackArgs];
-        */
 		NSString *js = [NSString
             stringWithFormat:@"window.storekit.updatedTransactionCallback.apply(window.storekit, %@)",
             [callbackArgs JSONSerialize]];
