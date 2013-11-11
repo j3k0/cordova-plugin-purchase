@@ -90,9 +90,9 @@ The plugin adds the `window.storekit` object, with the following methods:
         ready:    function () {},
         error:    function (errorCode, errorText) {},
         purchase: function (transactionId, productId) {},
-        restore:  function (originalTransactionId, productId) {},
-        restoreFailed:    function (errCode) {},
-        restoreCompleted: function () {}
+        restore:  function (originalTransactionId, productId) {}
+        restoreCompleted: function () {},
+        restoreFailed:    function (errorCode) {}
     })
     storekit.load(productIds, callback)
     storekit.restore()
@@ -118,10 +118,10 @@ In your `deviceready` listener, call:
             console.log('restored: ' + productId);
         },
         restoreCompleted: function () {
-            console.log('restoreCompleted');
+           console.log('all restore complete');
         },
         restoreFailed: function (errCode) {
-            console.log('Restore Failed: ' + errCode);
+            console.log('restore failed: ' + errCode);
         },
         error: function (errno, errtext) {
             console.log('Failed: ' + errtext);

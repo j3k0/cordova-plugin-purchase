@@ -18,7 +18,8 @@
             ready:    IAP.onReady,
             purchase: IAP.onPurchase,
             restore:  IAP.onRestore,
-            error:    IAP.onError
+            error:    IAP.onError,
+            restoreCompleted: IAP.onRestoreCompleted
         });
     };
 
@@ -59,6 +60,10 @@
         console.log("Restored: " + productId);
         var n = (localStorage['storekit.' + productId]|0) + 1;
         localStorage['storekit.' + productId] = n;
+    };
+
+    IAP.onRestoreCompleted = function () {
+        console.log("Restore Completed");
     };
 
     IAP.buy = function (productId, callback) {
