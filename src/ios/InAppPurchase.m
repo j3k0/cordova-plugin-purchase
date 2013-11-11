@@ -190,17 +190,15 @@ static BOOL g_debugEnabled = NO;
 
 - (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error
 {
-    DLog(@"restoreCompletedTransactions Failed");
-	/* NSString *js = [NSString stringWithFormat:
-      @"window.storekit.onRestoreCompletedTransactionsFailed(%d)", error.code];
-	[self writeJavascript: js]; */
+	NSString *js = [NSString stringWithFormat:
+      @"window.storekit.restoreCompletedTransactionsFailed(%d)", error.code];
+    [self.commandDelegate evalJs: js];
 }
 
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue
 {
-	/* NSString *js = @"window.storekit.onRestoreCompletedTransactionsFinished()";
-	[self writeJavascript: js]; */
-    DLog(@"restoreCompletedTransactions Finished");
+    NSString *js = @"window.storekit.restoreCompletedTransactionsFinished.apply(window.storekit)";
+    [self.commandDelegate evalJs: js];
 }
 
 @end
