@@ -178,6 +178,40 @@ InAppPurchase.prototype.restoreCompletedTransactionsFailed = function (errorCode
     this.options.restoreFailed(errorCode);
 };
 
+var receiptForTransaction = function (transactionId) {
+    return null;
+};
+
+var receiptForProduct = function (productId) {
+    return null;
+};
+
+InAppPurchase.prototype.loadReceipts = function (callback) {
+
+    var appStoreReceipt = null;
+
+    var loaded = function (base64) {
+        appStoreReceipt = base64;
+    };
+
+    var error = function (errMessage) {
+        log('load failed: ' + errMessage);
+        options.error(InAppPurchase.ERR_LOAD, 'Failed to load receipt: ' + errMessage);
+    };
+
+    var callCallback = function () {
+        if (callback) {
+            callback({
+                appStoreReceipt: appStoreReceipt,
+                forTransaction: function (transactionId) { return null; },
+                forProduct:     function (productId) { return null; }
+            });
+        }
+    };
+
+    exec('appStoreReceipt', [], loaded, error);
+};
+
 /*
  * This queue stuff is here because we may be sent events before listeners have been registered. This is because if we have 
  * incomplete transactions when we quit, the app will try to run these when we resume. If we don't register to receive these
