@@ -17,6 +17,7 @@
 @interface InAppPurchase : CDVPlugin <SKPaymentTransactionObserver> {
     NSMutableDictionary *list;
     NSMutableDictionary *retainer;
+    NSMutableDictionary *unfinishedTransactions;
 }
 @property (nonatomic,retain) NSMutableDictionary *list;
 @property (nonatomic,retain) NSMutableDictionary *retainer;
@@ -29,6 +30,10 @@
 - (void) paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions;
 - (void) paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error;
 - (void) paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue;
+
+- (void) debug: (CDVInvokedUrlCommand*)command;
+- (void) noAutoFinish: (CDVInvokedUrlCommand*)command;
+- (void) finishTransaction: (CDVInvokedUrlCommand*)command;
 
 @end
 

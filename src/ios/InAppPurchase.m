@@ -14,6 +14,8 @@
 #define NILABLE(obj) ((obj) != nil ? (NSObject *)(obj) : (NSObject *)[NSNull null])
 
 static BOOL g_debugEnabled = NO;
+static BOOL g_autoFinishEnabled = YES;
+
 #define DLog(fmt, ...) { \
     if (g_debugEnabled) \
         NSLog((@"InAppPurchase[objc]: " fmt), ##__VA_ARGS__); \
@@ -231,10 +233,15 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
     g_debugEnabled = YES;
 }
 
+-(void) noAutoFinish: (CDVInvokedUrlCommand*)command {
+    g_autoFinishEnabled = NO;
+}
+
 -(void) setup: (CDVInvokedUrlCommand*)command {
     CDVPluginResult* pluginResult = nil;
     self.list = [[NSMutableDictionary alloc] init];
     self.retainer = [[NSMutableDictionary alloc] init];
+    unfinishedTransactions = [[NSMutableDictionary alloc] init];
     [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppPurchase initialized"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -366,8 +373,54 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
             [callbackArgs JSONSerialize]];
 		// DLog(@"js: %@", js);
         [self.commandDelegate evalJs:js];
-		[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+        if (g_autoFinishEnabled) {
+            [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+            [self transactionFinished:transaction];
+        }
+        else {
+            [unfinishedTransactions setObject:transaction forKey:transactionIdentifier];
+        }
     }
+}
+
+- (void) transactionFinished: (SKPaymentTransaction*) transaction
+{
+    NSArray *callbackArgs = [NSArray arrayWithObjects:
+                                NILABLE(@"PaymentTransactionStateFinished"),
+                                0,
+                                NILABLE(nil),
+                                NILABLE(transaction.transactionIdentifier),
+                                NILABLE(transaction.payment.productIdentifier),
+                                NILABLE(nil),
+                                nil];
+    NSString *js = [NSString
+      stringWithFormat:@"window.storekit.updatedTransactionCallback.apply(window.storekit, %@)",
+      [callbackArgs JSONSerialize]];
+    [self.commandDelegate evalJs:js];
+}
+
+- (void) finishTransaction: (CDVInvokedUrlCommand*)command
+{
+    CDVPluginResult* pluginResult;
+    NSString *identifier = (NSString*)[command.arguments objectAtIndex:0];
+    SKPaymentTransaction *transaction = nil;
+
+    if (identifier) {
+        transaction = (SKPaymentTransaction*)[unfinishedTransactions objectForKey:identifier];
+    }
+
+    if (transaction) {
+        DLog(@"Transaction %@ finished.", identifier);
+        [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+        [unfinishedTransactions removeObjectForKey:identifier];
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self transactionFinished:transaction];
+    }
+    else {
+        DLog(@"Cannot finish transaction %@.", identifier);
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Cannot finish transaction"];
+    }
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error

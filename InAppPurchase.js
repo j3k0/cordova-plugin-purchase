@@ -40,6 +40,7 @@ InAppPurchase.prototype.init = function (options) {
         error:    options.error    || noop,
         ready:    options.ready    || noop,
         purchase: options.purchase || noop,
+        finish:   options.finish   || noop,
         restore:  options.restore  || noop,
         restoreFailed:     options.restoreFailed    || noop,
         restoreCompleted:  options.restoreCompleted || noop
@@ -54,6 +55,10 @@ InAppPurchase.prototype.init = function (options) {
 
     if (options.debug) {
         exec('debug', [], noop, noop);
+    }
+
+    if (options.noAutoFinish) {
+        exec('noAutoFinish', [], noop, noop);
     }
 
     var that = this;
@@ -165,6 +170,18 @@ InAppPurchase.prototype.load = function (productIds, callback) {
     }
 };
 
+/**
+ * Finish an unfinished transaction.
+ *
+ * @param {String} transactionId
+ *    Identifier of the transaction to finish.
+ *
+ * You have to call this method manually when using the noAutoFinish option.
+ */
+InAppPurchase.prototype.finish = function (transactionId) {
+    exec('finishTransaction', [transactionId], noop, noop);
+};
+
 /* This is called from native.*/
 InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
     if (transactionReceipt) {
@@ -184,6 +201,9 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
 			return;
 		case "PaymentTransactionStateRestored":
             protectCall(this.options.restore, 'options.restore', transactionIdentifier, productId);
+			return;
+		case "PaymentTransactionStateFinished":
+            protectCall(this.options.finish, 'options.finish', transactionIdentifier, productId);
 			return;
 	}
 };
@@ -236,6 +256,7 @@ InAppPurchase.prototype.loadReceipts = function (callback) {
     exec('appStoreReceipt', [], loaded, error);
 };
 
+/*
 InAppPurchase.prototype.verifyReceipt = function (success, error) {
     var receiptOk = function () {
         log("Receipt validation success");
@@ -249,6 +270,7 @@ InAppPurchase.prototype.verifyReceipt = function (success, error) {
     };
     exec('verifyReceipt', [], receiptOk, receiptError);
 };
+*/
 
 /*
  * This queue stuff is here because we may be sent events before listeners have been registered. This is because if we have 

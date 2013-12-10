@@ -150,13 +150,36 @@ To make a purchase:
 
     window.storekit.purchase("com.example.app.inappid1", 1);
 
-To load receipts:
+## Advanced use
+
+### Receipts
 
     window.storekit.loadReceipts(function (receipts) {
         receipts.appStoreReceipt(); // null or base64 encoded receipt (iOS >= 7)
         receipts.forTransaction(transactionId); // null or base64 encoded receipt (iOS < 7)
         receipts.forProduct(productId); // null or base64 encoded receipt (iOS < 7)
     });
+
+### Manually Finish Transactions
+By default, the plugin auto-finish all completed transactions. In some cases, for example when content needs to be delivered by a server, you should finish the transaction only when the content has been delivered. (Thus preventing the user from paying for something he didn't get).
+
+To achieve this, set the `noAutoFinish` option to true in `init()`. Then you shoud call `window.storekit.finish(transactionId)` whenever content is delivered for a given purchase.
+
+Example:
+
+    storekit.init({
+        purchase: function (transactionId, productId) {
+            if (productId === '42.mp3') {
+                myDownload('http://x.yz/42.mp3', function () {
+                    storekit.finish(transactionId);
+                });
+            }
+        },
+        finish: function (transactionId, productId) {
+            // Called when a transaction has been finished.
+        }
+    });
+    storekit.purchase(productId, quantity)
 
 ## Test your IAP
 The plugin offers a way for you to check if your IAP should work.

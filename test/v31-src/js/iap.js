@@ -15,8 +15,10 @@
         // Initialize
         storekit.init({
             debug:    true,
+            noAutoFinish: true,
             ready:    IAP.onReady,
             purchase: IAP.onPurchase,
+            finish:   IAP.onFinish,
             restore:  IAP.onRestore,
             error:    IAP.onError,
             restoreCompleted: IAP.onRestoreCompleted
@@ -56,10 +58,16 @@
             delete IAP.purchaseCallbackl;
         }
 
+        storekit.finish(transactionId);
+
         storekit.loadReceipts(function (receipts) {
             console.log('Receipt for appStore = ' + receipts.appStoreReceipt);
             console.log('Receipt for ' + productId + ' = ' + receipts.forProduct(productId));
         });
+    };
+
+    IAP.onFinish = function (transactionId, productId) {
+        console.log('Finished transaction for ' + productId + ' : ' + transactionId);
     };
 
     IAP.onError = function (errorCode, errorMessage) {
