@@ -35,6 +35,43 @@ static BOOL g_debugEnabled = NO;
 }
 @end
 
+@interface NSData (Base64)
+- (NSString*)convertToBase64;
+@end
+
+@implementation NSData (Base64)
+- (NSString*)convertToBase64 {
+    const uint8_t* input = (const uint8_t*)[self bytes];
+    NSInteger length = [self length];
+
+    static char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+    NSMutableData* data = [NSMutableData dataWithLength:((length + 2) / 3) * 4];
+    uint8_t* output = (uint8_t*)data.mutableBytes;
+
+    NSInteger i;
+    for (i=0; i < length; i += 3) {
+        NSInteger value = 0;
+        NSInteger j;
+        for (j = i; j < (i + 3); j++) {
+            value <<= 8;
+
+            if (j < length) {
+                value |= (0xFF & input[j]);
+            }
+        }
+
+        NSInteger theIndex = (i / 3) * 4;
+        output[theIndex + 0] =                    table[(value >> 18) & 0x3F];
+        output[theIndex + 1] =                    table[(value >> 12) & 0x3F];
+        output[theIndex + 2] = (i + 1) < length ? table[(value >> 6)  & 0x3F] : '=';
+        output[theIndex + 3] = (i + 2) < length ? table[(value >> 0)  & 0x3F] : '=';
+    }
+
+    return [[[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding] autorelease];
+}
+@end
+
 @implementation InAppPurchase
 @synthesize list;
 @synthesize retainer;
@@ -195,6 +232,28 @@ static BOOL g_debugEnabled = NO;
 {
     NSString *js = @"window.storekit.restoreCompletedTransactionsFinished.apply(window.storekit)";
     [self.commandDelegate evalJs: js];
+}
+
+-(void) appStoreReceipt: (CDVInvokedUrlCommand*)command {
+
+    // self.list = [[NSMutableDictionary alloc] init];
+    // self.retainer = [[NSMutableDictionary alloc] init];
+    // [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
+    NSURL *receiptURL = nil;
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSString *base64 = nil;
+    if ([bundle respondsToSelector:@selector(appStoreReceiptURL)]) {
+        receiptURL = [bundle performSelector:@selector(appStoreReceiptURL)];
+    }
+    if (receiptURL != nil) {
+        NSData *receiptData = [NSData dataWithContentsOfURL:receiptURL];
+        if (receiptData != nil) {
+            base64 = [receiptData convertToBase64];
+        }
+    }
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                                      messageAsString:base64];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 @end

@@ -150,6 +150,14 @@ To make a purchase:
 
     window.storekit.purchase("com.example.app.inappid1", 1);
 
+To load receipts:
+
+    window.storekit.loadReceipts(function (receipts) {
+        receipts.appStoreReceipt(); // null or base64 encoded receipt (iOS >= 7)
+        receipts.forTransaction(transactionId); // null or base64 encoded receipt (iOS < 7)
+        receipts.forProduct(productId); // null or base64 encoded receipt (iOS < 7)
+    });
+
 ## Test your IAP
 The plugin offers a way for you to check if your IAP should work.
 

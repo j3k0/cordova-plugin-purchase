@@ -41,6 +41,11 @@
             }
             IAP.render();
         });
+
+        // Also check the receipts
+        storekit.loadReceipts(function (receipts) {
+            console.log('appStoreReceipt:' + receipts);
+        });
     };
 
     IAP.onPurchase = function (transactionId, productId) {
