@@ -68,7 +68,11 @@ static BOOL g_debugEnabled = NO;
         output[theIndex + 3] = (i + 2) < length ? table[(value >> 0)  & 0x3F] : '=';
     }
 
-    return [[[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding] autorelease];
+    NSString *ret = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
+#if ARC_DISABLED
+    [ret autorelease];
+#endif
+    return ret;
 }
 @end
 
