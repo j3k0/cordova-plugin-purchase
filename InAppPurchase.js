@@ -14,6 +14,16 @@ var log = function (msg) {
     console.log("InAppPurchase[js]: " + msg);
 };
 
+var protectCall = function (callback, context) {
+    try {
+        var args = Array.prototype.slice.call(arguments, 2); 
+        callback.apply(this, args);
+    }
+    catch {
+        log('exception in ' + context + ': "' + err + '"');
+    }
+};
+
 var InAppPurchase = function () {
     this.options = {};
 };
@@ -38,7 +48,7 @@ InAppPurchase.prototype.init = function (options) {
     var that = this;
     var setupOk = function () {
         log('setup ok');
-        that.options.ready();
+        protectCall(that.options.ready, 'options.ready');
 
         // Is there a reason why we wouldn't like to do this automatically?
         // YES! it does ask the user for his password.
@@ -46,7 +56,7 @@ InAppPurchase.prototype.init = function (options) {
     };
     var setupFailed = function () {
         log('setup failed');
-        options.error(InAppPurchase.ERR_SETUP, 'Setup failed');
+        protectCall(options.error, 'options.error', InAppPurchase.ERR_SETUP, 'Setup failed');
     };
 
     if (options.debug) {
@@ -67,14 +77,16 @@ InAppPurchase.prototype.purchase = function (productId, quantity) {
     var options = this.options;
     var purchaseOk = function () {
         log('Purchased ' + productId);
-        if (typeof options.purchase === 'function')
-            options.purchase(productId, quantity);
+        if (typeof options.purchase === 'function') {
+            protectCall(options.purchase, 'options.purchase', productId, quantity);
+        }
     };
     var purchaseFailed = function () {
         var msg = 'Purchasing ' + productId + ' failed';
         log(msg);
-        if (typeof options.error === 'function')
-            options.error(InAppPurchase.ERR_PURCHASE, msg, productId, quantity);
+        if (typeof options.error === 'function') {
+            protectCall(options.error, 'options.error', InAppPurchase.ERR_PURCHASE, msg, productId, quantity);
+        }
     };
     return exec('purchase', [productId, quantity], purchaseOk, purchaseFailed);
 };
@@ -120,13 +132,13 @@ InAppPurchase.prototype.load = function (productIds, callback) {
     }
     if (!productIds.length) {
         // Empty array, nothing to do.
-        callback([], []);
+        protectCall(callback, 'load.callback', [], []);
     }
     else {
         if (typeof productIds[0] !== 'string') {
             var msg = 'invalid productIds given to store.load: ' + JSON.stringify(productIds);
             log(msg);
-            options.error(InAppPurchase.ERR_LOAD, msg);
+            protectCall(options.error, 'options.error', InAppPurchase.ERR_LOAD, msg);
             return;
         }
         log('load ' + JSON.stringify(productIds));
@@ -135,11 +147,11 @@ InAppPurchase.prototype.load = function (productIds, callback) {
             var valid = array[0];
             var invalid = array[1];
             log('load ok: { valid:' + JSON.stringify(valid) + ' invalid:' + JSON.stringify(invalid) + ' }');
-            callback(valid, invalid);
+            protectCall(callback, 'load.callback', valid, invalid);
         };
         var loadFailed = function (errMessage) {
             log('load failed: ' + errMessage);
-            options.error(InAppPurchase.ERR_LOAD, 'Failed to load product data: ' + errMessage);
+            protectCall(options.error, 'options.error', InAppPurchase.ERR_LOAD, 'Failed to load product data: ' + errMessage);
         };
 
         exec('load', [productIds], loadOk, loadFailed);
@@ -151,13 +163,13 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
     transactionReceipt = 'NO RECEIPT';
 	switch(state) {
 		case "PaymentTransactionStatePurchased":
-            this.options.purchase(transactionIdentifier, productId, transactionReceipt);
+            protectCall(this.options.purchase, 'options.purchase', transactionIdentifier, productId, transactionReceipt);
 			return; 
 		case "PaymentTransactionStateFailed":
-            this.options.error(errorCode, errorText);
+            protectCall(this.options.error, 'options.error', errorCode, errorText);
 			return;
 		case "PaymentTransactionStateRestored":
-            this.options.restore(transactionIdentifier, productId, transactionReceipt);
+            protectCall(this.options.restore, 'options.restore', transactionIdentifier, productId, transactionReceipt);
 			return;
 	}
 };
@@ -167,7 +179,7 @@ InAppPurchase.prototype.restoreCompletedTransactionsFinished = function () {
         delete this.needRestoreNotification;
     else
         return;
-    this.options.restoreCompleted();
+    protectCall(this.options.restoreCompleted, 'options.restoreCompleted');
 };
 
 InAppPurchase.prototype.restoreCompletedTransactionsFailed = function (errorCode) {
@@ -175,7 +187,7 @@ InAppPurchase.prototype.restoreCompletedTransactionsFailed = function (errorCode
         delete this.needRestoreNotification;
     else
         return;
-    this.options.restoreFailed(errorCode);
+    protectCall(this.options.restoreFailed, 'options.restoreFailed', errorCode);
 };
 
 var receiptForTransaction = function (transactionId) {
@@ -196,12 +208,12 @@ InAppPurchase.prototype.loadReceipts = function (callback) {
 
     var error = function (errMessage) {
         log('load failed: ' + errMessage);
-        options.error(InAppPurchase.ERR_LOAD, 'Failed to load receipt: ' + errMessage);
+        protectCall(options.error, 'options.error', InAppPurchase.ERR_LOAD, 'Failed to load receipt: ' + errMessage);
     };
 
     var callCallback = function () {
         if (callback) {
-            callback({
+            protectCall(callback, 'loadReceipts.callback', {
                 appStoreReceipt: appStoreReceipt,
                 forTransaction: function (transactionId) { return null; },
                 forProduct:     function (productId) { return null; }
