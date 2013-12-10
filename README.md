@@ -168,6 +168,7 @@ To achieve this, set the `noAutoFinish` option to true in `init()`. Then you sho
 Example:
 
     storekit.init({
+        noAutoFinish: true,
         purchase: function (transactionId, productId) {
             if (productId === '42.mp3') {
                 myDownload('http://x.yz/42.mp3', function () {
