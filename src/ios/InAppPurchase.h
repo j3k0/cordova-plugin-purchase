@@ -24,6 +24,7 @@
 - (void) setup: (CDVInvokedUrlCommand*)command;
 - (void) load: (CDVInvokedUrlCommand*)command;
 - (void) purchase: (CDVInvokedUrlCommand*)command;
+- (void) appStoreReceipt: (CDVInvokedUrlCommand*)command;
 
 - (void) paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions;
 - (void) paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error;
