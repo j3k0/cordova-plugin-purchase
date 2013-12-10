@@ -1,10 +1,10 @@
 lint: check-jshint
 	@jshint *.js
 
-test:
-	@./test/run.sh
+run-test:
+	@./test/run.sh cc.fovea.babygoo babygooinapp1
 
-all: lint test
+all: lint run-test
 	@echo 'ok'
 
 check-jshint:

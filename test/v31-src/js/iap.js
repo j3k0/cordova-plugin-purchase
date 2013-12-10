@@ -44,7 +44,7 @@
 
         // Also check the receipts
         storekit.loadReceipts(function (receipts) {
-            console.log('appStoreReceipt:' + receipts);
+            console.log('appStoreReceipt:' + receipts.appStoreReceipt);
         });
     };
 
@@ -55,6 +55,11 @@
             IAP.purchaseCallback(productId);
             delete IAP.purchaseCallbackl;
         }
+
+        storekit.loadReceipts(function (receipts) {
+            console.log('Receipt for appStore = ' + receipts.appStoreReceipt);
+            console.log('Receipt for ' + productId + ' = ' + receipts.forProduct(productId));
+        });
     };
 
     IAP.onError = function (errorCode, errorMessage) {

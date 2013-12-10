@@ -19,7 +19,7 @@ var protectCall = function (callback, context) {
         var args = Array.prototype.slice.call(arguments, 2); 
         callback.apply(this, args);
     }
-    catch {
+    catch (err) {
         log('exception in ' + context + ': "' + err + '"');
     }
 };
@@ -45,6 +45,17 @@ InAppPurchase.prototype.init = function (options) {
         restoreCompleted:  options.restoreCompleted || noop
     };
 
+    this.receiptForTransaction = {};
+    this.receiptForProduct = {};
+    if (window.localStorage && window.localStorage.sk_receiptForTransaction)
+        this.receiptForTransaction = JSON.parse(window.localStorage.sk_receiptForTransaction);
+    if (window.localStorage && window.localStorage.sk_receiptForProduct)
+        this.receiptForProduct = JSON.parse(window.localStorage.sk_receiptForProduct);
+
+    if (options.debug) {
+        exec('debug', [], noop, noop);
+    }
+
     var that = this;
     var setupOk = function () {
         log('setup ok');
@@ -58,10 +69,6 @@ InAppPurchase.prototype.init = function (options) {
         log('setup failed');
         protectCall(options.error, 'options.error', InAppPurchase.ERR_SETUP, 'Setup failed');
     };
-
-    if (options.debug) {
-        exec('debug', [], noop, noop);
-    }
 
     exec('setup', [], setupOk, setupFailed);
 };
@@ -160,16 +167,23 @@ InAppPurchase.prototype.load = function (productIds, callback) {
 
 /* This is called from native.*/
 InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
-    transactionReceipt = 'NO RECEIPT';
+    if (transactionReceipt) {
+        this.receiptForProduct[productId] = transactionReceipt;
+        this.receiptForTransaction[transactionIdentifier] = transactionReceipt;
+        if (window.localStorage) {
+            window.localStorage.sk_receiptForProduct = JSON.stringify(this.receiptForProduct);
+            window.localStorage.sk_receiptForTransaction = JSON.stringify(this.receiptForTransaction);
+        }
+    }
 	switch(state) {
 		case "PaymentTransactionStatePurchased":
-            protectCall(this.options.purchase, 'options.purchase', transactionIdentifier, productId, transactionReceipt);
+            protectCall(this.options.purchase, 'options.purchase', transactionIdentifier, productId);
 			return; 
 		case "PaymentTransactionStateFailed":
             protectCall(this.options.error, 'options.error', errorCode, errorText);
 			return;
 		case "PaymentTransactionStateRestored":
-            protectCall(this.options.restore, 'options.restore', transactionIdentifier, productId, transactionReceipt);
+            protectCall(this.options.restore, 'options.restore', transactionIdentifier, productId);
 			return;
 	}
 };
@@ -190,20 +204,14 @@ InAppPurchase.prototype.restoreCompletedTransactionsFailed = function (errorCode
     protectCall(this.options.restoreFailed, 'options.restoreFailed', errorCode);
 };
 
-var receiptForTransaction = function (transactionId) {
-    return null;
-};
-
-var receiptForProduct = function (productId) {
-    return null;
-};
-
 InAppPurchase.prototype.loadReceipts = function (callback) {
 
-    var appStoreReceipt = null;
+    var that = this;
+    that.appStoreReceipt = null;
 
     var loaded = function (base64) {
-        appStoreReceipt = base64;
+        that.appStoreReceipt = base64;
+        callCallback();
     };
 
     var error = function (errMessage) {
@@ -214,14 +222,32 @@ InAppPurchase.prototype.loadReceipts = function (callback) {
     var callCallback = function () {
         if (callback) {
             protectCall(callback, 'loadReceipts.callback', {
-                appStoreReceipt: appStoreReceipt,
-                forTransaction: function (transactionId) { return null; },
-                forProduct:     function (productId) { return null; }
+                appStoreReceipt: that.appStoreReceipt,
+                forTransaction: function (transactionId) {
+                    return that.receiptForTransaction[transactionId] || null;
+                },
+                forProduct:     function (productId) {
+                    return that.receiptForProduct[productId] || null;
+                }
             });
         }
     };
 
     exec('appStoreReceipt', [], loaded, error);
+};
+
+InAppPurchase.prototype.verifyReceipt = function (success, error) {
+    var receiptOk = function () {
+        log("Receipt validation success");
+        if (success)
+            protectCall(success, 'verifyReceipt.success', reason);
+    };
+    var receiptError = function (reason) {
+        log("Receipt validation failed: " + reason);
+        if (error)
+            protectCall(error, 'verifyReceipt.error', reason);
+    };
+    exec('verifyReceipt', [], receiptOk, receiptError);
 };
 
 /*

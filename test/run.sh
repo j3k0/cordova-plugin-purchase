@@ -3,8 +3,8 @@
 TEST_VERSION="3.1"
 TEST_NAME="v31"
 
-# PLUGIN_URL="git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git"
-PLUGIN_URL="http://localhost/git/PhoneGap-InAppPurchase-iOS.git"
+PLUGIN_URL="git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git"
+# PLUGIN_URL="http://localhost/git/PhoneGap-InAppPurchase-iOS.git"
 
 BUNDLE_ID="$1"
 IAP_ID="$2"
@@ -58,6 +58,7 @@ cd $TEST_NAME-build
 # Add our plugin
 phonegap local plugin add "$PLUGIN_URL" || exit 1
 cp ../../src/ios/*.[hm] plugins/com.phonegap.plugins.inapppurchase/src/ios/
+cp ../../InAppPurchase.js plugins/com.phonegap.plugins.inapppurchase/
 
 # Add console debug
 phonegap local plugin add https://git-wip-us.apache.org/repos/asf/cordova-plugin-console.git || exit 1
