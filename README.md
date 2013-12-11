@@ -199,6 +199,7 @@ The latest bleeding-edge version is available [on GitHub](http://github.com/j3k0
 The MIT License
 
 Copyright (c) 2011 Matt Kane
+Copyright (c) 2013 Jean-Christophe Hoelt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
