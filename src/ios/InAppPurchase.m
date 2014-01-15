@@ -20,6 +20,35 @@ static BOOL g_autoFinishEnabled = YES;
     if (g_debugEnabled) \
         NSLog((@"InAppPurchase[objc]: " fmt), ##__VA_ARGS__); \
 }
+
+#define ERROR_CODES_BASE 4983497
+#define ERR_SETUP         (ERROR_CODES_BASE + 1)
+#define ERR_LOAD          (ERROR_CODES_BASE + 2)
+#define ERR_PURCHASE      (ERROR_CODES_BASE + 3)
+#define ERR_LOAD_RECEIPTS (ERROR_CODES_BASE + 4)
+
+#define ERR_CLIENT_INVALID    (ERROR_CODES_BASE + 5)
+#define ERR_PAYMENT_CANCELLED (ERROR_CODES_BASE + 6)
+#define ERR_PAYMENT_INVALID   (ERROR_CODES_BASE + 7)
+#define ERR_PAYMENT_NOT_ALLOWED (ERROR_CODES_BASE + 8)
+#define ERR_UNKNOWN (ERROR_CODES_BASE + 10)
+
+static int jsErrorCode(int storeKitErrorCode)
+{
+    switch (storeKitErrorCode) {
+        case SKErrorUnknown:
+            return ERR_UNKNOWN;
+        case SKErrorClientInvalid:
+            return ERR_CLIENT_INVALID;
+        case SKErrorPaymentCancelled:
+            return ERR_PAYMENT_CANCELLED;
+        case SKErrorPaymentInvalid:
+            return ERR_PAYMENT_INVALID;
+        case SKErrorPaymentNotAllowed:
+            return ERR_PAYMENT_NOT_ALLOWED;
+    }
+    return ERR_UNKNOWN;
+}
 /*
 
 const static char* b64="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" ;
@@ -344,7 +373,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 			case SKPaymentTransactionStateFailed:
 				state = @"PaymentTransactionStateFailed";
 				error = transaction.error.localizedDescription;
-				errorCode = transaction.error.code;
+				errorCode = jsErrorCode(transaction.error.code);
 				DLog(@"Error %d %@", errorCode, error);
                 break;
 

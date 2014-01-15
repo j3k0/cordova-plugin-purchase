@@ -30,10 +30,18 @@ var InAppPurchase = function () {
 
 var noop = function () {};
 
-// Error codes.
-InAppPurchase.ERR_SETUP = 1;
-InAppPurchase.ERR_LOAD = 2;
-InAppPurchase.ERR_PURCHASE = 3;
+// Error codes
+// (keep synchronized with InAppPurchase.m)
+var ERROR_CODES_BASE = 4983497;
+InAppPurchase.ERR_SETUP    = ERROR_CODES_BASE + 1;
+InAppPurchase.ERR_LOAD     = ERROR_CODES_BASE + 2;
+InAppPurchase.ERR_PURCHASE = ERROR_CODES_BASE + 3;
+InAppPurchase.ERR_LOAD_RECEIPTS       = ERROR_CODES_BASE + 4;
+InAppPurchase.ERR_CLIENT_INVALID      = ERROR_CODES_BASE + 5;
+InAppPurchase.ERR_PAYMENT_CANCELLED   = ERROR_CODES_BASE + 6;
+InAppPurchase.ERR_PAYMENT_INVALID     = ERROR_CODES_BASE + 7;
+InAppPurchase.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
+InAppPurchase.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
 
 InAppPurchase.prototype.init = function (options) {
     this.options = {
