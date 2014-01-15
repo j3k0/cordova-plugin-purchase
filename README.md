@@ -150,6 +150,27 @@ To make a purchase:
 
     window.storekit.purchase("com.example.app.inappid1", 1);
 
+Error codes:
+
+ * storekit.ERR_SETUP
+    * Cannot setup the plugin.
+ * storekit.ERR_LOAD
+    * Cannot load IAPs from Apple servers.
+ * storekit.ERR_PURCHASE
+    * Failed to purchase the item
+ * storekit.ERR_LOAD_RECEIPTS
+    * Cannot load receipts from Apple servers.
+ * storekit.ERR_CLIENT_INVALID
+    * Client doesn't support in-app purchase. (eg Simulator)
+ * storekit.ERR_PAYMENT_CANCELLED
+    * User cancelled the payment.
+ * storekit.ERR_PAYMENT_INVALID
+    * Problem with payment.
+ * storekit.ERR_PAYMENT_NOT_ALLOWED
+    * Payment not allowed.
+ * storekit.ERR_UNKNOWN
+    * Unknown error.
+
 ## Advanced use
 
 ### Receipts
