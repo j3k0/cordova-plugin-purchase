@@ -210,16 +210,22 @@ Run the following command and follow the instructions:
 
     ./test/run.sh
 
-## BUGS AND CONTRIBUTIONS
+## Bugs and contributions
 For IAP support, please use [the Apple Developer Forum](https://devforums.apple.com/community/ios/integration/storekit).
 
 The latest bleeding-edge version is available [on GitHub](http://github.com/j3k0/PhoneGap-InAppPurchase-iOS/). If you have a patch, fork and send pull requests.
-	
+
+## Sponsors
+Big thanks to:
+ * Maxwell C. Moore ([MCM Consulting, LLC](http://mcmconsulting.biz)) for sponsoring the support of iOS 7 AppStore Receipts.
+ * Fovea (http://www.fovea.cc) for sponsoring most of JC's work on the plugin.
+
 ## Licence
 
 The MIT License
 
 Copyright (c) 2011 Matt Kane
+Copyright (c) 2013 Jean-Christophe Hoelt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
