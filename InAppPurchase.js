@@ -35,6 +35,7 @@ var ERROR_CODES_BASE = 4983497;
 InAppPurchase.ERR_SETUP    = ERROR_CODES_BASE + 1;
 InAppPurchase.ERR_LOAD     = ERROR_CODES_BASE + 2;
 InAppPurchase.ERR_PURCHASE = ERROR_CODES_BASE + 3;
+InAppPurchase.ERR_LOAD_RECEIPTS = ERROR_CODES_BASE + 4;
 
 InAppPurchase.prototype.init = function (options) {
     this.options = {
@@ -237,7 +238,7 @@ InAppPurchase.prototype.loadReceipts = function (callback) {
 
     var error = function (errMessage) {
         log('load failed: ' + errMessage);
-        protectCall(options.error, 'options.error', InAppPurchase.ERR_LOAD, 'Failed to load receipt: ' + errMessage);
+        protectCall(options.error, 'options.error', InAppPurchase.ERR_LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
     };
 
     var callCallback = function () {
