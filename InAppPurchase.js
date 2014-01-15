@@ -244,7 +244,7 @@ InAppPurchase.prototype.loadReceipts = function (callback) {
 
     var error = function (errMessage) {
         log('load failed: ' + errMessage);
-        protectCall(options.error, 'options.error', InAppPurchase.ERR_LOAD, 'Failed to load receipt: ' + errMessage);
+        protectCall(options.error, 'options.error', InAppPurchase.ERR_LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
     };
 
     var callCallback = function () {
