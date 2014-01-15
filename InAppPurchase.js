@@ -31,9 +31,10 @@ var InAppPurchase = function () {
 var noop = function () {};
 
 // Error codes.
-InAppPurchase.ERR_SETUP = 1;
-InAppPurchase.ERR_LOAD = 2;
-InAppPurchase.ERR_PURCHASE = 3;
+var ERROR_CODES_BASE = 4983497;
+InAppPurchase.ERR_SETUP    = ERROR_CODES_BASE + 1;
+InAppPurchase.ERR_LOAD     = ERROR_CODES_BASE + 2;
+InAppPurchase.ERR_PURCHASE = ERROR_CODES_BASE + 3;
 
 InAppPurchase.prototype.init = function (options) {
     this.options = {
