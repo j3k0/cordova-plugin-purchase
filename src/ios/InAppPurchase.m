@@ -49,6 +49,22 @@ static int jsErrorCode(int storeKitErrorCode)
     }
     return ERR_UNKNOWN;
 }
+
+static NSString *jsErrorCodeAsString(int code) {
+    switch (code) {
+        case ERR_SETUP: return @"ERR_SETUP";
+        case ERR_LOAD: return @"ERR_LOAD";
+        case ERR_PURCHASE: return @"ERR_PURCHASE";
+        case ERR_LOAD_RECEIPTS: return @"ERR_LOAD_RECEIPTS";
+        case ERR_CLIENT_INVALID: return @"ERR_CLIENT_INVALID";
+        case ERR_PAYMENT_CANCELLED: return @"ERR_PAYMENT_CANCELLED";
+        case ERR_PAYMENT_INVALID: return @"ERR_PAYMENT_INVALID";
+        case ERR_PAYMENT_NOT_ALLOWED: return @"ERR_PAYMENT_NOT_ALLOWED";
+        case ERR_UNKNOWN: return @"ERR_UNKNOWN";
+    }
+    return @"ERR_NONE";
+}
+
 /*
 
 const static char* b64="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" ;
@@ -355,7 +371,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
     {
 		error = state = transactionIdentifier = transactionReceipt = productId = @"";
 		errorCode = 0;
-        DLog(@"Payment transaction updated:");
+        DLog(@"Payment transaction updated (%@):", transaction.originalTransaction.payment.productIdentifier);
 
         switch (transaction.transactionState)
         {
@@ -374,7 +390,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 				state = @"PaymentTransactionStateFailed";
 				error = transaction.error.localizedDescription;
 				errorCode = jsErrorCode(transaction.error.code);
-				DLog(@"Error %d %@", errorCode, error);
+				DLog(@"Error %@ %@", jsErrorCodeAsString(errorCode), error);
                 break;
 
 			case SKPaymentTransactionStateRestored:

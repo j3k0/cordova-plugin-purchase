@@ -45,9 +45,9 @@
         });
 
         // Also check the receipts
-        storekit.loadReceipts(function (receipts) {
-            console.log('appStoreReceipt:' + receipts.appStoreReceipt);
-        });
+        // storekit.loadReceipts(function (receipts) {
+        //     console.log('appStoreReceipt: ' + receipts.appStoreReceipt);
+        // });
     };
 
     IAP.onPurchase = function (transactionId, productId) {

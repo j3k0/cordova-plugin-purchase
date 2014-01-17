@@ -95,6 +95,18 @@ InAppPurchase.prototype.init = function (options) {
 InAppPurchase.prototype.purchase = function (productId, quantity) {
 	quantity = (quantity|0) || 1;
     var options = this.options;
+
+    // Many people forget to load information about their products from apple's servers before allowing
+    // users to purchase them... leading them to spam us with useless issues and comments.
+    // Let's chase them down!
+    if ((!InAppPurchase._productIds) || (InAppPurchase._productIds.indexOf(productId) < 0)) {
+        log('purchase error: product needs to be loaded before purchase, call storekit.load(...) first!');
+        if (typeof options.error === 'function') {
+            protectCall(options.error, 'options.error', InAppPurchase.ERR_PURCHASE, msg, productId, quantity);
+        }
+        return;
+    }
+
     var purchaseOk = function () {
         log('Purchased ' + productId);
         if (typeof options.purchase === 'function') {
@@ -150,7 +162,11 @@ InAppPurchase.prototype.load = function (productIds, callback) {
     if (typeof productIds === "string") {
         productIds = [productIds];
     }
-    if (!productIds.length) {
+    if (!productIds) {
+        // Empty array, nothing to do.
+        protectCall(callback, 'load.callback', [], []);
+    }
+    else if (!productIds.length) {
         // Empty array, nothing to do.
         protectCall(callback, 'load.callback', [], []);
     }
@@ -174,6 +190,7 @@ InAppPurchase.prototype.load = function (productIds, callback) {
             protectCall(options.error, 'options.error', InAppPurchase.ERR_LOAD, 'Failed to load product data: ' + errMessage);
         };
 
+        InAppPurchase._productIds = productIds;
         exec('load', [productIds], loadOk, loadFailed);
     }
 };

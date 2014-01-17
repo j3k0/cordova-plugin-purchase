@@ -9,8 +9,8 @@ PLUGIN_URL="git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git"
 BUNDLE_ID="$1"
 IAP_ID="$2"
 
-DIR=platforms/ios/TestIAP$TEST_NAME/Plugins/com.phonegap.plugins.inapppurchase
-WWW=platforms/ios/www/plugins/com.phonegap.plugins.inapppurchase
+DIR=platforms/ios/TestIAP$TEST_NAME/Plugins/cc.fovea.plugins.inapppurchase
+WWW=platforms/ios/www/plugins/cc.fovea.plugins.inapppurchase
 PROJ=platforms/ios/TestIAP${TEST_NAME}.xcodeproj/project.pbxproj
 
 if [ "x$IAP_ID" = "x" ] || [ "x$1" = "x--help" ]; then
@@ -57,8 +57,8 @@ cd $TEST_NAME-build
 
 # Add our plugin
 phonegap local plugin add "$PLUGIN_URL" || exit 1
-cp ../../src/ios/*.[hm] plugins/com.phonegap.plugins.inapppurchase/src/ios/
-cp ../../InAppPurchase.js plugins/com.phonegap.plugins.inapppurchase/
+cp ../../src/ios/*.[hm] plugins/cc.fovea.plugins.inapppurchase/src/ios/
+cp ../../InAppPurchase.js plugins/cc.fovea.plugins.inapppurchase/
 
 # Add console debug
 phonegap local plugin add https://git-wip-us.apache.org/repos/asf/cordova-plugin-console.git || exit 1
