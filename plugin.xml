@@ -3,7 +3,7 @@
     xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="cc.fovea.plugins.inapppurchase"
-    version="3.1.0">
+    version="3.1.1">
 
     <name>InAppPurchase</name>
 	<description>In app purchase support for iOS</description>
