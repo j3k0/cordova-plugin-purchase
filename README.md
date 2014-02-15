@@ -19,8 +19,6 @@ And that's for Cordova:
 
     cordova plugin add git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git
 
-Then some extra steps need to be done to disable ARC for the plugin's .m files. Follow [those instructions](http://stackoverflow.com/a/6658549/271585) for InAppPurchase.m and SKProduct+LocalizedPrice.m
-
 ### PhoneGap <= 2.9 using Plugman
 
     plugman install --platform ios --project <path to Xcode project> --plugin git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git
