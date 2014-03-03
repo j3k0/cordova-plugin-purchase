@@ -391,6 +391,14 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 				error = transaction.error.localizedDescription;
 				errorCode = jsErrorCode(transaction.error.code);
 				DLog(@"Error %@ %@", jsErrorCodeAsString(errorCode), error);
+				
+				// Finish failed transactions, when autoFinish is off
+				if (!g_autoFinishEnabled) {
+					[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+					[self transactionFinished:transaction];
+				}
+				
+				DLog(@"Error %d %@", errorCode, error);
                 break;
 
 			case SKPaymentTransactionStateRestored:
@@ -432,7 +440,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 {
     NSArray *callbackArgs = [NSArray arrayWithObjects:
                                 NILABLE(@"PaymentTransactionStateFinished"),
-                                0,
+                                [NSNumber numberWithInt:0], // Fixed to send object. The 0 was stopping the array.
                                 NILABLE(nil),
                                 NILABLE(transaction.transactionIdentifier),
                                 NILABLE(transaction.payment.productIdentifier),
