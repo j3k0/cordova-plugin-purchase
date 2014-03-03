@@ -42,6 +42,7 @@ InAppPurchase.prototype.init = function (options) {
         error:    options.error    || noop,
         ready:    options.ready    || noop,
         purchase: options.purchase || noop,
+        purchaseEnqueued: options.purchaseEnqueued || noop,
         finish:   options.finish   || noop,
         restore:  options.restore  || noop,
         restoreFailed:     options.restoreFailed    || noop,
@@ -91,8 +92,8 @@ InAppPurchase.prototype.purchase = function (productId, quantity) {
     var options = this.options;
     var purchaseOk = function () {
         log('Purchased ' + productId);
-        if (typeof options.purchase === 'function') {
-            protectCall(options.purchase, 'options.purchase', productId, quantity);
+        if (typeof options.purchaseEnqueued === 'function') {
+            protectCall(options.purchaseEnqueued, 'options.purchaseEnqueued', productId, quantity);
         }
     };
     var purchaseFailed = function () {
