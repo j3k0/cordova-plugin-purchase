@@ -5,7 +5,7 @@
 
 Original code: Matt Kane
 
-Maintainer: Jean-Christophe Hoelt
+Maintainer: Jean-Christophe Hoelt <hoelt@fovea.cc>
 
 ## Install the Plugin
 
