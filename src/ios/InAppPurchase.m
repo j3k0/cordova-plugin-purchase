@@ -286,7 +286,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
     CDVPluginResult* pluginResult = nil;
 
     if (![SKPaymentQueue canMakePayments]) {
-        DLog(@"cannot make payments");
+        DLog(@"Cant make payments, plugin disabled.");
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Can't make payments"];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         return;
