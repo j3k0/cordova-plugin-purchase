@@ -11,12 +11,13 @@
         <engine name="cordova" version=">=2.4.0" />
     </engines>
 	
-    <js-module src="InAppPurchase.js" name="InAppPurchase">
-        <clobbers target="storekit" />
-    </js-module>
 	<license>MIT</license>
     <!-- ios -->
     <platform name="ios">
+        <js-module src="InAppPurchase.js" name="InAppPurchase">
+            <clobbers target="storekit" />
+        </js-module>
+        
         <!-- Cordova 2.2 -->
         <plugins-plist key="InAppPurchase" string="InAppPurchase" />
                     
