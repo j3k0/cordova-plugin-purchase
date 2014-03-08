@@ -13,7 +13,7 @@ Maintainer: Jean-Christophe Hoelt
 
 For PhoneGap >= 3.0 this plugin can be installed with a single command:
 
-    phonegap local add git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git
+    phonegap local plugin add git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git
 
 And that's for Cordova:
 
