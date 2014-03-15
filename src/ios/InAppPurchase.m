@@ -487,7 +487,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 - (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error
 {
 	NSString *js = [NSString stringWithFormat:
-      @"window.storekit.restoreCompletedTransactionsFailed(%d)", error.code];
+      @"window.storekit.restoreCompletedTransactionsFailed(%d)", jsErrorCode(error.code)];
     [self.commandDelegate evalJs: js];
 }
 
@@ -642,6 +642,10 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
 {
     DLog(@"In-App Store unavailable (ERROR %i)", error.code);
     DLog(@"%@", [error localizedDescription]);
+
+    CDVPluginResult* pluginResult =
+      [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+    [self.plugin.commandDelegate sendPluginResult:pluginResult callbackId:self.command.callbackId];
 }
 
 #if ARC_DISABLED
