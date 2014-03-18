@@ -1,7 +1,7 @@
 #!/bin/sh
 
-TEST_VERSION="3.1"
-TEST_NAME="v31"
+TEST_VERSION="3.4"
+TEST_NAME="v34"
 
 PLUGIN_URL="git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git"
 # PLUGIN_URL="http://localhost/git/PhoneGap-InAppPurchase-iOS.git"
@@ -9,9 +9,9 @@ PLUGIN_URL="git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git"
 BUNDLE_ID="$1"
 IAP_ID="$2"
 
-DIR=platforms/ios/TestIAP$TEST_NAME/Plugins/cc.fovea.plugins.inapppurchase
+DIR=platforms/ios/HelloWorld/Plugins/cc.fovea.plugins.inapppurchase
 WWW=platforms/ios/www/plugins/cc.fovea.plugins.inapppurchase
-PROJ=platforms/ios/TestIAP${TEST_NAME}.xcodeproj/project.pbxproj
+PROJ=platforms/ios/HelloWorld.xcodeproj/project.pbxproj
 
 if [ "x$IAP_ID" = "x" ] || [ "x$1" = "x--help" ]; then
     echo
@@ -46,7 +46,7 @@ cd `dirname $0`
 rm -fr $TEST_NAME-build
 
 # Create a project
-phonegap create $TEST_NAME-build -n TestIAP$TEST_NAME -i cc.fovea.babygoo
+phonegap create $TEST_NAME-build -n TestIAP$TEST_NAME -i $BUNDLE_ID
 
 cp $TEST_NAME-src/css/* $TEST_NAME-build/www/css/
 cp $TEST_NAME-src/js/* $TEST_NAME-build/www/js/
@@ -54,6 +54,9 @@ cp $TEST_NAME-src/index.html $TEST_NAME-build/www/
 sed -i "" "s/babygooinapp1/$IAP_ID/g" $TEST_NAME-build/www/js/iap.js
 
 cd $TEST_NAME-build
+
+# Compile for iOS (make sure iOS platform is ready)
+phonegap local build ios || exit 1
 
 # Add our plugin
 phonegap local plugin add "$PLUGIN_URL" || exit 1

@@ -3,7 +3,7 @@
     xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="cc.fovea.plugins.inapppurchase"
-    version="3.2.0">
+    version="3.4.0">
 
     <name>InAppPurchase</name>
 	<description>In app purchase support for iOS</description>
@@ -12,6 +12,7 @@
     </engines>
 	
 	<license>MIT</license>
+    <keywords>cordova,phonegap,purchase,storekit,ios</keywords>
     <!-- ios -->
     <platform name="ios">
         <js-module src="InAppPurchase.js" name="InAppPurchase">
