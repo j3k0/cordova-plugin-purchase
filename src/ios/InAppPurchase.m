@@ -33,7 +33,7 @@ static BOOL g_autoFinishEnabled = YES;
 #define ERR_PAYMENT_NOT_ALLOWED (ERROR_CODES_BASE + 8)
 #define ERR_UNKNOWN (ERROR_CODES_BASE + 10)
 
-static int jsErrorCode(int storeKitErrorCode)
+static NSInteger jsErrorCode(NSInteger storeKitErrorCode)
 {
     switch (storeKitErrorCode) {
         case SKErrorUnknown:
@@ -50,7 +50,7 @@ static int jsErrorCode(int storeKitErrorCode)
     return ERR_UNKNOWN;
 }
 
-static NSString *jsErrorCodeAsString(int code) {
+static NSString *jsErrorCodeAsString(NSInteger code) {
     switch (code) {
         case ERR_SETUP: return @"ERR_SETUP";
         case ERR_LOAD: return @"ERR_LOAD";
@@ -406,7 +406,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 					[self transactionFinished:transaction];
 				}
 				
-				DLog(@"Error %d %@", errorCode, error);
+				DLog(@"Error %li %@", (unsigned long)errorCode, error);
                 break;
 
 			case SKPaymentTransactionStateRestored:
@@ -423,7 +423,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 		DLog(@"State: %@", state);
         NSArray *callbackArgs = [NSArray arrayWithObjects:
                                  NILABLE(state),
-                                 [NSNumber numberWithInt:errorCode],
+                                 [NSNumber numberWithInteger:errorCode],
                                  NILABLE(error),
                                  NILABLE(transactionIdentifier),
                                  NILABLE(productId),
@@ -487,7 +487,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 - (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error
 {
 	NSString *js = [NSString stringWithFormat:
-      @"window.storekit.restoreCompletedTransactionsFailed(%d)", jsErrorCode(error.code)];
+      @"window.storekit.restoreCompletedTransactionsFailed(%li)", (unsigned long)jsErrorCode(error.code)];
     [self.commandDelegate evalJs: js];
 }
 
@@ -640,7 +640,7 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
 
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error
 {
-    DLog(@"In-App Store unavailable (ERROR %i)", error.code);
+    DLog(@"In-App Store unavailable (ERROR %li)", (unsigned long)error.code);
     DLog(@"%@", [error localizedDescription]);
 
     CDVPluginResult* pluginResult =
