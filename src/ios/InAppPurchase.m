@@ -588,6 +588,16 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+- (void) dispose {
+    self.retainer = nil;
+    self.list = nil;
+    unfinishedTransactions = nil;
+
+    [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
+
+    [super dispose];
+}
+
 @end
 
 /**
@@ -646,16 +656,6 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
     CDVPluginResult* pluginResult =
       [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
     [self.plugin.commandDelegate sendPluginResult:pluginResult callbackId:self.command.callbackId];
-}
-
-- (void) dispose {
-    self.retainer = nil;
-    self.list = nil;
-    unfinishedTransactions = nil;
-
-    [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
-
-    [super dispose];
 }
 
 #if ARC_DISABLED
