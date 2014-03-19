@@ -648,6 +648,16 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
     [self.plugin.commandDelegate sendPluginResult:pluginResult callbackId:self.command.callbackId];
 }
 
+- (void) dispose {
+    self.retainer = nil;
+    self.list = nil;
+    unfinishedTransactions = nil;
+
+    [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
+
+    [super dispose];
+}
+
 #if ARC_DISABLED
 - (void) dealloc {
 	[plugin  release];
