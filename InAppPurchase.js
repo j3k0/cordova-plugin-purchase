@@ -33,15 +33,15 @@ var noop = function () {};
 // Error codes
 // (keep synchronized with InAppPurchase.m)
 var ERROR_CODES_BASE = 4983497;
-InAppPurchase.ERR_SETUP    = ERROR_CODES_BASE + 1;
-InAppPurchase.ERR_LOAD     = ERROR_CODES_BASE + 2;
-InAppPurchase.ERR_PURCHASE = ERROR_CODES_BASE + 3;
-InAppPurchase.ERR_LOAD_RECEIPTS       = ERROR_CODES_BASE + 4;
-InAppPurchase.ERR_CLIENT_INVALID      = ERROR_CODES_BASE + 5;
-InAppPurchase.ERR_PAYMENT_CANCELLED   = ERROR_CODES_BASE + 6;
-InAppPurchase.ERR_PAYMENT_INVALID     = ERROR_CODES_BASE + 7;
-InAppPurchase.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
-InAppPurchase.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
+InAppPurchase.prototype.ERR_SETUP               = ERROR_CODES_BASE + 1;
+InAppPurchase.prototype.ERR_LOAD                = ERROR_CODES_BASE + 2;
+InAppPurchase.prototype.ERR_PURCHASE            = ERROR_CODES_BASE + 3;
+InAppPurchase.prototype.ERR_LOAD_RECEIPTS       = ERROR_CODES_BASE + 4;
+InAppPurchase.prototype.ERR_CLIENT_INVALID      = ERROR_CODES_BASE + 5;
+InAppPurchase.prototype.ERR_PAYMENT_CANCELLED   = ERROR_CODES_BASE + 6;
+InAppPurchase.prototype.ERR_PAYMENT_INVALID     = ERROR_CODES_BASE + 7;
+InAppPurchase.prototype.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
+InAppPurchase.prototype.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
 
 InAppPurchase.prototype.init = function (options) {
     this.options = {
@@ -81,7 +81,7 @@ InAppPurchase.prototype.init = function (options) {
     };
     var setupFailed = function () {
         log('setup failed');
-        protectCall(options.error, 'options.error', InAppPurchase.ERR_SETUP, 'Setup failed');
+        protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_SETUP, 'Setup failed');
     };
 
     exec('setup', [], setupOk, setupFailed);
@@ -103,7 +103,7 @@ InAppPurchase.prototype.purchase = function (productId, quantity) {
     if ((!InAppPurchase._productIds) || (InAppPurchase._productIds.indexOf(productId) < 0)) {
         log('purchase error: product needs to be loaded before purchase, call storekit.load(...) first!');
         if (typeof options.error === 'function') {
-            protectCall(options.error, 'options.error', InAppPurchase.ERR_PURCHASE, msg, productId, quantity);
+            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_PURCHASE, msg, productId, quantity);
         }
         return;
     }
@@ -118,7 +118,7 @@ InAppPurchase.prototype.purchase = function (productId, quantity) {
         var msg = 'Purchasing ' + productId + ' failed';
         log(msg);
         if (typeof options.error === 'function') {
-            protectCall(options.error, 'options.error', InAppPurchase.ERR_PURCHASE, msg, productId, quantity);
+            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_PURCHASE, msg, productId, quantity);
         }
     };
     return exec('purchase', [productId, quantity], purchaseOk, purchaseFailed);
@@ -175,7 +175,7 @@ InAppPurchase.prototype.load = function (productIds, callback) {
         if (typeof productIds[0] !== 'string') {
             var msg = 'invalid productIds given to store.load: ' + JSON.stringify(productIds);
             log(msg);
-            protectCall(options.error, 'options.error', InAppPurchase.ERR_LOAD, msg);
+            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_LOAD, msg);
             return;
         }
         log('load ' + JSON.stringify(productIds));
@@ -188,7 +188,7 @@ InAppPurchase.prototype.load = function (productIds, callback) {
         };
         var loadFailed = function (errMessage) {
             log('load failed: ' + errMessage);
-            protectCall(options.error, 'options.error', InAppPurchase.ERR_LOAD, 'Failed to load product data: ' + errMessage);
+            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_LOAD, 'Failed to load product data: ' + errMessage);
         };
 
         InAppPurchase._productIds = productIds;
@@ -262,7 +262,7 @@ InAppPurchase.prototype.loadReceipts = function (callback) {
 
     var error = function (errMessage) {
         log('load failed: ' + errMessage);
-        protectCall(options.error, 'options.error', InAppPurchase.ERR_LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
+        protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
     };
 
     var callCallback = function () {
