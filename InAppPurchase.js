@@ -10,10 +10,6 @@ var exec = function (methodName, options, success, error) {
     cordova.exec(success, error, "InAppPurchase", methodName, options);
 };
 
-var log = function (msg) {
-    console.log("InAppPurchase[js]: " + msg);
-};
-
 var protectCall = function (callback, context) {
     try {
         var args = Array.prototype.slice.call(arguments, 2); 
@@ -29,6 +25,8 @@ var InAppPurchase = function () {
 };
 
 var noop = function () {};
+
+var log = noop;
 
 // Error codes
 // (keep synchronized with InAppPurchase.m)
@@ -64,6 +62,9 @@ InAppPurchase.prototype.init = function (options) {
 
     if (options.debug) {
         exec('debug', [], noop, noop);
+        log = function (msg) {
+            console.log("InAppPurchase[js]: " + msg);
+        };
     }
 
     if (options.noAutoFinish) {
