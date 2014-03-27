@@ -174,7 +174,7 @@ Error codes:
 ### Receipts
 
     window.storekit.loadReceipts(function (receipts) {
-        receipts.appStoreReceipt(); // null or base64 encoded receipt (iOS >= 7)
+        receipts.appStoreReceipt; // null or base64 encoded receipt (iOS >= 7)
         receipts.forTransaction(transactionId); // null or base64 encoded receipt (iOS < 7)
         receipts.forProduct(productId); // null or base64 encoded receipt (iOS < 7)
     });
