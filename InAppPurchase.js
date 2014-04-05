@@ -102,9 +102,9 @@ InAppPurchase.prototype.purchase = function (productId, quantity) {
     // users to purchase them... leading them to spam us with useless issues and comments.
     // Let's chase them down!
     if ((!InAppPurchase._productIds) || (InAppPurchase._productIds.indexOf(productId) < 0)) {
-        log('purchase error: product needs to be loaded before purchase, call storekit.load(...) first!');
+        log('Purchase error: product needs to be loaded before purchase, call storekit.load(...) first, wait for "ready" before doing any purchase.');
         if (typeof options.error === 'function') {
-            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_PURCHASE, msg, productId, quantity);
+            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_PURCHASE, 'Trying to purchase a unknown product.', productId, quantity);
         }
         return;
     }
