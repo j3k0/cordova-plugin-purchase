@@ -45,7 +45,6 @@ See [Cordova Cli](https://github.com/apache/cordova-cli).
     </feature>
 ```
 
- * Add the following to the config.xml file in your Xcode project:
  * Create a new file named `cordova_plugins.js` in the `<path to Xcode project>/www` folder if it does not exist.
  * Edit `cordova_plugins.js` and add a reference to the plugin to automatically load it:
 
