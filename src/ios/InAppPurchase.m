@@ -32,6 +32,7 @@ static BOOL g_autoFinishEnabled = YES;
 #define ERR_PAYMENT_INVALID   (ERROR_CODES_BASE + 7)
 #define ERR_PAYMENT_NOT_ALLOWED (ERROR_CODES_BASE + 8)
 #define ERR_UNKNOWN (ERROR_CODES_BASE + 10)
+#define ERR_REFRESH_RECEIPTS (ERROR_CODES_BASE + 11)
 
 static NSInteger jsErrorCode(NSInteger storeKitErrorCode)
 {
@@ -56,6 +57,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         case ERR_LOAD: return @"ERR_LOAD";
         case ERR_PURCHASE: return @"ERR_PURCHASE";
         case ERR_LOAD_RECEIPTS: return @"ERR_LOAD_RECEIPTS";
+        case ERR_REFRESH_RECEIPTS: return @"ERR_REFRESH_RECEIPTS";
         case ERR_CLIENT_INVALID: return @"ERR_CLIENT_INVALID";
         case ERR_PAYMENT_CANCELLED: return @"ERR_PAYMENT_CANCELLED";
         case ERR_PAYMENT_INVALID: return @"ERR_PAYMENT_INVALID";
@@ -588,6 +590,26 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+- (void) appStoreRefreshReceipt: (CDVInvokedUrlCommand*)command {
+    DLog(@"Request to refresh app receipt");
+    RefreshReceiptDelegate* delegate = [[RefreshReceiptDelegate alloc] init];
+    SKReceiptRefreshRequest* recreq = [[SKReceiptRefreshRequest alloc] init];
+    recreq.delegate = delegate;
+    delegate.plugin  = self;
+    delegate.command = command;
+    
+#if ARC_ENABLED
+    self.retainer[@"receiptRefreshRequest"] = recreq;
+    self.retainer[@"receiptRefreshRequestDelegate"] = delegate;
+#else
+    [delegate retain];
+#endif
+
+    DLog(@"Starting receipt refresh request...");
+    [recreq start];
+    DLog(@"Receipt refresh request started");
+}
+
 - (void) dispose {
     self.retainer = nil;
     self.list = nil;
@@ -597,6 +619,53 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
 
     [super dispose];
 }
+
+@end
+/**
+ * Receive refreshed app receipt
+ */
+@implementation RefreshReceiptDelegate
+
+@synthesize plugin, command;
+
+- (void) requestDidFinish:(SKRequest *)request {
+    DLog(@"Got refreshed receipt");
+    NSString *base64 = nil;
+    NSData *receiptData = [self.plugin appStoreReceipt];
+    if (receiptData != nil) {
+        base64 = [receiptData convertToBase64];
+        // DLog(@"base64 receipt: %@", base64);
+    }
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                                      messageAsString:base64];
+    DLog(@"Send new receipt data");
+    [self.plugin.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+
+#if ARC_ENABLED
+    [self.plugin.retainer removeObjectForKey:@"receiptRefreshRequest"];
+    [self.plugin.retainer removeObjectForKey:@"receiptRefreshRequestDelegate"];
+#else
+    [request release];
+    [self    release];
+#endif
+}
+
+- (void):(SKRequest *)request didFailWithError:(NSError*) error {
+    DLog(@"In-App Store unavailable (ERROR %li)", (unsigned long)error.code);
+    DLog(@"%@", [error localizedDescription]);
+
+    CDVPluginResult* pluginResult =
+    [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+    [self.plugin.commandDelegate sendPluginResult:pluginResult callbackId:self.command.callbackId];
+}
+
+#if ARC_DISABLED
+- (void) dealloc {
+    [plugin  release];   
+    [command release];
+    [super   dealloc];
+}
+#endif
 
 @end
 
