@@ -1,11 +1,17 @@
 # iOS In-App Purchase plugin
 
- * Allows In-App Purchases to be made from a Phonegap Application.
+ * Allows In-App Purchases to be made from a Phonegap / Cordova Application.
  * Wraps StoreKit.
 
 Original code: Matt Kane
 
 Maintainer: Jean-Christophe Hoelt <hoelt@fovea.cc>
+
+# Save yourself some pain
+
+**Save time and effort**: support the campaign for a uniform In-App Purchase plugin, for both iOS and Android.
+
+http://igg.me/at/cordova-iap/x/8416559
 
 ## Install the Plugin
 
