@@ -2,21 +2,23 @@
 <plugin
     xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    id="cc.fovea.plugins.inapppurchase"
-    version="3.5.0">
+    id="cc.fovea.cordova.purchase"
+    version="3.5.0-dev">
 
     <name>Purchase</name>
 	<description>Cordova Purchase plugin for Apple AppStore for iOS and Google Play Store for Android</description>
     <engines>
         <engine name="cordova" version=">=2.4.0" />
     </engines>
+    <repo>https://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git</repo>
+    <issue>https://github.com/j3k0/PhoneGap-InAppPurchase-iOS/issues</issue>
 	
 	<license>MIT</license>
     <keywords>cordova,phonegap,purchase,storekit,ios,android,play,appstore</keywords>
 
     <!-- ios -->
     <platform name="ios">
-        <js-module src="InAppPurchase.js" name="InAppPurchase">
+        <js-module src="www/purchase-ios.js" name="InAppPurchase">
             <clobbers target="storekit" />
         </js-module>
         
@@ -40,7 +42,7 @@
 
     <!-- android -->
     <platform name="android">
-        <js-module src="www/inappbilling.js" name="InAppBilling">
+        <js-module src="www/purchase-android.js" name="InAppBilling">
             <clobbers target="inappbilling" />
         </js-module>
 
@@ -70,7 +72,6 @@
         <!-- cordova plugin src files -->
         <source-file src="src/android/com/mohamnag/inappbilling/InAppBillingPlugin.java" target-dir="src/com/mohamnag/inappbilling" />
         <source-file src="src/android/com/mohamnag/inappbilling/Error.java" target-dir="src/com/mohamnag/inappbilling" />
-
 
         <!-- the code from marketbilling example: https://code.google.com/p/marketbilling/ -->
         <source-file src="src/android/com/mohamnag/inappbilling/helper/Purchase.java" target-dir="src/com/mohamnag/inappbilling/helper/" />
