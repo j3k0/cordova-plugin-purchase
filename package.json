@@ -1,0 +1,29 @@
+{
+  "name": "cordova-purchase-plugin",
+  "version": "3.5.0-dev",
+  "description": "Cordova Purchase plugin for Apple AppStore for iOS and Google Play Store for Android",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git"
+  },
+  "keywords": [
+    "cordova",
+    "phonegap",
+    "purchase",
+    "storekit",
+    "ios",
+    "android",
+    "play",
+    "appstore"
+  ],
+  "author": "Jean-Christophe Hoelt <hoelt@fovea.cc>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/j3k0/PhoneGap-InAppPurchase-iOS/issues"
+  },
+  "homepage": "https://github.com/j3k0/PhoneGap-InAppPurchase-iOS",
+  "devDependencies": {
+    "jshint": "^2.5.6",
+    "cordova": "^3.6.3-0.2.13"
+  }
+}

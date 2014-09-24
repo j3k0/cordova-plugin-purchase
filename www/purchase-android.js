@@ -122,7 +122,8 @@ InAppBilling.prototype.log = function(msg) {
  * @param {{(String|Array.<String>)}} productIds   an optional list of product IDs to load after initialization was successful
  */
 InAppBilling.prototype.init = function(success, fail, options, productIds) {
-    options || (options = {});
+    if (!options)
+        options = {};
 
     this.options = {
         showLog: options.showLog || false

@@ -1,2 +1,3 @@
-test/v31-build/
+/test/v31-build/
+/node_modules/
 *~

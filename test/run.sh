@@ -1,26 +1,33 @@
 #!/bin/sh
 
-TEST_VERSION="3.4"
-TEST_NAME="v34"
+# Set variables: PLUGIN_DIR, TEST_DIR, BIN_DIR
+cd `dirname $0`/..
+ROOT_DIR=`pwd`
+TEST_DIR="$ROOT_DIR/test"
+BIN_DIR="$TEST_DIR/bin"
 
-PLUGIN_URL="git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git"
-# PLUGIN_URL="http://localhost/git/PhoneGap-InAppPurchase-iOS.git"
+# Create and enter the bin directory
+rm -fr "$BIN_DIR"
+cd "$TEST_DIR"
 
+# Command line parameters
 BUNDLE_ID="$1"
 IAP_ID="$2"
 
-DIR=platforms/ios/HelloWorld/Plugins/cc.fovea.plugins.inapppurchase
-WWW=platforms/ios/www/plugins/cc.fovea.plugins.inapppurchase
-PROJ=platforms/ios/HelloWorld.xcodeproj/project.pbxproj
+PLUGIN_URL="git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git#unified"
+
+# DIR=platforms/ios/HelloWorld/Plugins/cc.fovea.plugins.inapppurchase
+# WWW=platforms/ios/www/plugins/cc.fovea.plugins.inapppurchase
+# PROJ=platforms/ios/HelloWorld.xcodeproj/project.pbxproj
 
 if [ "x$IAP_ID" = "x" ] || [ "x$1" = "x--help" ]; then
     echo
     echo "usage: $0 <bundle_id> <iap_id>"
     echo
-    echo "This will generate a phonegap project using PhoneGap $TEST_VERSION (required)."
+    echo "This will generate a cordova project using Cordova $TEST_VERSION (required)."
     echo "If plugin install is successful, you can test your IAP as follow:"
     echo " - if your device is logged-in a production iTunes account, go unlog (in device's settings)"
-    echo " - open ./$TEST_NAME-build/platforms/ios/TestIAP${TEST_NAME}.xcodeproj"
+    echo " - open ./bin/platforms/ios/Test.xcodeproj"
     echo " - compile and run ON A DEVICE"
     echo " - the description of the IAP should appear after a while."
     echo " - click on the price to purchase, confirmation should appear on the console."
@@ -32,42 +39,39 @@ if [ "x$IAP_ID" = "x" ] || [ "x$1" = "x--help" ]; then
     exit 1
 fi
 
-# Check PhoneGap version
-V=`phonegap version`
-MAJOR=`echo $V | cut -d. -f1`
-MINOR=`echo $V | cut -d. -f2`
-if [ "x$MAJOR.$MINOR" != "x$TEST_VERSION" ]; then
-    echo "This test is validated with PhoneGap $TEST_VERSION only (you are running $MAJOR.$MINOR)."
-    exit 1
-fi
-
-# Clean things
-cd `dirname $0`
-rm -fr $TEST_NAME-build
+# Add cordova to PATH
+export PATH="$ROOT_DIR/node_modules/cordova/bin:$PATH"
 
 # Create a project
-phonegap create $TEST_NAME-build -n TestIAP$TEST_NAME -i $BUNDLE_ID
+cordova create bin $BUNDLE_ID Test
 
-cp $TEST_NAME-src/css/* $TEST_NAME-build/www/css/
-cp $TEST_NAME-src/js/* $TEST_NAME-build/www/js/
-cp $TEST_NAME-src/index.html $TEST_NAME-build/www/
-sed -i "" "s/babygooinapp1/$IAP_ID/g" $TEST_NAME-build/www/js/iap.js
+# Copy project's files
+cp "$TEST_DIR/src/css/"* "$BIN_DIR/www/css/"
+cp "$TEST_DIR/src/js/"* "$BIN_DIR/www/js/"
+cp "$TEST_DIR/src/index.html" "$BIN_DIR/www/"
+sed -i "" "s/babygooinapp1/$IAP_ID/g" "$BIN_DIR/www/js/iap.js"
+cd "$BIN_DIR"
 
-cd $TEST_NAME-build
+echo Prepare iOS and Android platforms
+cordova platform add ios || exit 1
+cordova platform add android || exit 1
 
-# Compile for iOS (make sure iOS platform is ready)
-phonegap local build ios || exit 1
+echo Add Purchase plugin
+cordova plugin add "$PLUGIN_URL" || exit 1
 
-# Add our plugin
-phonegap local plugin add "$PLUGIN_URL" || exit 1
-cp ../../src/ios/*.[hm] plugins/cc.fovea.plugins.inapppurchase/src/ios/
-cp ../../InAppPurchase.js plugins/cc.fovea.plugins.inapppurchase/
+echo Copy non commited files
+rsync -r "$ROOT_DIR"/src/android/ plugins/cc.fovea.cordova.purchase/src/android
+cp "$ROOT_DIR"/src/ios/*.[hm] plugins/cc.fovea.cordova.purchase/src/ios/
+cp "$ROOT_DIR"/www/*.js plugins/cc.fovea.cordova.purchase/www/
 
 # Add console debug
-phonegap local plugin add https://git-wip-us.apache.org/repos/asf/cordova-plugin-console.git || exit 1
+cordova plugin add https://git-wip-us.apache.org/repos/asf/cordova-plugin-console.git || exit 1
 
 # Compile for iOS
-phonegap local build ios || exit 1
+cordova build ios || exit 1
+
+# Compile for Android
+cordova build android || exit 1
 
 # Check existance of the plugins files
 function hasFile() {
