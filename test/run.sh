@@ -1,13 +1,13 @@
 #!/bin/sh
 
-# Set variables: PLUGIN_DIR, TEST_DIR, BIN_DIR
+# Set variables: PLUGIN_DIR, TEST_DIR, BUILD_DIR
 cd `dirname $0`/..
 ROOT_DIR=`pwd`
 TEST_DIR="$ROOT_DIR/test"
-BIN_DIR="$TEST_DIR/bin"
+BUILD_DIR="$TEST_DIR/build"
 
-# Create and enter the bin directory
-rm -fr "$BIN_DIR"
+# Create and enter the build directory
+rm -fr "$BUILD_DIR"
 cd "$TEST_DIR"
 
 # Command line parameters
@@ -16,10 +16,6 @@ IAP_ID="$2"
 
 PLUGIN_URL="git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git#unified"
 
-# DIR=platforms/ios/HelloWorld/Plugins/cc.fovea.plugins.inapppurchase
-# WWW=platforms/ios/www/plugins/cc.fovea.plugins.inapppurchase
-# PROJ=platforms/ios/HelloWorld.xcodeproj/project.pbxproj
-
 if [ "x$IAP_ID" = "x" ] || [ "x$1" = "x--help" ]; then
     echo
     echo "usage: $0 <bundle_id> <iap_id>"
@@ -27,7 +23,7 @@ if [ "x$IAP_ID" = "x" ] || [ "x$1" = "x--help" ]; then
     echo "This will generate a cordova project using Cordova $TEST_VERSION (required)."
     echo "If plugin install is successful, you can test your IAP as follow:"
     echo " - if your device is logged-in a production iTunes account, go unlog (in device's settings)"
-    echo " - open ./bin/platforms/ios/Test.xcodeproj"
+    echo " - open ./build/platforms/ios/Test.xcodeproj"
     echo " - compile and run ON A DEVICE"
     echo " - the description of the IAP should appear after a while."
     echo " - click on the price to purchase, confirmation should appear on the console."
@@ -40,17 +36,17 @@ if [ "x$IAP_ID" = "x" ] || [ "x$1" = "x--help" ]; then
 fi
 
 # Add cordova to PATH
-export PATH="$ROOT_DIR/node_modules/cordova/bin:$PATH"
+export PATH="$ROOT_DIR/node_modules/.bin:$PATH"
 
 # Create a project
-cordova create bin $BUNDLE_ID Test
+cordova create "$BUILD_DIR" "$BUNDLE_ID" Test
 
 # Copy project's files
-cp "$TEST_DIR/src/css/"* "$BIN_DIR/www/css/"
-cp "$TEST_DIR/src/js/"* "$BIN_DIR/www/js/"
-cp "$TEST_DIR/src/index.html" "$BIN_DIR/www/"
-sed -i "" "s/babygooinapp1/$IAP_ID/g" "$BIN_DIR/www/js/iap.js"
-cd "$BIN_DIR"
+cp "$TEST_DIR/src/css/"* "$BUILD_DIR/www/css/"
+cp "$TEST_DIR/src/js/"* "$BUILD_DIR/www/js/"
+cp "$TEST_DIR/src/index.html" "$BUILD_DIR/www/"
+sed -i "" "s/babygooinapp1/$IAP_ID/g" "$BUILD_DIR/www/js/iap.js"
+cd "$BUILD_DIR"
 
 echo Prepare iOS and Android platforms
 cordova platform add ios || exit 1
@@ -83,16 +79,34 @@ function hasFile() {
     fi
 }
 
-hasFile "$DIR/InAppPurchase.m"
-hasFile "$DIR/InAppPurchase.h"
-hasFile "$DIR/SKProduct+LocalizedPrice.h"
-hasFile "$DIR/SKProduct+LocalizedPrice.m"
-hasFile "$WWW/InAppPurchase.js"
+echo
+echo Check iOS installation
+IOS_PLUGIN_DIR="$BUILD_DIR/platforms/ios/Test/Plugins/cc.fovea.cordova.purchase"
+IOS_WWW_DIR="$BUILD_DIR/platforms/ios/www/plugins/cc.fovea.cordova.purchase/www"
+IOS_PROJ="$BUILD_DIR/platforms/ios/Test.xcodeproj/project.pbxproj"
 
-if grep StoreKit.framework "$PROJ" > /dev/null; then
+hasFile "$IOS_PLUGIN_DIR/InAppPurchase.m"
+hasFile "$IOS_PLUGIN_DIR/InAppPurchase.h"
+hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.h"
+hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.m"
+hasFile "$IOS_WWW_DIR/purchase-ios.js"
+
+if grep StoreKit.framework "$IOS_PROJ" > /dev/null; then
     echo "StoreKit framework added."
 else
     echo "ERROR: StoreKit framework missing."
+    EXIT=1
+fi
+
+echo Check Android installation
+ANDROID_CLASSES_DIR="$BUILD_DIR/platforms/android/ant-build/classes"
+ANDROID_MANIFEST="$BUILD_DIR/platforms/android/ant-build/AndroidManifest.cordova.xml"
+
+hasFile "$ANDROID_CLASSES_DIR/com/mohamnag/inappbilling/InAppBillingPlugin.class"
+if grep "com.android.vending.BILLING" "$ANDROID_MANIFEST" > /dev/null; then
+    echo "BILLING permission added."
+else
+    echo "ERROR: Not BILLING permission."
     EXIT=1
 fi
 
