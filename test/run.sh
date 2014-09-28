@@ -103,6 +103,8 @@ ANDROID_CLASSES_DIR="$BUILD_DIR/platforms/android/ant-build/classes"
 ANDROID_MANIFEST="$BUILD_DIR/platforms/android/ant-build/AndroidManifest.cordova.xml"
 
 hasFile "$ANDROID_CLASSES_DIR/com/mohamnag/inappbilling/InAppBillingPlugin.class"
+hasFile "$BUILD_DIR/platforms/android/src/com/mohamnag/inappbilling/InAppBillingPlugin.java"
+
 if grep "com.android.vending.BILLING" "$ANDROID_MANIFEST" > /dev/null; then
     echo "BILLING permission added."
 else

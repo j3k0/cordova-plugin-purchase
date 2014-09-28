@@ -3,9 +3,13 @@
  * Allows In-App Purchases to be made from a Phonegap / Cordova Application.
  * Wraps StoreKit.
 
-Original code: Matt Kane
+Author: Jean-Christophe Hoelt <hoelt@fovea.cc>
 
-Maintainer: Jean-Christophe Hoelt <hoelt@fovea.cc>
+Other contributors:
+
+ * Guillaume Charhon (initial Android code)
+ * Matt Kane (initial iOS code)
+ * Mohammad Naghavi (original unification attempt)
 
 # Save yourself some pain
 
@@ -227,8 +231,7 @@ Big thanks to:
 
 The MIT License
 
-Copyright (c) 2011 Matt Kane
-Copyright (c) 2013 Jean-Christophe Hoelt
+Copyright (c) 2014, Jean-Christophe Hoelt and contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
