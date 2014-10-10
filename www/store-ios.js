@@ -16,9 +16,13 @@
 // Store is the singleton object, exported by the plugin.
 var store = {};
 
-store.FREE_SUBSCRIPTION = "free-subscription";
-store.PAID_SUBSCRIPTION = "paid-subscription";
+// Product types
+store.FREE_SUBSCRIPTION = "free subscription";
+store.PAID_SUBSCRIPTION = "paid subscription";
+store.CONSUMABLE        = "consumable";
+store.NON_CONSUMABLE    = "non consumable";
 
+// Error codes
 var ERROR_CODES_BASE = 4983497;
 store.ERR_SETUP               = ERROR_CODES_BASE + 1;
 store.ERR_LOAD                = ERROR_CODES_BASE + 2;
@@ -212,13 +216,31 @@ var ask = store.ask = function(pid) {
         }
     };
 };
+// 
+// List of user registered error callbacks, with methods to:
+// - trigger an error (`triggerError`)
+// - register a callback (`store.error`)
+//
 
-var process = store.process = function(query) {
+// List of callbacks
+var errorCallbacks = [];
+
+// Call all error callbacks with the given error
+var triggerError = function(error) {
+    for (var i = 0; i < errorCallbacks.length; ++i)
+        errorCallbacks[i].call(store, error);
 };
 
-var order = store.order = function(product) {
+// Register an error handler
+store.error = function(cb) {
+    errorCallbacks.push(cb);
 };
 
+store.order = function(product) {
+};
+
+store.refresh = function(query) {
+};
 /** 
  * A plugin to enable iOS In-App Purchases.
  *
@@ -572,11 +594,14 @@ window.storekit = new InAppPurchase();
 var initialized = false;
 
 var init = function () {
+    if (initialized) return;
+    initialized = true;
     storekit.init({
-        debug: store.debug ? true : false,
+        debug:    store.debug ? true : false,
+        noAutoFinish: true,
         ready:    storekitReady,
         error:    storekitError,
-        purchase: function (transactionId, productId) {},
+        purchase: storekitPurchase,
         restore:  function (originalTransactionId, productId) {},
         restoreCompleted: function () {},
         restoreFailed:    function (errorCode) {}
@@ -588,10 +613,16 @@ var storekitReady = function () {
     var products = [];
     for (var i = 0; i < store.products.length; ++i)
         products.push(store.products[i].id);
-    storekit.load(products, productsLoaded);
+    storekit.load(products, storekitLoaded);
 };
 
+// called when an error happens
 var storekitError = function(errorCode, errorText) {
+
+    console.log('error ' + errorCode + ': ' + errorText);
+
+    // when loading failed, trigger "error" for each of
+    // the registered products.
     if (errorCode === storekit.ERR_LOAD) {
         for (var i = 0; i < store.products.length; ++i) {
             var p = store.products[i];
@@ -601,10 +632,15 @@ var storekitError = function(errorCode, errorText) {
             }, p]);
         }
     }
+
+    triggerError({
+        code:    errorCode,
+        message: errorText
+    });
 };
 
 // update store's product definitions when they have been loaded.
-var productsLoaded = function (validProducts, invalidProductIds) {
+var storekitLoaded = function (validProducts, invalidProductIds) {
     var p;
     for (var i = 0; i < validProducts.length; ++i) {
         p = store.productsById[validProducts[i].id];
@@ -623,15 +659,72 @@ var productsLoaded = function (validProducts, invalidProductIds) {
     }
 };
 
-var restore = store.restore = function() {
-    // Restore purchases.
+// Purchase approved
+var storekitPurchase = function (transactionId, productId) {
+    var product = store.productsById[productId];
+    if (!product) {
+        triggerError({
+            code: store.ERR_PURCHASE,
+            message: "Unknown product purchased"
+        });
+        return;
+    }
+    var order = {
+        id:      productId,
+        alias:   product.alias,
+        product: product,
+        productId:     productId,
+        transactionId: transactionId,
+        finish:  function () {
+            storekit.finish(this.transactionId);
+        }
+    };
+    triggerWhenProduct(product, "approved", [ order ]);
 };
 
-store.process = function(query) {
-    process.apply(this, arguments);
-    if (!initialized) {
-        init();
+// Restore purchases.
+store.restore = function() {
+};
+
+// Initiate a purchase
+store.order = function(productId, quantity) {
+    var product = store.productsById[productId] || store.productsByAlias[productId];
+    if (!product) {
+        triggerError({
+            code: store.ERR_INVALID_PRODUCT_ID,
+            message: "Trying to order an unknown product"
+        });
+        return;
     }
+    if (!initialized) {
+        triggerWhenProduct(product, "error", [{
+            code: store.ERR_PURCHASE,
+            message: "`purchase()` called before initialization"
+        }, product]);
+        return;
+    }
+    if (!product.loaded) {
+        triggerWhenProduct(product, "error", [{
+            code: store.ERR_PURCHASE,
+            message: "`purchase()` called before doing initial `refresh()`"
+        }, product]);
+        return;
+    }
+    if (!product.valid) {
+        triggerWhenProduct(product, "error", [{
+            code: store.ERR_PURCHASE,
+            message: "`purchase()` called with an invalid product ID"
+        }, product]);
+        return;
+    }
+    storekit.purchase(product.id, quantity || 1);
+};
+
+// Refresh the store
+var refresh = store.refresh;
+store.refresh = function(query) {
+    refresh.apply(this, arguments);
+    if (!initialized) init();
 };
 
 module.exports = store;

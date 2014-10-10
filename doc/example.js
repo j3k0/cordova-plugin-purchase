@@ -1,17 +1,17 @@
     store.registerProducts([{
         id: "com.example.app.inappid1",
         alias: "100 coins",
-        type: purchase.CONSUMABLE
+        type: store.CONSUMABLE
     }, {
         id: "com.example.app.inappid2",
         alias: "full version",
-        type: purchase.NON_CONSUMABLE
+        type: store.NON_CONSUMABLE
     }, {
         id: "com.example.app.inappid3",
-        type: purchase.PAID_SUBSCRIPTION
+        type: store.PAID_SUBSCRIPTION
     }, {
         id: "com.example.app.inappid3",
-        type: purchase.FREE_SUBSCRIPTION
+        type: store.FREE_SUBSCRIPTION
     }]);
 
     // Request more information about a product
@@ -72,14 +72,11 @@
     store.when("order").cancelled(function(order) {
     });
 
-    store.process();
+    store.refresh();
 
     // Call restore if supported
     if (store.restore)
         store.restore();
-
-    // Only process a given purchase
-    store.process("com.example.app.inappid3");
 
     store.order("com.example.app.inappid3");
 

@@ -1,9 +1,13 @@
 // Store is the singleton object, exported by the plugin.
 var store = {};
 
-store.FREE_SUBSCRIPTION = "free-subscription";
-store.PAID_SUBSCRIPTION = "paid-subscription";
+// Product types
+store.FREE_SUBSCRIPTION = "free subscription";
+store.PAID_SUBSCRIPTION = "paid subscription";
+store.CONSUMABLE        = "consumable";
+store.NON_CONSUMABLE    = "non consumable";
 
+// Error codes
 var ERROR_CODES_BASE = 4983497;
 store.ERR_SETUP               = ERROR_CODES_BASE + 1;
 store.ERR_LOAD                = ERROR_CODES_BASE + 2;
@@ -197,13 +201,31 @@ var ask = store.ask = function(pid) {
         }
     };
 };
+// 
+// List of user registered error callbacks, with methods to:
+// - trigger an error (`triggerError`)
+// - register a callback (`store.error`)
+//
 
-var process = store.process = function(query) {
+// List of callbacks
+var errorCallbacks = [];
+
+// Call all error callbacks with the given error
+var triggerError = function(error) {
+    for (var i = 0; i < errorCallbacks.length; ++i)
+        errorCallbacks[i].call(store, error);
 };
 
-var order = store.order = function(product) {
+// Register an error handler
+store.error = function(cb) {
+    errorCallbacks.push(cb);
 };
 
+store.order = function(product) {
+};
+
+store.refresh = function(query) {
+};
 
 store._uniqueQuery = uniqueQuery;
 store._callbacks = callbacks;

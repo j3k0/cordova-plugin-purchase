@@ -6,10 +6,10 @@ var store = {};
 // #include "queries.js"
 // #include "when.js"
 // #include "ask.js"
+// #include "error-handler.js"
 
-var process = store.process = function(query) {
+store.order = function(product) {
 };
 
-var order = store.order = function(product) {
+store.refresh = function(query) {
 };
-

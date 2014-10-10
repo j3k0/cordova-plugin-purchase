@@ -1,6 +1,10 @@
-store.FREE_SUBSCRIPTION = "free-subscription";
-store.PAID_SUBSCRIPTION = "paid-subscription";
+// Product types
+store.FREE_SUBSCRIPTION = "free subscription";
+store.PAID_SUBSCRIPTION = "paid subscription";
+store.CONSUMABLE        = "consumable";
+store.NON_CONSUMABLE    = "non consumable";
 
+// Error codes
 var ERROR_CODES_BASE = 4983497;
 store.ERR_SETUP               = ERROR_CODES_BASE + 1;
 store.ERR_LOAD                = ERROR_CODES_BASE + 2;
