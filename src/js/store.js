@@ -6,6 +6,7 @@ var store = {};
 // #include "queries.js"
 // #include "when.js"
 // #include "ask.js"
+// #include "ready.js"
 // #include "error-handler.js"
 
 store.order = function(product) {
