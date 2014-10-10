@@ -81,10 +81,34 @@ var triggerWhenProduct = function(product, action, args) {
         }
     }
 };
-
-var process = store.process = function(query) {
+var when = store.when = function(query, once) {
+    return {
+        loaded: function(cb) {
+            callbacks.add(query, "loaded", cb, once);
+            return this;
+        },
+        approved: function(cb) {
+            callbacks.add(query, "approved", cb, once);
+            return this;
+        },
+        rejected: function(cb) {
+            callbacks.add(query, "rejected", cb, once);
+            return this;
+        },
+        updated: function(cb) {
+            callbacks.add(query, "updated", cb, once);
+            return this;
+        },
+        cancelled: function(cb) {
+            callbacks.add(query, "cancelled", cb, once);
+            return this;
+        }
+    };
 };
 
+var once = store.once = function(query) {
+    return store.when(query, true);
+};
 // Retrieve informations about a given product.
 // If the given product is already loaded, promise callbacks
 // will be called immediately. If not, it will happen as soon
@@ -138,37 +162,12 @@ var ask = store.ask = function(product) {
     };
 };
 
+var process = store.process = function(query) {
+};
+
 var order = store.order = function(product) {
 };
 
-var when = store.when = function(query, once) {
-    return {
-        loaded: function(cb) {
-            callbacks.add(query, "loaded", cb, once);
-            return this;
-        },
-        approved: function(cb) {
-            callbacks.add(query, "approved", cb, once);
-            return this;
-        },
-        rejected: function(cb) {
-            callbacks.add(query, "rejected", cb, once);
-            return this;
-        },
-        updated: function(cb) {
-            callbacks.add(query, "updated", cb, once);
-            return this;
-        },
-        cancelled: function(cb) {
-            callbacks.add(query, "cancelled", cb, once);
-            return this;
-        }
-    };
-};
-
-var once = store.once = function(query) {
-    return store.when(query, true);
-};
 
 store._uniqueQuery = uniqueQuery;
 store._callbacks = callbacks;

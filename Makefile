@@ -19,7 +19,7 @@ build: test-js
 test-js: check-jshint
 	@node_modules/.bin/jshint src/js/*.js test/js/*.js
 	@node_modules/.bin/preprocess src/js/store-test.js src/js > www/store-test.js
-	@node_modules/.bin/mocha test/js/test-queries.js
+	@node_modules/.bin/mocha test/js/test-*.js
 
 test-install: build
 	@./test/run.sh cc.fovea.babygoo babygooinapp1
