@@ -31,12 +31,12 @@ var uniqueQuery = function(string) {
 
 var callbacks = {
     byQuery: {},
-    add: function(query, action, cb) {
+    add: function(query, action, cb, once) {
         var fullQuery = uniqueQuery(query ? query + " " + action : action);
         if (this.byQuery[fullQuery])
-            this.byQuery[fullQuery].push(cb);
+            this.byQuery[fullQuery].push({cb:cb, once:once});
         else
-            this.byQuery[fullQuery] = [cb];
+            this.byQuery[fullQuery] = [{cb:cb, once:once}];
     }
 };
 
@@ -51,12 +51,17 @@ var triggerWhenProduct = function(product, action, args) {
     if (product && product.type && (product.type === store.FREE_SUBSCRIPTION || product.type === store.PAID_SUBSCRIPTION))
         queries.push("subscription " + action);
     queries.push(action);
-    for (var i = 0; i < queries.length; ++i) {
+    var i;
+    for (i = 0; i < queries.length; ++i) {
         var q = queries[i];
         var cbs = callbacks.byQuery[q];
         if (cbs) {
-            for (var j = 0; j < cbs.length; ++j)
-                cbs[i].apply(store, args);
+            // Call callbacks
+            for (var j = 0; j < cbs.length; ++j) {
+                cbs[j].cb.apply(store, args);
+            }
+            // Remove callbacks that needed to be called only once
+            callbacks.byQuery[q] = cbs.filter(function (cb) { return !cb.once; });
         }
     }
 };
@@ -75,27 +80,89 @@ var registerProducts = store.registerProducts = function(products) {
 var process = store.process = function(query) {
 };
 
+// Retrieve informations about a given product.
+// If the given product is already loaded, promise callbacks
+// will be called immediately. If not, it will happen as soon
+// as the product is known as valid or invalid.
 var ask = store.ask = function(product) {
+    var that = this;
+    var p = this.productsById[product] || this.productsByAlias[product];
+    var skip = false;
+
+    return {
+
+        // then: register a callback that'll be called when the product
+        // is loaded and known to be valid.
+        then: function(cb) {
+            if (p.loaded && p.valid)
+                cb(p);
+            else
+                that.once(product, "loaded", function(p) {
+                    if (skip) return;
+                    skip = true;
+                    if (p.valid)
+                        cb(p);
+                });
+            return this;
+        },
+
+        // then: register a callback that'll be called when the product
+        // is loaded and known to be invalid. Or when loading of the
+        // product information was impossible.
+        error: function(cb) {
+            if (p.loaded && !p.valid)
+                cb(p);
+            else {
+                that.once(product, store.ERR_PRODUCT_NOT_LOADED, function(err) {
+                    if (skip) return;
+                    skip = true;
+                    cb(err);
+                });
+                that.once(product, "loaded", function(p) {
+                    if (skip) return;
+                    skip = true;
+                    if (!p.valid)
+                        cb({
+                            code: store.ERR_INVALID_PRODUCT_ID,
+                            message: "Invalid product ID"
+                        });
+                });
+            }
+            return this;
+        }
+    };
 };
 
 var order = store.order = function(product) {
 };
 
-var when = store.when = function(query) {
+var when = store.when = function(query, once) {
     return {
+        loaded: function(cb) {
+            callbacks.add(query, "loaded", cb, once);
+            return this;
+        },
         approved: function(cb) {
-            callbacks.add(query, "approved", cb);
+            callbacks.add(query, "approved", cb, once);
+            return this;
         },
         rejected: function(cb) {
-            callbacks.add(query, "cancelled". cb);
+            callbacks.add(query, "rejected", cb, once);
+            return this;
         },
         updated: function(cb) {
-            callbacks.add(query, "updated", cb);
+            callbacks.add(query, "updated", cb, once);
+            return this;
         },
         cancelled: function(cb) {
-            callbacks.add(query, "cancelled", cb);
+            callbacks.add(query, "cancelled", cb, once);
+            return this;
         }
     };
+};
+
+var once = store.once = function(query) {
+    return store.when(query, true);
 };
 
 // Store iOS
@@ -128,6 +195,7 @@ if (iOS) {
     var productsLoaded = function (validProducts, invalidProductIds) {
         for (var i = 0; i < validProducts.length; ++i) {
             var p = store.productsById[validProducts[i].id];
+            p.loaded = true;
             p.valid = true;
             p.title = validProducts[i].title;
             p.price = validProducts[i].price;
@@ -135,7 +203,10 @@ if (iOS) {
             triggerWhenProduct(p, "loaded", [p]);
         }
         for (var j = 0; j < invalidProductIds.length; ++j) {
-            store.productsById[invalidProductIds[j]].valid = false;
+            p = store.productsById[invalidProductIds[j]];
+            p.loaded = true;
+            p.valid = false;
+            triggerWhenProduct(p, "loaded", [p]);
         }
     };
 

@@ -16,9 +16,13 @@
 	<license>MIT</license>
     <keywords>cordova,phonegap,purchase,storekit,ios,android,play,appstore</keywords>
 
+    <js-module src="www/store.js" name="Purchase">
+        <clobbers target="store" />
+    </js-module>
+
     <!-- ios -->
     <platform name="ios">
-        <js-module src="www/purchase-ios.js" name="InAppPurchase">
+        <js-module src="www/store-ios.js" name="InAppPurchase">
             <clobbers target="storekit" />
         </js-module>
         
@@ -42,7 +46,7 @@
 
     <!-- android -->
     <platform name="android">
-        <js-module src="www/purchase-android.js" name="InAppBilling">
+        <js-module src="www/store-android.js" name="InAppBilling">
             <clobbers target="inappbilling" />
         </js-module>
 
