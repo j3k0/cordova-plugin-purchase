@@ -20,6 +20,10 @@ store.when = function(query, once) {
         cancelled: function(cb) {
             callbacks.add(query, "cancelled", cb, once);
             return this;
+        },
+        error: function(cb) {
+            callbacks.add(query, "error", cb, once);
+            return this;
         }
     };
 };

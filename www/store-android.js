@@ -131,6 +131,10 @@ store.when = function(query, once) {
         cancelled: function(cb) {
             callbacks.add(query, "cancelled", cb, once);
             return this;
+        },
+        error: function(cb) {
+            callbacks.add(query, "error", cb, once);
+            return this;
         }
     };
 };
@@ -186,7 +190,13 @@ var ask = store.ask = function(pid) {
                 }, p);
             }
             else {
-                // TODO: Catch loading errors.
+                that.once(pid).error(function(err, p) {
+                    if (skip) return;
+                    if (err.code === store.ERR_LOAD) {
+                        skip = true;
+                        cb(err, p);
+                    }
+                });
                 that.once(pid).loaded(function(p) {
                     if (skip) return;
                     if (!p.valid) {

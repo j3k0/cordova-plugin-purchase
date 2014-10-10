@@ -131,6 +131,10 @@ store.when = function(query, once) {
         cancelled: function(cb) {
             callbacks.add(query, "cancelled", cb, once);
             return this;
+        },
+        error: function(cb) {
+            callbacks.add(query, "error", cb, once);
+            return this;
         }
     };
 };
@@ -186,7 +190,13 @@ var ask = store.ask = function(pid) {
                 }, p);
             }
             else {
-                // TODO: Catch loading errors.
+                that.once(pid).error(function(err, p) {
+                    if (skip) return;
+                    if (err.code === store.ERR_LOAD) {
+                        skip = true;
+                        cb(err, p);
+                    }
+                });
                 that.once(pid).loaded(function(p) {
                     if (skip) return;
                     if (!p.valid) {
@@ -564,8 +574,8 @@ var initialized = false;
 var init = function () {
     storekit.init({
         debug: store.debug ? true : false,
-        ready: storekitReady,
-        error:    function (errorCode, errorText) {},
+        ready:    storekitReady,
+        error:    storekitError,
         purchase: function (transactionId, productId) {},
         restore:  function (originalTransactionId, productId) {},
         restoreCompleted: function () {},
@@ -579,6 +589,18 @@ var storekitReady = function () {
     for (var i = 0; i < store.products.length; ++i)
         products.push(store.products[i].id);
     storekit.load(products, productsLoaded);
+};
+
+var storekitError = function(errorCode, errorText) {
+    if (errorCode === storekit.ERR_LOAD) {
+        for (var i = 0; i < store.products.length; ++i) {
+            var p = store.products[i];
+            triggerWhenProduct(p, "error", [{
+                code: store.ERR_LOAD,
+                message: errorText
+            }, p]);
+        }
+    }
 };
 
 // update store's product definitions when they have been loaded.

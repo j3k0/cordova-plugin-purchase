@@ -7,8 +7,8 @@ var initialized = false;
 var init = function () {
     storekit.init({
         debug: store.debug ? true : false,
-        ready: storekitReady,
-        error:    function (errorCode, errorText) {},
+        ready:    storekitReady,
+        error:    storekitError,
         purchase: function (transactionId, productId) {},
         restore:  function (originalTransactionId, productId) {},
         restoreCompleted: function () {},
@@ -22,6 +22,18 @@ var storekitReady = function () {
     for (var i = 0; i < store.products.length; ++i)
         products.push(store.products[i].id);
     storekit.load(products, productsLoaded);
+};
+
+var storekitError = function(errorCode, errorText) {
+    if (errorCode === storekit.ERR_LOAD) {
+        for (var i = 0; i < store.products.length; ++i) {
+            var p = store.products[i];
+            triggerWhenProduct(p, "error", [{
+                code: store.ERR_LOAD,
+                message: errorText
+            }, p]);
+        }
+    }
 };
 
 // update store's product definitions when they have been loaded.
