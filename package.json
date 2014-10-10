@@ -25,6 +25,7 @@
   "devDependencies": {
     "cordova": "^3.6.3-0.2.13",
     "jshint": "^2.5.6",
+    "mocha": "^1.21.4",
     "preprocessor": "^1.4.0"
   }
 }

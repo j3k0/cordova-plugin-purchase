@@ -13,11 +13,13 @@ help:
 	@echo ""
 
 build: test-js
-	@node_modules/.bin/preprocess src/javascript/store-ios.js src/javascript > www/store-ios.js
-	@node_modules/.bin/preprocess src/javascript/store-android.js src/javascript > www/store-android.js
+	@node_modules/.bin/preprocess src/js/store-ios.js src/js > www/store-ios.js
+	@node_modules/.bin/preprocess src/js/store-android.js src/js > www/store-android.js
 
 test-js: check-jshint
-	@node_modules/.bin/jshint src/javascript/*.js
+	@node_modules/.bin/jshint src/js/*.js test/js/*.js
+	@node_modules/.bin/preprocess src/js/store-test.js src/js > www/store-test.js
+	@node_modules/.bin/mocha test/js/test-queries.js
 
 test-install: build
 	@./test/run.sh cc.fovea.babygoo babygooinapp1

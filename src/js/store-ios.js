@@ -1,3 +1,4 @@
+// #include "copyright.js"
 // #include "store.js"
 
 var initialized = false;
@@ -52,3 +53,5 @@ store.process = function(query) {
         init();
     }
 };
+
+module.exports = store;

@@ -13,6 +13,7 @@ var uniqueQuery = function(string) {
             query += tokens[i];
         }
     }
+    return query;
 };
 
 // Manage the list of callbacks registered for given queries

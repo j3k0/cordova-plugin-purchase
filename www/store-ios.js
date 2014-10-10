@@ -1,10 +1,18 @@
 //
-// File: store-common.js
+// Cordova Purchase Plugin
+//
 // Author: Jean-Christophe Hoelt
 // Copyright (c)2014
 //
 // License: MIT
+//
 
+//
+// !!! WARNING !!!
+// This file is auto-generated from files located in `src/js`
+//
+// DO NOT EDIT DIRECTLY OR YOUR CHANGES WILL BE LOST
+//
 // Store is the singleton object, exported by the plugin.
 var store = {};
 
@@ -37,6 +45,7 @@ var uniqueQuery = function(string) {
             query += tokens[i];
         }
     }
+    return query;
 };
 
 // Manage the list of callbacks registered for given queries
