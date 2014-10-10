@@ -16,6 +16,21 @@
 // Store is the singleton object, exported by the plugin.
 var store = {};
 
+store.FREE_SUBSCRIPTION = "free-subscription";
+store.PAID_SUBSCRIPTION = "paid-subscription";
+
+var ERROR_CODES_BASE = 4983497;
+store.ERR_SETUP               = ERROR_CODES_BASE + 1;
+store.ERR_LOAD                = ERROR_CODES_BASE + 2;
+store.ERR_PURCHASE            = ERROR_CODES_BASE + 3;
+store.ERR_LOAD_RECEIPTS       = ERROR_CODES_BASE + 4;
+store.ERR_CLIENT_INVALID      = ERROR_CODES_BASE + 5;
+store.ERR_PAYMENT_CANCELLED   = ERROR_CODES_BASE + 6;
+store.ERR_PAYMENT_INVALID     = ERROR_CODES_BASE + 7;
+store.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
+store.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
+store.ERR_REFRESH_RECEIPTS    = ERROR_CODES_BASE + 11;
+store.ERR_INVALID_PRODUCT_ID  = ERROR_CODES_BASE + 12;
 store.productsById = {};
 store.productsByAlias = {};
 store.products = [];
@@ -94,67 +109,8 @@ var triggerWhenProduct = function(product, action, args) {
         }
     }
 };
-
-var process = store.process = function(query) {
-};
-
-// Retrieve informations about a given product.
-// If the given product is already loaded, promise callbacks
-// will be called immediately. If not, it will happen as soon
-// as the product is known as valid or invalid.
-var ask = store.ask = function(product) {
-    var that = this;
-    var p = this.productsById[product] || this.productsByAlias[product];
-    var skip = false;
-
-    return {
-
-        // then: register a callback that'll be called when the product
-        // is loaded and known to be valid.
-        then: function(cb) {
-            if (p.loaded && p.valid)
-                cb(p);
-            else
-                that.once(product, "loaded", function(p) {
-                    if (skip) return;
-                    skip = true;
-                    if (p.valid)
-                        cb(p);
-                });
-            return this;
-        },
-
-        // then: register a callback that'll be called when the product
-        // is loaded and known to be invalid. Or when loading of the
-        // product information was impossible.
-        error: function(cb) {
-            if (p.loaded && !p.valid)
-                cb(p);
-            else {
-                that.once(product, store.ERR_PRODUCT_NOT_LOADED, function(err) {
-                    if (skip) return;
-                    skip = true;
-                    cb(err);
-                });
-                that.once(product, "loaded", function(p) {
-                    if (skip) return;
-                    skip = true;
-                    if (!p.valid)
-                        cb({
-                            code: store.ERR_INVALID_PRODUCT_ID,
-                            message: "Invalid product ID"
-                        });
-                });
-            }
-            return this;
-        }
-    };
-};
-
-var order = store.order = function(product) {
-};
-
-var when = store.when = function(query, once) {
+// 
+store.when = function(query, once) {
     return {
         loaded: function(cb) {
             callbacks.add(query, "loaded", cb, once);
@@ -179,9 +135,80 @@ var when = store.when = function(query, once) {
     };
 };
 
-var once = store.once = function(query) {
+store.once = function(query) {
     return store.when(query, true);
 };
+// Retrieve informations about a given product.
+// If the given product is already loaded, promise callbacks
+// will be called immediately. If not, it will happen as soon
+// as the product is known as valid or invalid.
+var ask = store.ask = function(pid) {
+    var that = this;
+    var p = this.productsById[pid] || this.productsByAlias[pid];
+    if (!p) {
+        p = {
+            id: pid,
+            loaded: true,
+            valid: false
+        };
+    }
+    var skip = false;
+
+    return {
+
+        // then: register a callback that'll be called when the product
+        // is loaded and known to be valid.
+        then: function(cb) {
+            if (p.loaded && p.valid) {
+                skip = true;
+                cb(p);
+            }
+            else
+                that.once(pid).loaded(function(p) {
+                    if (skip) return;
+                    if (p.valid) {
+                        skip = true;
+                        cb(p);
+                    }
+                });
+            return this;
+        },
+
+        // then: register a callback that'll be called when the product
+        // is loaded and known to be invalid. Or when loading of the
+        // product information was impossible.
+        error: function(cb) {
+            if (p.loaded && !p.valid) {
+                skip = true;
+                cb({
+                    code: store.ERR_INVALID_PRODUCT_ID,
+                    message: "Invalid product"
+                }, p);
+            }
+            else {
+                // TODO: Catch loading errors.
+                that.once(pid).loaded(function(p) {
+                    if (skip) return;
+                    if (!p.valid) {
+                        skip = true;
+                        cb({
+                            code: store.ERR_INVALID_PRODUCT_ID,
+                            message: "Invalid product"
+                        }, p);
+                    }
+                });
+            }
+            return this;
+        }
+    };
+};
+
+var process = store.process = function(query) {
+};
+
+var order = store.order = function(product) {
+};
+
 
 module.exports = store;
 

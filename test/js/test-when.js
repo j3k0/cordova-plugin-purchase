@@ -96,4 +96,3 @@ describe('When', function(){
         });
     });
 });
-

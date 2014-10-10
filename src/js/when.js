@@ -1,4 +1,5 @@
-var when = store.when = function(query, once) {
+// 
+store.when = function(query, once) {
     return {
         loaded: function(cb) {
             callbacks.add(query, "loaded", cb, once);
@@ -23,6 +24,6 @@ var when = store.when = function(query, once) {
     };
 };
 
-var once = store.once = function(query) {
+store.once = function(query) {
     return store.when(query, true);
 };

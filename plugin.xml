@@ -16,14 +16,10 @@
 	<license>MIT</license>
     <keywords>cordova,phonegap,purchase,storekit,ios,android,play,appstore</keywords>
 
-    <js-module src="www/store.js" name="Purchase">
-        <clobbers target="store" />
-    </js-module>
-
     <!-- ios -->
     <platform name="ios">
         <js-module src="www/store-ios.js" name="InAppPurchase">
-            <clobbers target="storekit" />
+            <clobbers target="store" />
         </js-module>
         
         <!-- Cordova 2.2 -->

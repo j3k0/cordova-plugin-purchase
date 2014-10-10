@@ -1,5 +1,6 @@
 // #include "copyright.js"
 // #include "store.js"
+// #include "ios.js"
 
 var initialized = false;
 

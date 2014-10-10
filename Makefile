@@ -13,11 +13,16 @@ help:
 	@echo ""
 
 build: test-js
+	@echo "- Preprocess"
 	@node_modules/.bin/preprocess src/js/store-ios.js src/js > www/store-ios.js
 	@node_modules/.bin/preprocess src/js/store-android.js src/js > www/store-android.js
+	@echo "- DONE"
+	@echo ""
 
 test-js: check-jshint
+	@echo "- JSHint"
 	@node_modules/.bin/jshint src/js/*.js test/js/*.js
+	@echo "- Mocha"
 	@node_modules/.bin/preprocess src/js/store-test.js src/js > www/store-test.js
 	@node_modules/.bin/mocha test/js/test-*.js
 
