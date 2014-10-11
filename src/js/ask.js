@@ -1,39 +1,11 @@
-//api: 
-//api: ## store.ask(productId)
-//api: 
-//api: Retrieve informations about a given product.
-//api: 
-//api: If the given product is already loaded, promise callbacks
-//api: will be called immediately. If not, it will happen as soon
-//api: as the product is known as valid or invalid.
-//api: 
-//api: ### return value
-//api: 
-//api: Return promise with the following methods:
-//api:     - then
-//api:     - error
-//api: 
-//api: #### then(function (product) {})
-//api: 
-//api: 
-//api: #### error(function (err) {})
-//api: 
-//api: 
-//api: ### example use
-//api: 
-//api: ```
-//api: store.ask("full version").
-//api:     then(function(product) {
-//api:         console.log("product " + product.id + " loaded");
-//api:         console.log("title: " + product.title);
-//api:         console.log("description: " + product.description);
-//api:         console.log("price: " + product.price);
-//api:     }).
-//api:     error(function(error) {
-//api:         console.log("failed to load product");
-//api:         console.log("ERROR " + error.code + ": " + error.message);
-//api:     });
-//api: ```
+/// 
+/// ## <a name="ask"></a>`store.ask(productId)` ##
+/// 
+/// Retrieve informations about a given [product](#products).
+/// 
+/// If the given product is already loaded, promise callbacks
+/// will be called immediately. If not, it will happen as soon
+/// as the product is known as valid or invalid.
 
 var ask = store.ask = function(pid) {
     var that = this;
@@ -47,10 +19,19 @@ var ask = store.ask = function(pid) {
     }
     var skip = false;
 
+    /// 
+    /// ### return value
+    /// 
+    /// Return promise with the following methods:
     return {
-
-        // then: register a callback that'll be called when the product
-        // is loaded and known to be valid.
+ 
+        /// 
+        /// #### then(function (product) {})
+        /// 
+        /// Called when the product information has been loaded from the store's
+        /// servers and known to be valid.
+        /// 
+        /// `product` contains the fields documented in the [products](#products) section.
         then: function(cb) {
             if (p.loaded && p.valid) {
                 skip = true;
@@ -67,9 +48,13 @@ var ask = store.ask = function(pid) {
             return this;
         },
 
-        // then: register a callback that'll be called when the product
-        // is loaded and known to be invalid. Or when loading of the
-        // product information was impossible.
+        /// 
+        /// #### error(function (err) {})
+        /// 
+        /// Called if product information cannot be loaded from the store or
+        /// when it is know to be invalid.
+        /// 
+        /// `err` features the standard [error](#errors) format (`code` and `message`).
         error: function(cb) {
             if (p.loaded && !p.valid) {
                 skip = true;
@@ -101,3 +86,19 @@ var ask = store.ask = function(pid) {
         }
     };
 };
+/// 
+/// ### example use
+/// 
+/// ```
+/// store.ask("full version").
+///     then(function(product) {
+///         console.log("product " + product.id + " loaded");
+///         console.log("title: " + product.title);
+///         console.log("description: " + product.description);
+///         console.log("price: " + product.price);
+///     }).
+///     error(function(error) {
+///         console.log("failed to load product");
+///         console.log("ERROR " + error.code + ": " + error.message);
+///     });
+/// ```
