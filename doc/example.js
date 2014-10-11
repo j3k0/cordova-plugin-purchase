@@ -72,6 +72,13 @@
     store.when("order").cancelled(function(order) {
     });
 
+    store.ready(); // true or false
+
+    // execute when (or immediately if) the store is ready and available.
+    store.ready(function() { });
+
+    store.off(callback);
+
     store.refresh();
 
     // Call restore if supported

@@ -7,6 +7,7 @@ help:
 	@echo "    tests .......... Run all tests."
 	@echo "    test-js ........ Test javascript files for errors."
 	@echo "    test-install ... Test plugin installation on iOS and Android."
+	@echo "    doc-api ........ Generate API documentation into doc/api.md"
 	@echo "    clean .......... Cleanup the project (temporary and generated files)."
 	@echo ""
 	@echo "(c)2014, Jean-Christophe Hoelt <hoelt@fovea.cc>"
@@ -34,6 +35,13 @@ tests: test-js test-install
 
 check-jshint:
 	@test -e node_modules/.bin/jshint || ( echo 'Please install dependencies: npm install'; exit 1 )
+
+doc-api:
+	@echo "# API Documentation" > doc/api.md
+	@echo >> doc/api.md
+	@echo "(generated from source files using make doc-api)" >> doc/api.md
+	@echo >> doc/api.md
+	@cat src/js/store.js src/js/ask.js | grep "//api: " | cut -d\  -f2- >> doc/api.md
 
 clean:
 	@find . -name '*~' -exec rm '{}' ';'
