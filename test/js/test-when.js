@@ -33,11 +33,11 @@ describe('When', function(){
             });
 
             assert.equal(loaded, false);
-            store._triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded");
             assert.equal(loaded, true);
 
             loaded = false;
-            store._triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded");
             assert.equal(loaded, true);
         });
 
@@ -50,11 +50,11 @@ describe('When', function(){
             });
 
             assert.equal(loaded, false);
-            store._triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded");
             assert.equal(loaded, true);
 
             loaded = false;
-            store._triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded");
             assert.equal(loaded, true);
         });
     });
@@ -70,11 +70,11 @@ describe('When', function(){
             });
 
             assert.equal(loaded, false);
-            store._triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded");
             assert.equal(loaded, true);
 
             loaded = false;
-            store._triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded");
             assert.equal(loaded, false);
         });
 
@@ -87,11 +87,11 @@ describe('When', function(){
             });
 
             assert.equal(loaded, false);
-            store._triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded");
             assert.equal(loaded, true);
 
             loaded = false;
-            store._triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded");
             assert.equal(loaded, false);
         });
     });

@@ -35,7 +35,7 @@ describe('Ask', function(){
                 });
             product.loaded = true;
             product.valid = true;
-            store._triggerWhenProduct(product, "loaded", [product]);
+            store._queries.triggerWhenProduct(product, "loaded", [product]);
             assert.equal(true, loaded);
             assert.equal(false, error);
         });
@@ -55,12 +55,12 @@ describe('Ask', function(){
                 });
             product.loaded = true;
             product.valid = false;
-            store._triggerWhenProduct(product, "loaded", [product]);
+            store._queries.triggerWhenProduct(product, "loaded", [product]);
             assert.equal(false, loaded);
             assert.equal(true, error);
         });
 
-        it('should throw errors when giving unregistered product id or alias', function() {
+        it('should fail when giving unregistered product id or alias', function() {
             var nop = function() {};
             var then = false;
             var error = false;

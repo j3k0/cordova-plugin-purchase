@@ -1,8 +1,6 @@
-// Store is the singleton object, exported by the plugin.
-var store = {};
 
 /// 
-/// ## <a name="store"></a>`store` object ##
+/// ## <a name="store"></a>*store* object ##
 /// 
 /// `store` is the global object exported by the purchase plugin.
 ///
@@ -11,23 +9,24 @@ var store = {};
 ///
 /// Check cordova's documentation for more details if needed.
 /// 
-/// ## products ##
-/// 
-/// Some methods, like the [`ask` method](#ask), give you access to a `product`
-/// object. Products object provide a set of fields and methods:
-///
-/// TODO: Document this
-///
-/// ## errors ##
-/// 
+var store = {};
 
 // #include "constants.js"
+// #include "product.js"
+// #include "error.js"
+
 // #include "registerProducts.js"
-// #include "queries.js"
 // #include "when.js"
 // #include "ask.js"
 // #include "ready.js"
-// #include "error-handler.js"
+
+///
+/// # internal APIs
+/// USE AT YOUR OWN RISKS
+
+// #include "products.js"
+// #include "queries.js"
+// #include "error-callbacks.js"
 
 store.order = function(product) {
 };

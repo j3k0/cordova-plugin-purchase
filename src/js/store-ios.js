@@ -37,36 +37,36 @@ var storekitError = function(errorCode, errorText) {
     if (errorCode === storekit.ERR_LOAD) {
         for (var i = 0; i < store.products.length; ++i) {
             var p = store.products[i];
-            triggerWhenProduct(p, "error", [{
+            store._queries.triggerWhenProduct(p, "error", [new store.Error({
                 code: store.ERR_LOAD,
                 message: errorText
-            }, p]);
+            }), p]);
         }
     }
 
-    triggerError({
+    store.error.callbacks.trigger(new store.Error({
         code:    errorCode,
         message: errorText
-    });
+    }));
 };
 
 // update store's product definitions when they have been loaded.
 var storekitLoaded = function (validProducts, invalidProductIds) {
     var p;
     for (var i = 0; i < validProducts.length; ++i) {
-        p = store.productsById[validProducts[i].id];
+        p = store.products.byId[validProducts[i].id];
         p.loaded = true;
         p.valid = true;
         p.title = validProducts[i].title;
         p.price = validProducts[i].price;
         p.description = validProducts[i].description;
-        triggerWhenProduct(p, "loaded", [p]);
+        store._queries.triggerWhenProduct(p, "loaded", [p]);
     }
     for (var j = 0; j < invalidProductIds.length; ++j) {
-        p = store.productsById[invalidProductIds[j]];
+        p = store.products.byId[invalidProductIds[j]];
         p.loaded = true;
         p.valid = false;
-        triggerWhenProduct(p, "loaded", [p]);
+        store._queries.triggerWhenProduct(p, "loaded", [p]);
     }
     store.ready(true);
 };
@@ -74,12 +74,12 @@ var storekitLoaded = function (validProducts, invalidProductIds) {
 // Purchase approved
 var storekitPurchase = function (transactionId, productId) {
     store.ready(function() {
-        var product = store.productsById[productId];
+        var product = store.products.byId[productId];
         if (!product) {
-            triggerError({
+            store.error.callbacks.trigger(new store.Error({
                 code: store.ERR_PURCHASE,
                 message: "Unknown product purchased"
-            });
+            }));
             return;
         }
         var order = {
@@ -92,7 +92,7 @@ var storekitPurchase = function (transactionId, productId) {
                 storekit.finish(this.transactionId);
             }
         };
-        triggerWhenProduct(product, "approved", [ order ]);
+        store._queries.triggerWhenProduct(product, "approved", [ order ]);
     });
 };
 
@@ -103,33 +103,33 @@ store.restore = function() {
 // Initiate a purchase
 store.order = function(productId, quantity) {
     store.ready(function() {
-        var product = store.productsById[productId] || store.productsByAlias[productId];
+        var product = store.products.byId[productId] || store.products.byAlias[productId];
         if (!product) {
-            triggerError({
+            store.error.callbacks.trigger(new store.Error({
                 code: store.ERR_INVALID_PRODUCT_ID,
                 message: "Trying to order an unknown product"
-            });
+            }));
             return;
         }
         if (!initialized) {
-            triggerWhenProduct(product, "error", [{
+            store._queries.triggerWhenProduct(product, "error", [new store.Error({
                 code: store.ERR_PURCHASE,
                 message: "`purchase()` called before initialization"
-            }, product]);
+            }), product]);
             return;
         }
         if (!product.loaded) {
-            triggerWhenProduct(product, "error", [{
+            store._queries.triggerWhenProduct(product, "error", [new store.Error({
                 code: store.ERR_PURCHASE,
                 message: "`purchase()` called before doing initial `refresh()`"
-            }, product]);
+            }), product]);
             return;
         }
         if (!product.valid) {
-            triggerWhenProduct(product, "error", [{
+            store._queries.triggerWhenProduct(product, "error", [new store.Error({
                 code: store.ERR_PURCHASE,
                 message: "`purchase()` called with an invalid product ID"
-            }, product]);
+            }), product]);
             return;
         }
         storekit.purchase(product.id, quantity || 1);

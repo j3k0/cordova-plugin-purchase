@@ -1,5 +1,8 @@
+(function(){
+'use strict';
+
 /// 
-/// ## <a name="ask"></a>`store.ask(productId)` ##
+/// ## <a name="ask"></a>*store.ask(productId)* ##
 /// 
 /// Retrieve informations about a given [product](#products).
 /// 
@@ -7,15 +10,15 @@
 /// will be called immediately. If not, it will happen as soon
 /// as the product is known as valid or invalid.
 
-var ask = store.ask = function(pid) {
+store.ask = function(pid) {
     var that = this;
-    var p = this.productsById[pid] || this.productsByAlias[pid];
+    var p = store.products.byId[pid] || store.products.byAlias[pid];
     if (!p) {
-        p = {
+        p = new store.Product({
             id: pid,
             loaded: true,
             valid: false
-        };
+        });
     }
     var skip = false;
 
@@ -26,7 +29,7 @@ var ask = store.ask = function(pid) {
     return {
  
         /// 
-        /// #### then(function (product) {})
+        /// #### .*then(function (product) {})*
         /// 
         /// Called when the product information has been loaded from the store's
         /// servers and known to be valid.
@@ -49,7 +52,7 @@ var ask = store.ask = function(pid) {
         },
 
         /// 
-        /// #### error(function (err) {})
+        /// #### .*error(function (err) {})*
         /// 
         /// Called if product information cannot be loaded from the store or
         /// when it is know to be invalid.
@@ -58,10 +61,10 @@ var ask = store.ask = function(pid) {
         error: function(cb) {
             if (p.loaded && !p.valid) {
                 skip = true;
-                cb({
+                cb(new store.Error({
                     code: store.ERR_INVALID_PRODUCT_ID,
                     message: "Invalid product"
-                }, p);
+                }), p);
             }
             else {
                 that.once(pid).error(function(err, p) {
@@ -75,10 +78,10 @@ var ask = store.ask = function(pid) {
                     if (skip) return;
                     if (!p.valid) {
                         skip = true;
-                        cb({
+                        cb(new store.Error({
                             code: store.ERR_INVALID_PRODUCT_ID,
                             message: "Invalid product"
-                        }, p);
+                        }), p);
                     }
                 });
             }
@@ -102,3 +105,4 @@ var ask = store.ask = function(pid) {
 ///         console.log("ERROR " + error.code + ": " + error.message);
 ///     });
 /// ```
+}).call(this);

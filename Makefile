@@ -39,7 +39,7 @@ check-jshint:
 doc-api: build
 	@echo "# API Documentation" > doc/api.md
 	@echo >> doc/api.md
-	@echo "(generated from source files using make doc-api)" >> doc/api.md
+	@echo "(generated from source files using \`make doc-api)\`" >> doc/api.md
 	@echo >> doc/api.md
 	@cat www/store-test.js | grep "///" | cut -d/ -f4- | cut -d\  -f2- >> doc/api.md
 

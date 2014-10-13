@@ -6,8 +6,8 @@ describe('Queries', function(){
     describe('#uniqueQuery()', function(){
 
         it('should remove keywords from the query', function(){
-            assert.ok(store._uniqueQuery);
-            var uniqueQuery = store._uniqueQuery;
+            assert.ok(store._queries.uniqueQuery);
+            var uniqueQuery = store._queries.uniqueQuery;
             assert.equal("full version", uniqueQuery("order full version"));
             assert.equal("loaded cc.fovea.babygoo.inapp1", uniqueQuery("loaded cc.fovea.babygoo.inapp1"));
         });
@@ -16,8 +16,8 @@ describe('Queries', function(){
     describe('#callbacks()', function(){
 
         it('should add callbacks', function(){
-            assert.ok(store._callbacks);
-            var callbacks = store._callbacks;
+            assert.ok(store._queries.callbacks);
+            var callbacks = store._queries.callbacks;
             var xxx = function() {};
             callbacks.add("p1", "loaded", xxx);
             assert.equal(1, callbacks.byQuery["p1 loaded"].length);
@@ -29,9 +29,9 @@ describe('Queries', function(){
     describe('#triggerWhenProduct()', function(){
 
         it('should call callbacks', function(){
-            assert.ok(store._triggerWhenProduct);
-            var triggerWhenProduct = store._triggerWhenProduct;
-            var callbacks = store._callbacks;
+            assert.ok(store._queries.triggerWhenProduct);
+            var triggerWhenProduct = store._queries.triggerWhenProduct;
+            var callbacks = store._queries.callbacks;
 
             var approved = false;
             callbacks.add("full version", "approved", function () {
@@ -48,8 +48,8 @@ describe('Queries', function(){
         });
 
         it('should call some callbacks only once', function(){
-            var triggerWhenProduct = store._triggerWhenProduct;
-            var callbacks = store._callbacks;
+            var triggerWhenProduct = store._queries.triggerWhenProduct;
+            var callbacks = store._queries.callbacks;
 
             var approved = false;
             callbacks.add("lite version", "approved", function () {
@@ -66,8 +66,8 @@ describe('Queries', function(){
         });
 
         it('should handle special case for subscriptions', function(){
-            var triggerWhenProduct = store._triggerWhenProduct;
-            var callbacks = store._callbacks;
+            var triggerWhenProduct = store._queries.triggerWhenProduct;
+            var callbacks = store._queries.callbacks;
 
             var approved = false;
             callbacks.add("order subscription", "approved", function() {
