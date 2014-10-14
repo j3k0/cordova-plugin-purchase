@@ -1,5 +1,5 @@
 var assert = require("assert");
-var store = require("../../www/store-test");
+var store = require("../store-test");
 
 describe('Ask', function(){
 

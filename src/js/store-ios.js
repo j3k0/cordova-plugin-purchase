@@ -83,13 +83,12 @@ var storekitPurchase = function (transactionId, productId) {
             return;
         }
         var order = {
-            id:      productId,
-            alias:   product.alias,
             product: product,
-            productId:     productId,
-            transactionId: transactionId,
+            transaction: {
+                id: transactionId,
+            },
             finish:  function () {
-                storekit.finish(this.transactionId);
+                storekit.finish(order.transaction.id);
             }
         };
         store._queries.triggerWhenProduct(product, "approved", [ order ]);
