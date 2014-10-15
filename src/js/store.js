@@ -1,12 +1,3 @@
-/// 
-/// ## <a name="store"></a>*store* object ##
-/// 
-/// `store` is the global object exported by the purchase plugin.
-///
-/// As with any other plugin, this object shouldn't be used before
-/// the "deviceready" event is fired. Check cordova's documentation
-/// for more details if needed.
-///
 /// ### Philosophy
 ///
 /// The `store` API is mostly events based. As a user of this plugin,
@@ -99,7 +90,7 @@
 ///     }
 ///     
 ///     function hide() {
-///         // unregister the callback in case it didn't fire before the view is closed
+///         // stop monitoring the product
 ///         store.off(render);
 ///     }
 ///
@@ -149,13 +140,23 @@
 /// However, connection can be lost between you sending a purchase request
 /// and the server answering to you. In that case, the purchase shouldn't
 /// be lost (because the user paid for it), that's why the store will notify
-/// you of an approved purchase at application startup.
+/// you of an approved purchase during the next application startup.
 /// 
-/// Same can also happen if the user bought a product from another device, using the
+/// The same can also happen if the user bought a product from another device, using his
 /// same account.
 /// 
 /// For that reason, you should register all your features-unlocking listeners at 
 /// startup, before the first call to `store.refresh()`
+///
+
+/// 
+/// # <a name="store"></a>*store* object ##
+/// 
+/// `store` is the global object exported by the purchase plugin.
+///
+/// As with any other plugin, this object shouldn't be used before
+/// the "deviceready" event is fired. Check cordova's documentation
+/// for more details if needed.
 ///
 var store = {};
 
