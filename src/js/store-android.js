@@ -10,16 +10,18 @@ var initialized = false;
 var init = function () {
     if (initialized) return;
     initialized = true;
-    inappbilling.init(iabReady, iabError, {
-        showLog:  store.debug ? true : false,
-    });
-};
 
-var iabReady = function() {
     var products = [];
     for (var i = 0; i < store.products.length; ++i)
         products.push(store.products[i].id);
-    iab.loadProductDetails(iabLoaded, iabError, products);
+
+    store.android.init(iabReady, iabError, {
+        showLog:  store.debug ? true : false
+    }, products);
+};
+
+var iabReady = function() {
+    inappbilling.loadProductDetails(iabLoaded, iabError, products);
 
     function iabLoaded(validProducts) {
         var p, i;
@@ -48,6 +50,7 @@ var iabReady = function() {
 var iabError = function(err) {
 };
 
+var refresh = store.refresh;
 store.refresh = function() {
     refresh.apply(this, arguments);
     if (!initialized) init();
@@ -55,4 +58,6 @@ store.refresh = function() {
 
 }).call(this);
 
+if (window)
+    window.store = store;
 module.exports = store;

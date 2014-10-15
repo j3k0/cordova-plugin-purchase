@@ -48,7 +48,7 @@ var InAppBilling = function() {
  * 
  * @private
  */
-ERROR_CODES_BASE = 4983497;
+var ERROR_CODES_BASE = 4983497;
 InAppBilling.prototype.ERR_NO_ERROR = ERROR_CODES_BASE;
 InAppBilling.prototype.ERR_SETUP = ERROR_CODES_BASE + 1;
 InAppBilling.prototype.ERR_LOAD = ERROR_CODES_BASE + 2;
@@ -384,6 +384,6 @@ InAppBilling.prototype.getPurchaseDetails = function(success, fail, purchaseId) 
     return cordova.exec(success, fail, "InAppBillingPlugin", "getPurchaseDetails", [purchaseId]);
 };
 
-window.inappbilling = new InAppBilling();
+window.inappbilling = store.android = new InAppBilling();
 
 }).call(this);

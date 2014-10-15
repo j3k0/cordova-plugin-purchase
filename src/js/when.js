@@ -11,21 +11,21 @@ store.when = function(query, once) {
     /// Return promise with the following methods:
     ///
     return {
-        ///  - `.*loaded(function (product) {})*`
+        ///  - `.loaded(function (product) {})`
         ///    - Called when [product](#product) data is loaded from the store.
         loaded: function(cb) {
             store._queries.callbacks.add(query, "loaded", cb, once);
             return this;
         },
 
-        ///  - `.*approved(function (order) {})*`
+        ///  - `.approved(function (order) {})`
         ///    - Called when an [order](#order) is approved.
         approved: function(cb) {
             store._queries.callbacks.add(query, "approved", cb, once);
             return this;
         },
 
-        ///  - `.*rejected(function (order) {})*`
+        ///  - `.rejected(function (order) {})`
         ///    - Called when an [order](#order) is rejected.
         rejected: function(cb) {
             store._queries.callbacks.add(query, "rejected", cb, once);
@@ -33,21 +33,21 @@ store.when = function(query, once) {
         },
 
         // Undocumented (NOT USED YET)
-        //  - `.*updated(function (product) {})*`
+        //  - `.updated(function (product) {})`
         //    - Called when an [order](#order) is rejected.
         updated: function(cb) {
             store._queries.callbacks.add(query, "updated", cb, once);
             return this;
         },
 
-        ///  - `.*cancelled(function (product) {})*`
+        ///  - `.cancelled(function (product) {})`
         ///    - Called when an [order](#order) is cancelled by the user.
         cancelled: function(cb) {
             store._queries.callbacks.add(query, "cancelled", cb, once);
             return this;
         },
 
-        ///  - `.*error(function (err) {})*`
+        ///  - `.error(function (err) {})`
         ///    - Called when an [order](#order) failed.
         ///    - The `err` parameter is an [error object](#errors)
         error: function(cb) {

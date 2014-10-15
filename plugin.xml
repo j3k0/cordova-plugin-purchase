@@ -3,7 +3,7 @@
     xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="cc.fovea.cordova.purchase"
-    version="3.5.0-dev">
+    version="3.6.0-dev">
 
     <name>Purchase</name>
 	<description>Cordova Purchase plugin for Apple AppStore for iOS and Google Play Store for Android</description>
@@ -43,7 +43,7 @@
     <!-- android -->
     <platform name="android">
         <js-module src="www/store-android.js" name="InAppBilling">
-            <clobbers target="inappbilling" />
+            <clobbers target="store" />
         </js-module>
 
         <config-file target="AndroidManifest.xml" parent="/manifest">
