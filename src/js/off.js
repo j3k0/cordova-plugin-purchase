@@ -28,6 +28,9 @@ store.off = function(callback) {
     // Unregister from `when` and `once`
     store.when.unregister(callback);
 
+    // Unregister from `order`
+    store.order.unregister(callback);
+
     // Unregister from `error`
     store.error.unregister(callback);
 };

@@ -104,7 +104,7 @@ store._queries = {
         if (product && product.id)
             queries.push(product.id + " " + action);
         ///  - product.alias + " " + action
-        if (product && product.alias)
+        if (product && product.alias && product.alias != product.id)
             queries.push(product.alias + " " + action);
         ///  - product.type + " " + action
         if (product && product.type)
@@ -142,6 +142,11 @@ store._queries = {
                 store._queries.callbacks.byQuery[q] = cbs.filter(isNotOnce);
             }
         }
+        
+        ///
+        /// **Note**: All events also trigger the `updated` event
+        if (action !== "updated")
+            this.triggerWhenProduct(product, "updated", args);
     }
     ///
 };

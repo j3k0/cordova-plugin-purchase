@@ -30,7 +30,6 @@ describe('Queries', function(){
 
         it('should call callbacks', function(){
             assert.ok(store._queries.triggerWhenProduct);
-            var triggerWhenProduct = store._queries.triggerWhenProduct;
             var callbacks = store._queries.callbacks;
 
             var approved = false;
@@ -38,17 +37,16 @@ describe('Queries', function(){
                 approved = true;
             });
             assert.equal(false, approved);
-            triggerWhenProduct({id:"full version"}, "approved");
+            store._queries.triggerWhenProduct({id:"full version"}, "approved");
             assert.equal(true, approved);
 
             approved = false;
             assert.equal(false, approved);
-            triggerWhenProduct({id:"full version"}, "approved");
+            store._queries.triggerWhenProduct({id:"full version"}, "approved");
             assert.equal(true, approved);
         });
 
         it('should call some callbacks only once', function(){
-            var triggerWhenProduct = store._queries.triggerWhenProduct;
             var callbacks = store._queries.callbacks;
 
             var approved = false;
@@ -56,17 +54,16 @@ describe('Queries', function(){
                 approved = true;
             }, true);
             assert.equal(false, approved);
-            triggerWhenProduct({id:"lite version"}, "approved");
+            store._queries.triggerWhenProduct({id:"lite version"}, "approved");
             assert.equal(true, approved);
 
             approved = false;
             assert.equal(false, approved);
-            triggerWhenProduct({id:"lite version"}, "approved");
+            store._queries.triggerWhenProduct({id:"lite version"}, "approved");
             assert.equal(false, approved);
         });
 
         it('should handle special case for subscriptions', function(){
-            var triggerWhenProduct = store._queries.triggerWhenProduct;
             var callbacks = store._queries.callbacks;
 
             var approved = false;
@@ -74,7 +71,7 @@ describe('Queries', function(){
                 approved = true;
             });
             assert.equal(false, approved);
-            triggerWhenProduct({id:"anything", type:store.FREE_SUBSCRIPTION}, "approved");
+            store._queries.triggerWhenProduct({id:"anything", type:store.FREE_SUBSCRIPTION}, "approved");
             assert.equal(true, approved);
         });
     });

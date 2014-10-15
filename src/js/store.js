@@ -166,13 +166,10 @@ var store = {};
 // #include "registerProducts.js"
 // #include "get.js"
 // #include "when.js"
+// #include "order.js"
 // #include "ask.js"
 // #include "ready.js"
 // #include "off.js"
-
-/// ## <a name="when"></a>*store.order(product)*
-store.order = function(productId) {
-};
 
 /// ## <a name="refresh"></a>*store.refresh()*
 store.refresh = function() {

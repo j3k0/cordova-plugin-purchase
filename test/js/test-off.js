@@ -4,8 +4,7 @@ var store = require("../store-test");
 describe('Off', function(){
 
     var product = {
-        id: "p1",
-        alias: "product"
+        id: "p1"
     };
     before(function() {
         store.registerProducts([ product ]);
@@ -25,8 +24,9 @@ describe('Off', function(){
             };
 
             store.when("p1").loaded(f);
+            assert.equal(0, called);
             store.trigger("p1", "loaded");
-            assert.equal(1, called);
+            assert.equal(1, called, "callback executed " + called + " times instead of 1");
 
             store.when("p1").loaded(f);
             store.trigger("p1", "loaded");

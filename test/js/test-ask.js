@@ -9,7 +9,7 @@ describe('Ask', function(){
         beforeEach(function() {
             product = {
                 id: "p1",
-                alias: "product"
+                alias: "extra life"
             };
             store.registerProducts([ product ]);
         });

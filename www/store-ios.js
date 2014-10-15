@@ -57,9 +57,19 @@ store.registerProducts = function(products) {
     for (var i = 0; i < products.length; ++i) {
         var p = new store.Product(products[i]);
         if (!p.alias) p.alias = p.id;
+        if (p.id !== store._queries.uniqueQuery(p.id)) continue;
+        if (p.alias !== store._queries.uniqueQuery(p.alias)) continue;
         this.products.push(p);
     }
 };
+
+(function() {
+    "use strict";
+    store.get = function(id) {
+        var product = store.products.byId[id] || store.products.byAlias[id];
+        return product;
+    };
+}).call(this);
 
 (function() {
     "use strict";
@@ -103,6 +113,59 @@ store.registerProducts = function(products) {
     "use strict";
     var callbacks = {};
     var callbackId = 0;
+    store.order = function(pid) {
+        var that = this;
+        var p = pid;
+        if (typeof pid === "string") {
+            p = store.products.byId[pid] || store.products.byAlias[pid];
+            if (!p) {
+                p = new store.Product({
+                    id: pid,
+                    loaded: true,
+                    valid: false
+                });
+            }
+        }
+        var localCallbackId = callbackId++;
+        var localCallback = callbacks[localCallbackId] = {};
+        function done() {
+            delete localCallback.initiated;
+            delete localCallback.error;
+            delete callbacks[localCallbackId];
+        }
+        return {
+            initiated: function(cb) {
+                localCallback.initiated = cb;
+                store._queries.callbacks.add(p.id, "initiated", function() {
+                    if (!localCallback.then) return;
+                    done();
+                    cb(p);
+                }, true);
+                return this;
+            },
+            error: function(cb) {
+                localCallback.error = cb;
+                store._queries.callbacks.add(p.id, "error", function(err) {
+                    if (!localCallback.error) return;
+                    done();
+                    cb(p);
+                }, true);
+                return this;
+            }
+        };
+    };
+    store.order.unregister = function(cb) {
+        for (var i in callbacks) {
+            if (callbacks[i].initiated === cb) delete callbacks[i].initiated;
+            if (callbacks[i].error === cb) delete callbacks[i].error;
+        }
+    };
+}).call(this);
+
+(function() {
+    "use strict";
+    var callbacks = {};
+    var callbackId = 0;
     store.ask = function(pid) {
         var that = this;
         var p = store.products.byId[pid] || store.products.byAlias[pid];
@@ -117,7 +180,7 @@ store.registerProducts = function(products) {
         var localCallback = callbacks[localCallbackId] = {
             skip: false
         };
-        function askDone() {
+        function done() {
             localCallback.skip = true;
             delete localCallback.then;
             delete localCallback.error;
@@ -126,7 +189,7 @@ store.registerProducts = function(products) {
         return {
             then: function(cb) {
                 if (p.loaded && p.valid) {
-                    askDone();
+                    done();
                     cb(p);
                 } else {
                     localCallback.then = cb;
@@ -134,10 +197,10 @@ store.registerProducts = function(products) {
                         if (localCallback.skip) return;
                         if (p.valid) {
                             if (localCallback.then) {
-                                askDone();
+                                done();
                                 cb(p);
                             } else {
-                                askDone();
+                                done();
                             }
                         }
                     });
@@ -146,7 +209,7 @@ store.registerProducts = function(products) {
             },
             error: function(cb) {
                 if (p.loaded && !p.valid) {
-                    askDone();
+                    done();
                     cb(new store.Error({
                         code: store.ERR_INVALID_PRODUCT_ID,
                         message: "Invalid product"
@@ -157,10 +220,10 @@ store.registerProducts = function(products) {
                         if (localCallback.skip) return;
                         if (err.code === store.ERR_LOAD) {
                             if (localCallback.error) {
-                                askDone();
+                                done();
                                 cb(err, p);
                             } else {
-                                askDone();
+                                done();
                             }
                         }
                     });
@@ -168,13 +231,13 @@ store.registerProducts = function(products) {
                         if (localCallback.skip) return;
                         if (!p.valid) {
                             if (localCallback.error) {
-                                askDone();
+                                done();
                                 cb(new store.Error({
                                     code: store.ERR_INVALID_PRODUCT_ID,
                                     message: "Invalid product"
                                 }), p);
                             } else {
-                                askDone();
+                                done();
                             }
                         }
                     });
@@ -226,11 +289,10 @@ store.registerProducts = function(products) {
         store.ready.unregister(callback);
         store.ask.unregister(callback);
         store.when.unregister(callback);
+        store.order.unregister(callback);
         store.error.unregister(callback);
     };
 }).call(this);
-
-store.order = function(productId) {};
 
 store.refresh = function() {};
 
@@ -284,7 +346,7 @@ store.products.byAlias = {};
         triggerWhenProduct: function(product, action, args) {
             var queries = [];
             if (product && product.id) queries.push(product.id + " " + action);
-            if (product && product.alias) queries.push(product.alias + " " + action);
+            if (product && product.alias && product.alias != product.id) queries.push(product.alias + " " + action);
             if (product && product.type) queries.push(product.type + " " + action);
             if (product && product.type && (product.type === store.FREE_SUBSCRIPTION || product.type === store.PAID_SUBSCRIPTION)) queries.push("subscription " + action);
             if (product && product.valid === true) queries.push("valid " + action);
@@ -304,6 +366,7 @@ store.products.byAlias = {};
                     store._queries.callbacks.byQuery[q] = cbs.filter(isNotOnce);
                 }
             }
+            if (action !== "updated") this.triggerWhenProduct(product, "updated", args);
         }
     };
 }).call(this);
@@ -692,6 +755,8 @@ var storekitPurchase = function(transactionId, productId) {
 };
 
 store.restore = function() {};
+
+var order = store.order;
 
 store.order = function(productId, quantity) {
     store.ready(function() {

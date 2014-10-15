@@ -28,13 +28,12 @@ store.ask = function(pid) {
         });
     }
 
-    // var skip = false;
     var localCallbackId = callbackId++;
     var localCallback = callbacks[localCallbackId] = {
         skip: false
     };
 
-    function askDone() {
+    function done() {
         localCallback.skip = true;
         delete localCallback.then;
         delete localCallback.error;
@@ -56,7 +55,7 @@ store.ask = function(pid) {
         /// `product` contains the fields documented in the [products](#products) section.
         then: function(cb) {
             if (p.loaded && p.valid) {
-                askDone();
+                done();
                 cb(p);
             }
             else {
@@ -65,11 +64,11 @@ store.ask = function(pid) {
                     if (localCallback.skip) return;
                     if (p.valid) {
                         if (localCallback.then) { // if `then` callback wasn't unregistered
-                            askDone();
+                            done();
                             cb(p);
                         }
                         else {
-                            askDone();
+                            done();
                         }
                     }
                 });
@@ -86,7 +85,7 @@ store.ask = function(pid) {
         /// `err` features the standard [error](#errors) format (`code` and `message`).
         error: function(cb) {
             if (p.loaded && !p.valid) {
-                askDone();
+                done();
                 cb(new store.Error({
                     code: store.ERR_INVALID_PRODUCT_ID,
                     message: "Invalid product"
@@ -98,11 +97,11 @@ store.ask = function(pid) {
                     if (localCallback.skip) return;
                     if (err.code === store.ERR_LOAD) {
                         if (localCallback.error) { // if error callback wasn't unregistered
-                            askDone();
+                            done();
                             cb(err, p);
                         }
                         else {
-                            askDone();
+                            done();
                         }
                     }
                 });
@@ -110,14 +109,14 @@ store.ask = function(pid) {
                     if (localCallback.skip) return;
                     if (!p.valid) {
                         if (localCallback.error) { // if error callback wasn't unregistered
-                            askDone();
+                            done();
                             cb(new store.Error({
                                 code: store.ERR_INVALID_PRODUCT_ID,
                                 message: "Invalid product"
                             }), p);
                         }
                         else {
-                            askDone();
+                            done();
                         }
                     }
                 });
