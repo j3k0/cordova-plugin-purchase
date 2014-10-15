@@ -19,6 +19,15 @@ var store = {};
 // #include "when.js"
 // #include "ask.js"
 // #include "ready.js"
+// #include "off.js"
+
+/// ## <a name="when"></a>*store.order(product)*
+store.order = function(productId) {
+};
+
+/// ## <a name="refresh"></a>*store.refresh()*
+store.refresh = function() {
+};
 
 ///
 /// # internal APIs
@@ -26,10 +35,6 @@ var store = {};
 
 // #include "products.js"
 // #include "queries.js"
+// #include "trigger.js"
 // #include "error-callbacks.js"
 
-store.order = function(product) {
-};
-
-store.refresh = function(query) {
-};

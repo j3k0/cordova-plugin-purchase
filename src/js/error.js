@@ -30,14 +30,18 @@ store.Error = function(options) {
 /// `callback` is a function taking an [error](#errors) as argument.
 ///
 /// example use:
-/// ```
+///
 ///     store.error(function(e){
 ///         console.log("ERROR " + e.code + ": " + e.message);
 ///     });
-/// ```
+///
 store.error = function(cb) {
     store.error.callbacks.push(cb);
 };
 
+// Unregister a callback registered with `store.error`
+store.error.unregister = function(cb) {
+    store.error.callbacks.unregister(cb);
+};
 
 }).call(this);

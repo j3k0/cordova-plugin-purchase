@@ -137,7 +137,7 @@ store.order = function(productId, quantity) {
 
 // Refresh the store
 var refresh = store.refresh;
-store.refresh = function(query) {
+store.refresh = function() {
     refresh.apply(this, arguments);
     if (!initialized) init();
 };

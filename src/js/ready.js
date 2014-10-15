@@ -1,4 +1,5 @@
 (function() {
+"use strict";
 
 var isReady = false;
 
@@ -36,4 +37,11 @@ store.ready = function (cb) {
     return this;
 };
 
-})();
+// Remove any callbacks registered with `ready`
+store.ready.unregister = function(cb) {
+    callbacks = callbacks.filter(function(o) {
+        return o !== cb;
+    });
+};
+
+}).call(this);

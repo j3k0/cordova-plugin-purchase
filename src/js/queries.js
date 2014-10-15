@@ -77,6 +77,14 @@ store._queries = {
                 this.byQuery[fullQuery].push({cb:cb, once:once});
             else
                 this.byQuery[fullQuery] = [{cb:cb, once:once}];
+        },
+
+        unregister: function(cb) {
+            var keep = function(o) {
+                return o.cb !== cb;
+            };
+            for (var i in this.byQuery)
+                this.byQuery[i] = this.byQuery[i].filter(keep);
         }
     },
 

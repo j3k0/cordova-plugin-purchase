@@ -25,4 +25,15 @@ store.error.callbacks.reset = function() {
         this.shift();
 };
 
+store.error.callbacks.unregister = function(cb) {
+    var newArray = this.filter(function(o) {
+        return o !== cb;
+    });
+    if (newArray.length < this.length) {
+        this.reset();
+        for (var i = 0; i < newArray.length; ++i)
+            this.push(newArray[i]);
+    }
+};
+
 }).call(this);

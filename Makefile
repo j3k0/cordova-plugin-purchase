@@ -25,7 +25,8 @@ test-js: check-jshint
 	@node_modules/.bin/jshint src/js/*.js test/js/*.js
 	@echo "- Mocha"
 	@node_modules/.bin/preprocess src/js/store-test.js src/js > test/store-test.js
-	@node_modules/.bin/mocha test/js/test-*.js
+	@echo
+	@for i in test/js/test-*.js; do printf $$i; node_modules/.bin/mocha -R list $$i || exit 1; done
 
 test-install: build
 	@./test/run.sh cc.fovea.babygoo babygooinapp1

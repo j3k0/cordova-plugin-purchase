@@ -69,11 +69,11 @@ Register an error handler.
 `callback` is a function taking an [error](#errors) as argument.
 
 example use:
-```
+
     store.error(function(e){
         console.log("ERROR " + e.code + ": " + e.message);
     });
-```
+
 ## <a name="registerProducts"></a>*store.registerProducts(products)*
 Adds (or register) products into the store. Products can't be used
 unless registered first!
@@ -93,31 +93,17 @@ See documentation for the [product](#product) object for more information.
 
 Return promise with the following methods:
 
-#### .*loaded(function (product) {})*
-
-Called when [product](#product) data is loaded from the store.
-
-
-#### .*approved(function (order) {})*
-
-Called when an [order](#order) is approved.
-
-
-#### .*rejected(function (order) {})*
-
-Called when an [order](#order) is rejected.
-
-
-#### .*cancelled(function (product) {})*
-
-Called when an [order](#order) is cancelled by the user.
-
-
-#### .*error(function (err) {})*
-
-Called when an [order](#order) failed.
-
-The `err` parameter is an [error object](#errors)
+ - `.*loaded(function (product) {})*`
+   - Called when [product](#product) data is loaded from the store.
+ - `.*approved(function (order) {})*`
+   - Called when an [order](#order) is approved.
+ - `.*rejected(function (order) {})*`
+   - Called when an [order](#order) is rejected.
+ - `.*cancelled(function (product) {})*`
+   - Called when an [order](#order) is cancelled by the user.
+ - `.*error(function (err) {})*`
+   - Called when an [order](#order) failed.
+   - The `err` parameter is an [error object](#errors)
 
 ## <a name="once"></a>*store.once(query)*
 
@@ -152,19 +138,18 @@ when it is know to be invalid.
 
 ### example use
 
-```
-store.ask("full version").
-    then(function(product) {
-        console.log("product " + product.id + " loaded");
-        console.log("title: " + product.title);
-        console.log("description: " + product.description);
-        console.log("price: " + product.price);
-    }).
-    error(function(error) {
-        console.log("failed to load product");
-        console.log("ERROR " + error.code + ": " + error.message);
-    });
-```
+    store.ask("full version").
+        then(function(product) {
+            console.log("product " + product.id + " loaded");
+            console.log("title: " + product.title);
+            console.log("description: " + product.description);
+            console.log("price: " + product.price);
+        }).
+        error(function(error) {
+            console.log("failed to load product");
+            console.log("ERROR " + error.code + ": " + error.message);
+        });
+
 ## <a name="ready"></a>*store.ready(callback)*
 Register the `callback` to be called when the store is ready to be used.
 
@@ -174,6 +159,24 @@ If the store is already ready, `callback` is called immediatly.
 and call the registered callbacks
 
 `store.ready()` without arguments will return the `ready` status.
+## <a name="off"></a>*store.off(callback)*
+Unregister a callback. Works for callbacks registered with `ready`, `ask`, `when`, `once` and `error`.
+
+Example use:
+
+    var fun = function(product) {
+        // Product loaded while the store screen is visible.
+        // Refresh some stuff.
+    };
+
+    store.when("product").loaded(fun);
+    ...
+    [later]
+    ...
+    store.off(fun);
+
+## <a name="when"></a>*store.order(product)*
+## <a name="refresh"></a>*store.refresh()*
 
 # internal APIs
 USE AT YOUR OWN RISKS
@@ -267,6 +270,9 @@ Then, for each query:
  - Call the callbacks
  - Remove callbacks that needed to be called only once
 
+## <a name="trigger"></a>*store.trigger(product, action, args)*
+
+For internal use, trigger an event so listeners are notified.
 
 ## *store.error.callbacks* array
 
