@@ -85,7 +85,13 @@
     if (store.restore)
         store.restore();
 
-    store.order("com.example.app.inappid3");
+    store.order("com.example.app.inappid3")
+        .initiated(function() {
+            // order initiated, waiting approval...
+        },
+        .error(function(err) {
+            // cannot initiate the order.
+        });
 
     // [consumable|non consumable|free subscription|paid subscription|subscription]
     // [order]

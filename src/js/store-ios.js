@@ -100,6 +100,7 @@ store.restore = function() {
 };
 
 // Initiate a purchase
+var order = store.order;
 store.order = function(productId, quantity) {
     store.ready(function() {
         var product = store.products.byId[productId] || store.products.byAlias[productId];

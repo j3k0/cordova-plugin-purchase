@@ -471,8 +471,10 @@ store.products.byAlias = {};
         }, products);
     };
     var iabReady = function() {
-        inappbilling.loadProductDetails(iabLoaded, iabError, products);
+        console.log("ready");
+        store.android.loadProductDetails(iabLoaded, iabError, products);
         function iabLoaded(validProducts) {
+            console.log("loaded");
             var p, i;
             for (i = 0; i < validProducts.length; ++i) {
                 p = store.products.byId[validProducts[i].id];
@@ -495,7 +497,9 @@ store.products.byAlias = {};
             store.ready(true);
         }
     };
-    var iabError = function(err) {};
+    var iabError = function(err) {
+        console.log(JSON.stringify(err));
+    };
     var refresh = store.refresh;
     store.refresh = function() {
         refresh.apply(this, arguments);
