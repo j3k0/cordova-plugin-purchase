@@ -37,17 +37,17 @@ var storekitError = function(errorCode, errorText) {
     if (errorCode === storekit.ERR_LOAD) {
         for (var i = 0; i < store.products.length; ++i) {
             var p = store.products[i];
-            store._queries.triggerWhenProduct(p, "error", [new store.Error({
+            p.trigger("error", [new store.Error({
                 code: store.ERR_LOAD,
                 message: errorText
             }), p]);
         }
     }
 
-    store.error.callbacks.trigger(new store.Error({
+    store.error({
         code:    errorCode,
         message: errorText
-    }));
+    });
 };
 
 // update store's product definitions when they have been loaded.
@@ -55,18 +55,18 @@ var storekitLoaded = function (validProducts, invalidProductIds) {
     var p;
     for (var i = 0; i < validProducts.length; ++i) {
         p = store.products.byId[validProducts[i].id];
-        p.loaded = true;
-        p.valid = true;
-        p.title = validProducts[i].title;
-        p.price = validProducts[i].price;
-        p.description = validProducts[i].description;
-        store._queries.triggerWhenProduct(p, "loaded", [p]);
+        p.set({
+            title: validProducts[i].title,
+            price: validProducts[i].price,
+            description: validProducts[i].description,
+            state: store.VALID
+        });
+        p.trigger("loaded");
     }
     for (var j = 0; j < invalidProductIds.length; ++j) {
         p = store.products.byId[invalidProductIds[j]];
-        p.loaded = true;
-        p.valid = false;
-        store._queries.triggerWhenProduct(p, "loaded", [p]);
+        p.set("state", store.INVALID);
+        p.trigger("loaded");
     }
     store.ready(true);
 };
@@ -76,10 +76,10 @@ var storekitPurchase = function (transactionId, productId) {
     store.ready(function() {
         var product = store.products.byId[productId];
         if (!product) {
-            store.error.callbacks.trigger(new store.Error({
+            store.error({
                 code: store.ERR_PURCHASE,
                 message: "Unknown product purchased"
-            }));
+            });
             return;
         }
         var order = {
@@ -103,10 +103,10 @@ store.when("order", "requested", function(product) {
     store.ready(function() {
         // var product = store.products.byId[pid] || store.products.byAlias[pid];
         if (!product) {
-            store.error.callbacks.trigger(new store.Error({
+            store.error({
                 code: store.ERR_INVALID_PRODUCT_ID,
                 message: "Trying to order an unknown product"
-            }));
+            });
             return;
         }
         if (!initialized) {

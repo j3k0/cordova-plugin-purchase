@@ -61,10 +61,10 @@
 ///         if (!product) {
 ///             $el.html("");
 ///         }
-///         else if (!product.loaded) {
+///         else if (product.state === store.REGISTERED) {
 ///             $el.html("<div class=\"loading\" />");
 ///         }
-///         else if (!product.valid) {
+///         else if (product.state === store.INVALID) {
 ///             $el.html("");
 ///         }
 ///         else {
@@ -75,17 +75,17 @@
 ///                 + "<div class=\"price\">"       + product.price       + "</div>"
 ///             );
 ///             
-///             // Is this product owned? Can't be purchased again.
-///             if (product.owned)
+///             // Is this product owned? Give him a special class.
+///             if (product.state === store.OWNED)
 ///                 $el.addClass("owned");
 ///             else
 ///                 $el.removeClass("owned");
 ///             
-///             // Is an order for this product in progress? Can't be ordered again neither.
-///             if (product.ordered)
-///                 $el.addClass("ordered");
+///             // Is an order for this product in progress? Can't be ordered right now?
+///             if (product.canPurchase)
+///                 $el.addClass("can-purchase");
 ///             else
-///                 $el.removeClass("ordered");
+///                 $el.removeClass("can-purchase");
 ///         }
 ///     }
 ///     
@@ -176,11 +176,16 @@ var store = {};
 store.refresh = function() {
 };
 
+/// ## <a name="restore"></a>*store.restore()*
+/// TODO write the doc
+store.restore = null;
+
 ///
 /// # internal APIs
 /// USE AT YOUR OWN RISKS
 
 // #include "products.js"
+// #include "product-internal.js"
 // #include "queries.js"
 // #include "trigger.js"
 // #include "error-callbacks.js"

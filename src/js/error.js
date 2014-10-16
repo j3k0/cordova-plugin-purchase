@@ -36,7 +36,12 @@ store.Error = function(options) {
 ///     });
 ///
 store.error = function(cb) {
-    store.error.callbacks.push(cb);
+    if (cb instanceof store.Error)
+        store.error.callbacks.trigger(cb);
+    else if (cb.code && cb.message)
+        store.error.callbacks.trigger(new store.Error(cb));
+    else
+        store.error.callbacks.push(cb);
 };
 
 // Unregister a callback registered with `store.error`

@@ -65,10 +65,10 @@ Let's demonstrate this with an example:
         if (!product) {
             $el.html("");
         }
-        else if (!product.loaded) {
+        else if (product.state === store.REGISTERED) {
             $el.html("<div class=\"loading\" />");
         }
-        else if (!product.valid) {
+        else if (product.state === store.INVALID) {
             $el.html("");
         }
         else {
@@ -79,17 +79,17 @@ Let's demonstrate this with an example:
                 + "<div class=\"price\">"       + product.price       + "</div>"
             );
             
-            // Is this product owned? Can't be purchased again.
-            if (product.owned)
+            // Is this product owned? Give him a special class.
+            if (product.state === store.OWNED)
                 $el.addClass("owned");
             else
                 $el.removeClass("owned");
             
-            // Is an order for this product in progress? Can't be ordered again neither.
-            if (product.ordered)
-                $el.addClass("ordered");
+            // Is an order for this product in progress? Can't be ordered right now?
+            if (product.canPurchase)
+                $el.addClass("can-purchase");
             else
-                $el.removeClass("ordered");
+                $el.removeClass("can-purchase");
         }
     }
     
@@ -194,7 +194,7 @@ Find below a diagram of the different states a product can pass by.
                     |                                  |         
                     +----------------------------------+         
 
-### States definition:
+#### states definitions
 
  - `REGISTERED`: right after being declared to the store using [`store.registerProducts()`](#registerProducts)
  - `INVALID`: the server didn't recognize this product, it cannot be used.
@@ -205,13 +205,16 @@ Find below a diagram of the different states a product can pass by.
  - `FINISHED`: purchase has been delivered by the app.
  - `OWNED`: purchase is owned (only for non-consumable and subscriptions)
 
-When finished, a consumable product will get back to the `VALID` state.
+#### Notes
 
-### State changes
+ - When finished, a consumable product will get back to the `VALID` state.
+ - Any error in the purchase process will bring the product back to the `VALID` state.
+ - During application startup, product will go instantly from `REGISTERED` to `OWNED` if it's a purchased non-consumable or non-expired subscription.
+
+#### state changes
 
 Each time the product changes state, an event is triggered.
 
-### aliases to `store` methods, added for conveniance.
 
 ## <a name="errors"></a>*store.Error* object
 
@@ -273,18 +276,21 @@ Return promise with the following methods:
    - The `err` parameter is an [error object](#errors)
 
 ### alternative usage
-/
+
  - `store.when(query, action, callback)`
    - Register a callback using its action name. Beware that this is more
      error prone, as there are not gonna be any error in case typos.
+
 ## <a name="once"></a>*store.once(query)*
 
 Identical to [`store.when`](#when), but the callback will be called only once.
 After being called, the callback will be unregistered.
+
 ### alternative usage
-/
+
  - `store.once(query, action, callback)`
    - Same remarks as `store.when(query, action, callback)`
+
 
 ## <a name="order"></a>*store.order(product)*
 
@@ -355,6 +361,8 @@ Example use:
     store.off(fun);
 
 ## <a name="refresh"></a>*store.refresh()*
+## <a name="restore"></a>*store.restore()*
+TODO write the doc
 
 # internal APIs
 USE AT YOUR OWN RISKS
@@ -379,6 +387,7 @@ Registered products indexed by their alias
 #### example
 
     store.products.byAlias["full version"]```
+### aliases to `store` methods, added for conveniance.
 
 ## queries
 

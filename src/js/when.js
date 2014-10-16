@@ -59,15 +59,16 @@ store.when = function(query, once, callback) {
                 store._queries.callbacks.add(query, "error", cb, once);
                 return this;
             }
-            ///
         };
     }
     else {
+        ///
         /// ### alternative usage
-        ////
+        ///
         ///  - `store.when(query, action, callback)`
         ///    - Register a callback using its action name. Beware that this is more
         ///      error prone, as there are not gonna be any error in case typos.
+        ///
         var action = once;
         store._queries.callbacks.add(query, action, callback);
     }
@@ -82,10 +83,12 @@ store.once = function(query, action, callback) {
         return store.when(query, true);
     }
     else {
+        ///
         /// ### alternative usage
-        ////
+        ///
         ///  - `store.once(query, action, callback)`
         ///    - Same remarks as `store.when(query, action, callback)`
+        ///
         store._queries.callbacks.add(query, action, callback, true);
     }
 };

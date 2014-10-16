@@ -47,37 +47,6 @@ var store = {};
         this.state = options.state || "";
         this.stateChanged();
     };
-    store.Product.prototype.set = function(key, value) {
-        if (typeof key === "string") {
-            this[key] = value;
-            if (key === "state") this.stateChanged();
-        } else {
-            var options = key;
-            for (key in options) {
-                value = options[key];
-                this.set(key, value);
-            }
-        }
-    };
-    store.Product.prototype.stateChanged = function() {
-        this.canPurchase = this.state === store.VALID;
-        this.loaded = this.state && this.state !== store.REGISTERED;
-        this.valid = this.state !== store.INVALID;
-        if (!this.state || this.state === store.REGISTERED) delete this.valid;
-        if (this.state) this.trigger(this.state);
-    };
-    store.Product.prototype.on = function(event, cb) {
-        store.when(this.id, event, cb);
-    };
-    store.Product.prototype.once = function(event, cb) {
-        store.once(this.id, event, cb);
-    };
-    store.Product.prototype.off = function(cb) {
-        store.when.unregister(cb);
-    };
-    store.Product.prototype.trigger = function(action, args) {
-        store.trigger(this, action, args);
-    };
 }).call(this);
 
 (function() {
@@ -88,7 +57,7 @@ var store = {};
         this.message = options.message || "unknown error";
     };
     store.error = function(cb) {
-        store.error.callbacks.push(cb);
+        if (cb instanceof store.Error) store.error.callbacks.trigger(cb); else if (cb.code && cb.message) store.error.callbacks.trigger(new store.Error(cb)); else store.error.callbacks.push(cb);
     };
     store.error.unregister = function(cb) {
         store.error.callbacks.unregister(cb);
@@ -351,6 +320,8 @@ var store = {};
 
 store.refresh = function() {};
 
+store.restore = null;
+
 (function() {
     "use strict";
     store.products = [];
@@ -361,6 +332,41 @@ store.refresh = function() {};
     };
     store.products.byId = {};
     store.products.byAlias = {};
+}).call(this);
+
+(function() {
+    "use strict";
+    store.Product.prototype.set = function(key, value) {
+        if (typeof key === "string") {
+            this[key] = value;
+            if (key === "state") this.stateChanged();
+        } else {
+            var options = key;
+            for (key in options) {
+                value = options[key];
+                this.set(key, value);
+            }
+        }
+    };
+    store.Product.prototype.stateChanged = function() {
+        this.canPurchase = this.state === store.VALID;
+        this.loaded = this.state && this.state !== store.REGISTERED;
+        this.valid = this.state !== store.INVALID;
+        if (!this.state || this.state === store.REGISTERED) delete this.valid;
+        if (this.state) this.trigger(this.state);
+    };
+    store.Product.prototype.on = function(event, cb) {
+        store.when(this.id, event, cb);
+    };
+    store.Product.prototype.once = function(event, cb) {
+        store.once(this.id, event, cb);
+    };
+    store.Product.prototype.off = function(cb) {
+        store.when.unregister(cb);
+    };
+    store.Product.prototype.trigger = function(action, args) {
+        store.trigger(this, action, args);
+    };
 }).call(this);
 
 (function() {
@@ -760,34 +766,34 @@ var storekitError = function(errorCode, errorText) {
     if (errorCode === storekit.ERR_LOAD) {
         for (var i = 0; i < store.products.length; ++i) {
             var p = store.products[i];
-            store._queries.triggerWhenProduct(p, "error", [ new store.Error({
+            p.trigger("error", [ new store.Error({
                 code: store.ERR_LOAD,
                 message: errorText
             }), p ]);
         }
     }
-    store.error.callbacks.trigger(new store.Error({
+    store.error({
         code: errorCode,
         message: errorText
-    }));
+    });
 };
 
 var storekitLoaded = function(validProducts, invalidProductIds) {
     var p;
     for (var i = 0; i < validProducts.length; ++i) {
         p = store.products.byId[validProducts[i].id];
-        p.loaded = true;
-        p.valid = true;
-        p.title = validProducts[i].title;
-        p.price = validProducts[i].price;
-        p.description = validProducts[i].description;
-        store._queries.triggerWhenProduct(p, "loaded", [ p ]);
+        p.set({
+            title: validProducts[i].title,
+            price: validProducts[i].price,
+            description: validProducts[i].description,
+            state: store.VALID
+        });
+        p.trigger("loaded");
     }
     for (var j = 0; j < invalidProductIds.length; ++j) {
         p = store.products.byId[invalidProductIds[j]];
-        p.loaded = true;
-        p.valid = false;
-        store._queries.triggerWhenProduct(p, "loaded", [ p ]);
+        p.set("state", store.INVALID);
+        p.trigger("loaded");
     }
     store.ready(true);
 };
@@ -796,10 +802,10 @@ var storekitPurchase = function(transactionId, productId) {
     store.ready(function() {
         var product = store.products.byId[productId];
         if (!product) {
-            store.error.callbacks.trigger(new store.Error({
+            store.error({
                 code: store.ERR_PURCHASE,
                 message: "Unknown product purchased"
-            }));
+            });
             return;
         }
         var order = {
@@ -820,10 +826,10 @@ store.restore = function() {};
 store.when("order", "requested", function(product) {
     store.ready(function() {
         if (!product) {
-            store.error.callbacks.trigger(new store.Error({
+            store.error({
                 code: store.ERR_INVALID_PRODUCT_ID,
                 message: "Trying to order an unknown product"
-            }));
+            });
             return;
         }
         if (!initialized) {

@@ -67,7 +67,7 @@ store.Product = function(options) {
 ///                     |                                  |         
 ///                     +----------------------------------+         
 ///
-/// ### States definition:
+/// #### states definitions
 ///
 ///  - `REGISTERED`: right after being declared to the store using [`store.registerProducts()`](#registerProducts)
 ///  - `INVALID`: the server didn't recognize this product, it cannot be used.
@@ -78,53 +78,15 @@ store.Product = function(options) {
 ///  - `FINISHED`: purchase has been delivered by the app.
 ///  - `OWNED`: purchase is owned (only for non-consumable and subscriptions)
 ///
-/// When finished, a consumable product will get back to the `VALID` state.
+/// #### Notes
 ///
-/// ### State changes
+///  - When finished, a consumable product will get back to the `VALID` state.
+///  - Any error in the purchase process will bring the product back to the `VALID` state.
+///  - During application startup, product will go instantly from `REGISTERED` to `OWNED` if it's a purchased non-consumable or non-expired subscription.
+///
+/// #### state changes
 ///
 /// Each time the product changes state, an event is triggered.
 ///
-store.Product.prototype.set = function(key, value) {
-    if (typeof key === 'string') {
-        this[key] = value;
-        if (key === 'state')
-            this.stateChanged();
-    }
-    else {
-        var options = key;
-        for (key in options) {
-            value = options[key];
-            this.set(key, value);
-        }
-    }
-};
-
-store.Product.prototype.stateChanged = function() {
-
-    this.canPurchase = this.state === store.VALID;
-    this.loaded      = this.state && this.state !== store.REGISTERED;
-
-    // update validity
-    this.valid       = this.state !== store.INVALID;
-    if (!this.state || this.state === store.REGISTERED)
-        delete this.valid;
-
-    if (this.state)
-        this.trigger(this.state);
-};
-
-/// ### aliases to `store` methods, added for conveniance.
-store.Product.prototype.on = function(event, cb) {
-    store.when(this.id, event, cb);
-};
-store.Product.prototype.once = function(event, cb) {
-    store.once(this.id, event, cb);
-};
-store.Product.prototype.off = function(cb) {
-    store.when.unregister(cb);
-};
-store.Product.prototype.trigger = function(action, args) {
-    store.trigger(this, action, args);
-};
 
 }).call(this);
