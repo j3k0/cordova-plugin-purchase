@@ -21,11 +21,11 @@ var init = function () {
 };
 
 var iabReady = function() {
-    console.log("ready");
+    store.log.debug("android -> ready");
     store.android.loadProductDetails(iabLoaded, iabError, products);
 
     function iabLoaded(validProducts) {
-        console.log("loaded");
+        store.log.debug("android -> loaded");
         var p, i;
         for (i = 0; i < validProducts.length; ++i) {
             p = store.products.byId[validProducts[i].id];
@@ -50,17 +50,18 @@ var iabReady = function() {
 };
 
 var iabError = function(err) {
-    console.log(JSON.stringify(err));
+    store.log.error("android -> error  " + JSON.stringify(err));
 };
 
-var refresh = store.refresh;
-store.refresh = function() {
-    refresh.apply(this, arguments);
+store.when("refreshed", function() {
     if (!initialized) init();
-};
+});
 
 }).call(this);
 
-if (window)
+// For some reasons, module exports failed on android...
+if (window) {
     window.store = store;
+}
+
 module.exports = store;

@@ -3,15 +3,20 @@ help:
 	@echo "Usage: make <target>"
 	@echo ""
 	@echo "available targets:"
-	@echo "    build   ........ Generate javascript files for iOS and Android."
+	@echo "    build .......... Generate javascript files for iOS and Android."
 	@echo "    tests .......... Run all tests."
 	@echo "    test-js ........ Test javascript files for errors."
 	@echo "    test-install ... Test plugin installation on iOS and Android."
 	@echo "    doc-api ........ Generate API documentation into doc/api.md"
 	@echo "    clean .......... Cleanup the project (temporary and generated files)."
 	@echo ""
+	@echo "extra targets"
+	@echo "    all ............ Generate javascript files and documentation"
+	@echo ""
 	@echo "(c)2014, Jean-Christophe Hoelt <hoelt@fovea.cc>"
 	@echo ""
+
+all: build doc-api
 
 build: test-js
 	@echo "- Preprocess"
@@ -37,7 +42,7 @@ tests: test-js test-install
 check-jshint:
 	@test -e node_modules/.bin/jshint || ( echo 'Please install dependencies: npm install'; exit 1 )
 
-doc-api: build
+doc-api: test-js
 	@echo "# API Documentation" > doc/api.md
 	@echo >> doc/api.md
 	@echo "(generated from source files using \`make doc-api)\`" >> doc/api.md

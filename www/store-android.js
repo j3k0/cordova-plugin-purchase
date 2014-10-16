@@ -725,15 +725,15 @@ store.restore = null;
         }
     };
     var iabError = function(err) {
-        console.log(JSON.stringify(err));
+        store.log.error(JSON.stringify(err));
     };
-    var refresh = store.refresh;
-    store.refresh = function() {
-        refresh.apply(this, arguments);
+    store.when("refreshed", function() {
         if (!initialized) init();
-    };
+    });
 }).call(this);
 
-if (window) window.store = store;
+if (window) {
+    window.store = store;
+}
 
 module.exports = store;
