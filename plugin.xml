@@ -42,44 +42,37 @@
 
     <!-- android -->
     <platform name="android">
-        <js-module src="www/store-android.js" name="InAppBilling">
+        <js-module src="www/store-android.js" name="InAppBillingPlugin">
             <clobbers target="store" />
         </js-module>
 
         <config-file target="AndroidManifest.xml" parent="/manifest">
-            <!-- InApp Billing Permission -->
+            <!-- In-App Billing Permission -->
             <uses-permission android:name="com.android.vending.BILLING" />
         </config-file>
 
-        <!--
-        updated until here!
-        TODO update the rest when finished with rest of code.    
-
-        http://cordova.apache.org/docs/en/3.4.0/plugin_ref_spec.md
-        -->
-
+        <!-- Cordova >= 3.0.0 -->
         <config-file target="res/xml/config.xml" parent="/*">
-            <!--TODO change this name if you want a unified service name for cordova.exec in both android and ios-->
             <feature name="InAppBillingPlugin">   
-                <!--TODO change this value when the name of java package/class has been changed-->
-                <param name="android-package" value="com.mohamnag.inappbilling.InAppBillingPlugin"/>
-            </feature>
+				<param name="android-package" value="com.smartmobilesoftware.inappbilling.InAppBillingPlugin"/>
+			</feature>
         </config-file>
         
-        <!-- IAB service interface -->
-        <source-file src="src/android/com/android/vending/billing/IInAppBillingService.aidl" target-dir="src/com/android/vending/billing" />
+        <!-- In-app Billing Library -->
+		<source-file src="src/android/com/android/vending/billing/IInAppBillingService.aidl" target-dir="src/com/android/vending/billing" />
 
         <!-- cordova plugin src files -->
-        <source-file src="src/android/com/mohamnag/inappbilling/InAppBillingPlugin.java" target-dir="src/com/mohamnag/inappbilling" />
-        <source-file src="src/android/com/mohamnag/inappbilling/Error.java" target-dir="src/com/mohamnag/inappbilling" />
+        <source-file src="src/android/com/smartmobilesoftware/inappbilling/InAppBillingPlugin.java" target-dir="src/com/smartmobilesoftware/inappbilling" />
 
-        <!-- the code from marketbilling example: https://code.google.com/p/marketbilling/ -->
-        <source-file src="src/android/com/mohamnag/inappbilling/helper/Purchase.java" target-dir="src/com/mohamnag/inappbilling/helper/" />
-        <source-file src="src/android/com/mohamnag/inappbilling/helper/Base64.java" target-dir="src/com/mohamnag/inappbilling/helper/" />
-        <source-file src="src/android/com/mohamnag/inappbilling/helper/Base64DecoderException.java" target-dir="src/com/mohamnag/inappbilling/helper/" />
-        <source-file src="src/android/com/mohamnag/inappbilling/helper/Inventory.java" target-dir="src/com/mohamnag/inappbilling/helper/" />
-        <source-file src="src/android/com/mohamnag/inappbilling/helper/Security.java" target-dir="src/com/mohamnag/inappbilling/helper/" />
-        <source-file src="src/android/com/mohamnag/inappbilling/helper/SkuDetails.java" target-dir="src/com/mohamnag/inappbilling/helper/" />
+		<source-file src="src/android/com/smartmobilesoftware/util/Base64.java" target-dir="src/com/smartmobilesoftware/util" />
+		<source-file src="src/android/com/smartmobilesoftware/util/Base64DecoderException.java" target-dir="src/com/smartmobilesoftware/util" />
+		<source-file src="src/android/com/smartmobilesoftware/util/IabException.java" target-dir="src/com/smartmobilesoftware/util" />
+		<source-file src="src/android/com/smartmobilesoftware/util/IabHelper.java" target-dir="src/com/smartmobilesoftware/util" />
+		<source-file src="src/android/com/smartmobilesoftware/util/IabResult.java" target-dir="src/com/smartmobilesoftware/util" />
+		<source-file src="src/android/com/smartmobilesoftware/util/Inventory.java" target-dir="src/com/smartmobilesoftware/util" />
+		<source-file src="src/android/com/smartmobilesoftware/util/Purchase.java" target-dir="src/com/smartmobilesoftware/util" />
+		<source-file src="src/android/com/smartmobilesoftware/util/Security.java" target-dir="src/com/smartmobilesoftware/util" />
+		<source-file src="src/android/com/smartmobilesoftware/util/SkuDetails.java" target-dir="src/com/smartmobilesoftware/util" />
     </platform>
 
 </plugin>

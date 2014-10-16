@@ -669,42 +669,52 @@ store.restore = null;
 (function() {
     "use strict";
     var initialized = false;
+    var skus = [];
     var init = function() {
         if (initialized) return;
         initialized = true;
-        var products = [];
-        for (var i = 0; i < store.products.length; ++i) products.push(store.products[i].id);
-        store.android.init(iabReady, iabError, {
+        for (var i = 0; i < store.products.length; ++i) skus.push(store.products[i].id);
+        store.android.init(iabReady, function(err) {
+            store.error({
+                code: store.ERR_SETUP,
+                message: "Init failed - " + err
+            });
+        }, {
             showLog: store.debug ? true : false
-        }, products);
+        }, skus);
     };
-    var iabReady = function() {
+    function iabReady() {
         store.log.debug("android -> ready");
-        store.android.loadProductDetails(iabLoaded, iabError, products);
-        function iabLoaded(validProducts) {
-            store.log.debug("android -> loaded");
-            var p, i;
-            for (i = 0; i < validProducts.length; ++i) {
-                p = store.products.byId[validProducts[i].id];
-                p.loaded = true;
-                p.valid = true;
-                p.title = validProducts[i].title;
-                p.price = validProducts[i].price;
-                p.currency = validProducts[i].currencyCode;
-                p.description = validProducts[i].description;
-                store._queries.triggerWhenProduct(p, "loaded", [ p ]);
-            }
-            for (i = 0; i < products.length; ++i) {
-                p = store.products.byId[products[i]];
-                if (!p.valid) {
-                    p.loaded = true;
-                    p.valid = false;
-                    store._queries.triggerWhenProduct(p, "loaded", [ p ]);
-                }
-            }
-            store.ready(true);
+        store.android.getAvailableProducts(iabLoaded, function(err) {
+            store.error({
+                code: store.ERR_LOAD,
+                message: "Loading product info failed - " + err
+            });
+        });
+    }
+    function iabLoaded(validProducts) {
+        store.log.debug("android -> loaded - " + JSON.stringify(validProducts));
+        var p, i;
+        for (i = 0; i < validProducts.length; ++i) {
+            p = store.products.byId[validProducts[i].productId];
+            p.set({
+                title: validProducts[i].title,
+                price: validProducts[i].price,
+                description: validProducts[i].description,
+                currency: validProducts[i].price_currency_code,
+                state: store.VALID
+            });
+            p.trigger("loaded");
         }
-    };
+        for (i = 0; i < skus.length; ++i) {
+            p = store.products.byId[skus[i]];
+            if (!p.valid) {
+                p.set("state", store.INVALID);
+                p.trigger("loaded");
+            }
+        }
+        store.ready(true);
+    }
     var iabError = function(err) {
         store.log.error("android -> error  " + JSON.stringify(err));
     };
