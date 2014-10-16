@@ -48,6 +48,7 @@ InAppPurchase.prototype.init = function (options) {
         ready:    options.ready    || noop,
         purchase: options.purchase || noop,
         purchaseEnqueued: options.purchaseEnqueued || noop,
+        purchasing: options.purchasing || noop,
         finish:   options.finish   || noop,
         restore:  options.restore  || noop,
         receiptsRefreshed: options.receiptsRefreshed || noop,
@@ -223,11 +224,16 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
         }
     }
 	switch(state) {
+        case "PaymentTransactionStatePurchasing":
+            protectCall(this.options.purchasing, 'options.purchasing', productId);
+            return;
 		case "PaymentTransactionStatePurchased":
             protectCall(this.options.purchase, 'options.purchase', transactionIdentifier, productId);
 			return; 
 		case "PaymentTransactionStateFailed":
-            protectCall(this.options.error, 'options.error', errorCode, errorText);
+            protectCall(this.options.error, 'options.error', errorCode, errorText, {
+                productId: productId
+            });
 			return;
 		case "PaymentTransactionStateRestored":
             protectCall(this.options.restore, 'options.restore', transactionIdentifier, productId);

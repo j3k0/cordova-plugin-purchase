@@ -379,13 +379,15 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
     {
 		error = state = transactionIdentifier = transactionReceipt = productId = @"";
 		errorCode = 0;
-        DLog(@"Payment transaction updated (%@):", transaction.originalTransaction.payment.productIdentifier);
+        DLog(@"Transaction updated: %@", transaction.payment.productIdentifier);
 
         switch (transaction.transactionState)
         {
 			case SKPaymentTransactionStatePurchasing:
 				DLog(@"Purchasing...");
-				continue;
+				state = @"PaymentTransactionStatePurchasing";
+				productId = transaction.payment.productIdentifier;
+				break;
 
             case SKPaymentTransactionStatePurchased:
 				state = @"PaymentTransactionStatePurchased";
@@ -398,15 +400,14 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 				state = @"PaymentTransactionStateFailed";
 				error = transaction.error.localizedDescription;
 				errorCode = jsErrorCode(transaction.error.code);
-				DLog(@"Error %@ %@", jsErrorCodeAsString(errorCode), error);
+				productId = transaction.payment.productIdentifier;
+				DLog(@"Error %@ - %@", jsErrorCodeAsString(errorCode), error);
 				
 				// Finish failed transactions, when autoFinish is off
 				if (!g_autoFinishEnabled) {
 					[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
 					[self transactionFinished:transaction];
 				}
-				
-				DLog(@"Error %li %@", (unsigned long)errorCode, error);
                 break;
 
 			case SKPaymentTransactionStateRestored:

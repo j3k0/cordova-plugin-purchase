@@ -12,7 +12,9 @@ store.Product = function(options) {
         options = {};
 
     ///
-    /// Products object have the following fields and methods:
+    /// Products object have the following fields and methods.
+    ///
+    /// ### public fields
     ///
 
     ///  - `product.id` - Identifier of the product on the store
@@ -50,6 +52,42 @@ store.Product = function(options) {
     this.state = options.state || "";
     this.stateChanged();
 };
+
+///
+/// ### public methods
+///
+
+/// #### <a name="finishOrder"></a>`finish()` ##
+///
+/// Call to confirm to the store that an approved order has been delivered.
+/// This will change the product state from `APPROVED` to `FINISHED` (see [life-cycle](#life-cycle)).
+///
+/// As long as you keep the product in its APPROVED:
+///
+///  - the money will not be in your account (i.e. user isn't charged)
+///  - you will receive the `approved` event each time the application starts,
+///    to try finishing the pending transaction
+///  - on iOS, the user will be prompted for its password at starts
+///
+/// ##### example use
+/// ```js
+/// store.when("product.id").approved(function(order){
+///     app.unlockFeature();
+///     order.finish();
+/// });
+/// ```
+store.Product.prototype.finish = function() {
+    if (this.state !== store.FINISHED) {
+        this.set('state', store.FINISHED);
+        setTimeout(function() {
+            if (this.type === store.CONSUMABLE)
+                this.set('state', store.VALID);
+            else
+                this.set('state', store.OWNED);
+        }, 0);
+    }
+};
+
 /// 
 /// ### life-cycle
 ///

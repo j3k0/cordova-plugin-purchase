@@ -13,6 +13,7 @@ var init = function () {
         ready:    storekitReady,
         error:    storekitError,
         purchase: storekitPurchase,
+        purchasing: storekitPurchasing,
         restore:  function (originalTransactionId, productId) {},
         restoreCompleted: function () {},
         restoreFailed:    function (errorCode) {}
@@ -28,20 +29,41 @@ var storekitReady = function () {
 };
 
 // called when an error happens
-var storekitError = function(errorCode, errorText) {
+var storekitError = function(errorCode, errorText, options) {
 
-    console.log('error ' + errorCode + ': ' + errorText);
+    var i,p;
+
+    if (!options)
+        options = {};
+
+    store.log.error('ios -> ERROR ' + errorCode + ': ' + errorText + ' - ' + JSON.stringify(options));
 
     // when loading failed, trigger "error" for each of
     // the registered products.
     if (errorCode === storekit.ERR_LOAD) {
-        for (var i = 0; i < store.products.length; ++i) {
-            var p = store.products[i];
+        for (i = 0; i < store.products.length; ++i) {
+            p = store.products[i];
             p.trigger("error", [new store.Error({
                 code: store.ERR_LOAD,
                 message: errorText
             }), p]);
         }
+    }
+
+    // a purchase was cancelled by the user:
+    // - trigger the "cancelled" event
+    // - set the product back to the VALID state
+    if (errorCode === storekit.ERR_PAYMENT_CANCELLED) {
+        p = store.get(options.productId);
+        if (p) {
+            p.trigger("cancelled");
+            p.set({
+                transaction: null,
+                state: store.VALID
+            });
+        }
+        // but a cancelled order isn't an error.
+        return;
     }
 
     store.error({
@@ -74,7 +96,7 @@ var storekitLoaded = function (validProducts, invalidProductIds) {
 // Purchase approved
 var storekitPurchase = function (transactionId, productId) {
     store.ready(function() {
-        var product = store.products.byId[productId];
+        var product = store.get(productId);
         if (!product) {
             store.error({
                 code: store.ERR_PURCHASE,
@@ -82,16 +104,33 @@ var storekitPurchase = function (transactionId, productId) {
             });
             return;
         }
-        var order = {
-            id: product,
+        /* var order = {
+            id: productId,
+            product: product,
             transaction: {
                 id: transactionId,
+                productId: productId
             },
             finish:  function () {
                 storekit.finish(order.transaction.id);
             }
-        };
-        store._queries.triggerWhenProduct(product, "approved", [ order ]);
+        }; */
+        product.set("state", store.APPROVED);
+        // store._queries.triggerWhenProduct(product, "approved", [ order ]);
+    });
+};
+
+// Purchase in progress
+var storekitPurchasing = function (productId) {
+    store.log.debug("ios -> is purchasing " + productId);
+    store.ready(function() {
+        var product = store.get(productId);
+        if (!product) {
+            store.log.warn("ios -> Product '" + productId + "' is being purchased. But isn't registered anymore! How come?");
+            return;
+        }
+        if (product.state !== store.INITIATED)
+            product.set("state", store.INITIATED);
     });
 };
 
@@ -129,13 +168,12 @@ store.when("order", "requested", function(product) {
             }), product]);
             return;
         }
-        product.set("state", store.INITIATED);
         storekit.purchase(product.id, 1);
     });
 });
 
 store.when("refreshed", function() {
-    store.log.debug("ios:refreshed");
+    store.log.debug("ios -> refreshed");
     if (!initialized) init();
 });
 

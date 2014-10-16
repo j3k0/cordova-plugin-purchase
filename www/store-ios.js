@@ -53,6 +53,14 @@ store.debug = 0;
         this.state = options.state || "";
         this.stateChanged();
     };
+    store.Product.prototype.finish = function() {
+        if (this.state !== store.FINISHED) {
+            this.set("state", store.FINISHED);
+            setTimeout(function() {
+                if (this.type === store.CONSUMABLE) this.set("state", store.VALID); else this.set("state", store.OWNED);
+            }, 0);
+        }
+    };
 }).call(this);
 
 (function() {
@@ -444,7 +452,7 @@ store.restore = null;
                     cb: cb,
                     once: once
                 } ];
-                store.log.debug("store.queries ++ '" + fullQuery + "'");
+                store.log.debug("queries ++ '" + fullQuery + "'");
             },
             unregister: function(cb) {
                 var keep = function(o) {
@@ -455,10 +463,14 @@ store.restore = null;
         },
         triggerAction: function(action, args) {
             var cbs = store._queries.callbacks.byQuery[action];
-            store.log.debug("store.queries !! '" + action + "'");
+            store.log.debug("queries !! '" + action + "'");
             if (cbs) {
                 for (var j = 0; j < cbs.length; ++j) {
-                    cbs[j].cb.apply(store, args);
+                    try {
+                        cbs[j].cb.apply(store, args);
+                    } catch (err) {
+                        handleCallbackError(action, err);
+                    }
                 }
                 store._queries.callbacks.byQuery[action] = cbs.filter(isNotOnce);
             }
@@ -479,7 +491,11 @@ store.restore = null;
                 var cbs = store._queries.callbacks.byQuery[q];
                 if (cbs) {
                     for (var j = 0; j < cbs.length; ++j) {
-                        cbs[j].cb.apply(store, args);
+                        try {
+                            cbs[j].cb.apply(store, args);
+                        } catch (err) {
+                            handleCallbackError(q, err);
+                        }
                     }
                     store._queries.callbacks.byQuery[q] = cbs.filter(isNotOnce);
                 }
@@ -489,6 +505,14 @@ store.restore = null;
     };
     function isNotOnce(cb) {
         return !cb.once;
+    }
+    function handleCallbackError(query, err) {
+        store.log.warn("queries -> a callback for '" + query + "' failed with an exception.");
+        if (typeof err === "string") store.log.warn("           " + err); else if (err) {
+            if (err.fileName) store.log.warn("           " + err.fileName + ":" + err.lineNumber);
+            if (err.message) store.log.warn("           " + err.message);
+            if (err.stack) store.log.warn("           " + err.stack);
+        }
     }
 }).call(this);
 
@@ -583,6 +607,7 @@ InAppPurchase.prototype.init = function(options) {
         ready: options.ready || noop,
         purchase: options.purchase || noop,
         purchaseEnqueued: options.purchaseEnqueued || noop,
+        purchasing: options.purchasing || noop,
         finish: options.finish || noop,
         restore: options.restore || noop,
         receiptsRefreshed: options.receiptsRefreshed || noop,
@@ -692,12 +717,18 @@ InAppPurchase.prototype.updatedTransactionCallback = function(state, errorCode, 
         }
     }
     switch (state) {
+      case "PaymentTransactionStatePurchasing":
+        protectCall(this.options.purchasing, "options.purchasing", productId);
+        return;
+
       case "PaymentTransactionStatePurchased":
         protectCall(this.options.purchase, "options.purchase", transactionIdentifier, productId);
         return;
 
       case "PaymentTransactionStateFailed":
-        protectCall(this.options.error, "options.error", errorCode, errorText);
+        protectCall(this.options.error, "options.error", errorCode, errorText, {
+            productId: productId
+        });
         return;
 
       case "PaymentTransactionStateRestored":
@@ -811,6 +842,7 @@ var init = function() {
         ready: storekitReady,
         error: storekitError,
         purchase: storekitPurchase,
+        purchasing: storekitPurchasing,
         restore: function(originalTransactionId, productId) {},
         restoreCompleted: function() {},
         restoreFailed: function(errorCode) {}
@@ -823,16 +855,29 @@ var storekitReady = function() {
     storekit.load(products, storekitLoaded);
 };
 
-var storekitError = function(errorCode, errorText) {
-    console.log("error " + errorCode + ": " + errorText);
+var storekitError = function(errorCode, errorText, options) {
+    var i, p;
+    if (!options) options = {};
+    store.log.error("ios -> ERROR " + errorCode + ": " + errorText + " - " + JSON.stringify(options));
     if (errorCode === storekit.ERR_LOAD) {
-        for (var i = 0; i < store.products.length; ++i) {
-            var p = store.products[i];
+        for (i = 0; i < store.products.length; ++i) {
+            p = store.products[i];
             p.trigger("error", [ new store.Error({
                 code: store.ERR_LOAD,
                 message: errorText
             }), p ]);
         }
+    }
+    if (errorCode === storekit.ERR_PAYMENT_CANCELLED) {
+        p = store.get(options.productId);
+        if (p) {
+            p.trigger("cancelled");
+            p.set({
+                transaction: null,
+                state: store.VALID
+            });
+        }
+        return;
     }
     store.error({
         code: errorCode,
@@ -862,7 +907,7 @@ var storekitLoaded = function(validProducts, invalidProductIds) {
 
 var storekitPurchase = function(transactionId, productId) {
     store.ready(function() {
-        var product = store.products.byId[productId];
+        var product = store.get(productId);
         if (!product) {
             store.error({
                 code: store.ERR_PURCHASE,
@@ -870,16 +915,19 @@ var storekitPurchase = function(transactionId, productId) {
             });
             return;
         }
-        var order = {
-            id: product,
-            transaction: {
-                id: transactionId
-            },
-            finish: function() {
-                storekit.finish(order.transaction.id);
-            }
-        };
-        store._queries.triggerWhenProduct(product, "approved", [ order ]);
+        product.set("state", store.APPROVED);
+    });
+};
+
+var storekitPurchasing = function(productId) {
+    store.log.debug("ios -> is purchasing " + productId);
+    store.ready(function() {
+        var product = store.get(productId);
+        if (!product) {
+            store.log.warn("ios -> Product '" + productId + "' is being purchased. But isn't registered anymore! How come?");
+            return;
+        }
+        if (product.state !== store.INITIATED) product.set("state", store.INITIATED);
     });
 };
 
@@ -915,13 +963,12 @@ store.when("order", "requested", function(product) {
             }), product ]);
             return;
         }
-        product.set("state", store.INITIATED);
         storekit.purchase(product.id, 1);
     });
 });
 
 store.when("refreshed", function() {
-    store.log.debug("ios:refreshed");
+    store.log.debug("ios -> refreshed");
     if (!initialized) init();
 });
 

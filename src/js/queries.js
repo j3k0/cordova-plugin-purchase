@@ -76,7 +76,7 @@ store._queries = {
                 this.byQuery[fullQuery].push({cb:cb, once:once});
             else
                 this.byQuery[fullQuery] = [{cb:cb, once:once}];
-            store.log.debug("store.queries ++ '" + fullQuery + "'");
+            store.log.debug("queries ++ '" + fullQuery + "'");
         },
 
         unregister: function(cb) {
@@ -97,11 +97,16 @@ store._queries = {
     triggerAction: function(action, args) {
 
         var cbs = store._queries.callbacks.byQuery[action];
-        store.log.debug("store.queries !! '" + action + "'");
+        store.log.debug("queries !! '" + action + "'");
         if (cbs) {
             ///  - Call the callbacks
             for (var j = 0; j < cbs.length; ++j) {
-                cbs[j].cb.apply(store, args);
+                try {
+                    cbs[j].cb.apply(store, args);
+                }
+                catch (err) {
+                    handleCallbackError(action, err);
+                }
             }
             ///  - Remove callbacks that needed to be called only once
             store._queries.callbacks.byQuery[action] = cbs.filter(isNotOnce);
@@ -153,7 +158,12 @@ store._queries = {
             if (cbs) {
                 ///  - Call the callbacks
                 for (var j = 0; j < cbs.length; ++j) {
-                    cbs[j].cb.apply(store, args);
+                    try {
+                        cbs[j].cb.apply(store, args);
+                    }
+                    catch (err) {
+                        handleCallbackError(q, err);
+                    }
                 }
                 ///  - Remove callbacks that needed to be called only once
                 store._queries.callbacks.byQuery[q] = cbs.filter(isNotOnce);
@@ -172,6 +182,20 @@ store._queries = {
 // isNotOnce return true iff a callback should be called more than once.
 function isNotOnce(cb) {
     return !cb.once;
+}
+
+function handleCallbackError(query, err) {
+    store.log.warn("queries -> a callback for \'" + query + "\' failed with an exception.");
+    if (typeof err === 'string')
+        store.log.warn("           " + err);
+    else if (err) {
+        if (err.fileName)
+            store.log.warn("           " + err.fileName + ":" + err.lineNumber);
+        if (err.message)
+            store.log.warn("           " + err.message);
+        if (err.stack)
+            store.log.warn("           " + err.stack);
+    }
 }
 
 }).call(this);
