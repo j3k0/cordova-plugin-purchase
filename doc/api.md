@@ -142,6 +142,7 @@ See [logging levels](#logging levels) for all possible values.
 
 ## constants
 
+
 ### product types
 
     store.FREE_SUBSCRIPTION = "free subscription";
@@ -162,7 +163,9 @@ See [logging levels](#logging levels) for all possible values.
     store.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
     store.ERR_REFRESH_RECEIPTS    = ERROR_CODES_BASE + 11;
     store.ERR_INVALID_PRODUCT_ID  = ERROR_CODES_BASE + 12;
+
 ### product states
+
     store.REGISTERED = 'registered';
     store.INVALID    = 'invalid';
     store.VALID      = 'valid';
@@ -171,7 +174,9 @@ See [logging levels](#logging levels) for all possible values.
     store.APPROVED   = 'approved';
     store.FINISHED   = 'finished';
     store.OWNED      = 'owned';
+
 ### logging levels
+
     store.ERROR    = 1;
     store.WARNING  = 2;
     store.INFO     = 3;
@@ -187,6 +192,7 @@ Products object have the following fields and methods.
 
  - `product.id` - Identifier of the product on the store
  - `product.alias` - Alias that can be used for more explicit [queries](#queries)
+ - `product.type` - Family of product, should be one of the defined [product types](#product-types).
  - `product.price` - Non-localized price, without the currency
  - `product.currency` - Currency code
  - `product.title` - Non-localized name or short description
@@ -194,7 +200,7 @@ Products object have the following fields and methods.
  - `product.localizedTitle` - Localized name or short description ready for display
  - `product.localizedDescription` - Localized longer description ready for display
  - `product.localizedPrice` - Localized price (with currency) ready for display
- - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below)
+ - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states).
 
 ### public methods
 

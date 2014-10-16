@@ -104,19 +104,11 @@ var storekitPurchase = function (transactionId, productId) {
             });
             return;
         }
-        /* var order = {
-            id: productId,
-            product: product,
-            transaction: {
-                id: transactionId,
-                productId: productId
-            },
-            finish:  function () {
-                storekit.finish(order.transaction.id);
-            }
-        }; */
+        product.transaction = {
+            type: 'ios-appstore',
+            id:   transactionId
+        };
         product.set("state", store.APPROVED);
-        // store._queries.triggerWhenProduct(product, "approved", [ order ]);
     });
 };
 
@@ -138,7 +130,7 @@ var storekitPurchasing = function (productId) {
 store.restore = function() {
 };
 
-store.when("order", "requested", function(product) {
+store.when("requested", function(product) {
     store.ready(function() {
         if (!product) {
             store.error({
@@ -170,6 +162,10 @@ store.when("order", "requested", function(product) {
         }
         storekit.purchase(product.id, 1);
     });
+});
+
+store.when("finished", function(product) {
+    storekit.finish(product.transaction.id);
 });
 
 store.when("refreshed", function() {

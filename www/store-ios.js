@@ -40,6 +40,7 @@ store.debug = 0;
         if (!options) options = {};
         this.id = options.id || null;
         this.alias = options.alias || options.id || null;
+        this.type = options.type || null;
         this.price = options.price || null;
         this.currency = options.currency || null;
         this.title = options.title || options.localizedTitle || null;
@@ -54,13 +55,23 @@ store.debug = 0;
         this.stateChanged();
     };
     store.Product.prototype.finish = function() {
-        if (this.state !== store.FINISHED) {
-            this.set("state", store.FINISHED);
-            setTimeout(function() {
-                if (this.type === store.CONSUMABLE) this.set("state", store.VALID); else this.set("state", store.OWNED);
-            }, 0);
-        }
+        store.log.debug("product -> defer finishing " + this.id);
+        defer(this, function() {
+            store.log.debug("product -> finishing " + this.id);
+            if (this.state !== store.FINISHED) {
+                this.set("state", store.FINISHED);
+                defer(this, function() {
+                    store.log.debug("product -> " + this.id + " is a " + this.type);
+                    if (this.type === store.CONSUMABLE) this.set("state", store.VALID); else this.set("state", store.OWNED);
+                });
+            }
+        });
     };
+    function defer(thisArg, cb) {
+        window.setTimeout(function() {
+            cb.call(thisArg);
+        }, 1);
+    }
 }).call(this);
 
 (function() {
@@ -915,6 +926,10 @@ var storekitPurchase = function(transactionId, productId) {
             });
             return;
         }
+        product.transaction = {
+            type: "ios-appstore",
+            id: transactionId
+        };
         product.set("state", store.APPROVED);
     });
 };
@@ -933,7 +948,7 @@ var storekitPurchasing = function(productId) {
 
 store.restore = function() {};
 
-store.when("order", "requested", function(product) {
+store.when("requested", function(product) {
     store.ready(function() {
         if (!product) {
             store.error({
@@ -965,6 +980,10 @@ store.when("order", "requested", function(product) {
         }
         storekit.purchase(product.id, 1);
     });
+});
+
+store.when("finished", function(product) {
+    storekit.finish(product.transaction.id);
 });
 
 store.when("refreshed", function() {

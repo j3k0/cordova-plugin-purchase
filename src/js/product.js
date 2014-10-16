@@ -23,6 +23,9 @@ store.Product = function(options) {
     ///  - `product.alias` - Alias that can be used for more explicit [queries](#queries)
     this.alias = options.alias || options.id || null;
 
+    ///  - `product.type` - Family of product, should be one of the defined [product types](#product-types).
+    this.type = options.type || null;
+
     ///  - `product.price` - Non-localized price, without the currency
     this.price = options.price || null;
 
@@ -48,8 +51,9 @@ store.Product = function(options) {
     this.valid  = options.valid;
     this.canPurchase = options.canPurchase;
 
-    ///  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below)
+    ///  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states).
     this.state = options.state || "";
+
     this.stateChanged();
 };
 
@@ -77,16 +81,27 @@ store.Product = function(options) {
 /// });
 /// ```
 store.Product.prototype.finish = function() {
-    if (this.state !== store.FINISHED) {
-        this.set('state', store.FINISHED);
-        setTimeout(function() {
-            if (this.type === store.CONSUMABLE)
-                this.set('state', store.VALID);
-            else
-                this.set('state', store.OWNED);
-        }, 0);
-    }
+    store.log.debug("product -> defer finishing " + this.id);
+    defer(this, function() {
+        store.log.debug("product -> finishing " + this.id);
+        if (this.state !== store.FINISHED) {
+            this.set('state', store.FINISHED);
+            defer(this, function() {
+                store.log.debug("product -> " + this.id + " is a " + this.type);
+                if (this.type === store.CONSUMABLE)
+                    this.set('state', store.VALID);
+                else
+                    this.set('state', store.OWNED);
+            });
+        }
+    });
 };
+
+function defer(thisArg, cb) {
+    window.setTimeout(function() {
+        cb.call(thisArg);
+    }, 1);
+}
 
 /// 
 /// ### life-cycle
