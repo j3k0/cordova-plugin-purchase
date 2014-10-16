@@ -18,7 +18,7 @@ help:
 
 all: build doc-api
 
-build: test-js
+build: sync-android test-js
 	@echo "- Preprocess"
 	@node_modules/.bin/preprocess src/js/store-ios.js src/js | node_modules/.bin/uglifyjs -b > www/store-ios.js
 	@node_modules/.bin/preprocess src/js/store-android.js src/js | node_modules/.bin/uglifyjs -b > www/store-android.js
@@ -48,6 +48,10 @@ doc-api: test-js
 	@echo "(generated from source files using \`make doc-api)\`" >> doc/api.md
 	@echo >> doc/api.md
 	@cat test/store-test.js | grep "///" | cut -d/ -f4- | cut -d\  -f2- >> doc/api.md
+
+sync-android:
+	@rsync -qrv git_modules/android_iap/v3/src/android/ src/android
+	@cp git_modules/android_iap/v3/www/inappbilling.js src/js/android.js
 
 clean:
 	@find . -name '*~' -exec rm '{}' ';'

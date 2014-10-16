@@ -571,116 +571,97 @@ store.restore = null;
 
 (function() {
     "use strict";
-    var noop = function() {};
+    var log = function(msg) {
+        console.log("InAppBilling[js]: " + msg);
+    };
     var InAppBilling = function() {
         this.options = {};
     };
-    var ERROR_CODES_BASE = 4983497;
-    InAppBilling.prototype.ERR_NO_ERROR = ERROR_CODES_BASE;
-    InAppBilling.prototype.ERR_SETUP = ERROR_CODES_BASE + 1;
-    InAppBilling.prototype.ERR_LOAD = ERROR_CODES_BASE + 2;
-    InAppBilling.prototype.ERR_PURCHASE = ERROR_CODES_BASE + 3;
-    InAppBilling.prototype.ERR_LOAD_RECEIPTS = ERROR_CODES_BASE + 4;
-    InAppBilling.prototype.ERR_CLIENT_INVALID = ERROR_CODES_BASE + 5;
-    InAppBilling.prototype.ERR_PAYMENT_CANCELLED = ERROR_CODES_BASE + 6;
-    InAppBilling.prototype.ERR_PAYMENT_INVALID = ERROR_CODES_BASE + 7;
-    InAppBilling.prototype.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
-    InAppBilling.prototype.ERR_UNKNOWN = ERROR_CODES_BASE + 10;
-    InAppBilling.prototype.ERR_LOAD_INVENTORY = ERROR_CODES_BASE + 11;
-    InAppBilling.prototype.ERR_HELPER_DISPOSED = ERROR_CODES_BASE + 12;
-    InAppBilling.prototype.ERR_NOT_INITIALIZED = ERROR_CODES_BASE + 13;
-    InAppBilling.prototype.ERR_INVENTORY_NOT_LOADED = ERROR_CODES_BASE + 14;
-    InAppBilling.prototype.ERR_PURCHASE_FAILED = ERROR_CODES_BASE + 15;
-    InAppBilling.prototype.ERR_JSON_CONVERSION_FAILED = ERROR_CODES_BASE + 16;
-    InAppBilling.prototype.ERR_INVALID_PURCHASE_PAYLOAD = ERROR_CODES_BASE + 17;
-    InAppBilling.prototype.ERR_SUBSCRIPTION_NOT_SUPPORTED = ERROR_CODES_BASE + 18;
-    InAppBilling.prototype.ERR_CONSUME_NOT_OWNED_ITEM = ERROR_CODES_BASE + 19;
-    InAppBilling.prototype.ERR_CONSUMPTION_FAILED = ERROR_CODES_BASE + 20;
-    InAppBilling.prototype.ERR_PRODUCT_NOT_LOADED = ERROR_CODES_BASE + 21;
-    InAppBilling.prototype.ERR_INVALID_PRODUCT_ID = ERROR_CODES_BASE + 22;
-    InAppBilling.prototype.ERR_INVALID_PURCHASE_ID = ERROR_CODES_BASE + 23;
-    InAppBilling.prototype.ERR_PURCHASE_OWNED_ITEM = ERROR_CODES_BASE + 24;
-    InAppBilling.prototype.log = function(msg) {
-        console.log("InAppBilling[js]: " + msg);
-    };
-    InAppBilling.prototype.init = function(success, fail, options, productIds) {
+    InAppBilling.prototype.init = function(success, fail, options, skus) {
         if (!options) options = {};
         this.options = {
-            showLog: options.showLog || false
+            showLog: options.showLog !== false
         };
-        if (this.options.showLog === true) {
-            this.log = InAppBilling.prototype.log;
-        } else {
-            this.log = noop;
+        if (this.options.showLog) {
+            log("setup ok");
         }
-        this.log("init called!");
-        var hasProductIds = false;
-        if (typeof productIds !== "undefined") {
-            if (typeof productIds === "string") {
-                productIds = [ productIds ];
+        var hasSKUs = false;
+        if (typeof skus !== "undefined") {
+            if (typeof skus === "string") {
+                skus = [ skus ];
             }
-            if (productIds.length > 0) {
-                if (typeof productIds[0] !== "string") {
-                    var msg = "invalid productIds: " + JSON.stringify(productIds);
-                    this.log(msg);
-                    fail({
-                        errorCode: this.ERR_INVALID_PRODUCT_ID,
-                        msg: msg,
-                        nativeEvent: {}
-                    });
+            if (skus.length > 0) {
+                if (typeof skus[0] !== "string") {
+                    var msg = "invalid productIds: " + JSON.stringify(skus);
+                    if (this.options.showLog) {
+                        log(msg);
+                    }
+                    fail(msg);
                     return;
                 }
-                this.log("load " + JSON.stringify(productIds));
-                hasProductIds = true;
+                if (this.options.showLog) {
+                    log("load " + JSON.stringify(skus));
+                }
+                hasSKUs = true;
             }
         }
-        if (hasProductIds) {
-            return cordova.exec(success, fail, "InAppBillingPlugin", "init", [ productIds, this.options.showLog ]);
+        if (hasSKUs) {
+            return cordova.exec(success, fail, "InAppBillingPlugin", "init", [ skus ]);
         } else {
-            return cordova.exec(success, fail, "InAppBillingPlugin", "init", [ [], this.options.showLog ]);
+            return cordova.exec(success, fail, "InAppBillingPlugin", "init", []);
         }
     };
     InAppBilling.prototype.getPurchases = function(success, fail) {
-        this.log("getPurchases called!");
+        if (this.options.showLog) {
+            log("getPurchases called!");
+        }
         return cordova.exec(success, fail, "InAppBillingPlugin", "getPurchases", [ "null" ]);
     };
     InAppBilling.prototype.buy = function(success, fail, productId) {
-        this.log("buy called!");
+        if (this.options.showLog) {
+            log("buy called!");
+        }
         return cordova.exec(success, fail, "InAppBillingPlugin", "buy", [ productId ]);
     };
-    InAppBilling.prototype.restore = function(success, fail) {
-        this.log("restore called!");
-        cordova.exec(success, fail, "InAppBillingPlugin", "restoreCompletedTransactions", []);
-    };
-    InAppBilling.prototype.consumeProduct = function(success, fail, productId) {
-        this.log("consumeProduct called!");
-        return cordova.exec(success, fail, "InAppBillingPlugin", "consumeProduct", [ productId ]);
-    };
-    InAppBilling.prototype.loadProductDetails = function(success, fail, productIds) {
-        this.log("loadProductDetails called!");
-        if (typeof productIds === "string") {
-            productIds = [ productIds ];
+    InAppBilling.prototype.subscribe = function(success, fail, productId) {
+        if (this.options.showLog) {
+            log("subscribe called!");
         }
-        if (!productIds.length) {
+        return cordova.exec(success, fail, "InAppBillingPlugin", "subscribe", [ productId ]);
+    };
+    InAppBilling.prototype.consumePurchase = function(success, fail, productId) {
+        if (this.options.showLog) {
+            log("consumePurchase called!");
+        }
+        return cordova.exec(success, fail, "InAppBillingPlugin", "consumePurchase", [ productId ]);
+    };
+    InAppBilling.prototype.getAvailableProducts = function(success, fail) {
+        if (this.options.showLog) {
+            log("getAvailableProducts called!");
+        }
+        return cordova.exec(success, fail, "InAppBillingPlugin", "getAvailableProducts", [ "null" ]);
+    };
+    InAppBilling.prototype.getProductDetails = function(success, fail, skus) {
+        if (this.options.showLog) {
+            log("getProductDetails called!");
+        }
+        if (typeof skus === "string") {
+            skus = [ skus ];
+        }
+        if (!skus.length) {
             return;
         } else {
-            if (typeof productIds[0] !== "string") {
-                var msg = "invalid productIds: " + JSON.stringify(productIds);
-                this.log(msg);
-                fail({
-                    errorCode: this.ERR_INVALID_PRODUCT_ID,
-                    msg: msg,
-                    nativeEvent: {}
-                });
+            if (typeof skus[0] !== "string") {
+                var msg = "invalid productIds: " + JSON.stringify(skus);
+                log(msg);
+                fail(msg);
                 return;
             }
-            this.log("load " + JSON.stringify(productIds));
-            return cordova.exec(success, fail, "InAppBillingPlugin", "loadProductDetails", [ productIds ]);
+            if (this.options.showLog) {
+                log("load " + JSON.stringify(skus));
+            }
+            return cordova.exec(success, fail, "InAppBillingPlugin", "getProductDetails", [ skus ]);
         }
-    };
-    InAppBilling.prototype.getPurchaseDetails = function(success, fail, purchaseId) {
-        this.log("loadProductDetails called!");
-        return cordova.exec(success, fail, "InAppBillingPlugin", "getPurchaseDetails", [ purchaseId ]);
     };
     window.inappbilling = store.android = new InAppBilling();
 }).call(this);
@@ -698,10 +679,10 @@ store.restore = null;
         }, products);
     };
     var iabReady = function() {
-        console.log("ready");
+        store.log.debug("android -> ready");
         store.android.loadProductDetails(iabLoaded, iabError, products);
         function iabLoaded(validProducts) {
-            console.log("loaded");
+            store.log.debug("android -> loaded");
             var p, i;
             for (i = 0; i < validProducts.length; ++i) {
                 p = store.products.byId[validProducts[i].id];
@@ -725,7 +706,7 @@ store.restore = null;
         }
     };
     var iabError = function(err) {
-        store.log.error(JSON.stringify(err));
+        store.log.error("android -> error  " + JSON.stringify(err));
     };
     store.when("refreshed", function() {
         if (!initialized) init();
