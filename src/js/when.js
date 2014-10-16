@@ -5,6 +5,9 @@
 /// 
 store.when = function(query, once, callback) {
 
+    if (typeof query !== 'string')
+        query = store.get(query);
+
     if (typeof once !== 'string') {
 
         /// 

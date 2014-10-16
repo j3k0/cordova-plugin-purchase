@@ -59,11 +59,9 @@ describe('Off', function(){
 
             store.ask("p1").then(f);
 
-            var product = store.products.byId.p1;
-            product.loaded = true;
-            product.valid = true;
-            store.trigger("p1", "loaded", product);
-            assert.equal(1, called);
+            var product = store.get("p1");
+            product.set("state", store.VALID);
+            assert.equal(1, called, "ask should have been called once, not " + called + " times");
 
             store.ask("p1").then(f);
             assert.equal(2, called);

@@ -64,16 +64,19 @@ var store = {};
         this.loaded = this.state && this.state !== store.REGISTERED;
         this.valid = this.state !== store.INVALID;
         if (!this.state || this.state === store.REGISTERED) delete this.valid;
-        if (this.state) store.trigger(this, this.state);
+        if (this.state) this.trigger(this.state);
     };
     store.Product.prototype.on = function(event, cb) {
-        store.when(this, event, cb);
+        store.when(this.id, event, cb);
     };
     store.Product.prototype.once = function(event, cb) {
-        store.once(this, event, cb);
+        store.once(this.id, event, cb);
     };
     store.Product.prototype.off = function(cb) {
         store.when.unregister(cb);
+    };
+    store.Product.prototype.trigger = function(action, args) {
+        store.trigger(this, action, args);
     };
 }).call(this);
 
@@ -116,6 +119,7 @@ var store = {};
 (function() {
     "use strict";
     store.when = function(query, once, callback) {
+        if (typeof query !== "string") query = store.get(query);
         if (typeof once !== "string") {
             return {
                 loaded: function(cb) {
@@ -248,15 +252,13 @@ var store = {};
                     cb(p);
                 } else {
                     localCallback.then = cb;
-                    that.once(pid).loaded(function(p) {
+                    p.once(store.VALID, function(p) {
                         if (localCallback.skip) return;
-                        if (p.valid) {
-                            if (localCallback.then) {
-                                done();
-                                cb(p);
-                            } else {
-                                done();
-                            }
+                        if (localCallback.then) {
+                            done();
+                            cb(p);
+                        } else {
+                            done();
                         }
                     });
                 }
@@ -282,18 +284,16 @@ var store = {};
                             }
                         }
                     });
-                    that.once(pid).loaded(function(p) {
+                    that.once(pid, store.INVALID, function(p) {
                         if (localCallback.skip) return;
-                        if (!p.valid) {
-                            if (localCallback.error) {
-                                done();
-                                cb(new store.Error({
-                                    code: store.ERR_INVALID_PRODUCT_ID,
-                                    message: "Invalid product"
-                                }), p);
-                            } else {
-                                done();
-                            }
+                        if (localCallback.error) {
+                            done();
+                            cb(new store.Error({
+                                code: store.ERR_INVALID_PRODUCT_ID,
+                                message: "Invalid product"
+                            }), p);
+                        } else {
+                            done();
                         }
                     });
                 }
@@ -365,6 +365,7 @@ store.refresh = function() {};
 
 (function() {
     "use strict";
+    function log() {}
     store._queries = {
         uniqueQuery: function(string) {
             if (!string) return "";
@@ -390,6 +391,7 @@ store.refresh = function() {};
                     cb: cb,
                     once: once
                 } ];
+                log("++ '" + fullQuery + "'");
             },
             unregister: function(cb) {
                 var keep = function(o) {
@@ -413,6 +415,7 @@ store.refresh = function() {};
             var i;
             for (i = 0; i < queries.length; ++i) {
                 var q = queries[i];
+                log("!! '" + q + "'");
                 var cbs = store._queries.callbacks.byQuery[q];
                 if (cbs) {
                     for (var j = 0; j < cbs.length; ++j) {

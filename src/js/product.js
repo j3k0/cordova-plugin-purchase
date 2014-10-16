@@ -78,13 +78,12 @@ store.Product = function(options) {
 ///  - `FINISHED`: purchase has been delivered by the app.
 ///  - `OWNED`: purchase is owned (only for non-consumable and subscriptions)
 ///
-/// When finished, a consumable product will get back to the `LOADED` state.
+/// When finished, a consumable product will get back to the `VALID` state.
 ///
 /// ### State changes
 ///
 /// Each time the product changes state, an event is triggered.
 ///
-
 store.Product.prototype.set = function(key, value) {
     if (typeof key === 'string') {
         this[key] = value;
@@ -111,18 +110,21 @@ store.Product.prototype.stateChanged = function() {
         delete this.valid;
 
     if (this.state)
-        store.trigger(this, this.state);
+        this.trigger(this.state);
 };
 
-// aliases to `store` methods, added for conveniance.
+/// ### aliases to `store` methods, added for conveniance.
 store.Product.prototype.on = function(event, cb) {
-    store.when(this, event, cb);
+    store.when(this.id, event, cb);
 };
 store.Product.prototype.once = function(event, cb) {
-    store.once(this, event, cb);
+    store.once(this.id, event, cb);
 };
 store.Product.prototype.off = function(cb) {
     store.when.unregister(cb);
+};
+store.Product.prototype.trigger = function(action, args) {
+    store.trigger(this, action, args);
 };
 
 }).call(this);

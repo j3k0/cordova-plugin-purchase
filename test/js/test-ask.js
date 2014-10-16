@@ -5,9 +5,8 @@ describe('Ask', function(){
 
     describe('#ask()', function(){
 
-        var product = {};
         beforeEach(function() {
-            product = {
+            var product = {
                 id: "p1",
                 alias: "extra life"
             };
@@ -21,43 +20,32 @@ describe('Ask', function(){
                 error(nop);
         });
 
-        it('should retrieve loaded products', function() {
-            var loaded = false;
-            var error = false;
+        it('should retrieve loaded products', function(done) {
             store.ask("p1").
                 then(function(product) {
-                    loaded = true;
-                    assert.equal(true, product.loaded);
-                    assert.equal(true, product.valid);
+                    assert.equal(true, product.loaded, "product is loaded");
+                    assert.equal(true, product.valid,  "product is valid");
+                    done();
                 }).
                 error(function(err) {
-                    error = true;
+                    assert.ok(false, "ask didn't fail with an error");
+                    done();
                 });
-            product.loaded = true;
-            product.valid = true;
-            store._queries.triggerWhenProduct(product, "loaded", [product]);
-            assert.equal(true, loaded);
-            assert.equal(false, error);
+            store.get("p1").set("state", store.VALID);
         });
 
-        it('should retrieve errors for invalid products', function() {
-            var loaded = false;
-            var error = false;
+        it('should retrieve errors for invalid products', function(done) {
             store.ask("p1").
                 then(function(product) {
-                    loaded = true;
+                    assert.ok("false", "ask should fail");
                 }).
                 error(function(err, product) {
                     assert.equal(store.ERR_INVALID_PRODUCT_ID, err.code);
                     assert.equal(true,  product.loaded);
                     assert.equal(false, product.valid);
-                    error = true;
+                    done();
                 });
-            product.loaded = true;
-            product.valid = false;
-            store._queries.triggerWhenProduct(product, "loaded", [product]);
-            assert.equal(false, loaded);
-            assert.equal(true, error);
+            store.get("p1").set("state", store.INVALID);
         });
 
         it('should fail when giving unregistered product id or alias', function() {

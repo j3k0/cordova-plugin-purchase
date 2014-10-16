@@ -61,16 +61,15 @@ store.ask = function(pid) {
             }
             else {
                 localCallback.then = cb;
-                that.once(pid).loaded(function(p) {
+                p.once(store.VALID, function(p) {
                     if (localCallback.skip) return;
-                    if (p.valid) {
-                        if (localCallback.then) { // if `then` callback wasn't unregistered
-                            done();
-                            cb(p);
-                        }
-                        else {
-                            done();
-                        }
+                    // if `then` callback wasn't UNregistered
+                    if (localCallback.then) {
+                        done();
+                        cb(p);
+                    }
+                    else {
+                        done();
                     }
                 });
             }
@@ -106,19 +105,17 @@ store.ask = function(pid) {
                         }
                     }
                 });
-                that.once(pid).loaded(function(p) {
+                that.once(pid, store.INVALID, function(p) {
                     if (localCallback.skip) return;
-                    if (!p.valid) {
-                        if (localCallback.error) { // if error callback wasn't unregistered
-                            done();
-                            cb(new store.Error({
-                                code: store.ERR_INVALID_PRODUCT_ID,
-                                message: "Invalid product"
-                            }), p);
-                        }
-                        else {
-                            done();
-                        }
+                    if (localCallback.error) { // if error callback wasn't unregistered
+                        done();
+                        cb(new store.Error({
+                            code: store.ERR_INVALID_PRODUCT_ID,
+                            message: "Invalid product"
+                        }), p);
+                    }
+                    else {
+                        done();
                     }
                 });
             }

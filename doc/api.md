@@ -152,14 +152,14 @@ for more details if needed.
     store.ERR_REFRESH_RECEIPTS    = ERROR_CODES_BASE + 11;
     store.ERR_INVALID_PRODUCT_ID  = ERROR_CODES_BASE + 12;
 ### product states
-store.REGISTERED = 'registered';
-store.INVALID    = 'invalid';
-store.VALID      = 'valid';
-store.REQUESTED  = 'requested';
-store.INITIATED  = 'initiated';
-store.APPROVED   = 'approved';
-store.FINISHED   = 'finished';
-store.OWNED      = 'owned';
+    store.REGISTERED = 'registered';
+    store.INVALID    = 'invalid';
+    store.VALID      = 'valid';
+    store.REQUESTED  = 'requested';
+    store.INITIATED  = 'initiated';
+    store.APPROVED   = 'approved';
+    store.FINISHED   = 'finished';
+    store.OWNED      = 'owned';
 ## <a name="product"></a>*store.Product* object ##
 
 Some methods, like the [`ask` method](#ask), give you access to a `product`
@@ -205,12 +205,13 @@ Find below a diagram of the different states a product can pass by.
  - `FINISHED`: purchase has been delivered by the app.
  - `OWNED`: purchase is owned (only for non-consumable and subscriptions)
 
-When finished, a consumable product will get back to the `LOADED` state.
+When finished, a consumable product will get back to the `VALID` state.
 
 ### State changes
 
 Each time the product changes state, an event is triggered.
 
+### aliases to `store` methods, added for conveniance.
 
 ## <a name="errors"></a>*store.Error* object
 

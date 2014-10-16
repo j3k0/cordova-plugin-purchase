@@ -1,6 +1,8 @@
 (function(){
 'use strict';
 
+function log() {}
+
 ///
 /// ## queries
 ///
@@ -77,6 +79,7 @@ store._queries = {
                 this.byQuery[fullQuery].push({cb:cb, once:once});
             else
                 this.byQuery[fullQuery] = [{cb:cb, once:once}];
+            log("++ '" + fullQuery + "'");
         },
 
         unregister: function(cb) {
@@ -132,6 +135,7 @@ store._queries = {
         var i;
         for (i = 0; i < queries.length; ++i) {
             var q = queries[i];
+            log("!! '" + q + "'");
             var cbs = store._queries.callbacks.byQuery[q];
             if (cbs) {
                 ///  - Call the callbacks
