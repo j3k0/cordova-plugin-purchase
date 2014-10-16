@@ -1,5 +1,7 @@
 var store = {};
 
+store.debug = 0;
+
 (function() {
     "use strict";
     store.FREE_SUBSCRIPTION = "free subscription";
@@ -26,6 +28,10 @@ var store = {};
     store.APPROVED = "approved";
     store.FINISHED = "finished";
     store.OWNED = "owned";
+    store.ERROR = 1;
+    store.WARNING = 2;
+    store.INFO = 3;
+    store.DEBUG = 4;
 }).call(this);
 
 (function() {
@@ -342,6 +348,30 @@ store.restore = null;
 
 (function() {
     "use strict";
+    function log(level, o) {
+        var maxLevel = store.debug === true ? 1 : store.debug;
+        if (level > maxLevel) return;
+        if (typeof o !== "string") o = JSON.stringify(o);
+        console.log("[store.js] " + o);
+    }
+    store.log = {
+        error: function(o) {
+            log(store.ERROR, o);
+        },
+        warn: function(o) {
+            log(store.WARNING, o);
+        },
+        info: function(o) {
+            log(store.INFO, o);
+        },
+        debug: function(o) {
+            log(store.DEBUG, o);
+        }
+    };
+}).call(this);
+
+(function() {
+    "use strict";
     store.products = [];
     store.products.push = function(p) {
         Array.prototype.push.call(this, p);
@@ -389,7 +419,6 @@ store.restore = null;
 
 (function() {
     "use strict";
-    function log(o) {}
     store._queries = {
         uniqueQuery: function(string) {
             if (!string) return "";
@@ -415,7 +444,7 @@ store.restore = null;
                     cb: cb,
                     once: once
                 } ];
-                log("++ '" + fullQuery + "'");
+                store.log.debug("store.queries ++ '" + fullQuery + "'");
             },
             unregister: function(cb) {
                 var keep = function(o) {
@@ -426,6 +455,7 @@ store.restore = null;
         },
         triggerAction: function(action, args) {
             var cbs = store._queries.callbacks.byQuery[action];
+            store.log.debug("store.queries !! '" + action + "'");
             if (cbs) {
                 for (var j = 0; j < cbs.length; ++j) {
                     cbs[j].cb.apply(store, args);
@@ -442,13 +472,10 @@ store.restore = null;
             if (product && product.valid === true) queries.push("valid " + action);
             if (product && product.valid === false) queries.push("invalid " + action);
             queries.push(action);
-            var isNotOnce = function(cb) {
-                return !cb.once;
-            };
             var i;
             for (i = 0; i < queries.length; ++i) {
                 var q = queries[i];
-                log("!! '" + q + "'");
+                store.log.debug("store.queries !! '" + q + "'");
                 var cbs = store._queries.callbacks.byQuery[q];
                 if (cbs) {
                     for (var j = 0; j < cbs.length; ++j) {
@@ -460,13 +487,17 @@ store.restore = null;
             if (action !== "updated") this.triggerWhenProduct(product, "updated", args);
         }
     };
+    function isNotOnce(cb) {
+        return !cb.once;
+    }
 }).call(this);
 
 (function() {
     "use strict";
     store.trigger = function(product, action, args) {
         if (!action && !args && typeof product === "string") {
-            store._queries.triggerAction(action);
+            store.log.debug("store.trigger -> triggering action " + product);
+            store._queries.triggerAction(product);
             return;
         }
         if (typeof product === "string") {
@@ -890,6 +921,7 @@ store.when("order", "requested", function(product) {
 });
 
 store.when("refreshed", function() {
+    store.log.debug("ios:refreshed");
     if (!initialized) init();
 });
 

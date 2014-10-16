@@ -160,6 +160,19 @@
 ///
 var store = {};
 
+/// ## <a name="debug"></a>*store.debug*
+///
+/// The `debug` property defines how much you want `store.js` to write on the console. Set to:
+/// 
+///  - `false` or `0` to disable all logging
+///  - `store.ERROR` to show only error messages
+///  - `store.WARNING` to show warnings and errors
+///  - `store.INFO` to also show information messages
+///  - `store.DEBUG` to enable internal debugging messages.
+///
+/// See [logging levels](#logging levels) for all possible values.
+store.debug = 0;
+
 // #include "constants.js"
 // #include "product.js"
 // #include "error.js"
@@ -180,6 +193,8 @@ store.refresh = function() {
 /// ## <a name="restore"></a>*store.restore()*
 /// TODO write the doc
 store.restore = null;
+
+// #include "log.js"
 
 ///
 /// # internal APIs

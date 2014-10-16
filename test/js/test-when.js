@@ -70,6 +70,13 @@ describe('When', function(){
             store.trigger("p1", "initiated");
             assert.equal(2, nCalls);
         });
+
+        it('should allow non product related registrations', function(done) {
+            store.when("refreshed", function() {
+                done();
+            });
+            store.trigger("refreshed");
+        });
     });
 
     describe('#once()', function(){

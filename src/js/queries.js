@@ -1,10 +1,6 @@
 (function(){
 'use strict';
 
-function log(o) {
-    // console.log(o);
-}
-
 ///
 /// ## queries
 ///
@@ -80,7 +76,7 @@ store._queries = {
                 this.byQuery[fullQuery].push({cb:cb, once:once});
             else
                 this.byQuery[fullQuery] = [{cb:cb, once:once}];
-            log("++ '" + fullQuery + "'");
+            store.log.debug("store.queries ++ '" + fullQuery + "'");
         },
 
         unregister: function(cb) {
@@ -99,7 +95,9 @@ store._queries = {
     /// `args` are passed as arguments to the registered callbacks.
     ///
     triggerAction: function(action, args) {
+
         var cbs = store._queries.callbacks.byQuery[action];
+        store.log.debug("store.queries !! '" + action + "'");
         if (cbs) {
             ///  - Call the callbacks
             for (var j = 0; j < cbs.length; ++j) {
@@ -108,6 +106,7 @@ store._queries = {
             ///  - Remove callbacks that needed to be called only once
             store._queries.callbacks.byQuery[action] = cbs.filter(isNotOnce);
         }
+        ///
     },
 
     /// ### *store._queries.triggerWhenProduct(product, action, args)*
@@ -143,18 +142,13 @@ store._queries = {
         ///  - action
         queries.push(action);
     
-        // Return true if a callback should be called more than once.
-        var isNotOnce = function(cb) {
-            return !cb.once;
-        };
-
         ///
         /// Then, for each query:
         ///
         var i;
         for (i = 0; i < queries.length; ++i) {
             var q = queries[i];
-            log("!! '" + q + "'");
+            store.log.debug("store.queries !! '" + q + "'");
             var cbs = store._queries.callbacks.byQuery[q];
             if (cbs) {
                 ///  - Call the callbacks
@@ -172,6 +166,12 @@ store._queries = {
             this.triggerWhenProduct(product, "updated", args);
     }
     ///
+  
 };
+
+// isNotOnce return true iff a callback should be called more than once.
+function isNotOnce(cb) {
+    return !cb.once;
+}
 
 }).call(this);

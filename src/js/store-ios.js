@@ -135,6 +135,7 @@ store.when("order", "requested", function(product) {
 });
 
 store.when("refreshed", function() {
+    store.log.debug("ios:refreshed");
     if (!initialized) init();
 });
 

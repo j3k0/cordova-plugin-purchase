@@ -128,6 +128,17 @@ As with any other plugin, this object shouldn't be used before
 the "deviceready" event is fired. Check cordova's documentation
 for more details if needed.
 
+## <a name="debug"></a>*store.debug*
+
+The `debug` property defines how much you want `store.js` to write on the console. Set to:
+
+ - `false` or `0` to disable all logging
+ - `store.ERROR` to show only error messages
+ - `store.WARNING` to show warnings and errors
+ - `store.INFO` to also show information messages
+ - `store.DEBUG` to enable internal debugging messages.
+
+See [logging levels](#logging levels) for all possible values.
 
 ## constants
 
@@ -160,6 +171,11 @@ for more details if needed.
     store.APPROVED   = 'approved';
     store.FINISHED   = 'finished';
     store.OWNED      = 'owned';
+### logging levels
+    store.ERROR    = 1;
+    store.WARNING  = 2;
+    store.INFO     = 3;
+    store.DEBUG    = 4;
 ## <a name="product"></a>*store.Product* object ##
 
 Some methods, like the [`ask` method](#ask), give you access to a `product`
@@ -378,6 +394,15 @@ Example use:
 ## <a name="refresh"></a>*store.refresh()*
 ## <a name="restore"></a>*store.restore()*
 TODO write the doc
+## *store.log* object
+### `store.log.error(message)`
+Logs an error message, only if `store.debug` >= store.ERROR
+### `store.log.warn(message)`
+Logs a warning message, only if `store.debug` >= store.WARNING
+### `store.log.info(message)`
+Logs an info message, only if `store.debug` >= store.INFO
+### `store.log.debug(message)`
+Logs a debug message, only if `store.debug` >= store.DEBUG
 
 # internal APIs
 USE AT YOUR OWN RISKS
@@ -459,6 +484,7 @@ happens, unrelated to a product.
 
  - Call the callbacks
  - Remove callbacks that needed to be called only once
+
 ### *store._queries.triggerWhenProduct(product, action, args)*
 Trigger the callbacks registered when a given `action` (string)
 happens to a given [`product`](#product).

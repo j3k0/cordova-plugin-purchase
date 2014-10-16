@@ -12,7 +12,8 @@ store.trigger = function(product, action, args) {
     ///  - allowing to trigger events unrelated to products
     ///    - by doing `store.trigger("refreshed")` for example.
     if (!action && !args && typeof product === 'string') {
-        store._queries.triggerAction(action);
+        store.log.debug("store.trigger -> triggering action " + product);
+        store._queries.triggerAction(product);
         return;
     }
 
