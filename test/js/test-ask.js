@@ -15,6 +15,7 @@ describe('Ask', function(){
 
         it('should define chainable promises', function() {
             var nop = function() {};
+            assert.ok(store.get("p1"));
             store.ask("p1").
                 then(nop).
                 error(nop);

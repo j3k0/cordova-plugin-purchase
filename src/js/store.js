@@ -174,6 +174,7 @@ var store = {};
 
 /// ## <a name="refresh"></a>*store.refresh()*
 store.refresh = function() {
+    store.trigger("refreshed");
 };
 
 /// ## <a name="restore"></a>*store.restore()*

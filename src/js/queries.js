@@ -1,7 +1,9 @@
 (function(){
 'use strict';
 
-function log() {}
+function log(o) {
+    // console.log(o);
+}
 
 ///
 /// ## queries
@@ -33,9 +35,6 @@ store._queries = {
     /// Transform a human readable query string
     /// into a unique string by filtering out reserved keywords:
     ///
-    ///  - `order`
-    ///  - `product`
-    ///
     uniqueQuery: function(string) {
         if (!string)
             return '';
@@ -43,11 +42,13 @@ store._queries = {
         var tokens = string.split(' ');
         for (var i = 0; i < tokens.length; ++i) {
             var token = tokens[i];
-            if (token !== 'order' && token !== 'product') {
+            if (token !== 'order' &&   ///  - `order`
+                token !== 'product') { ///  - `product`
                 if (query !== '')
                     query += ' ';
-                query += tokens[i];
+                query += token;
             }
+            ///
         }
         return query;
     },
@@ -88,6 +89,24 @@ store._queries = {
             };
             for (var i in this.byQuery)
                 this.byQuery[i] = this.byQuery[i].filter(keep);
+        }
+    },
+
+    /// ### *store._queries.triggerAction(action, args)*
+    /// Trigger the callbacks registered when a given `action` (string)
+    /// happens, unrelated to a product.
+    ///
+    /// `args` are passed as arguments to the registered callbacks.
+    ///
+    triggerAction: function(action, args) {
+        var cbs = store._queries.callbacks.byQuery[action];
+        if (cbs) {
+            ///  - Call the callbacks
+            for (var j = 0; j < cbs.length; ++j) {
+                cbs[j].cb.apply(store, args);
+            }
+            ///  - Remove callbacks that needed to be called only once
+            store._queries.callbacks.byQuery[action] = cbs.filter(isNotOnce);
         }
     },
 

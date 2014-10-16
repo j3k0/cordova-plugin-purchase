@@ -249,6 +249,21 @@ Products is an array of object with fields :
 
 See documentation for the [product](#product) object for more information.
 
+### Reserved keywords
+Some reserved keywords can't be used in the product `id` and `alias`:
+
+ - `product`
+ - `order`
+ - `registered`
+ - `valid`
+ - `invalid`
+ - `requested`
+ - `initiated`
+ - `approved`
+ - `owned`
+ - `finished`
+ - `refreshed`
+
 ## <a name="get"></a>*store.get(id)*
 Retrieve a [product](#product) from its `id` or `alias`.
 
@@ -279,7 +294,7 @@ Return promise with the following methods:
 
  - `store.when(query, action, callback)`
    - Register a callback using its action name. Beware that this is more
-     error prone, as there are not gonna be any error in case typos.
+     error prone, as there are not gonna be any error in case of typos.
 
 ## <a name="once"></a>*store.once(query)*
 
@@ -436,6 +451,14 @@ Each callback have the following attributes:
 Simplify the query with `uniqueQuery()`, then add it to the dictionary.
 
 `action` is concatenated to the `query` string to create the key.
+### *store._queries.triggerAction(action, args)*
+Trigger the callbacks registered when a given `action` (string)
+happens, unrelated to a product.
+
+`args` are passed as arguments to the registered callbacks.
+
+ - Call the callbacks
+ - Remove callbacks that needed to be called only once
 ### *store._queries.triggerWhenProduct(product, action, args)*
 Trigger the callbacks registered when a given `action` (string)
 happens to a given [`product`](#product).
@@ -465,6 +488,8 @@ For internal use, trigger an event so listeners are notified.
 
 It's a conveniance method, that adds flexibility to [`_queries.triggerWhenProduct`](#triggerWhenProduct) by:
 
+ - allowing to trigger events unrelated to products
+   - by doing `store.trigger("refreshed")` for example.
  - allowing the `product` argument to be either:
    - a [product](#product)
    - a product `id`

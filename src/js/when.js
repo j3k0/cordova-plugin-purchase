@@ -5,10 +5,14 @@
 /// 
 store.when = function(query, once, callback) {
 
-    if (typeof query !== 'string')
-        query = store.get(query);
+    // In case the first arguemnt is a product, convert to its id
+    if (typeof query === 'object' && query instanceof store.Product)
+        query = query.id;
 
-    if (typeof once !== 'string') {
+    if (typeof once === 'function') {
+        return store.when("", query, once);
+    }
+    else if (typeof once !== 'string') {
 
         /// 
         /// ### return value
@@ -67,7 +71,7 @@ store.when = function(query, once, callback) {
         ///
         ///  - `store.when(query, action, callback)`
         ///    - Register a callback using its action name. Beware that this is more
-        ///      error prone, as there are not gonna be any error in case typos.
+        ///      error prone, as there are not gonna be any error in case of typos.
         ///
         var action = once;
         store._queries.callbacks.add(query, action, callback);
