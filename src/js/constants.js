@@ -25,5 +25,14 @@ var ERROR_CODES_BASE = 4983497;
 /*///*/     store.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
 /*///*/     store.ERR_REFRESH_RECEIPTS    = ERROR_CODES_BASE + 11;
 /*///*/     store.ERR_INVALID_PRODUCT_ID  = ERROR_CODES_BASE + 12;
+/// ### product states
+/*///*/ store.REGISTERED = 'registered';
+/*///*/ store.INVALID    = 'invalid';
+/*///*/ store.VALID      = 'valid';
+/*///*/ store.REQUESTED  = 'requested';
+/*///*/ store.INITIATED  = 'initiated';
+/*///*/ store.APPROVED   = 'approved';
+/*///*/ store.FINISHED   = 'finished';
+/*///*/ store.OWNED      = 'owned';
 
 }).call(this);

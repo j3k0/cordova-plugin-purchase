@@ -1,3 +1,6 @@
+(function() {
+"use strict";
+
 /// ## <a name="registerProducts"></a>*store.registerProducts(products)*
 /// Adds (or register) products into the store. Products can't be used
 /// unless registered first!
@@ -25,3 +28,5 @@ store.registerProducts = function(products) {
         this.products.push(p);
     }
 };
+
+}).call(this);

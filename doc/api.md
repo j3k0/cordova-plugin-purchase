@@ -151,6 +151,15 @@ for more details if needed.
     store.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
     store.ERR_REFRESH_RECEIPTS    = ERROR_CODES_BASE + 11;
     store.ERR_INVALID_PRODUCT_ID  = ERROR_CODES_BASE + 12;
+### product states
+store.REGISTERED = 'registered';
+store.INVALID    = 'invalid';
+store.VALID      = 'valid';
+store.REQUESTED  = 'requested';
+store.INITIATED  = 'initiated';
+store.APPROVED   = 'approved';
+store.FINISHED   = 'finished';
+store.OWNED      = 'owned';
 ## <a name="product"></a>*store.Product* object ##
 
 Some methods, like the [`ask` method](#ask), give you access to a `product`
@@ -167,6 +176,40 @@ Products object have the following fields and methods:
  - `product.localizedTitle` - Localized name or short description ready for display
  - `product.localizedDescription` - Localized longer description ready for display
  - `product.localizedPrice` - Localized price (with currency) ready for display
+ - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below)
+
+### life-cycle
+
+A product will change state during the application execution.
+
+Find below a diagram of the different states a product can pass by.
+
+    REGISTERED +--> INVALID                                      
+               |                                                 
+               +--> VALID +--> REQUESTED +--> INITIATED +-+     
+                                                          |     
+                    ^      +------------------------------+     
+                    |      |                                     
+                    |      +--> APPROVED +--> FINISHED +--> OWNED
+                    |                                  |         
+                    +----------------------------------+         
+
+### States definition:
+
+ - `REGISTERED`: right after being declared to the store using [`store.registerProducts()`](#registerProducts)
+ - `INVALID`: the server didn't recognize this product, it cannot be used.
+ - `VALID`: the server sent extra information about the product (`title`, `price` and such).
+ - `REQUESTED`: order (purchase) has been requested by the user
+ - `INITIATED`: order has been transmitted to the server
+ - `APPROVED`: purchase has been approved by server
+ - `FINISHED`: purchase has been delivered by the app.
+ - `OWNED`: purchase is owned (only for non-consumable and subscriptions)
+
+When finished, a consumable product will get back to the `LOADED` state.
+
+### State changes
+
+Each time the product changes state, an event is triggered.
 
 
 ## <a name="errors"></a>*store.Error* object
@@ -228,10 +271,19 @@ Return promise with the following methods:
    - Called when an [order](#order) failed.
    - The `err` parameter is an [error object](#errors)
 
+### alternative usage
+/
+ - `store.when(query, action, callback)`
+   - Register a callback using its action name. Beware that this is more
+     error prone, as there are not gonna be any error in case typos.
 ## <a name="once"></a>*store.once(query)*
 
 Identical to [`store.when`](#when), but the callback will be called only once.
 After being called, the callback will be unregistered.
+### alternative usage
+/
+ - `store.once(query, action, callback)`
+   - Same remarks as `store.when(query, action, callback)`
 
 ## <a name="order"></a>*store.order(product)*
 
@@ -250,7 +302,7 @@ Return promise with the following methods:
 #### .*then(function (product) {})*
 
 Called when the product information has been loaded from the store's
-servers and known to be valid.
+servers and is known to be valid.
 
 `product` contains the fields documented in the [products](#products) section.
 
@@ -280,6 +332,7 @@ Register the `callback` to be called when the store is ready to be used.
 
 If the store is already ready, `callback` is called immediatly.
 ### alternate usage (internal)
+
 `store.ready(true)` will set the `ready` status to true,
 and call the registered callbacks
 
@@ -399,6 +452,16 @@ Then, for each query:
 ## <a name="trigger"></a>*store.trigger(product, action, args)*
 
 For internal use, trigger an event so listeners are notified.
+
+It's a conveniance method, that adds flexibility to [`_queries.triggerWhenProduct`](#triggerWhenProduct) by:
+
+ - allowing the `product` argument to be either:
+   - a [product](#product)
+   - a product `id`
+   - a product `alias`
+ - converting the `args` argument to an array if it's not one
+ - adding the product itself as an argument to the event if none were passed
+
 
 ## *store.error.callbacks* array
 

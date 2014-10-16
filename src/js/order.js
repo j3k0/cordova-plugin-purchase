@@ -34,25 +34,30 @@ store.order = function(pid) {
         delete callbacks[localCallbackId];
     }
 
+    // Request the purchase.
+    store.ready(function() {
+        p.set("state", store.REQUESTED);
+    });
+
     return {
         initiated: function(cb) {
             localCallback.initiated = cb;
-            store._queries.callbacks.add(p.id, "initiated", function() {
+            store.once(p.id, "initiated", function() {
                 if (!localCallback.then)
                     return;
                 done();
                 cb(p);
-            }, true);
+            });
             return this;
         },
         error: function(cb) {
             localCallback.error = cb;
-            store._queries.callbacks.add(p.id, "error", function(err) {
+            store.once(p.id, "error", function(err) {
                 if (!localCallback.error)
                     return;
                 done();
                 cb(p);
-            }, true);
+            });
             return this;
         }
     };

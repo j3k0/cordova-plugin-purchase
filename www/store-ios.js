@@ -18,6 +18,14 @@ var store = {};
     store.ERR_UNKNOWN = ERROR_CODES_BASE + 10;
     store.ERR_REFRESH_RECEIPTS = ERROR_CODES_BASE + 11;
     store.ERR_INVALID_PRODUCT_ID = ERROR_CODES_BASE + 12;
+    store.REGISTERED = "registered";
+    store.INVALID = "invalid";
+    store.VALID = "valid";
+    store.REQUESTED = "requested";
+    store.INITIATED = "initiated";
+    store.APPROVED = "approved";
+    store.FINISHED = "finished";
+    store.OWNED = "owned";
 }).call(this);
 
 (function() {
@@ -35,6 +43,37 @@ var store = {};
         this.localizedPrice = options.localizedPrice || null;
         this.loaded = options.loaded;
         this.valid = options.valid;
+        this.canPurchase = options.canPurchase;
+        this.state = options.state || "";
+        this.stateChanged();
+    };
+    store.Product.prototype.set = function(key, value) {
+        if (typeof key === "string") {
+            this[key] = value;
+            if (key === "state") this.stateChanged();
+        } else {
+            var options = key;
+            for (key in options) {
+                value = options[key];
+                this.set(key, value);
+            }
+        }
+    };
+    store.Product.prototype.stateChanged = function() {
+        this.canPurchase = this.state === store.VALID;
+        this.loaded = this.state && this.state !== store.REGISTERED;
+        this.valid = this.state !== store.INVALID;
+        if (!this.state || this.state === store.REGISTERED) delete this.valid;
+        if (this.state) store.trigger(this, this.state);
+    };
+    store.Product.prototype.on = function(event, cb) {
+        store.when(this, event, cb);
+    };
+    store.Product.prototype.once = function(event, cb) {
+        store.once(this, event, cb);
+    };
+    store.Product.prototype.off = function(cb) {
+        store.when.unregister(cb);
     };
 }).call(this);
 
@@ -53,15 +92,18 @@ var store = {};
     };
 }).call(this);
 
-store.registerProducts = function(products) {
-    for (var i = 0; i < products.length; ++i) {
-        var p = new store.Product(products[i]);
-        if (!p.alias) p.alias = p.id;
-        if (p.id !== store._queries.uniqueQuery(p.id)) continue;
-        if (p.alias !== store._queries.uniqueQuery(p.alias)) continue;
-        this.products.push(p);
-    }
-};
+(function() {
+    "use strict";
+    store.registerProducts = function(products) {
+        for (var i = 0; i < products.length; ++i) {
+            var p = new store.Product(products[i]);
+            if (!p.alias) p.alias = p.id;
+            if (p.id !== store._queries.uniqueQuery(p.id)) continue;
+            if (p.alias !== store._queries.uniqueQuery(p.alias)) continue;
+            this.products.push(p);
+        }
+    };
+}).call(this);
 
 (function() {
     "use strict";
@@ -73,36 +115,45 @@ store.registerProducts = function(products) {
 
 (function() {
     "use strict";
-    store.when = function(query, once) {
-        return {
-            loaded: function(cb) {
-                store._queries.callbacks.add(query, "loaded", cb, once);
-                return this;
-            },
-            approved: function(cb) {
-                store._queries.callbacks.add(query, "approved", cb, once);
-                return this;
-            },
-            rejected: function(cb) {
-                store._queries.callbacks.add(query, "rejected", cb, once);
-                return this;
-            },
-            updated: function(cb) {
-                store._queries.callbacks.add(query, "updated", cb, once);
-                return this;
-            },
-            cancelled: function(cb) {
-                store._queries.callbacks.add(query, "cancelled", cb, once);
-                return this;
-            },
-            error: function(cb) {
-                store._queries.callbacks.add(query, "error", cb, once);
-                return this;
-            }
-        };
+    store.when = function(query, once, callback) {
+        if (typeof once !== "string") {
+            return {
+                loaded: function(cb) {
+                    store._queries.callbacks.add(query, "loaded", cb, once);
+                    return this;
+                },
+                approved: function(cb) {
+                    store._queries.callbacks.add(query, "approved", cb, once);
+                    return this;
+                },
+                rejected: function(cb) {
+                    store._queries.callbacks.add(query, "rejected", cb, once);
+                    return this;
+                },
+                updated: function(cb) {
+                    store._queries.callbacks.add(query, "updated", cb, once);
+                    return this;
+                },
+                cancelled: function(cb) {
+                    store._queries.callbacks.add(query, "cancelled", cb, once);
+                    return this;
+                },
+                error: function(cb) {
+                    store._queries.callbacks.add(query, "error", cb, once);
+                    return this;
+                }
+            };
+        } else {
+            var action = once;
+            store._queries.callbacks.add(query, action, callback);
+        }
     };
-    store.once = function(query) {
-        return store.when(query, true);
+    store.once = function(query, action, callback) {
+        if (typeof action !== "string") {
+            return store.when(query, true);
+        } else {
+            store._queries.callbacks.add(query, action, callback, true);
+        }
     };
     store.when.unregister = store.once.unregister = function(cb) {
         store._queries.callbacks.unregister(cb);
@@ -133,23 +184,26 @@ store.registerProducts = function(products) {
             delete localCallback.error;
             delete callbacks[localCallbackId];
         }
+        store.ready(function() {
+            p.set("state", store.REQUESTED);
+        });
         return {
             initiated: function(cb) {
                 localCallback.initiated = cb;
-                store._queries.callbacks.add(p.id, "initiated", function() {
+                store.once(p.id, "initiated", function() {
                     if (!localCallback.then) return;
                     done();
                     cb(p);
-                }, true);
+                });
                 return this;
             },
             error: function(cb) {
                 localCallback.error = cb;
-                store._queries.callbacks.add(p.id, "error", function(err) {
+                store.once(p.id, "error", function(err) {
                     if (!localCallback.error) return;
                     done();
                     cb(p);
-                }, true);
+                });
                 return this;
             }
         };
@@ -172,6 +226,7 @@ store.registerProducts = function(products) {
         if (!p) {
             p = new store.Product({
                 id: pid,
+                state: store.INVALID,
                 loaded: true,
                 valid: false
             });
@@ -208,7 +263,7 @@ store.registerProducts = function(products) {
                 return this;
             },
             error: function(cb) {
-                if (p.loaded && !p.valid) {
+                if (p.state === store.INVALID) {
                     done();
                     cb(new store.Error({
                         code: store.ERR_INVALID_PRODUCT_ID,
@@ -266,7 +321,7 @@ store.registerProducts = function(products) {
             callbacks = [];
         } else if (cb) {
             if (isReady) {
-                cb();
+                setTimeout(cb, 0);
                 return this;
             } else {
                 callbacks.push(cb);
@@ -296,17 +351,17 @@ store.registerProducts = function(products) {
 
 store.refresh = function() {};
 
-store.products = [];
-
-store.products.push = function(p) {
-    Array.prototype.push.call(this, p);
-    this.byId[p.id] = p;
-    this.byAlias[p.alias] = p;
-};
-
-store.products.byId = {};
-
-store.products.byAlias = {};
+(function() {
+    "use strict";
+    store.products = [];
+    store.products.push = function(p) {
+        Array.prototype.push.call(this, p);
+        this.byId[p.id] = p;
+        this.byAlias[p.alias] = p;
+    };
+    store.products.byId = {};
+    store.products.byAlias = {};
+}).call(this);
 
 (function() {
     "use strict";
@@ -375,11 +430,14 @@ store.products.byAlias = {};
     "use strict";
     store.trigger = function(product, action, args) {
         if (typeof product === "string") {
-            product = store.products.byId[product] || store.products.byAlias[product];
+            product = store.get(product);
             if (!product) return;
         }
         if (typeof args !== "undefined" && (typeof args !== "object" || typeof args.length !== "number")) {
             args = [ args ];
+        }
+        if (typeof args === "undefined") {
+            args = [ product ];
         }
         store._queries.triggerWhenProduct(product, action, args);
     };
@@ -742,7 +800,7 @@ var storekitPurchase = function(transactionId, productId) {
             return;
         }
         var order = {
-            product: product,
+            id: product,
             transaction: {
                 id: transactionId
             },
@@ -756,11 +814,8 @@ var storekitPurchase = function(transactionId, productId) {
 
 store.restore = function() {};
 
-var order = store.order;
-
-store.order = function(productId, quantity) {
+store.when("order", "requested", function(product) {
     store.ready(function() {
-        var product = store.products.byId[productId] || store.products.byAlias[productId];
         if (!product) {
             store.error.callbacks.trigger(new store.Error({
                 code: store.ERR_INVALID_PRODUCT_ID,
@@ -769,29 +824,30 @@ store.order = function(productId, quantity) {
             return;
         }
         if (!initialized) {
-            store._queries.triggerWhenProduct(product, "error", [ new store.Error({
+            store.trigger(product, "error", [ new store.Error({
                 code: store.ERR_PURCHASE,
                 message: "`purchase()` called before initialization"
             }), product ]);
             return;
         }
         if (!product.loaded) {
-            store._queries.triggerWhenProduct(product, "error", [ new store.Error({
+            store.trigger(product, "error", [ new store.Error({
                 code: store.ERR_PURCHASE,
                 message: "`purchase()` called before doing initial `refresh()`"
             }), product ]);
             return;
         }
         if (!product.valid) {
-            store._queries.triggerWhenProduct(product, "error", [ new store.Error({
+            store.trigger(product, "error", [ new store.Error({
                 code: store.ERR_PURCHASE,
                 message: "`purchase()` called with an invalid product ID"
             }), product ]);
             return;
         }
+        store.trigger(product, "initiated", product);
         storekit.purchase(product.id, quantity || 1);
     });
-};
+});
 
 var refresh = store.refresh;
 

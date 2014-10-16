@@ -1,3 +1,6 @@
+(function() {
+"use strict";
+
 /// ## *store.products* array ##
 /// Array of all registered products
 ///
@@ -31,3 +34,4 @@ store.products.byId = {};
 ///     store.products.byAlias["full version"]```
 store.products.byAlias = {};
 
+}).call(this);

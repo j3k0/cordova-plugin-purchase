@@ -83,7 +83,7 @@ var storekitPurchase = function (transactionId, productId) {
             return;
         }
         var order = {
-            product: product,
+            id: product,
             transaction: {
                 id: transactionId,
             },
@@ -99,11 +99,9 @@ var storekitPurchase = function (transactionId, productId) {
 store.restore = function() {
 };
 
-// Initiate a purchase
-var order = store.order;
-store.order = function(productId, quantity) {
+store.when("order", "requested", function(product) {
     store.ready(function() {
-        var product = store.products.byId[productId] || store.products.byAlias[productId];
+        // var product = store.products.byId[pid] || store.products.byAlias[pid];
         if (!product) {
             store.error.callbacks.trigger(new store.Error({
                 code: store.ERR_INVALID_PRODUCT_ID,
@@ -112,29 +110,72 @@ store.order = function(productId, quantity) {
             return;
         }
         if (!initialized) {
-            store._queries.triggerWhenProduct(product, "error", [new store.Error({
+            store.trigger(product, "error", [new store.Error({
                 code: store.ERR_PURCHASE,
                 message: "`purchase()` called before initialization"
             }), product]);
             return;
         }
         if (!product.loaded) {
-            store._queries.triggerWhenProduct(product, "error", [new store.Error({
+            store.trigger(product, "error", [new store.Error({
                 code: store.ERR_PURCHASE,
                 message: "`purchase()` called before doing initial `refresh()`"
             }), product]);
             return;
         }
         if (!product.valid) {
-            store._queries.triggerWhenProduct(product, "error", [new store.Error({
+            store.trigger(product, "error", [new store.Error({
                 code: store.ERR_PURCHASE,
                 message: "`purchase()` called with an invalid product ID"
             }), product]);
             return;
         }
+        store.trigger(product, "initiated", product);
         storekit.purchase(product.id, quantity || 1);
     });
+});
+
+// Initiate a purchase
+/*
+var order = store.order;
+store.order = function(pid, quantity) {
+    var ret = order(pid);
+    store.ready(function() {
+        var product = store.products.byId[pid] || store.products.byAlias[pid];
+        if (!product) {
+            store.error.callbacks.trigger(new store.Error({
+                code: store.ERR_INVALID_PRODUCT_ID,
+                message: "Trying to order an unknown product"
+            }));
+            return;
+        }
+        if (!initialized) {
+            store.trigger(product, "error", [new store.Error({
+                code: store.ERR_PURCHASE,
+                message: "`purchase()` called before initialization"
+            }), product]);
+            return;
+        }
+        if (!product.loaded) {
+            store.trigger(product, "error", [new store.Error({
+                code: store.ERR_PURCHASE,
+                message: "`purchase()` called before doing initial `refresh()`"
+            }), product]);
+            return;
+        }
+        if (!product.valid) {
+            store.trigger(product, "error", [new store.Error({
+                code: store.ERR_PURCHASE,
+                message: "`purchase()` called with an invalid product ID"
+            }), product]);
+            return;
+        }
+        store.trigger(product, "initiated", product);
+        storekit.purchase(product.id, quantity || 1);
+    });
+    return ret;
 };
+*/
 
 // Refresh the store
 var refresh = store.refresh;

@@ -23,6 +23,7 @@ store.ask = function(pid) {
     if (!p) {
         p = new store.Product({
             id: pid,
+            state: store.INVALID,
             loaded: true,
             valid: false
         });
@@ -50,7 +51,7 @@ store.ask = function(pid) {
         /// #### .*then(function (product) {})*
         /// 
         /// Called when the product information has been loaded from the store's
-        /// servers and known to be valid.
+        /// servers and is known to be valid.
         /// 
         /// `product` contains the fields documented in the [products](#products) section.
         then: function(cb) {
@@ -84,7 +85,7 @@ store.ask = function(pid) {
         /// 
         /// `err` features the standard [error](#errors) format (`code` and `message`).
         error: function(cb) {
-            if (p.loaded && !p.valid) {
+            if (p.state === store.INVALID) {
                 done();
                 cb(new store.Error({
                     code: store.ERR_INVALID_PRODUCT_ID,

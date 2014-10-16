@@ -44,6 +44,85 @@ store.Product = function(options) {
 
     this.loaded = options.loaded;
     this.valid  = options.valid;
+    this.canPurchase = options.canPurchase;
+
+    ///  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below)
+    this.state = options.state || "";
+    this.stateChanged();
 };
+/// 
+/// ### life-cycle
 ///
+/// A product will change state during the application execution.
+///
+/// Find below a diagram of the different states a product can pass by.
+///
+///     REGISTERED +--> INVALID                                      
+///                |                                                 
+///                +--> VALID +--> REQUESTED +--> INITIATED +-+     
+///                                                           |     
+///                     ^      +------------------------------+     
+///                     |      |                                     
+///                     |      +--> APPROVED +--> FINISHED +--> OWNED
+///                     |                                  |         
+///                     +----------------------------------+         
+///
+/// ### States definition:
+///
+///  - `REGISTERED`: right after being declared to the store using [`store.registerProducts()`](#registerProducts)
+///  - `INVALID`: the server didn't recognize this product, it cannot be used.
+///  - `VALID`: the server sent extra information about the product (`title`, `price` and such).
+///  - `REQUESTED`: order (purchase) has been requested by the user
+///  - `INITIATED`: order has been transmitted to the server
+///  - `APPROVED`: purchase has been approved by server
+///  - `FINISHED`: purchase has been delivered by the app.
+///  - `OWNED`: purchase is owned (only for non-consumable and subscriptions)
+///
+/// When finished, a consumable product will get back to the `LOADED` state.
+///
+/// ### State changes
+///
+/// Each time the product changes state, an event is triggered.
+///
+
+store.Product.prototype.set = function(key, value) {
+    if (typeof key === 'string') {
+        this[key] = value;
+        if (key === 'state')
+            this.stateChanged();
+    }
+    else {
+        var options = key;
+        for (key in options) {
+            value = options[key];
+            this.set(key, value);
+        }
+    }
+};
+
+store.Product.prototype.stateChanged = function() {
+
+    this.canPurchase = this.state === store.VALID;
+    this.loaded      = this.state && this.state !== store.REGISTERED;
+
+    // update validity
+    this.valid       = this.state !== store.INVALID;
+    if (!this.state || this.state === store.REGISTERED)
+        delete this.valid;
+
+    if (this.state)
+        store.trigger(this, this.state);
+};
+
+// aliases to `store` methods, added for conveniance.
+store.Product.prototype.on = function(event, cb) {
+    store.when(this, event, cb);
+};
+store.Product.prototype.once = function(event, cb) {
+    store.once(this, event, cb);
+};
+store.Product.prototype.off = function(cb) {
+    store.when.unregister(cb);
+};
+
 }).call(this);

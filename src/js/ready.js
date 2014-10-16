@@ -10,7 +10,9 @@ var callbacks = [];
 ///
 /// If the store is already ready, `callback` is called immediatly.
 store.ready = function (cb) {
+
     /// ### alternate usage (internal)
+    ///
     /// `store.ready(true)` will set the `ready` status to true,
     /// and call the registered callbacks
     if (cb === true) {
@@ -22,7 +24,9 @@ store.ready = function (cb) {
     }
     else if (cb) {
         if (isReady) {
-            cb();
+            // defer execution to prevent falsy belief that code works
+            // whereas it only works synchronously.
+            setTimeout(cb, 0);
             return this;
         }
         else {

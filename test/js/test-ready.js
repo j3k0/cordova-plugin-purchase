@@ -25,12 +25,15 @@ describe('Ready', function(){
             assert.equal(false, called);
         });
 
+        /*
         it('should execute immediatly if ready status is set', function() {
+            // NO it shouldn't anymore. execution is now defered.
             store.ready(true);
             var called = false;
             assert.equal(true, store.ready());
             store.ready(function() { called = true; });
             assert.equal(true, called);
         });
+        */
     });
 });

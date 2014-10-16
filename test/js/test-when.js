@@ -5,7 +5,7 @@ describe('When', function(){
 
     var product = {
         id: "p1",
-        alias: "product"
+        alias: "product-alias"
     };
     before(function() {
         store.registerProducts([ product ]);
@@ -56,6 +56,19 @@ describe('When', function(){
             loaded = false;
             store._queries.triggerWhenProduct(product, "loaded");
             assert.equal(loaded, true);
+        });
+
+        it('should allow direct callback registrations', function() {
+            var nCalls = 0;
+            store.when("order", "initiated", function(product) {
+                nCalls ++;
+                assert.equal("p1", product.id);
+            });
+            assert.equal(0, nCalls);
+            store.trigger("p1", "initiated");
+            assert.equal(1, nCalls);
+            store.trigger("p1", "initiated");
+            assert.equal(2, nCalls);
         });
     });
 
