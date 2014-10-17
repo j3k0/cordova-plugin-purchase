@@ -8,7 +8,7 @@ store.verbosity = 0;
     store.PAID_SUBSCRIPTION = "paid subscription";
     store.CONSUMABLE = "consumable";
     store.NON_CONSUMABLE = "non consumable";
-    var ERROR_CODES_BASE = 4983497;
+    var ERROR_CODES_BASE = 6777e3;
     store.ERR_SETUP = ERROR_CODES_BASE + 1;
     store.ERR_LOAD = ERROR_CODES_BASE + 2;
     store.ERR_PURCHASE = ERROR_CODES_BASE + 3;
@@ -483,7 +483,7 @@ store.restore = null;
                     try {
                         cbs[j].cb.apply(store, args);
                     } catch (err) {
-                        handleCallbackError(action, err);
+                        store.helpers.handleCallbackError(action, err);
                     }
                 }
                 store._queries.callbacks.byQuery[action] = cbs.filter(isNotOnce);
@@ -508,7 +508,7 @@ store.restore = null;
                         try {
                             cbs[j].cb.apply(store, args);
                         } catch (err) {
-                            handleCallbackError(q, err);
+                            store.helpers.handleCallbackError(q, err);
                         }
                     }
                     store._queries.callbacks.byQuery[q] = cbs.filter(isNotOnce);
@@ -519,14 +519,6 @@ store.restore = null;
     };
     function isNotOnce(cb) {
         return !cb.once;
-    }
-    function handleCallbackError(query, err) {
-        store.log.warn("queries -> a callback for '" + query + "' failed with an exception.");
-        if (typeof err === "string") store.log.warn("           " + err); else if (err) {
-            if (err.fileName) store.log.warn("           " + err.fileName + ":" + err.lineNumber);
-            if (err.message) store.log.warn("           " + err.message);
-            if (err.stack) store.log.warn("           " + err.stack);
-        }
     }
 }).call(this);
 
@@ -556,7 +548,13 @@ store.restore = null;
     "use strict";
     store.error.callbacks = [];
     store.error.callbacks.trigger = function(error) {
-        for (var i = 0; i < this.length; ++i) this[i].call(store, error);
+        for (var i = 0; i < this.length; ++i) {
+            try {
+                this[i].call(store, error);
+            } catch (err) {
+                store.helpers.handleCallbackError("error", err);
+            }
+        }
     };
     store.error.callbacks.reset = function() {
         while (this.length > 0) this.shift();
@@ -568,6 +566,20 @@ store.restore = null;
         if (newArray.length < this.length) {
             this.reset();
             for (var i = 0; i < newArray.length; ++i) this.push(newArray[i]);
+        }
+    };
+}).call(this);
+
+(function() {
+    "use strict";
+    store.helpers = {
+        handleCallbackError: function(query, err) {
+            store.log.warn("queries -> a callback for '" + query + "' failed with an exception.");
+            if (typeof err === "string") store.log.warn("           " + err); else if (err) {
+                if (err.fileName) store.log.warn("           " + err.fileName + ":" + err.lineNumber);
+                if (err.message) store.log.warn("           " + err.message);
+                if (err.stack) store.log.warn("           " + err.stack);
+            }
         }
     };
 }).call(this);
@@ -618,13 +630,13 @@ store.restore = null;
         if (this.options.showLog) {
             log("getPurchases called!");
         }
-        return cordova.exec(success, fail, "InAppBillingPlugin", "getPurchases", [ "null" ]);
+        return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getPurchases", [ "null" ]);
     };
     InAppBilling.prototype.buy = function(success, fail, productId) {
         if (this.options.showLog) {
             log("buy called!");
         }
-        return cordova.exec(success, fail, "InAppBillingPlugin", "buy", [ productId ]);
+        return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [ productId ]);
     };
     InAppBilling.prototype.subscribe = function(success, fail, productId) {
         if (this.options.showLog) {
@@ -666,11 +678,30 @@ store.restore = null;
             return cordova.exec(success, fail, "InAppBillingPlugin", "getProductDetails", [ skus ]);
         }
     };
-    window.inappbilling = store.android = new InAppBilling();
+    function errorCb(fail) {
+        return function(error) {
+            if (!fail) return;
+            var tokens = error.split("|");
+            if (tokens.length > 1 && /^[-+]?(\d+)$/.test(tokens[0])) {
+                var code = tokens[0];
+                var message = tokens[1];
+                fail(message, +code);
+            } else {
+                fail(error);
+            }
+        };
+    }
+    window.inappbilling = new InAppBilling();
+    try {
+        store.android = window.inappbilling;
+    } catch (e) {}
 }).call(this);
 
 (function() {
     "use strict";
+    store.when("refreshed", function() {
+        if (!initialized) init();
+    });
     var initialized = false;
     var skus = [];
     var init = function() {
@@ -718,8 +749,54 @@ store.restore = null;
         }
         store.ready(true);
     }
-    store.when("refreshed", function() {
-        if (!initialized) init();
+    store.when("requested", function(product) {
+        store.ready(function() {
+            if (!product) {
+                store.error({
+                    code: store.ERR_INVALID_PRODUCT_ID,
+                    message: "Trying to order an unknown product"
+                });
+                return;
+            }
+            if (!product.valid) {
+                product.trigger("error", [ new store.Error({
+                    code: store.ERR_PURCHASE,
+                    message: "`purchase()` called with an invalid product"
+                }), product ]);
+                return;
+            }
+            product.set("state", store.INITIATED);
+            store.android.buy(function(data) {
+                product.transaction = {
+                    type: "android-playstore",
+                    id: data.orderId
+                };
+                product.set("state", store.APPROVED);
+            }, function(err, code) {
+                store.log.info("android -> buy error " + code);
+                if (code === store.ERR_PAYMENT_CANCELLED) {
+                    product.transaction = null;
+                    product.trigger("cancelled");
+                } else if (code) {
+                    store.error({
+                        code: code,
+                        message: "Purchase failed: " + err
+                    });
+                } else {
+                    store.error({
+                        code: store.ERR_PURCHASE,
+                        message: "Purchase failed: " + err
+                    });
+                }
+                product.set("state", store.VALID);
+            }, product.id);
+        });
+    });
+    store.when("consumable", "finished", function(product) {
+        if (product.type === store.CONSUMABLE) {
+            product.transaction = null;
+            store.android.consumePurchase(product.id);
+        }
     });
 }).call(this);
 

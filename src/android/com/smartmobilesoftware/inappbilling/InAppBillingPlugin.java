@@ -342,7 +342,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
             }
             
             if (result.isFailure()) {
-            	callbackContext.error("Error purchasing: " + result);
+            	callbackContext.error(result.getResponse() + "|Error purchasing: " + result);
                 return;
             }
             

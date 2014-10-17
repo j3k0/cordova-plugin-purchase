@@ -44,8 +44,14 @@ When a product enters the store.FINISHED state, `finish()` the storekit transact
     });
 
 #### persist ownership
-A non-consumable product, once owned always will be.
-Until Apple provides a mean to get notified to refunds... there's no way back.
+
+`storekit` doesn't provide a way to know which products have been purchases.
+That is why we have to handle that ourselves, by storing the `OWNED` status of a product.
+
+Note that, until Apple provides a mean to get notified to refunds, there's no way back.
+A non-consumable product, once `OWNED` always will be.
+
+http://stackoverflow.com/questions/6429186/can-we-check-if-a-users-in-app-purchase-has-been-refunded-by-apple
 
     store.when("owned", function(product) {
         setOwned(product.id, true);
@@ -58,11 +64,11 @@ Until Apple provides a mean to get notified to refunds... there's no way back.
 
 This funciton will initialize the storekit API.
 
-This initiates a chain reaction with [`storekitReady()`](#storekitReady) and [`storekitLoaded()`](#storekitLoaded)
-that will make sure product are loaded from server and restored
-to their proper *OWNED* status.
+This initiates a chain reaction including [`storekitReady()`](#storekitReady) and [`storekitLoaded()`](#storekitLoaded)
+that will make sure products are loaded from server, set as `VALID` or `INVALID`, and eventually restored
+to their proper `OWNED` status.
 
-It also registers the storekit callbacks to get notified to events from the StoreKit API.
+It also registers the `storekit` callbacks to get notified of events from the StoreKit API:
 
  - [`storekitPurchasing()`](#storekitPurchasing)
  - [`storekitPurchased()`](#storekitPurchased)
@@ -107,3 +113,11 @@ Called by `storekit` when an error happens in the storekit API.
 
 Will convert storekit errors to a [`store.Error`](api.md/#errors).
 
+
+## Persistance of the *OWNED* status
+
+#### *isOwned(productId)*
+return true iff the product with given ID has been purchased and finished
+during this or a previous execution of the application.
+#### *setOwned(productId, value)*
+store the boolean OWNED status of a given product.

@@ -21,7 +21,7 @@ static BOOL g_autoFinishEnabled = YES;
         NSLog((@"InAppPurchase[objc]: " fmt), ##__VA_ARGS__); \
 }
 
-#define ERROR_CODES_BASE 4983497
+#define ERROR_CODES_BASE 6777000
 #define ERR_SETUP         (ERROR_CODES_BASE + 1)
 #define ERR_LOAD          (ERROR_CODES_BASE + 2)
 #define ERR_PURCHASE      (ERROR_CODES_BASE + 3)

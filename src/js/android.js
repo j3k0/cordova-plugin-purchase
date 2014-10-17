@@ -59,13 +59,13 @@ InAppBilling.prototype.getPurchases = function (success, fail) {
 	if (this.options.showLog) {
 		log('getPurchases called!');
 	}
-	return cordova.exec(success, fail, "InAppBillingPlugin", "getPurchases", ["null"]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getPurchases", ["null"]);
 };
 InAppBilling.prototype.buy = function (success, fail, productId) {
 	if (this.options.showLog) {
 		log('buy called!');
 	}
-	return cordova.exec(success, fail, "InAppBillingPlugin", "buy", [productId]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId]);
 };
 InAppBilling.prototype.subscribe = function (success, fail, productId) {
 	if (this.options.showLog) {
@@ -110,6 +110,34 @@ InAppBilling.prototype.getProductDetails = function (success, fail, skus) {
     }
 };
 
-window.inappbilling = store.android = new InAppBilling();
+// Generates a `fail` function that accepts an optional error code
+// in the first part of the error string.
+//
+// format: `code|message`
+//
+// `fail` function will be called with `message` as a first argument
+// and `code` as a second argument (or undefined). This ensures
+// backward compatibility with legacy code.
+function errorCb(fail) {
+    return function(error) {
+        if (!fail)
+            return;
+        var tokens = error.split('|');
+        if (tokens.length > 1 && /^[-+]?(\d+)$/.test(tokens[0])) {
+            var code = tokens[0];
+            var message = tokens[1];
+            fail(message, +code);
+        }
+        else {
+            fail(error);
+        }
+    };
+}
+
+window.inappbilling = new InAppBilling();
+
+// That's for compatibility with the unified IAP plugin.
+try { store.android = window.inappbilling; }
+catch (e) {}
 
 }).call(this);

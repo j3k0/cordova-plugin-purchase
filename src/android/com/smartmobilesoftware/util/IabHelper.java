@@ -118,12 +118,16 @@ public class IabHelper {
     public static final int BILLING_RESPONSE_RESULT_ITEM_NOT_OWNED = 8;
 
     // IAB Helper error codes
+    //
+    // KEEP SYNCHRONIZED with src/js/constants.js
+    //
+    public static final int ERROR_CODES_BASE = 6777000;
     public static final int IABHELPER_ERROR_BASE = -1000;
     public static final int IABHELPER_REMOTE_EXCEPTION = -1001;
     public static final int IABHELPER_BAD_RESPONSE = -1002;
     public static final int IABHELPER_VERIFICATION_FAILED = -1003;
     public static final int IABHELPER_SEND_INTENT_FAILED = -1004;
-    public static final int IABHELPER_USER_CANCELLED = -1005;
+    public static final int IABHELPER_USER_CANCELLED = ERROR_CODES_BASE + 6;
     public static final int IABHELPER_UNKNOWN_PURCHASE_RESPONSE = -1006;
     public static final int IABHELPER_MISSING_TOKEN = -1007;
     public static final int IABHELPER_UNKNOWN_ERROR = -1008;

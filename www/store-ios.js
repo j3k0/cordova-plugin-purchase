@@ -8,7 +8,7 @@ store.verbosity = 0;
     store.PAID_SUBSCRIPTION = "paid subscription";
     store.CONSUMABLE = "consumable";
     store.NON_CONSUMABLE = "non consumable";
-    var ERROR_CODES_BASE = 4983497;
+    var ERROR_CODES_BASE = 6777e3;
     store.ERR_SETUP = ERROR_CODES_BASE + 1;
     store.ERR_LOAD = ERROR_CODES_BASE + 2;
     store.ERR_PURCHASE = ERROR_CODES_BASE + 3;
@@ -483,7 +483,7 @@ store.restore = null;
                     try {
                         cbs[j].cb.apply(store, args);
                     } catch (err) {
-                        handleCallbackError(action, err);
+                        store.helpers.handleCallbackError(action, err);
                     }
                 }
                 store._queries.callbacks.byQuery[action] = cbs.filter(isNotOnce);
@@ -508,7 +508,7 @@ store.restore = null;
                         try {
                             cbs[j].cb.apply(store, args);
                         } catch (err) {
-                            handleCallbackError(q, err);
+                            store.helpers.handleCallbackError(q, err);
                         }
                     }
                     store._queries.callbacks.byQuery[q] = cbs.filter(isNotOnce);
@@ -519,14 +519,6 @@ store.restore = null;
     };
     function isNotOnce(cb) {
         return !cb.once;
-    }
-    function handleCallbackError(query, err) {
-        store.log.warn("queries -> a callback for '" + query + "' failed with an exception.");
-        if (typeof err === "string") store.log.warn("           " + err); else if (err) {
-            if (err.fileName) store.log.warn("           " + err.fileName + ":" + err.lineNumber);
-            if (err.message) store.log.warn("           " + err.message);
-            if (err.stack) store.log.warn("           " + err.stack);
-        }
     }
 }).call(this);
 
@@ -556,7 +548,13 @@ store.restore = null;
     "use strict";
     store.error.callbacks = [];
     store.error.callbacks.trigger = function(error) {
-        for (var i = 0; i < this.length; ++i) this[i].call(store, error);
+        for (var i = 0; i < this.length; ++i) {
+            try {
+                this[i].call(store, error);
+            } catch (err) {
+                store.helpers.handleCallbackError("error", err);
+            }
+        }
     };
     store.error.callbacks.reset = function() {
         while (this.length > 0) this.shift();
@@ -568,6 +566,20 @@ store.restore = null;
         if (newArray.length < this.length) {
             this.reset();
             for (var i = 0; i < newArray.length; ++i) this.push(newArray[i]);
+        }
+    };
+}).call(this);
+
+(function() {
+    "use strict";
+    store.helpers = {
+        handleCallbackError: function(query, err) {
+            store.log.warn("queries -> a callback for '" + query + "' failed with an exception.");
+            if (typeof err === "string") store.log.warn("           " + err); else if (err) {
+                if (err.fileName) store.log.warn("           " + err.fileName + ":" + err.lineNumber);
+                if (err.message) store.log.warn("           " + err.message);
+                if (err.stack) store.log.warn("           " + err.stack);
+            }
         }
     };
 }).call(this);
@@ -858,24 +870,10 @@ store.when("requested", function(product) {
             });
             return;
         }
-        if (!initialized) {
-            product.trigger("error", [ new store.Error({
-                code: store.ERR_PURCHASE,
-                message: "`purchase()` called before initialization"
-            }), product ]);
-            return;
-        }
-        if (!product.loaded) {
-            product.trigger("error", [ new store.Error({
-                code: store.ERR_PURCHASE,
-                message: "`purchase()` called before doing initial `refresh()`"
-            }), product ]);
-            return;
-        }
         if (!product.valid) {
             product.trigger("error", [ new store.Error({
                 code: store.ERR_PURCHASE,
-                message: "`purchase()` called with an invalid product ID"
+                message: "`purchase()` called with an invalid product"
             }), product ]);
             return;
         }

@@ -74,5 +74,27 @@ describe('Queries', function(){
             store._queries.triggerWhenProduct({id:"anything", type:store.FREE_SUBSCRIPTION}, "approved");
             assert.equal(true, approved);
         });
+
+        it('should execute all callbacks even if one fails with an exception', function() {
+            var f1_called = false;
+            var f1_returned = false;
+            var f2_called = false;
+            var f2_returned = false;
+            store._queries.callbacks.add("", "yyy", function() {
+                f1_called = true;
+                if (f1_called) throw "ERROR";
+                f1_returned = true;
+            }, true);
+            store._queries.callbacks.add("", "yyy", function() {
+                f2_called = true;
+                if (f2_called) throw "ERROR";
+                f2_returned = true;
+            }, true);
+            store._queries.triggerAction("yyy");
+            assert.equal(true, f1_called);
+            assert.equal(false, f1_returned);
+            assert.equal(true, f2_called);
+            assert.equal(false, f2_returned);
+        });
     });
 });

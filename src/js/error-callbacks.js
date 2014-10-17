@@ -12,8 +12,14 @@ store.error.callbacks = [];
 ///
 /// Execute all error callbacks with the given `error` argument.
 store.error.callbacks.trigger = function(error) {
-    for (var i = 0; i < this.length; ++i)
-        this[i].call(store, error);
+    for (var i = 0; i < this.length; ++i) {
+        try {
+            this[i].call(store, error);
+        }
+        catch (err) {
+            store.helpers.handleCallbackError("error", err);
+        }
+    }
 };
 
 ///
