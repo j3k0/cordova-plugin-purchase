@@ -160,18 +160,18 @@
 ///
 var store = {};
 
-/// ## <a name="debug"></a>*store.debug*
+/// ## <a name="verbosity"></a>*store.verbosity*
 ///
-/// The `debug` property defines how much you want `store.js` to write on the console. Set to:
+/// The `verbosity` property defines how much you want `store.js` to write on the console. Set to:
 /// 
-///  - `false` or `0` to disable all logging
-///  - `store.ERROR` to show only error messages
-///  - `store.WARNING` to show warnings and errors
-///  - `store.INFO` to also show information messages
-///  - `store.DEBUG` to enable internal debugging messages.
+///  - `store.QUIET` or `0` to disable all logging (default)
+///  - `store.ERROR` or `1` to show only error messages
+///  - `store.WARNING` or `2` to show warnings and errors
+///  - `store.INFO` or `3` to also show information messages
+///  - `store.DEBUG` or `4` to enable internal debugging messages.
 ///
 /// See [logging levels](#logging levels) for all possible values.
-store.debug = 0;
+store.verbosity = 0;
 
 // #include "constants.js"
 // #include "product.js"

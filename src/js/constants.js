@@ -44,9 +44,10 @@ var ERROR_CODES_BASE = 4983497;
 ///
 /// ### logging levels
 ///
-/*///*/     store.ERROR    = 1;
-/*///*/     store.WARNING  = 2;
-/*///*/     store.INFO     = 3;
-/*///*/     store.DEBUG    = 4;
+/*///*/     store.QUIET   = 0;
+/*///*/     store.ERROR   = 1;
+/*///*/     store.WARNING = 2;
+/*///*/     store.INFO    = 3;
+/*///*/     store.DEBUG   = 4;
 
 }).call(this);

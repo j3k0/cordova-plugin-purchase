@@ -2,7 +2,7 @@
 "use strict";
 
 function log(level, o) {
-    var maxLevel = (store.debug === true ? 1 : store.debug);
+    var maxLevel = (store.verbosity === true ? 1 : store.verbosity);
     if (level > maxLevel)
         return;
 

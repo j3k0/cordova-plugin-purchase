@@ -1,6 +1,6 @@
 var store = {};
 
-store.debug = 0;
+store.verbosity = 0;
 
 (function() {
     "use strict";
@@ -28,6 +28,7 @@ store.debug = 0;
     store.APPROVED = "approved";
     store.FINISHED = "finished";
     store.OWNED = "owned";
+    store.QUIET = 0;
     store.ERROR = 1;
     store.WARNING = 2;
     store.INFO = 3;
@@ -51,6 +52,7 @@ store.debug = 0;
         this.loaded = options.loaded;
         this.valid = options.valid;
         this.canPurchase = options.canPurchase;
+        this.owned = options.owned;
         this.state = options.state || "";
         this.stateChanged();
     };
@@ -368,7 +370,7 @@ store.restore = null;
 (function() {
     "use strict";
     function log(level, o) {
-        var maxLevel = store.debug === true ? 1 : store.debug;
+        var maxLevel = store.verbosity === true ? 1 : store.verbosity;
         if (level > maxLevel) return;
         if (typeof o !== "string") o = JSON.stringify(o);
         console.log("[store.js] " + o);
@@ -418,6 +420,7 @@ store.restore = null;
     store.Product.prototype.stateChanged = function() {
         this.canPurchase = this.state === store.VALID;
         this.loaded = this.state && this.state !== store.REGISTERED;
+        this.owned = this.state === store.OWNED;
         this.valid = this.state !== store.INVALID;
         if (!this.state || this.state === store.REGISTERED) delete this.valid;
         if (this.state) this.trigger(this.state);
@@ -680,7 +683,7 @@ store.restore = null;
                 message: "Init failed - " + err
             });
         }, {
-            showLog: store.debug ? true : false
+            showLog: store.verbosity >= store.INFO ? true : false
         }, skus);
     };
     function iabReady() {
@@ -715,9 +718,6 @@ store.restore = null;
         }
         store.ready(true);
     }
-    var iabError = function(err) {
-        store.log.error("android -> error  " + JSON.stringify(err));
-    };
     store.when("refreshed", function() {
         if (!initialized) init();
     });

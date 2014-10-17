@@ -1,6 +1,6 @@
 var store = {};
 
-store.debug = 0;
+store.verbosity = 0;
 
 (function() {
     "use strict";
@@ -28,6 +28,7 @@ store.debug = 0;
     store.APPROVED = "approved";
     store.FINISHED = "finished";
     store.OWNED = "owned";
+    store.QUIET = 0;
     store.ERROR = 1;
     store.WARNING = 2;
     store.INFO = 3;
@@ -51,6 +52,7 @@ store.debug = 0;
         this.loaded = options.loaded;
         this.valid = options.valid;
         this.canPurchase = options.canPurchase;
+        this.owned = options.owned;
         this.state = options.state || "";
         this.stateChanged();
     };
@@ -368,7 +370,7 @@ store.restore = null;
 (function() {
     "use strict";
     function log(level, o) {
-        var maxLevel = store.debug === true ? 1 : store.debug;
+        var maxLevel = store.verbosity === true ? 1 : store.verbosity;
         if (level > maxLevel) return;
         if (typeof o !== "string") o = JSON.stringify(o);
         console.log("[store.js] " + o);
@@ -418,6 +420,7 @@ store.restore = null;
     store.Product.prototype.stateChanged = function() {
         this.canPurchase = this.state === store.VALID;
         this.loaded = this.state && this.state !== store.REGISTERED;
+        this.owned = this.state === store.OWNED;
         this.valid = this.state !== store.INVALID;
         if (!this.state || this.state === store.REGISTERED) delete this.valid;
         if (this.state) this.trigger(this.state);
@@ -842,13 +845,25 @@ InAppPurchase.prototype.timer = null;
 
 window.storekit = new InAppPurchase();
 
+store.once("refreshed", function() {
+    storekitInit();
+});
+
+store.when("finished", function(product) {
+    storekit.finish(product.transaction.id);
+});
+
+store.when("owned", function(product) {
+    setOwned(product.id, true);
+});
+
 var initialized = false;
 
-var init = function() {
+var storekitInit = function() {
     if (initialized) return;
     initialized = true;
     storekit.init({
-        debug: store.debug ? true : false,
+        debug: store.verbosity >= store.INFO ? true : false,
         noAutoFinish: true,
         ready: storekitReady,
         error: storekitError,
@@ -866,36 +881,6 @@ var storekitReady = function() {
     storekit.load(products, storekitLoaded);
 };
 
-var storekitError = function(errorCode, errorText, options) {
-    var i, p;
-    if (!options) options = {};
-    store.log.error("ios -> ERROR " + errorCode + ": " + errorText + " - " + JSON.stringify(options));
-    if (errorCode === storekit.ERR_LOAD) {
-        for (i = 0; i < store.products.length; ++i) {
-            p = store.products[i];
-            p.trigger("error", [ new store.Error({
-                code: store.ERR_LOAD,
-                message: errorText
-            }), p ]);
-        }
-    }
-    if (errorCode === storekit.ERR_PAYMENT_CANCELLED) {
-        p = store.get(options.productId);
-        if (p) {
-            p.trigger("cancelled");
-            p.set({
-                transaction: null,
-                state: store.VALID
-            });
-        }
-        return;
-    }
-    store.error({
-        code: errorCode,
-        message: errorText
-    });
-};
-
 var storekitLoaded = function(validProducts, invalidProductIds) {
     var p;
     for (var i = 0; i < validProducts.length; ++i) {
@@ -907,13 +892,16 @@ var storekitLoaded = function(validProducts, invalidProductIds) {
             state: store.VALID
         });
         p.trigger("loaded");
+        if (isOwned(p.id)) p.set("state", store.OWNED);
     }
     for (var j = 0; j < invalidProductIds.length; ++j) {
         p = store.products.byId[invalidProductIds[j]];
         p.set("state", store.INVALID);
         p.trigger("loaded");
     }
-    store.ready(true);
+    setTimeout(function() {
+        store.ready(true);
+    }, 1);
 };
 
 var storekitPurchase = function(transactionId, productId) {
@@ -943,6 +931,36 @@ var storekitPurchasing = function(productId) {
             return;
         }
         if (product.state !== store.INITIATED) product.set("state", store.INITIATED);
+    });
+};
+
+var storekitError = function(errorCode, errorText, options) {
+    var i, p;
+    if (!options) options = {};
+    store.log.error("ios -> ERROR " + errorCode + ": " + errorText + " - " + JSON.stringify(options));
+    if (errorCode === storekit.ERR_LOAD) {
+        for (i = 0; i < store.products.length; ++i) {
+            p = store.products[i];
+            p.trigger("error", [ new store.Error({
+                code: store.ERR_LOAD,
+                message: errorText
+            }), p ]);
+        }
+    }
+    if (errorCode === storekit.ERR_PAYMENT_CANCELLED) {
+        p = store.get(options.productId);
+        if (p) {
+            p.trigger("cancelled");
+            p.set({
+                transaction: null,
+                state: store.VALID
+            });
+        }
+        return;
+    }
+    store.error({
+        code: errorCode,
+        message: errorText
     });
 };
 
@@ -982,13 +1000,12 @@ store.when("requested", function(product) {
     });
 });
 
-store.when("finished", function(product) {
-    storekit.finish(product.transaction.id);
-});
+function isOwned(productId) {
+    return localStorage["__cc_fovea_store_ios_owned_ " + productId] === "1";
+}
 
-store.when("refreshed", function() {
-    store.log.debug("ios -> refreshed");
-    if (!initialized) init();
-});
+function setOwned(productId, value) {
+    localStorage["__cc_fovea_store_ios_owned_ " + productId] = value ? "1" : "0";
+}
 
 module.exports = store;

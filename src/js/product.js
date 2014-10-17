@@ -47,11 +47,19 @@ store.Product = function(options) {
     ///  - `product.localizedPrice` - Localized price (with currency) ready for display
     this.localizedPrice = options.localizedPrice || null;
 
+    ///  - `product.loaded` - Product has been loaded from server, however it can still be either `valid` or not
     this.loaded = options.loaded;
+
+    ///  - `product.valid` - Product has been loaded and is a valid product
     this.valid  = options.valid;
+
+    ///  - `product.canPurchase` - Product is in a state where it can be purchased
     this.canPurchase = options.canPurchase;
 
-    ///  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states).
+    ///  - `product.owned` - Product is owned
+    this.owned = options.owned;
+
+    ///  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
     this.state = options.state || "";
 
     this.stateChanged();

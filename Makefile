@@ -16,7 +16,7 @@ help:
 	@echo "(c)2014, Jean-Christophe Hoelt <hoelt@fovea.cc>"
 	@echo ""
 
-all: build doc-api
+all: build doc
 
 build: sync-android test-js
 	@echo "- Preprocess"
@@ -48,6 +48,11 @@ doc-api: test-js
 	@echo "(generated from source files using \`make doc-api)\`" >> doc/api.md
 	@echo >> doc/api.md
 	@cat test/store-test.js | grep "///" | cut -d/ -f4- | cut -d\  -f2- >> doc/api.md
+
+doc-dev-guide-ios: test-js
+	@cat src/js/store-ios.js | grep "///" | cut -d/ -f4- | cut -d\  -f2- > doc/dev-guide-ios.md
+
+doc: doc-api doc-dev-guide-ios
 
 sync-android:
 	@rsync -qrv git_modules/android_iap/v3/src/android/ src/android

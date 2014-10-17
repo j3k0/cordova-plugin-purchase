@@ -23,7 +23,7 @@ var init = function () {
             });
         },
         {
-            showLog: store.debug ? true : false
+            showLog: store.verbosity >= store.INFO ? true : false
         },
         skus);
 };
@@ -61,10 +61,6 @@ function iabLoaded(validProducts) {
     }
     store.ready(true);
 }
-
-var iabError = function(err) {
-    store.log.error("android -> error  " + JSON.stringify(err));
-};
 
 store.when("refreshed", function() {
     if (!initialized) init();

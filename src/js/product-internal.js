@@ -18,8 +18,13 @@ store.Product.prototype.set = function(key, value) {
 
 store.Product.prototype.stateChanged = function() {
 
+    // update some properties useful to the user
+    // to make sense of the product state without writing
+    // complex conditions.
+
     this.canPurchase = this.state === store.VALID;
     this.loaded      = this.state && this.state !== store.REGISTERED;
+    this.owned       = this.state === store.OWNED;
 
     // update validity
     this.valid       = this.state !== store.INVALID;

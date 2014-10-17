@@ -128,15 +128,15 @@ As with any other plugin, this object shouldn't be used before
 the "deviceready" event is fired. Check cordova's documentation
 for more details if needed.
 
-## <a name="debug"></a>*store.debug*
+## <a name="verbosity"></a>*store.verbosity*
 
-The `debug` property defines how much you want `store.js` to write on the console. Set to:
+The `verbosity` property defines how much you want `store.js` to write on the console. Set to:
 
- - `false` or `0` to disable all logging
- - `store.ERROR` to show only error messages
- - `store.WARNING` to show warnings and errors
- - `store.INFO` to also show information messages
- - `store.DEBUG` to enable internal debugging messages.
+ - `store.QUIET` or `0` to disable all logging (default)
+ - `store.ERROR` or `1` to show only error messages
+ - `store.WARNING` or `2` to show warnings and errors
+ - `store.INFO` or `3` to also show information messages
+ - `store.DEBUG` or `4` to enable internal debugging messages.
 
 See [logging levels](#logging levels) for all possible values.
 
@@ -177,10 +177,11 @@ See [logging levels](#logging levels) for all possible values.
 
 ### logging levels
 
-    store.ERROR    = 1;
-    store.WARNING  = 2;
-    store.INFO     = 3;
-    store.DEBUG    = 4;
+    store.QUIET   = 0;
+    store.ERROR   = 1;
+    store.WARNING = 2;
+    store.INFO    = 3;
+    store.DEBUG   = 4;
 ## <a name="product"></a>*store.Product* object ##
 
 Some methods, like the [`ask` method](#ask), give you access to a `product`
@@ -200,7 +201,11 @@ Products object have the following fields and methods.
  - `product.localizedTitle` - Localized name or short description ready for display
  - `product.localizedDescription` - Localized longer description ready for display
  - `product.localizedPrice` - Localized price (with currency) ready for display
- - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states).
+ - `product.loaded` - Product has been loaded from server, however it can still be either `valid` or not
+ - `product.valid` - Product has been loaded and is a valid product
+ - `product.canPurchase` - Product is in a state where it can be purchased
+ - `product.owned` - Product is owned
+ - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
 
 ### public methods
 
