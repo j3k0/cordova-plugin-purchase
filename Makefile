@@ -8,6 +8,7 @@ help:
 	@echo "    test-js ........ Test javascript files for errors."
 	@echo "    test-install ... Test plugin installation on iOS and Android."
 	@echo "    doc-api ........ Generate API documentation into doc/api.md"
+	@echo "    doc-contrib .... Generate Contributor Guide into doc/contributor-guide.md"
 	@echo "    clean .......... Cleanup the project (temporary and generated files)."
 	@echo ""
 	@echo "extra targets"
@@ -49,10 +50,14 @@ doc-api: test-js
 	@echo >> doc/api.md
 	@cat test/store-test.js | grep "///" | cut -d/ -f4- | cut -d\  -f2- >> doc/api.md
 
-doc-dev-guide-ios: test-js
-	@cat src/js/store-ios.js | grep "///" | cut -d/ -f4- | cut -d\  -f2- > doc/dev-guide-ios.md
+doc-contrib: test-js
+	@echo "# Contributor Guide" > doc/contributor-guide.md
+	@echo >> doc/contributor-guide.md
+	@echo "(generated from source files using \`make doc-api)\`" >> doc/contributor-guide.md
+	@echo >> doc/contributor-guide.md
+	@cat src/js/*.js | grep "//!" | cut -d! -f2- | cut -d\  -f2- >> doc/contributor-guide.md
 
-doc: doc-api doc-dev-guide-ios
+doc: doc-api doc-contrib
 
 sync-android:
 	@rsync -qrv git_modules/android_iap/v3/src/android/ src/android

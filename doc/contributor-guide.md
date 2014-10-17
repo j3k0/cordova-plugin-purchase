@@ -1,3 +1,7 @@
+# Contributor Guide
+
+(generated from source files using `make doc-api)`
+
 # iOS Implementation
 
 The implementation of the unified API is a small layer

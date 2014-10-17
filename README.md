@@ -1,21 +1,57 @@
 # Cordova Purchase Plugin
 
- * Allows In-App Purchases to be made from a Phonegap / Cordova Application.
+**Author**: Jean-Christophe Hoelt <hoelt@fovea.cc>
 
-Author: Jean-Christophe Hoelt <hoelt@fovea.cc>
+## Summary
 
-Contributors:
+This plugin allows **In-App Purchases** to be made from **Cordova and PhoneGap** applications.
+
+It lets you handle both platforms with a single codebase, reducing development time
+and removing the need for platform specific plugins.
+
+## Supported platforms
+
+ - **iOS** version 5.0 or higher.
+ - **Android** version 2.2 (API level 8) or higher
+   - with Google Play client version 3.9.16 or higher
+
+## Getting Started
+
+If you don't know much about In-App Purchases, you'll find a good introduction
+on the subject on Fovea's blog (coming soon).
+
+You probably want to start by installing the plugin into your project.
+This is documented in the [Setup Guide](doc/setup.md).
+
+Once your project setup properly, add the minimal initialization code in
+your project and check that it works. You'll find a [minimal example here](doc/minimal-example.js).
+
+If you can't get things to work, go through the [Troubleshooting Checklist](doc/troubleshooting.md).
+
+## Documentation
+
+ - [API Documentation](doc/api.md)
+ - [Documentation for iOS](doc/ios.md)
+ - [Documentation for Android](doc/android.md)
+
+## Resources
+
+### for iOS
+
+ - [Getting Started with In-App Purchase on iOS](https://developer.apple.com/in-app-purchase/In-App-Purchase-Guidelines.pdf)
+   - Read about the business models supported by In-App Purchase and the types of items you can sell in your app.
+ - [In-App Purchase Configuration Guide for iTunes Connect](https://developer.apple.com/library/ios/documentation/LanguagesUtilities/Conceptual/iTunesConnectInAppPurchase_Guide/Chapters/Introduction.html)
+   - Learn how to set up and manage In-App Purchases with iTunes Connect.
+
+# Contribute
+
+ - [Contributor Guide](doc/contributor-guide.md)
+
+### Contributors:
 
  * Guillaume Charhon (initial Android code)
  * Matt Kane (initial iOS code)
  * Mohammad Naghavi (original unification attempt)
-
-# Documentation
-
- - [API Documentation](doc/api.md)
- - [Guide for iOS](doc/ios.md)
- - [Guide for Android](doc/android.md)
-
 
 ## Install the Plugin
 
