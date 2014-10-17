@@ -849,6 +849,40 @@ store.once("refreshed", function() {
     storekitInit();
 });
 
+store.when("requested", function(product) {
+    store.ready(function() {
+        if (!product) {
+            store.error({
+                code: store.ERR_INVALID_PRODUCT_ID,
+                message: "Trying to order an unknown product"
+            });
+            return;
+        }
+        if (!initialized) {
+            product.trigger("error", [ new store.Error({
+                code: store.ERR_PURCHASE,
+                message: "`purchase()` called before initialization"
+            }), product ]);
+            return;
+        }
+        if (!product.loaded) {
+            product.trigger("error", [ new store.Error({
+                code: store.ERR_PURCHASE,
+                message: "`purchase()` called before doing initial `refresh()`"
+            }), product ]);
+            return;
+        }
+        if (!product.valid) {
+            product.trigger("error", [ new store.Error({
+                code: store.ERR_PURCHASE,
+                message: "`purchase()` called with an invalid product ID"
+            }), product ]);
+            return;
+        }
+        storekit.purchase(product.id, 1);
+    });
+});
+
 store.when("finished", function(product) {
     storekit.finish(product.transaction.id);
 });
@@ -867,7 +901,7 @@ var storekitInit = function() {
         noAutoFinish: true,
         ready: storekitReady,
         error: storekitError,
-        purchase: storekitPurchase,
+        purchase: storekitPurchased,
         purchasing: storekitPurchasing,
         restore: function(originalTransactionId, productId) {},
         restoreCompleted: function() {},
@@ -904,7 +938,19 @@ var storekitLoaded = function(validProducts, invalidProductIds) {
     }, 1);
 };
 
-var storekitPurchase = function(transactionId, productId) {
+var storekitPurchasing = function(productId) {
+    store.log.debug("ios -> is purchasing " + productId);
+    store.ready(function() {
+        var product = store.get(productId);
+        if (!product) {
+            store.log.warn("ios -> Product '" + productId + "' is being purchased. But isn't registered anymore! How come?");
+            return;
+        }
+        if (product.state !== store.INITIATED) product.set("state", store.INITIATED);
+    });
+};
+
+var storekitPurchased = function(transactionId, productId) {
     store.ready(function() {
         var product = store.get(productId);
         if (!product) {
@@ -919,18 +965,6 @@ var storekitPurchase = function(transactionId, productId) {
             id: transactionId
         };
         product.set("state", store.APPROVED);
-    });
-};
-
-var storekitPurchasing = function(productId) {
-    store.log.debug("ios -> is purchasing " + productId);
-    store.ready(function() {
-        var product = store.get(productId);
-        if (!product) {
-            store.log.warn("ios -> Product '" + productId + "' is being purchased. But isn't registered anymore! How come?");
-            return;
-        }
-        if (product.state !== store.INITIATED) product.set("state", store.INITIATED);
     });
 };
 
@@ -965,40 +999,6 @@ var storekitError = function(errorCode, errorText, options) {
 };
 
 store.restore = function() {};
-
-store.when("requested", function(product) {
-    store.ready(function() {
-        if (!product) {
-            store.error({
-                code: store.ERR_INVALID_PRODUCT_ID,
-                message: "Trying to order an unknown product"
-            });
-            return;
-        }
-        if (!initialized) {
-            product.trigger("error", [ new store.Error({
-                code: store.ERR_PURCHASE,
-                message: "`purchase()` called before initialization"
-            }), product ]);
-            return;
-        }
-        if (!product.loaded) {
-            product.trigger("error", [ new store.Error({
-                code: store.ERR_PURCHASE,
-                message: "`purchase()` called before doing initial `refresh()`"
-            }), product ]);
-            return;
-        }
-        if (!product.valid) {
-            product.trigger("error", [ new store.Error({
-                code: store.ERR_PURCHASE,
-                message: "`purchase()` called with an invalid product ID"
-            }), product ]);
-            return;
-        }
-        storekit.purchase(product.id, 1);
-    });
-});
 
 function isOwned(productId) {
     return localStorage["__cc_fovea_store_ios_owned_ " + productId] === "1";

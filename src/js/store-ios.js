@@ -31,7 +31,7 @@
 /// Please refer to the [product life-cycle section](api.md#life-cycle) of the documentation
 /// for better understanding of the job of this event handlers.
 
-/// #### initialization
+/// #### initialize storekit
 /// At first refresh, initialize the storekit API. See [`storekitInit()`](#storekitInit) for details.
 ///
 /*///*/     store.once("refreshed", function() {
@@ -39,8 +39,47 @@
 /*///*/     });
 ///
 
-/// #### finishing a purchase
-/// When a product order is finished, `finish()` the storekit transaction.
+/// #### initiate a purchase
+///
+/// When a product enters the store.REQUESTED state, initiate a purchase with `storekit`.
+///
+store.when("requested", function(product) {
+    store.ready(function() {
+        if (!product) {
+            store.error({
+                code: store.ERR_INVALID_PRODUCT_ID,
+                message: "Trying to order an unknown product"
+            });
+            return;
+        }
+        if (!initialized) {
+            product.trigger("error", [new store.Error({
+                code: store.ERR_PURCHASE,
+                message: "`purchase()` called before initialization"
+            }), product]);
+            return;
+        }
+        if (!product.loaded) {
+            product.trigger("error", [new store.Error({
+                code: store.ERR_PURCHASE,
+                message: "`purchase()` called before doing initial `refresh()`"
+            }), product]);
+            return;
+        }
+        if (!product.valid) {
+            product.trigger("error", [new store.Error({
+                code: store.ERR_PURCHASE,
+                message: "`purchase()` called with an invalid product ID"
+            }), product]);
+            return;
+        }
+        storekit.purchase(product.id, 1);
+    });
+});
+
+
+/// #### finish a purchase
+/// When a product enters the store.FINISHED state, `finish()` the storekit transaction.
 ///
 /*///*/     store.when("finished", function(product) {
 /*///*/         storekit.finish(product.transaction.id);
@@ -56,15 +95,24 @@
 /*///*/     });
 ///
 
-/// ## Functions
+///
+/// ## Initialization
+///
 
 /// ### <a name="storekitInit"></a> *storekitInit()*
 ///
 /// This funciton will initialize the storekit API.
 ///
-/// This initiates a chain reaction with `storekitReady()` and `storekitLoaded()`
+/// This initiates a chain reaction with [`storekitReady()`](#storekitReady) and [`storekitLoaded()`](#storekitLoaded)
 /// that will make sure product are loaded from server and restored
 /// to their proper *OWNED* status.
+///
+/// It also registers the storekit callbacks to get notified to events from the StoreKit API.
+///
+///  - [`storekitPurchasing()`](#storekitPurchasing)
+///  - [`storekitPurchased()`](#storekitPurchased)
+///  - [`storekitError()`](#storekitError)
+///
 var initialized = false;
 var storekitInit = function () {
     if (initialized) return;
@@ -74,7 +122,7 @@ var storekitInit = function () {
         noAutoFinish: true,
         ready:    storekitReady,
         error:    storekitError,
-        purchase: storekitPurchase,
+        purchase: storekitPurchased,
         purchasing: storekitPurchasing,
         restore:  function (originalTransactionId, productId) {},
         restoreCompleted: function () {},
@@ -82,11 +130,16 @@ var storekitInit = function () {
     });
 };
 
+///
+/// ## *storekit* events handlers
+///
+
 /// ### <a name="storekitReady"></a> *storekitReady()*
 ///
-/// Loads all registered products immediately when storekit is ready.
+/// Called when `storekit` has been initialized successfully.
 ///
-/// Triggers `storekitLoaded()` when done.
+/// Loads all registered products, triggers `storekitLoaded()` when done.
+///
 var storekitReady = function () {
     var products = [];
     for (var i = 0; i < store.products.length; ++i)
@@ -94,7 +147,15 @@ var storekitReady = function () {
     storekit.load(products, storekitLoaded);
 };
 
-// update store's product definitions when they have been loaded.
+/// ### <a name="storekitLoaded"></a> *storekitLoaded()*
+///
+/// Update the `store`'s product definitions when they have been loaded.
+///
+///  1. Set the products state to `VALID` or `INVALID`
+///  2. Trigger the "loaded" event
+///  3. Set the products state to `OWNED` (if it is so)
+///  4. Set the store status to "ready".
+///
 var storekitLoaded = function (validProducts, invalidProductIds) {
     var p;
     for (var i = 0; i < validProducts.length; ++i) {
@@ -115,14 +176,40 @@ var storekitLoaded = function (validProducts, invalidProductIds) {
         p.trigger("loaded");
     }
 
-    // Defer execution of "ready" to make sure state changes have been processed.
+    /// Note: the execution of "ready" is deferred to make sure state
+    /// changes have been processed.
     setTimeout(function() {
         store.ready(true);
     }, 1);
 };
 
-// Purchase approved
-var storekitPurchase = function (transactionId, productId) {
+/// ### <a name="storekitPurchasing"></a> *storekitPurchasing()*
+///
+/// Called by `storekit` when a purchase is in progress.
+///
+/// It will set the product state to `INITIATED`.
+///
+var storekitPurchasing = function (productId) {
+    store.log.debug("ios -> is purchasing " + productId);
+    store.ready(function() {
+        var product = store.get(productId);
+        if (!product) {
+            store.log.warn("ios -> Product '" + productId + "' is being purchased. But isn't registered anymore! How come?");
+            return;
+        }
+        if (product.state !== store.INITIATED)
+            product.set("state", store.INITIATED);
+    });
+};
+
+/// ### <a name="storekitPurchased"></a> *storekitPurchased()*
+///
+/// Called by `storekit` when a purchase have been approved.
+///
+/// It will set the product state to `APPROVED` and associates the product
+/// with the order's transaction identifier.
+///
+var storekitPurchased = function (transactionId, productId) {
     store.ready(function() {
         var product = store.get(productId);
         if (!product) {
@@ -140,25 +227,12 @@ var storekitPurchase = function (transactionId, productId) {
     });
 };
 
-// Purchase in progress
-var storekitPurchasing = function (productId) {
-    store.log.debug("ios -> is purchasing " + productId);
-    store.ready(function() {
-        var product = store.get(productId);
-        if (!product) {
-            store.log.warn("ios -> Product '" + productId + "' is being purchased. But isn't registered anymore! How come?");
-            return;
-        }
-        if (product.state !== store.INITIATED)
-            product.set("state", store.INITIATED);
-    });
-};
-
 /// ### <a name="storekitError"></a> *storekitError()*
 ///
-/// Called when an error happens in the storekit API.
+/// Called by `storekit` when an error happens in the storekit API.
 ///
 /// Will convert storekit errors to a [`store.Error`](api.md/#errors).
+///
 var storekitError = function(errorCode, errorText, options) {
 
     var i,p;
@@ -204,44 +278,11 @@ var storekitError = function(errorCode, errorText, options) {
 
 // Restore purchases.
 store.restore = function() {
+    // TODO
 };
 
-store.when("requested", function(product) {
-    store.ready(function() {
-        if (!product) {
-            store.error({
-                code: store.ERR_INVALID_PRODUCT_ID,
-                message: "Trying to order an unknown product"
-            });
-            return;
-        }
-        if (!initialized) {
-            product.trigger("error", [new store.Error({
-                code: store.ERR_PURCHASE,
-                message: "`purchase()` called before initialization"
-            }), product]);
-            return;
-        }
-        if (!product.loaded) {
-            product.trigger("error", [new store.Error({
-                code: store.ERR_PURCHASE,
-                message: "`purchase()` called before doing initial `refresh()`"
-            }), product]);
-            return;
-        }
-        if (!product.valid) {
-            product.trigger("error", [new store.Error({
-                code: store.ERR_PURCHASE,
-                message: "`purchase()` called with an invalid product ID"
-            }), product]);
-            return;
-        }
-        storekit.purchase(product.id, 1);
-    });
-});
-
 // 
-// ### Persistance of the "OWNED" status
+// ## Persistance of the "OWNED" status
 //
 
 // #### *isOwned(productId)*

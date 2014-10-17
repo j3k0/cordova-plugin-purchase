@@ -25,15 +25,19 @@ The iOS implementation monitors products changes of state to trigger
 
 Please refer to the [product life-cycle section](api.md#life-cycle) of the documentation
 for better understanding of the job of this event handlers.
-#### initialization
+#### initialize storekit
 At first refresh, initialize the storekit API. See [`storekitInit()`](#storekitInit) for details.
 
     store.once("refreshed", function() {
         storekitInit();
     });
 
-#### finishing a purchase
-When a product order is finished, `finish()` the storekit transaction.
+#### initiate a purchase
+
+When a product enters the store.REQUESTED state, initiate a purchase with `storekit`.
+
+#### finish a purchase
+When a product enters the store.FINISHED state, `finish()` the storekit transaction.
 
     store.when("finished", function(product) {
         storekit.finish(product.transaction.id);
@@ -47,21 +51,59 @@ Until Apple provides a mean to get notified to refunds... there's no way back.
         setOwned(product.id, true);
     });
 
-## Functions
+
+## Initialization
+
 ### <a name="storekitInit"></a> *storekitInit()*
 
 This funciton will initialize the storekit API.
 
-This initiates a chain reaction with `storekitReady()` and `storekitLoaded()`
+This initiates a chain reaction with [`storekitReady()`](#storekitReady) and [`storekitLoaded()`](#storekitLoaded)
 that will make sure product are loaded from server and restored
 to their proper *OWNED* status.
+
+It also registers the storekit callbacks to get notified to events from the StoreKit API.
+
+ - [`storekitPurchasing()`](#storekitPurchasing)
+ - [`storekitPurchased()`](#storekitPurchased)
+ - [`storekitError()`](#storekitError)
+
+
+## *storekit* events handlers
+
 ### <a name="storekitReady"></a> *storekitReady()*
 
-Loads all registered products immediately when storekit is ready.
+Called when `storekit` has been initialized successfully.
 
-Triggers `storekitLoaded()` when done.
+Loads all registered products, triggers `storekitLoaded()` when done.
+
+### <a name="storekitLoaded"></a> *storekitLoaded()*
+
+Update the `store`'s product definitions when they have been loaded.
+
+ 1. Set the products state to `VALID` or `INVALID`
+ 2. Trigger the "loaded" event
+ 3. Set the products state to `OWNED` (if it is so)
+ 4. Set the store status to "ready".
+
+Note: the execution of "ready" is deferred to make sure state
+changes have been processed.
+### <a name="storekitPurchasing"></a> *storekitPurchasing()*
+
+Called by `storekit` when a purchase is in progress.
+
+It will set the product state to `INITIATED`.
+
+### <a name="storekitPurchased"></a> *storekitPurchased()*
+
+Called by `storekit` when a purchase have been approved.
+
+It will set the product state to `APPROVED` and associates the product
+with the order's transaction identifier.
+
 ### <a name="storekitError"></a> *storekitError()*
 
-Called when an error happens in the storekit API.
+Called by `storekit` when an error happens in the storekit API.
 
 Will convert storekit errors to a [`store.Error`](api.md/#errors).
+
