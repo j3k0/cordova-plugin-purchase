@@ -1,6 +1,12 @@
 (function(){
 "use strict";
 
+var logLevel = {};
+logLevel[store.ERROR] = "ERROR";
+logLevel[store.WARNING] = "WARNING";
+logLevel[store.INFO] = "INFO";
+logLevel[store.DEBUG] = "DEBUG";
+
 function log(level, o) {
     var maxLevel = (store.verbosity === true ? 1 : store.verbosity);
     if (level > maxLevel)
@@ -9,7 +15,10 @@ function log(level, o) {
     if (typeof o !== 'string')
         o = JSON.stringify(o);
 
-    console.log("[store.js] " + o);
+    if (logLevel[level])
+        console.log("[store.js] " + logLevel[level] + ": " + o);
+    else
+        console.log("[store.js] " + o);
 }
 
 /// ## *store.log* object

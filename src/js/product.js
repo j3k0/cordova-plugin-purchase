@@ -94,13 +94,13 @@ store.Product.prototype.finish = function() {
         store.log.debug("product -> finishing " + this.id);
         if (this.state !== store.FINISHED) {
             this.set('state', store.FINISHED);
-            defer(this, function() {
-                store.log.debug("product -> " + this.id + " is a " + this.type);
-                if (this.type === store.CONSUMABLE)
-                    this.set('state', store.VALID);
-                else
-                    this.set('state', store.OWNED);
-            });
+            // The platform store should now handle the FINISHED event
+            // and change the product status to VALID or OWNED.
+            // defer(this, function() {
+            //     store.log.debug("product -> " + this.id + " is a " + this.type);
+            //     if (this.type !== store.CONSUMABLE)
+            //         this.set('state', store.OWNED);
+            // });
         }
     });
 };

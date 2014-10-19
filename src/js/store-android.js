@@ -63,11 +63,51 @@ function iabLoaded(validProducts) {
             p.trigger("loaded");
         }
     }
-    store.ready(true);
+
+    store.android.getPurchases(
+        function(purchases) { // success
+            // example purchases data:
+            //
+            // [
+            //   {
+            //     "purchaseToken":"tokenabc",
+            //     "developerPayload":"mypayload1",
+            //     "packageName":"com.example.MyPackage",
+            //     "purchaseState":0,
+            //     "orderId":"12345.6789",
+            //     "purchaseTime":1382517909216,
+            //     "productId":"example_subscription"
+            //   },
+            //   { ... }
+            // ]
+            if (purchases && purchases.length) {
+                for (var i = 0; i < purchases.length; ++i) {
+                    var purchase = purchases[i];
+                    var p = store.get(purchase.productId);
+                    if (!p) {
+                        store.log.warn("android -> user owns a non-registered product");
+                        continue;
+                    }
+                    setProductApproved(p, purchase);
+                }
+            }
+            store.ready(true);
+        },
+        function() { // errro
+        }
+    );
 
     // TODO getPurchases
     // consumable in the list should enter the APPROVED state
     // non-consumable in the list should enter the OWNED state
+}
+
+function setProductApproved(product, data) {
+    product.transaction = {
+        type: 'android-playstore',
+        id: data.orderId
+    };
+    product.set("state", store.APPROVED);
 }
 
 store.when("requested", function(product) {
@@ -104,11 +144,7 @@ store.when("requested", function(product) {
             //     "receipt":        "{...}",
             //     "signature":      "qs54SGHgjGSJHSKJHIU"
             // }
-            product.transaction = {
-                type: 'android-playstore',
-                id: data.orderId
-            };
-            product.set("state", store.APPROVED);
+            setProductApproved(product, data);
         },
         function(err, code) {
             store.log.info("android -> buy error " + code);
@@ -138,10 +174,22 @@ store.when("requested", function(product) {
 /// #### finish a purchase
 /// When a consumable product enters the store.FINISHED state,
 /// `consume()` the product.
-store.when("consumable", "finished", function(product) {
+store.when("product", "finished", function(product) {
+    store.log.debug("android -> consumable finished");
     if (product.type === store.CONSUMABLE) {
         product.transaction = null;
-        store.android.consumePurchase(product.id);
+        store.android.consumePurchase(
+            function() { // success
+                store.log.debug("android -> consumable consumed");
+                product.set('state', store.VALID);
+            },
+            function(err) { // error
+                // can't finish.
+            },
+            product.id);
+    }
+    else {
+        product.set('state', store.OWNED);
     }
 });
 

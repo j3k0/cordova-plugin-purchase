@@ -62,10 +62,6 @@ store.verbosity = 0;
             store.log.debug("product -> finishing " + this.id);
             if (this.state !== store.FINISHED) {
                 this.set("state", store.FINISHED);
-                defer(this, function() {
-                    store.log.debug("product -> " + this.id + " is a " + this.type);
-                    if (this.type === store.CONSUMABLE) this.set("state", store.VALID); else this.set("state", store.OWNED);
-                });
             }
         });
     };
@@ -369,11 +365,16 @@ store.restore = null;
 
 (function() {
     "use strict";
+    var logLevel = {};
+    logLevel[store.ERROR] = "ERROR";
+    logLevel[store.WARNING] = "WARNING";
+    logLevel[store.INFO] = "INFO";
+    logLevel[store.DEBUG] = "DEBUG";
     function log(level, o) {
         var maxLevel = store.verbosity === true ? 1 : store.verbosity;
         if (level > maxLevel) return;
         if (typeof o !== "string") o = JSON.stringify(o);
-        console.log("[store.js] " + o);
+        if (logLevel[level]) console.log("[store.js] " + logLevel[level] + ": " + o); else console.log("[store.js] " + o);
     }
     store.log = {
         error: function(o) {
@@ -747,7 +748,27 @@ store.restore = null;
                 p.trigger("loaded");
             }
         }
-        store.ready(true);
+        store.android.getPurchases(function(purchases) {
+            if (purchases && purchases.length) {
+                for (var i = 0; i < purchases.length; ++i) {
+                    var purchase = purchases[i];
+                    var p = store.get(purchase.productId);
+                    if (!p) {
+                        store.log.warn("android -> user owns a non-registered product");
+                        continue;
+                    }
+                    setProductApproved(p, purchase);
+                }
+            }
+            store.ready(true);
+        }, function() {});
+    }
+    function setProductApproved(product, data) {
+        product.transaction = {
+            type: "android-playstore",
+            id: data.orderId
+        };
+        product.set("state", store.APPROVED);
     }
     store.when("requested", function(product) {
         store.ready(function() {
@@ -767,11 +788,7 @@ store.restore = null;
             }
             product.set("state", store.INITIATED);
             store.android.buy(function(data) {
-                product.transaction = {
-                    type: "android-playstore",
-                    id: data.orderId
-                };
-                product.set("state", store.APPROVED);
+                setProductApproved(product, data);
             }, function(err, code) {
                 store.log.info("android -> buy error " + code);
                 if (code === store.ERR_PAYMENT_CANCELLED) {
@@ -792,10 +809,16 @@ store.restore = null;
             }, product.id);
         });
     });
-    store.when("consumable", "finished", function(product) {
+    store.when("product", "finished", function(product) {
+        store.log.debug("android -> consumable finished");
         if (product.type === store.CONSUMABLE) {
             product.transaction = null;
-            store.android.consumePurchase(product.id);
+            store.android.consumePurchase(function() {
+                store.log.debug("android -> consumable consumed");
+                product.set("state", store.VALID);
+            }, function(err) {}, product.id);
+        } else {
+            product.set("state", store.OWNED);
         }
     });
 }).call(this);

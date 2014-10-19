@@ -32,20 +32,12 @@ for better understanding of the job of this event handlers.
 #### initialize storekit
 At first refresh, initialize the storekit API. See [`storekitInit()`](#storekitInit) for details.
 
-    store.once("refreshed", function() {
-        storekitInit();
-    });
-
 #### initiate a purchase
 
 When a product enters the store.REQUESTED state, initiate a purchase with `storekit`.
 
 #### finish a purchase
 When a product enters the store.FINISHED state, `finish()` the storekit transaction.
-
-    store.when("finished", function(product) {
-        storekit.finish(product.transaction.id);
-    });
 
 #### persist ownership
 
@@ -56,10 +48,6 @@ Note that, until Apple provides a mean to get notified to refunds, there's no wa
 A non-consumable product, once `OWNED` always will be.
 
 http://stackoverflow.com/questions/6429186/can-we-check-if-a-users-in-app-purchase-has-been-refunded-by-apple
-
-    store.when("owned", function(product) {
-        setOwned(product.id, true);
-    });
 
 
 ## Initialization

@@ -34,10 +34,10 @@
 //! #### initialize storekit
 //! At first refresh, initialize the storekit API. See [`storekitInit()`](#storekitInit) for details.
 //!
-/*//!*/     store.once("refreshed", function() {
-/*//!*/         storekitInit();
-/*//!*/     });
-//!
+store.once("refreshed", function() {
+    storekitInit();
+});
+
 
 //! #### initiate a purchase
 //!
@@ -67,10 +67,10 @@ store.when("requested", function(product) {
 //! #### finish a purchase
 //! When a product enters the store.FINISHED state, `finish()` the storekit transaction.
 //!
-/*//!*/     store.when("finished", function(product) {
-/*//!*/         storekit.finish(product.transaction.id);
-/*//!*/     });
-//!
+store.when("finished", function(product) {
+    storekit.finish(product.transaction.id);
+    product.set("state", type === store.CONSUMABLE ? store.VALID : store.OWNED);
+});
 
 //! #### persist ownership
 //!
@@ -82,10 +82,9 @@ store.when("requested", function(product) {
 //!
 //! http://stackoverflow.com/questions/6429186/can-we-check-if-a-users-in-app-purchase-has-been-refunded-by-apple
 //!
-/*//!*/     store.when("owned", function(product) {
-/*//!*/         setOwned(product.id, true);
-/*//!*/     });
-//!
+store.when("owned", function(product) {
+    setOwned(product.id, true);
+});
 
 //!
 //! ## Initialization
