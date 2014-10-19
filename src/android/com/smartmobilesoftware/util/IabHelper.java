@@ -107,7 +107,7 @@ public class IabHelper {
     // Public key for verifying signature, in base64 encoding
     String mSignatureBase64 = null;
 
-    // Billing response codes
+    // Billing API response codes
     public static final int BILLING_RESPONSE_RESULT_OK = 0;
     public static final int BILLING_RESPONSE_RESULT_USER_CANCELED = 1;
     public static final int BILLING_RESPONSE_RESULT_BILLING_UNAVAILABLE = 3;
@@ -122,17 +122,20 @@ public class IabHelper {
     // KEEP SYNCHRONIZED with src/js/constants.js
     //
     public static final int ERROR_CODES_BASE = 6777000;
-    public static final int IABHELPER_ERROR_BASE = -1000;
-    public static final int IABHELPER_REMOTE_EXCEPTION = -1001;
-    public static final int IABHELPER_BAD_RESPONSE = -1002;
-    public static final int IABHELPER_VERIFICATION_FAILED = -1003;
-    public static final int IABHELPER_SEND_INTENT_FAILED = -1004;
-    public static final int IABHELPER_USER_CANCELLED = ERROR_CODES_BASE + 6;
-    public static final int IABHELPER_UNKNOWN_PURCHASE_RESPONSE = -1006;
-    public static final int IABHELPER_MISSING_TOKEN = -1007;
-    public static final int IABHELPER_UNKNOWN_ERROR = -1008;
-    public static final int IABHELPER_SUBSCRIPTIONS_NOT_AVAILABLE = -1009;
-    public static final int IABHELPER_INVALID_CONSUMPTION = -1010;
+    // public static final int ERR_ERROR_BASE = -1000;
+
+    public static final int ERR_SETUP = ERROR_CODES_BASE + 1;
+    public static final int ERR_LOAD = ERROR_CODES_BASE + 2;
+    public static final int ERR_PURCHASE = ERROR_CODES_BASE + 3;
+    public static final int ERR_CANCELLED = ERROR_CODES_BASE + 6;
+    public static final int ERR_UNKNOWN = ERROR_CODES_BASE + 10;
+    public static final int ERR_FINISH = ERROR_CODES_BASE + 13;
+    public static final int ERR_COMMUNICATION = ERROR_CODES_BASE + 14;
+    public static final int ERR_SUBSCRIPTIONS_NOT_AVAILABLE = ERROR_CODES_BASE + 15;
+    public static final int ERR_MISSING_TOKEN = ERROR_CODES_BASE + 16;
+    public static final int ERR_VERIFICATION_FAILED = ERROR_CODES_BASE + 17;
+    public static final int ERR_BAD_RESPONSE = ERROR_CODES_BASE + 18;
+    public static final int ERR_REFRESH = ERROR_CODES_BASE + 19;
 
     // Keys for the responses from InAppBillingService
     public static final String RESPONSE_CODE = "RESPONSE_CODE";
@@ -253,7 +256,7 @@ public class IabHelper {
                 }
                 catch (RemoteException e) {
                     if (listener != null) {
-                        listener.onIabSetupFinished(new IabResult(IABHELPER_REMOTE_EXCEPTION,
+                        listener.onIabSetupFinished(new IabResult(ERR_COMMUNICATION,
                                                     "RemoteException while setting up in-app billing."));
                     }
                     e.printStackTrace();
@@ -389,7 +392,7 @@ public class IabHelper {
         IabResult result;
 
         if (itemType.equals(ITEM_TYPE_SUBS) && !mSubscriptionsSupported) {
-            IabResult r = new IabResult(IABHELPER_SUBSCRIPTIONS_NOT_AVAILABLE,
+            IabResult r = new IabResult(ERR_SUBSCRIPTIONS_NOT_AVAILABLE,
                     "Subscriptions are not available.");
             flagEndAsync();
             if (listener != null) listener.onIabPurchaseFinished(r, null);
@@ -423,7 +426,7 @@ public class IabHelper {
             e.printStackTrace();
             flagEndAsync();
 
-            result = new IabResult(IABHELPER_SEND_INTENT_FAILED, "Failed to send intent.");
+            result = new IabResult(ERR_PURCHASE, "Failed to send intent.");
             if (listener != null) listener.onIabPurchaseFinished(result, null);
         }
         catch (RemoteException e) {
@@ -431,7 +434,7 @@ public class IabHelper {
             e.printStackTrace();
             flagEndAsync();
 
-            result = new IabResult(IABHELPER_REMOTE_EXCEPTION, "Remote exception while starting purchase flow");
+            result = new IabResult(ERR_COMMUNICATION, "Remote exception while starting purchase flow");
             if (listener != null) listener.onIabPurchaseFinished(result, null);
         }
     }
@@ -461,7 +464,7 @@ public class IabHelper {
 
         if (data == null) {
             logError("Null data in IAB activity result.");
-            result = new IabResult(IABHELPER_BAD_RESPONSE, "Null data in IAB result");
+            result = new IabResult(ERR_BAD_RESPONSE, "Null data in IAB result");
             if (mPurchaseListener != null) mPurchaseListener.onIabPurchaseFinished(result, null);
             return true;
         }
@@ -480,7 +483,7 @@ public class IabHelper {
             if (purchaseData == null || dataSignature == null) {
                 logError("BUG: either purchaseData or dataSignature is null.");
                 logDebug("Extras: " + data.getExtras().toString());
-                result = new IabResult(IABHELPER_UNKNOWN_ERROR, "IAB returned null purchaseData or dataSignature");
+                result = new IabResult(ERR_UNKNOWN, "IAB returned null purchaseData or dataSignature");
                 if (mPurchaseListener != null) mPurchaseListener.onIabPurchaseFinished(result, null);
                 return true;
             }
@@ -493,7 +496,7 @@ public class IabHelper {
                 // Verify signature
                 if (!Security.verifyPurchase(mSignatureBase64, purchaseData, dataSignature)) {
                     logError("Purchase signature verification FAILED for sku " + sku);
-                    result = new IabResult(IABHELPER_VERIFICATION_FAILED, "Signature verification failed for sku " + sku);
+                    result = new IabResult(ERR_VERIFICATION_FAILED, "Signature verification failed for sku " + sku);
                     if (mPurchaseListener != null) mPurchaseListener.onIabPurchaseFinished(result, purchase);
                     return true;
                 }
@@ -502,7 +505,7 @@ public class IabHelper {
             catch (JSONException e) {
                 logError("Failed to parse purchase data.");
                 e.printStackTrace();
-                result = new IabResult(IABHELPER_BAD_RESPONSE, "Failed to parse purchase data.");
+                result = new IabResult(ERR_BAD_RESPONSE, "Failed to parse purchase data.");
                 if (mPurchaseListener != null) mPurchaseListener.onIabPurchaseFinished(result, null);
                 return true;
             }
@@ -521,13 +524,13 @@ public class IabHelper {
         }
         else if (resultCode == Activity.RESULT_CANCELED) {
             logDebug("Purchase canceled - Response: " + getResponseDesc(responseCode));
-            result = new IabResult(IABHELPER_USER_CANCELLED, "User canceled.");
+            result = new IabResult(ERR_CANCELLED, "User canceled.");
             if (mPurchaseListener != null) mPurchaseListener.onIabPurchaseFinished(result, null);
         }
         else {
             logError("Purchase failed. Result code: " + Integer.toString(resultCode)
                     + ". Response: " + getResponseDesc(responseCode));
-            result = new IabResult(IABHELPER_UNKNOWN_PURCHASE_RESPONSE, "Unknown purchase response.");
+            result = new IabResult(ERR_UNKNOWN, "Unknown purchase response.");
             if (mPurchaseListener != null) mPurchaseListener.onIabPurchaseFinished(result, null);
         }
         return true;
@@ -586,10 +589,10 @@ public class IabHelper {
             return inv;
         }
         catch (RemoteException e) {
-            throw new IabException(IABHELPER_REMOTE_EXCEPTION, "Remote exception while refreshing inventory.", e);
+            throw new IabException(ERR_COMMUNICATION, "Remote exception while refreshing inventory.", e);
         }
         catch (JSONException e) {
-            throw new IabException(IABHELPER_BAD_RESPONSE, "Error parsing JSON response while refreshing inventory.", e);
+            throw new IabException(ERR_BAD_RESPONSE, "Error parsing JSON response while refreshing inventory.", e);
         }
     }
 
@@ -673,7 +676,7 @@ public class IabHelper {
         checkSetupDone("consume");
 
         if (!itemInfo.mItemType.equals(ITEM_TYPE_INAPP)) {
-            throw new IabException(IABHELPER_INVALID_CONSUMPTION,
+            throw new IabException(ERR_FINISH,
                     "Items of type '" + itemInfo.mItemType + "' can't be consumed.");
         }
 
@@ -682,7 +685,7 @@ public class IabHelper {
             String sku = itemInfo.getSku();
             if (token == null || token.equals("")) {
                logError("Can't consume "+ sku + ". No token.");
-               throw new IabException(IABHELPER_MISSING_TOKEN, "PurchaseInfo is missing token for sku: "
+               throw new IabException(ERR_MISSING_TOKEN, "PurchaseInfo is missing token for sku: "
                    + sku + " " + itemInfo);
             }
 
@@ -697,7 +700,7 @@ public class IabHelper {
             }
         }
         catch (RemoteException e) {
-            throw new IabException(IABHELPER_REMOTE_EXCEPTION, "Remote exception while consuming. PurchaseInfo: " + itemInfo, e);
+            throw new IabException(ERR_COMMUNICATION, "Remote exception while consuming. PurchaseInfo: " + itemInfo, e);
         }
     }
 
@@ -763,30 +766,7 @@ public class IabHelper {
      *     It also includes the result code numerically.
      */
     public static String getResponseDesc(int code) {
-        String[] iab_msgs = ("0:OK/1:User Canceled/2:Unknown/" +
-                "3:Billing Unavailable/4:Item unavailable/" +
-                "5:Developer Error/6:Error/7:Item Already Owned/" +
-                "8:Item not owned").split("/");
-        String[] iabhelper_msgs = ("0:OK/-1001:Remote exception during initialization/" +
-                                   "-1002:Bad response received/" +
-                                   "-1003:Purchase signature verification failed/" +
-                                   "-1004:Send intent failed/" +
-                                   "-1005:User cancelled/" +
-                                   "-1006:Unknown purchase response/" +
-                                   "-1007:Missing token/" +
-                                   "-1008:Unknown error/" +
-                                   "-1009:Subscriptions not available/" +
-                                   "-1010:Invalid consumption attempt").split("/");
-
-        if (code <= IABHELPER_ERROR_BASE) {
-            int index = IABHELPER_ERROR_BASE - code;
-            if (index >= 0 && index < iabhelper_msgs.length) return iabhelper_msgs[index];
-            else return String.valueOf(code) + ":Unknown IAB Helper Error";
-        }
-        else if (code < 0 || code >= iab_msgs.length)
-            return String.valueOf(code) + ":Unknown";
-        else
-            return iab_msgs[code];
+        return code + ":Error";
     }
 
 
@@ -867,7 +847,7 @@ public class IabHelper {
                     || !ownedItems.containsKey(RESPONSE_INAPP_PURCHASE_DATA_LIST)
                     || !ownedItems.containsKey(RESPONSE_INAPP_SIGNATURE_LIST)) {
                 logError("Bundle returned from getPurchases() doesn't contain required fields.");
-                return IABHELPER_BAD_RESPONSE;
+                return ERR_BAD_RESPONSE;
             }
 
             ArrayList<String> ownedSkus = ownedItems.getStringArrayList(
@@ -905,7 +885,7 @@ public class IabHelper {
             logDebug("Continuation token: " + continueToken);
         } while (!TextUtils.isEmpty(continueToken));
 
-        return verificationFailed ? IABHELPER_VERIFICATION_FAILED : BILLING_RESPONSE_RESULT_OK;
+        return verificationFailed ? ERR_VERIFICATION_FAILED : BILLING_RESPONSE_RESULT_OK;
     }
 
     int querySkuDetails(String itemType, Inventory inv, List<String> moreSkus)
@@ -941,7 +921,7 @@ public class IabHelper {
             }
             else {
                 logError("getSkuDetails() returned a bundle with neither an error nor a detail list.");
-                return IABHELPER_BAD_RESPONSE;
+                return ERR_BAD_RESPONSE;
             }
         }
 

@@ -149,20 +149,14 @@ store.when("requested", function(product) {
         function(err, code) {
             store.log.info("android -> buy error " + code);
             if (code === store.ERR_PAYMENT_CANCELLED) {
-                // This isn't an error
+                // This isn't an error,
                 // just trigger the cancelled event.
                 product.transaction = null;
                 product.trigger("cancelled");
             }
-            else if (code) {
-                store.error({
-                    code: code,
-                    message: "Purchase failed: " + err
-                });
-            }
             else {
                 store.error({
-                    code: store.ERR_PURCHASE,
+                    code: code || store.ERR_PURCHASE,
                     message: "Purchase failed: " + err
                 });
             }
@@ -183,8 +177,12 @@ store.when("product", "finished", function(product) {
                 store.log.debug("android -> consumable consumed");
                 product.set('state', store.VALID);
             },
-            function(err) { // error
+            function(err, code) { // error
                 // can't finish.
+                store.error({
+                    code: code || ERR_UNKNOWN,
+                    message: err
+                });
             },
             product.id);
     }

@@ -27,7 +27,7 @@ import android.util.Log;
 
 public class InAppBillingPlugin extends CordovaPlugin {
 	private final Boolean ENABLE_DEBUG_LOGGING = true;
-	private final String TAG = "CORDOVA_BILLING";
+	private final String TAG = "CordovaPurchase";
 
 
     // (arbitrary) request code for the purchase flow
@@ -104,9 +104,9 @@ public class InAppBillingPlugin extends CordovaPlugin {
 				isValidAction = false;
 			}
 		} catch (IllegalStateException e){
-			callbackContext.error(e.getMessage());
+			callbackContext.error(IabHelper.ERR_UNKNOWN + "|" + e.getMessage());
 		} catch (JSONException e){
-			callbackContext.error(e.getMessage());
+			callbackContext.error(IabHelper.ERR_UNKNOWN + "|" + e.getMessage());
 		}
 
 		// Method not found
@@ -141,13 +141,13 @@ public class InAppBillingPlugin extends CordovaPlugin {
 
                 if (!result.isSuccess()) {
                     // Oh no, there was a problem.
-                    callbackContext.error("Problem setting up in-app billing: " + result);
+                    callbackContext.error(IabHelper.ERR_SETUP + "|Problem setting up in-app billing: " + result);
                     return;
                 }
                 
                 // Have we been disposed of in the meantime? If so, quit.
                 if (mHelper == null) {
-                	callbackContext.error("The billing helper has been disposed");
+                	callbackContext.error(IabHelper.ERR_SETUP + "|The billing helper has been disposed");
                 }
 
                 // Hooray, IAB is fully set up. Now, let's get an inventory of stuff we own.
@@ -170,7 +170,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
 		final String payload = "";
 		
 		if (mHelper == null){
-			callbackContext.error("Billing plugin was not initialized");
+			callbackContext.error(IabHelper.ERR_PURCHASE + "|Billing plugin was not initialized");
 			return;
 		}
 		
@@ -184,11 +184,11 @@ public class InAppBillingPlugin extends CordovaPlugin {
 	// Buy an item
 	private void subscribe(final String sku){
 		if (mHelper == null){
-			callbackContext.error("Billing plugin was not initialized");
+			callbackContext.error(IabHelper.ERR_PURCHASE + "|Billing plugin was not initialized");
 			return;
 		}
 		if (!mHelper.subscriptionsSupported()) {
-            callbackContext.error("Subscriptions not supported on your device yet. Sorry!");
+            callbackContext.error(IabHelper.ERR_SUBSCRIPTIONS_NOT_AVAILABLE + "|Subscriptions not supported on your device yet. Sorry!");
             return;
         }
 		
@@ -210,7 +210,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
 	private JSONArray getPurchases() throws JSONException {
 		// Get the list of owned items
 		if(myInventory == null){
-			callbackContext.error("Billing plugin was not initialized");
+			callbackContext.error(IabHelper.ERR_REFRESH + "|Billing plugin was not initialized");
 			return new JSONArray();
 		}
         List<Purchase>purchaseList = myInventory.getAllPurchases();
@@ -229,7 +229,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
 	private JSONArray getAvailableProducts(){
 		// Get the list of owned items
 		if(myInventory == null){
-			callbackContext.error("Billing plugin was not initialized");
+			callbackContext.error(IabHelper.ERR_LOAD + "|Billing plugin was not initialized");
 			return new JSONArray();
 		}
         List<SkuDetails>skuList = myInventory.getAllProducts();
@@ -242,7 +242,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
 	        	jsonSkuList.put(sku.toJson());
 	        }
 		}catch (JSONException e){
-			callbackContext.error(e.getMessage());
+			callbackContext.error(IabHelper.ERR_LOAD + "|" + e.getMessage());
 		}
 		return jsonSkuList;
 	}
@@ -250,7 +250,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
 	//Get SkuDetails for skus
 	private void getProductDetails(final List<String> skus){
 		if (mHelper == null){
-			callbackContext.error("Billing plugin was not initialized");
+			callbackContext.error(IabHelper.ERR_LOAD + "|Billing plugin was not initialized");
 			return;
 		}
 
@@ -262,7 +262,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
 	private void consumePurchase(JSONArray data) throws JSONException{
 		
 		if (mHelper == null){
-			callbackContext.error("Did you forget to initialize the plugin?");
+			callbackContext.error(IabHelper.ERR_FINISH + "|Did you forget to initialize the plugin?");
 			return;
 		} 
 		
@@ -274,7 +274,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
 			// Consume it
 			mHelper.consumeAsync(purchase, mConsumeFinishedListener);
 		else
-			callbackContext.error(sku + " is not owned so it cannot be consumed");
+			callbackContext.error(IabHelper.ERR_FINISH + "|" + sku + " is not owned so it cannot be consumed");
 	}
 	
 	// Listener that's called when we finish querying the items and subscriptions we own
@@ -306,7 +306,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
                     jsonSkuList.put(sku.toJson());
                 }
             } catch (JSONException e) {
-                callbackContext.error(e.getMessage());
+                callbackContext.error(IabHelper.ERR_LOAD + "|" + e.getMessage());
             }
             callbackContext.success(jsonSkuList);
         }
@@ -315,13 +315,13 @@ public class InAppBillingPlugin extends CordovaPlugin {
     // Check if there is any errors in the iabResult and update the inventory
     private Boolean hasErrorsAndUpdateInventory(IabResult result, Inventory inventory){
     	if (result.isFailure()) {
-        	callbackContext.error("Failed to query inventory: " + result);
+        	callbackContext.error(result.getResponse() + "|Failed to query inventory: " + result);
         	return true;
         }
         
         // Have we been disposed of in the meantime? If so, quit.
         if (mHelper == null) {
-        	callbackContext.error("The billing helper has been disposed");
+        	callbackContext.error(IabHelper.ERR_LOAD + "|The billing helper has been disposed");
         	return true;
         }
         
@@ -338,7 +338,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
             
             // Have we been disposed of in the meantime? If so, quit.
             if (mHelper == null) {
-            	callbackContext.error("The billing helper has been disposed");
+            	callbackContext.error(IabHelper.ERR_PURCHASE + "|The billing helper has been disposed");
             }
             
             if (result.isFailure()) {
@@ -347,7 +347,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
             }
             
             if (!verifyDeveloperPayload(purchase)) {
-            	callbackContext.error("Error purchasing. Authenticity verification failed.");
+            	callbackContext.error(IabHelper.ERR_PURCHASE + "|Error purchasing. Authenticity verification failed.");
                 return;
             }
 
@@ -363,7 +363,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
                 purchaseJsonObject.put("receipt", purchase.getOriginalJson().toString());
                 callbackContext.success(purchaseJsonObject);
             } catch (JSONException e) {
-                callbackContext.error("Could not create JSON object from purchase object");
+                callbackContext.error(IabHelper.ERR_PURCHASE + "|Could not create JSON object from purchase object");
             }
 
         }
@@ -389,7 +389,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
                 
             }
             else {
-                callbackContext.error("Error while consuming: " + result);
+                callbackContext.error(result.getResponse() + "|Error while consuming: " + result);
             }
             
         }

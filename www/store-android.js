@@ -20,6 +20,13 @@ store.verbosity = 0;
     store.ERR_UNKNOWN = ERROR_CODES_BASE + 10;
     store.ERR_REFRESH_RECEIPTS = ERROR_CODES_BASE + 11;
     store.ERR_INVALID_PRODUCT_ID = ERROR_CODES_BASE + 12;
+    store.ERR_FINISH = ERROR_CODES_BASE + 13;
+    store.ERR_COMMUNICATION = ERROR_CODES_BASE + 14;
+    store.ERR_SUBSCRIPTIONS_NOT_AVAILABLE = ERROR_CODES_BASE + 15;
+    store.ERR_MISSING_TOKEN = ERROR_CODES_BASE + 16;
+    store.ERR_VERIFICATION_FAILED = ERROR_CODES_BASE + 17;
+    store.ERR_BAD_RESPONSE = ERROR_CODES_BASE + 18;
+    store.ERR_REFRESH = ERROR_CODES_BASE + 19;
     store.REGISTERED = "registered";
     store.INVALID = "invalid";
     store.VALID = "valid";
@@ -794,14 +801,9 @@ store.restore = null;
                 if (code === store.ERR_PAYMENT_CANCELLED) {
                     product.transaction = null;
                     product.trigger("cancelled");
-                } else if (code) {
-                    store.error({
-                        code: code,
-                        message: "Purchase failed: " + err
-                    });
                 } else {
                     store.error({
-                        code: store.ERR_PURCHASE,
+                        code: code || store.ERR_PURCHASE,
                         message: "Purchase failed: " + err
                     });
                 }
@@ -816,7 +818,12 @@ store.restore = null;
             store.android.consumePurchase(function() {
                 store.log.debug("android -> consumable consumed");
                 product.set("state", store.VALID);
-            }, function(err) {}, product.id);
+            }, function(err, code) {
+                store.error({
+                    code: code || ERR_UNKNOWN,
+                    message: err
+                });
+            }, product.id);
         } else {
             product.set("state", store.OWNED);
         }
