@@ -167,16 +167,23 @@ store.verbosity = 0;
             store._queries.callbacks.add(query, action, callback);
         }
     };
+    store.when.unregister = function(cb) {
+        store._queries.callbacks.unregister(cb);
+    };
+}).call(this);
+
+(function() {
+    "use strict";
     store.once = function(query, action, callback) {
-        if (typeof action !== "string") {
+        if (typeof action === "function") {
+            return store.when(query, action, true);
+        } else if (typeof action === "undefined") {
             return store.when(query, true);
         } else {
             store._queries.callbacks.add(query, action, callback, true);
         }
     };
-    store.when.unregister = store.once.unregister = function(cb) {
-        store._queries.callbacks.unregister(cb);
-    };
+    store.once.unregister = store.when.unregister;
 }).call(this);
 
 (function() {
@@ -865,7 +872,7 @@ InAppPurchase.prototype.timer = null;
 
 window.storekit = new InAppPurchase();
 
-store.once("refreshed", function() {
+store.when("refreshed", function() {
     storekitInit();
 });
 

@@ -34,7 +34,7 @@
 //! #### initialize storekit
 //! At first refresh, initialize the storekit API. See [`storekitInit()`](#storekitInit) for details.
 //!
-store.once("refreshed", function() {
+store.when("refreshed", function() {
     storekitInit();
 });
 

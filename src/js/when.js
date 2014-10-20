@@ -78,27 +78,8 @@ store.when = function(query, once, callback) {
     }
 };
 
-/// ## <a name="once"></a>*store.once(query)*
-/// 
-/// Identical to [`store.when`](#when), but the callback will be called only once.
-/// After being called, the callback will be unregistered.
-store.once = function(query, action, callback) {
-    if (typeof action !== 'string') {
-        return store.when(query, true);
-    }
-    else {
-        ///
-        /// ### alternative usage
-        ///
-        ///  - `store.once(query, action, callback)`
-        ///    - Same remarks as `store.when(query, action, callback)`
-        ///
-        store._queries.callbacks.add(query, action, callback, true);
-    }
-};
-
 // Remove any callbacks registered with `ready`
-store.when.unregister = store.once.unregister = function(cb) {
+store.when.unregister = function(cb) {
     store._queries.callbacks.unregister(cb);
 };
 

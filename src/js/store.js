@@ -180,6 +180,7 @@ store.verbosity = 0;
 // #include "registerProducts.js"
 // #include "get.js"
 // #include "when.js"
+// #include "once.js"
 // #include "order.js"
 // #include "ask.js"
 // #include "ready.js"

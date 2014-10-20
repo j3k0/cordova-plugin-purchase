@@ -82,7 +82,7 @@ describe('When', function(){
     describe('#once()', function(){
 
         it('should be called once on id', function(){
-            assert.ok(store.when);
+            assert.ok(store.once, "store.once is defined");
 
             var loaded = false;
             store.once("p1").loaded(function(product) {
