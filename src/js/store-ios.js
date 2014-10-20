@@ -208,6 +208,7 @@ var storekitLoaded = function (validProducts, invalidProductIds) {
 };
 
 var storekitLoadFailed = function() {
+    store.log.warn("ios -> loading products failed");
     loading = false;
 };
 

@@ -744,6 +744,7 @@ InAppPurchase.prototype.load = function(productIds, success, error) {
             var msg = "invalid productIds given to store.load: " + JSON.stringify(productIds);
             log(msg);
             protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_LOAD, msg);
+            protectCall(error, "load.error", InAppPurchase.prototype.ERR_LOAD, msg);
             return;
         }
         log("load " + JSON.stringify(productIds));
@@ -754,10 +755,11 @@ InAppPurchase.prototype.load = function(productIds, success, error) {
             protectCall(success, "load.success", valid, invalid);
         };
         var loadFailed = function(errMessage) {
-            log("load failed: " + errMessage);
-            var message = "Failed to load product data: " + errMessage;
+            log("load failed");
+            log(errMessage);
+            var message = "Load failed: " + errMessage;
             protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_LOAD, message);
-            protectcall(error, "load.error", InAppPurchase.prototype.ERR_LOAD, message);
+            protectCall(error, "load.error", InAppPurchase.prototype.ERR_LOAD, message);
         };
         InAppPurchase._productIds = productIds;
         exec("load", [ productIds ], loadOk, loadFailed);
@@ -1008,6 +1010,7 @@ var storekitLoaded = function(validProducts, invalidProductIds) {
 };
 
 var storekitLoadFailed = function() {
+    store.log.warn("ios -> loading products failed");
     loading = false;
 };
 
