@@ -69,7 +69,7 @@ store.when("requested", function(product) {
 //!
 store.when("finished", function(product) {
     storekit.finish(product.transaction.id);
-    product.set("state", type === store.CONSUMABLE ? store.VALID : store.OWNED);
+    product.set("state", product.type === store.CONSUMABLE ? store.VALID : store.OWNED);
 });
 
 //! #### persist ownership
