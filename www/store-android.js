@@ -149,6 +149,10 @@ store.verbosity = 0;
                     store._queries.callbacks.add(query, "rejected", cb, once);
                     return this;
                 },
+                owned: function(cb) {
+                    store._queries.callbacks.add(query, "owned", cb, once);
+                    return this;
+                },
                 updated: function(cb) {
                     store._queries.callbacks.add(query, "updated", cb, once);
                     return this;
@@ -729,7 +733,7 @@ store.restore = null;
                 message: "Init failed - " + err
             });
         }, {
-            showLog: store.verbosity >= store.INFO ? true : false
+            showLog: store.verbosity >= store.DEBUG ? true : false
         }, skus);
     };
     function iabReady() {

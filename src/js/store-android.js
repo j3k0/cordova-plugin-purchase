@@ -27,7 +27,7 @@ var init = function () {
             });
         },
         {
-            showLog: store.verbosity >= store.INFO ? true : false
+            showLog: store.verbosity >= store.DEBUG ? true : false
         },
         skus);
 };

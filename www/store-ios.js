@@ -149,6 +149,10 @@ store.verbosity = 0;
                     store._queries.callbacks.add(query, "rejected", cb, once);
                     return this;
                 },
+                owned: function(cb) {
+                    store._queries.callbacks.add(query, "owned", cb, once);
+                    return this;
+                },
                 updated: function(cb) {
                     store._queries.callbacks.add(query, "updated", cb, once);
                     return this;
@@ -912,7 +916,7 @@ var storekitInit = function() {
     initialized = true;
     store.log.debug("ios -> initializing storekit");
     storekit.init({
-        debug: store.verbosity >= store.INFO ? true : false,
+        debug: store.verbosity >= store.DEBUG ? true : false,
         noAutoFinish: true,
         ready: storekitReady,
         error: storekitError,

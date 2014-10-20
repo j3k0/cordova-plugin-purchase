@@ -41,9 +41,15 @@ store.when = function(query, once, callback) {
                 return this;
             },
 
-            // Undocumented (NOT USED YET)
-            //  - `.updated(function (product) {})`
-            //    - Called when an [order](#order) is rejected.
+            ///  - `.owned(function (product) {})`
+            ///    - Called when a non-consumable product or subscription is owned.
+            owned: function(cb) {
+                store._queries.callbacks.add(query, "owned", cb, once);
+                return this;
+            },
+
+            ///  - `.updated(function (product) {})`
+            ///    - Called when any change occured to a product.
             updated: function(cb) {
                 store._queries.callbacks.add(query, "updated", cb, once);
                 return this;

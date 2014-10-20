@@ -110,7 +110,7 @@ var storekitInit = function () {
     initialized = true;
     store.log.debug("ios -> initializing storekit");
     storekit.init({
-        debug:    store.verbosity >= store.INFO ? true : false,
+        debug:    store.verbosity >= store.DEBUG ? true : false,
         noAutoFinish: true,
         ready:    storekitReady,
         error:    storekitError,

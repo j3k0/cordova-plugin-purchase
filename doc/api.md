@@ -342,6 +342,10 @@ Return promise with the following methods:
    - Called when an [order](#order) is approved.
  - `.rejected(function (order) {})`
    - Called when an [order](#order) is rejected.
+ - `.owned(function (product) {})`
+   - Called when a non-consumable product or subscription is owned.
+ - `.updated(function (product) {})`
+   - Called when any change occured to a product.
  - `.cancelled(function (product) {})`
    - Called when an [order](#order) is cancelled by the user.
  - `.error(function (err) {})`
