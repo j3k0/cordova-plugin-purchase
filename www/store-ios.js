@@ -525,7 +525,7 @@ store.restore = null;
                     store._queries.callbacks.byQuery[q] = cbs.filter(isNotOnce);
                 }
             }
-            if (action !== "updated") this.triggerWhenProduct(product, "updated", args);
+            if (action !== "updated" && action !== "error") this.triggerWhenProduct(product, "updated", product);
         }
     };
     function isNotOnce(cb) {

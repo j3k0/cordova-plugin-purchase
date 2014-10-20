@@ -172,8 +172,8 @@ store._queries = {
         
         ///
         /// **Note**: All events also trigger the `updated` event
-        if (action !== "updated")
-            this.triggerWhenProduct(product, "updated", args);
+        if (action !== "updated" && action !== 'error')
+            this.triggerWhenProduct(product, "updated", product);
     }
     ///
   
