@@ -903,6 +903,7 @@ var initialized = false;
 var storekitInit = function() {
     if (initialized) return;
     initialized = true;
+    store.log.debug("ios -> initializing storekit");
     storekit.init({
         debug: store.verbosity >= store.INFO ? true : false,
         noAutoFinish: true,
@@ -917,15 +918,19 @@ var storekitInit = function() {
 };
 
 var storekitReady = function() {
+    store.log.debug("ios -> storekit ready");
     var products = [];
     for (var i = 0; i < store.products.length; ++i) products.push(store.products[i].id);
+    store.log.debug("ios -> loading products");
     storekit.load(products, storekitLoaded);
 };
 
 var storekitLoaded = function(validProducts, invalidProductIds) {
+    store.log.debug("ios -> products loaded");
     var p;
     for (var i = 0; i < validProducts.length; ++i) {
         p = store.products.byId[validProducts[i].id];
+        store.log.debug("ios -> product " + p.id + " is valid (" + p.alias + ")");
         p.set({
             title: validProducts[i].title,
             price: validProducts[i].price,
@@ -938,6 +943,7 @@ var storekitLoaded = function(validProducts, invalidProductIds) {
     for (var j = 0; j < invalidProductIds.length; ++j) {
         p = store.products.byId[invalidProductIds[j]];
         p.set("state", store.INVALID);
+        store.log.warn("ios -> product " + p.id + " is NOT valid (" + p.alias + ")");
         p.trigger("loaded");
     }
     setTimeout(function() {
