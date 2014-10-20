@@ -439,7 +439,7 @@ store.restore = null;
     store.Product.prototype.stateChanged = function() {
         this.canPurchase = this.state === store.VALID;
         this.loaded = this.state && this.state !== store.REGISTERED;
-        this.owned = this.state === store.OWNED;
+        this.owned = this.owned || this.state === store.OWNED;
         this.valid = this.state !== store.INVALID;
         if (!this.state || this.state === store.REGISTERED) delete this.valid;
         if (this.state) this.trigger(this.state);
@@ -906,7 +906,12 @@ store.when("finished", function(product) {
 });
 
 store.when("owned", function(product) {
-    setOwned(product.id, true);
+    if (!isOwned(product.id)) setOwned(product.id, true);
+});
+
+store.when("registered", function(product) {
+    store.log.debug("product " + product.id + " got registered " + (isOwned(product.id) ? "and is owned" : "but isn't owned"));
+    if (isOwned(product.id)) product.owned = true;
 });
 
 var initialized = false;

@@ -439,7 +439,7 @@ store.restore = null;
     store.Product.prototype.stateChanged = function() {
         this.canPurchase = this.state === store.VALID;
         this.loaded = this.state && this.state !== store.REGISTERED;
-        this.owned = this.state === store.OWNED;
+        this.owned = this.owned || this.state === store.OWNED;
         this.valid = this.state !== store.INVALID;
         if (!this.state || this.state === store.REGISTERED) delete this.valid;
         if (this.state) this.trigger(this.state);

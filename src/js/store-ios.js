@@ -83,7 +83,14 @@ store.when("finished", function(product) {
 //! http://stackoverflow.com/questions/6429186/can-we-check-if-a-users-in-app-purchase-has-been-refunded-by-apple
 //!
 store.when("owned", function(product) {
-    setOwned(product.id, true);
+    if (!isOwned(product.id))
+        setOwned(product.id, true);
+});
+
+store.when("registered", function(product) {
+    store.log.debug("product " + product.id + " got registered " + (isOwned(product.id) ? "and is owned" : "but isn't owned"));
+    if (isOwned(product.id))
+        product.owned = true;
 });
 
 //!
