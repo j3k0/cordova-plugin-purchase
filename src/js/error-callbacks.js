@@ -18,6 +18,7 @@ store.error.callbacks.trigger = function(error) {
         }
         catch (err) {
             store.helpers.handleCallbackError("error", err);
+            deferThrow(err);
         }
     }
 };
@@ -41,5 +42,9 @@ store.error.callbacks.unregister = function(cb) {
             this.push(newArray[i]);
     }
 };
+
+function deferThrow(err) {
+    setTimeout(function() { throw err; }, 1);
+}
 
 }).call(this);

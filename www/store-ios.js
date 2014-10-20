@@ -520,16 +520,22 @@ store.restore = null;
                             cbs[j].cb.apply(store, args);
                         } catch (err) {
                             store.helpers.handleCallbackError(q, err);
+                            deferThrow(err);
                         }
                     }
                     store._queries.callbacks.byQuery[q] = cbs.filter(isNotOnce);
                 }
             }
-            if (action !== "updated" && action !== "error") this.triggerWhenProduct(product, "updated", product);
+            if (action !== "updated" && action !== "error") this.triggerWhenProduct(product, "updated", [ product ]);
         }
     };
     function isNotOnce(cb) {
         return !cb.once;
+    }
+    function deferThrow(err) {
+        setTimeout(function() {
+            throw err;
+        }, 1);
     }
 }).call(this);
 
@@ -564,6 +570,7 @@ store.restore = null;
                 this[i].call(store, error);
             } catch (err) {
                 store.helpers.handleCallbackError("error", err);
+                deferThrow(err);
             }
         }
     };
@@ -579,6 +586,11 @@ store.restore = null;
             for (var i = 0; i < newArray.length; ++i) this.push(newArray[i]);
         }
     };
+    function deferThrow(err) {
+        setTimeout(function() {
+            throw err;
+        }, 1);
+    }
 }).call(this);
 
 (function() {

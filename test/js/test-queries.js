@@ -28,6 +28,10 @@ describe('Queries', function(){
 
     describe('#triggerWhenProduct()', function(){
 
+        beforeEach(function() {
+            store._queries.callbacks.byQuery = {};
+        });
+
         it('should call callbacks', function(){
             assert.ok(store._queries.triggerWhenProduct);
             var callbacks = store._queries.callbacks;
@@ -95,6 +99,35 @@ describe('Queries', function(){
             assert.equal(false, f1_returned);
             assert.equal(true, f2_called);
             assert.equal(false, f2_returned);
+        });
+
+        it('should trigger an update for any event', function(done) {
+            store._queries.callbacks.add("product", "updated", function(product) {
+                assert.equal("test.updated1", product.id);
+                done();
+            });
+            store._queries.triggerWhenProduct({id:"test.updated1"}, "xyz");
+        });
+
+        it('should not trigger an update for error events', function(done) {
+            store._queries.callbacks.add("product", "updated", function(product) {
+                console.log("updated2");
+                assert(false, "updated shouldn't be called");
+            });
+            store._queries.triggerWhenProduct({id:"test.updated2"}, "error");
+            setTimeout(done, 6);
+        });
+
+        it('should not trigger "updated" events twice', function(done) {
+            var nCalls = 0;
+            store._queries.callbacks.add("product", "updated", function(product) {
+                nCalls++;
+            });
+            store._queries.triggerWhenProduct({id:"test.updated2"}, "udpated");
+            setTimeout(function() {
+                assert.equal(1, nCalls);
+                done();
+            }, 6);
         });
     });
 });

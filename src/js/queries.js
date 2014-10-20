@@ -162,7 +162,13 @@ store._queries = {
                         cbs[j].cb.apply(store, args);
                     }
                     catch (err) {
+
+                        // Generate a store error.
                         store.helpers.handleCallbackError(q, err);
+
+                        // We will throw the exception, but later,
+                        // first let all callbacks do their job.
+                        deferThrow(err);
                     }
                 }
                 ///  - Remove callbacks that needed to be called only once
@@ -173,7 +179,7 @@ store._queries = {
         ///
         /// **Note**: All events also trigger the `updated` event
         if (action !== "updated" && action !== 'error')
-            this.triggerWhenProduct(product, "updated", product);
+            this.triggerWhenProduct(product, "updated", [ product ]);
     }
     ///
   
@@ -182,6 +188,10 @@ store._queries = {
 // isNotOnce return true iff a callback should be called more than once.
 function isNotOnce(cb) {
     return !cb.once;
+}
+
+function deferThrow(err) {
+    setTimeout(function() { throw err; }, 1);
 }
 
 }).call(this);
