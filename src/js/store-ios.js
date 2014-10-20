@@ -247,6 +247,12 @@ var storekitError = function(errorCode, errorText, options) {
 
     store.log.error('ios -> ERROR ' + errorCode + ': ' + errorText + ' - ' + JSON.stringify(options));
 
+    // if setup failed, set initialized to false, so a subsequent call to
+    // refresh will retry.
+    if (errorCode === storekit.ERR_SETUP) {
+        initialized = false;
+    }
+
     // when loading failed, trigger "error" for each of
     // the registered products.
     if (errorCode === storekit.ERR_LOAD) {

@@ -1014,6 +1014,9 @@ var storekitError = function(errorCode, errorText, options) {
     var i, p;
     if (!options) options = {};
     store.log.error("ios -> ERROR " + errorCode + ": " + errorText + " - " + JSON.stringify(options));
+    if (errorCode === storekit.ERR_SETUP) {
+        initialized = false;
+    }
     if (errorCode === storekit.ERR_LOAD) {
         for (i = 0; i < store.products.length; ++i) {
             p = store.products[i];
