@@ -23,28 +23,59 @@ store.Error = function(options) {
     ///
 };
 
-/// ### <a name="error"></a>*store.error(callback)*
+/// ## <a name="error"></a>*store.error(callback)*
 ///
 /// Register an error handler.
 ///
 /// `callback` is a function taking an [error](#errors) as argument.
 ///
-/// example use:
+/// ### example use:
 ///
 ///     store.error(function(e){
 ///         console.log("ERROR " + e.code + ": " + e.message);
 ///     });
 ///
-store.error = function(cb) {
+store.error = function(cb, altCb) {
+
+    var ret = cb;
+
     if (cb instanceof store.Error)
         store.error.callbacks.trigger(cb);
+
     else if (cb.code && cb.message)
         store.error.callbacks.trigger(new store.Error(cb));
-    else
+
+    else if (typeof cb === "function")
         store.error.callbacks.push(cb);
+
+    /// ### alternative usage
+    ///
+    ///  - `store.error(code, callback)`
+    ///    - only call the callback for errors with the given error code.
+    ///    - **example**: `store.error(store.ERR_SETUP, function() { ... });`
+    else if (typeof altCb === "function") {
+        ret = function(err) {
+            if (err.code === cb)
+                altCb();
+        };
+        store.error(ret);
+    }
+    ///
+
+   return ret;
 };
 
+/// ### unregister the error callback
+/// To unregister the callback, you will use [`store.off()`](#off):
+/// ```js
+/// var handler = store.error(function() { ... } );
+/// ...
+/// store.off(handler);
+/// ```
+///
+
 // Unregister a callback registered with `store.error`
+// this method is called by `store.off`.
 store.error.unregister = function(cb) {
     store.error.callbacks.unregister(cb);
 };

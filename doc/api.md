@@ -283,17 +283,31 @@ Errors have the following fields:
  - `error.code` - An integer [error code](#error-codes). See the [error codes](#error-codes) section for more details.
  - `error.message` - Human readable message string, useful for debugging.
 
-### <a name="error"></a>*store.error(callback)*
+## <a name="error"></a>*store.error(callback)*
 
 Register an error handler.
 
 `callback` is a function taking an [error](#errors) as argument.
 
-example use:
+### example use:
 
     store.error(function(e){
         console.log("ERROR " + e.code + ": " + e.message);
     });
+
+### alternative usage
+
+ - `store.error(code, callback)`
+   - only call the callback for errors with the given error code.
+   - **example**: `store.error(store.ERR_SETUP, function() { ... });`
+
+### unregister the error callback
+To unregister the callback, you will use [`store.off()`](#off):
+```js
+var handler = store.error(function() { ... } );
+...
+store.off(handler);
+```
 
 ## <a name="registerProducts"></a>*store.registerProducts(products)*
 Adds (or register) products into the store. Products can't be used

@@ -86,8 +86,15 @@ store.verbosity = 0;
         this.code = options.code || store.ERR_UNKNOWN;
         this.message = options.message || "unknown error";
     };
-    store.error = function(cb) {
-        if (cb instanceof store.Error) store.error.callbacks.trigger(cb); else if (cb.code && cb.message) store.error.callbacks.trigger(new store.Error(cb)); else store.error.callbacks.push(cb);
+    store.error = function(cb, altCb) {
+        var ret = cb;
+        if (cb instanceof store.Error) store.error.callbacks.trigger(cb); else if (cb.code && cb.message) store.error.callbacks.trigger(new store.Error(cb)); else if (typeof cb === "function") store.error.callbacks.push(cb); else if (typeof altCb === "function") {
+            ret = function(err) {
+                if (err.code === cb) altCb();
+            };
+            store.error(ret);
+        }
+        return ret;
     };
     store.error.unregister = function(cb) {
         store.error.callbacks.unregister(cb);
