@@ -11,6 +11,7 @@ var exec = function (methodName, options, success, error) {
 };
 
 var protectCall = function (callback, context) {
+    if (!callback) return;
     try {
         var args = Array.prototype.slice.call(arguments, 2); 
         callback.apply(this, args);
@@ -42,7 +43,7 @@ InAppPurchase.prototype.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
 InAppPurchase.prototype.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
 InAppPurchase.prototype.ERR_REFRESH_RECEIPTS    = ERROR_CODES_BASE + 11;
 
-InAppPurchase.prototype.init = function (options) {
+InAppPurchase.prototype.init = function (options, success, error) {
     this.options = {
         error:    options.error    || noop,
         ready:    options.ready    || noop,
@@ -78,6 +79,7 @@ InAppPurchase.prototype.init = function (options) {
     var setupOk = function () {
         log('setup ok');
         protectCall(that.options.ready, 'options.ready');
+        protectCall(success, 'init.success');
 
         // Is there a reason why we wouldn't like to do this automatically?
         // YES! it does ask the user for his password.
@@ -86,6 +88,7 @@ InAppPurchase.prototype.init = function (options) {
     var setupFailed = function () {
         log('setup failed');
         protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_SETUP, 'Setup failed');
+        protectCall(error, 'init.error');
     };
 
     exec('setup', [], setupOk, setupFailed);
@@ -163,18 +166,18 @@ InAppPurchase.prototype.restore = function() {
  *  and invalidProductIds receives an array of product identifier
  *  strings which were rejected by the app store.
  */
-InAppPurchase.prototype.load = function (productIds, callback) {
+InAppPurchase.prototype.load = function (productIds, success, error) {
     var options = this.options;
     if (typeof productIds === "string") {
         productIds = [productIds];
     }
     if (!productIds) {
         // Empty array, nothing to do.
-        protectCall(callback, 'load.callback', [], []);
+        protectCall(success, 'load.success', [], []);
     }
     else if (!productIds.length) {
         // Empty array, nothing to do.
-        protectCall(callback, 'load.callback', [], []);
+        protectCall(success, 'load.success', [], []);
     }
     else {
         if (typeof productIds[0] !== 'string') {
@@ -189,11 +192,13 @@ InAppPurchase.prototype.load = function (productIds, callback) {
             var valid = array[0];
             var invalid = array[1];
             log('load ok: { valid:' + JSON.stringify(valid) + ' invalid:' + JSON.stringify(invalid) + ' }');
-            protectCall(callback, 'load.callback', valid, invalid);
+            protectCall(success, 'load.success', valid, invalid);
         };
         var loadFailed = function (errMessage) {
             log('load failed: ' + errMessage);
-            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_LOAD, 'Failed to load product data: ' + errMessage);
+            var message = 'Failed to load product data: ' + errMessage;
+            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_LOAD, message);
+            protectcall(error, 'load.error', InAppPurchase.prototype.ERR_LOAD, message);
         };
 
         InAppPurchase._productIds = productIds;

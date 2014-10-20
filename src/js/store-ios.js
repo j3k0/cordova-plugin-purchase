@@ -35,7 +35,8 @@
 //! At first refresh, initialize the storekit API. See [`storekitInit()`](#storekitInit) for details.
 //!
 store.when("refreshed", function() {
-    storekitInit();
+    storekitInit(); // try to init if needed
+    storekitLoad(); // try to load if needed
 });
 
 
@@ -112,21 +113,21 @@ store.when("registered", function(product) {
 //!  - [`storekitError()`](#storekitError)
 //!
 var initialized = false;
+var initializing = false;
 var storekitInit = function () {
-    if (initialized) return;
-    initialized = true;
+    if (initialized || initializing) return;
+    initializing = true;
     store.log.debug("ios -> initializing storekit");
     storekit.init({
         debug:    store.verbosity >= store.DEBUG ? true : false,
         noAutoFinish: true,
-        ready:    storekitReady,
         error:    storekitError,
         purchase: storekitPurchased,
         purchasing: storekitPurchasing,
         restore:  function (originalTransactionId, productId) {},
         restoreCompleted: function () {},
         restoreFailed:    function (errorCode) {}
-    });
+    }, storekitReady, storekitInitFailed);
 };
 
 //!
@@ -140,12 +141,28 @@ var storekitInit = function () {
 //! Loads all registered products, triggers `storekitLoaded()` when done.
 //!
 var storekitReady = function () {
-    store.log.debug("ios -> storekit ready");
+    store.log.info("ios -> storekit ready");
+    initializing = false;
+    initialized = true;
+    storekitLoad();
+};
+
+var storekitInitFailed = function() {
+    store.log.warn("ios -> storekit init failed");
+    initializing = false;
+};
+
+var loaded = false;
+var loading = false;
+var storekitLoad = function() {
+    if (!initialized) return;
+    if (loaded || loading) return;
+    loading = true;
     var products = [];
     for (var i = 0; i < store.products.length; ++i)
         products.push(store.products[i].id);
     store.log.debug("ios -> loading products");
-    storekit.load(products, storekitLoaded);
+    storekit.load(products, storekitLoaded, storekitLoadFailed);
 };
 
 //! ### <a name="storekitLoaded"></a> *storekitLoaded()*
@@ -184,8 +201,14 @@ var storekitLoaded = function (validProducts, invalidProductIds) {
     //! Note: the execution of "ready" is deferred to make sure state
     //! changes have been processed.
     setTimeout(function() {
+        storekit.loading = false;
+        storekit.loaded = true;
         store.ready(true);
     }, 1);
+};
+
+var storekitLoadFailed = function() {
+    loading = false;
 };
 
 //! ### <a name="storekitPurchasing"></a> *storekitPurchasing()*
@@ -246,12 +269,6 @@ var storekitError = function(errorCode, errorText, options) {
         options = {};
 
     store.log.error('ios -> ERROR ' + errorCode + ': ' + errorText + ' - ' + JSON.stringify(options));
-
-    // if setup failed, set initialized to false, so a subsequent call to
-    // refresh will retry.
-    if (errorCode === storekit.ERR_SETUP) {
-        initialized = false;
-    }
 
     // when loading failed, trigger "error" for each of
     // the registered products.

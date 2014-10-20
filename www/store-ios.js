@@ -619,6 +619,7 @@ var exec = function(methodName, options, success, error) {
 };
 
 var protectCall = function(callback, context) {
+    if (!callback) return;
     try {
         var args = Array.prototype.slice.call(arguments, 2);
         callback.apply(this, args);
@@ -657,7 +658,7 @@ InAppPurchase.prototype.ERR_UNKNOWN = ERROR_CODES_BASE + 10;
 
 InAppPurchase.prototype.ERR_REFRESH_RECEIPTS = ERROR_CODES_BASE + 11;
 
-InAppPurchase.prototype.init = function(options) {
+InAppPurchase.prototype.init = function(options, success, error) {
     this.options = {
         error: options.error || noop,
         ready: options.ready || noop,
@@ -687,10 +688,12 @@ InAppPurchase.prototype.init = function(options) {
     var setupOk = function() {
         log("setup ok");
         protectCall(that.options.ready, "options.ready");
+        protectCall(success, "init.success");
     };
     var setupFailed = function() {
         log("setup failed");
         protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_SETUP, "Setup failed");
+        protectCall(error, "init.error");
     };
     exec("setup", [], setupOk, setupFailed);
 };
@@ -727,15 +730,15 @@ InAppPurchase.prototype.restore = function() {
     return exec("restoreCompletedTransactions", []);
 };
 
-InAppPurchase.prototype.load = function(productIds, callback) {
+InAppPurchase.prototype.load = function(productIds, success, error) {
     var options = this.options;
     if (typeof productIds === "string") {
         productIds = [ productIds ];
     }
     if (!productIds) {
-        protectCall(callback, "load.callback", [], []);
+        protectCall(success, "load.success", [], []);
     } else if (!productIds.length) {
-        protectCall(callback, "load.callback", [], []);
+        protectCall(success, "load.success", [], []);
     } else {
         if (typeof productIds[0] !== "string") {
             var msg = "invalid productIds given to store.load: " + JSON.stringify(productIds);
@@ -748,11 +751,13 @@ InAppPurchase.prototype.load = function(productIds, callback) {
             var valid = array[0];
             var invalid = array[1];
             log("load ok: { valid:" + JSON.stringify(valid) + " invalid:" + JSON.stringify(invalid) + " }");
-            protectCall(callback, "load.callback", valid, invalid);
+            protectCall(success, "load.success", valid, invalid);
         };
         var loadFailed = function(errMessage) {
             log("load failed: " + errMessage);
-            protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_LOAD, "Failed to load product data: " + errMessage);
+            var message = "Failed to load product data: " + errMessage;
+            protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_LOAD, message);
+            protectcall(error, "load.error", InAppPurchase.prototype.ERR_LOAD, message);
         };
         InAppPurchase._productIds = productIds;
         exec("load", [ productIds ], loadOk, loadFailed);
@@ -889,6 +894,7 @@ window.storekit = new InAppPurchase();
 
 store.when("refreshed", function() {
     storekitInit();
+    storekitLoad();
 });
 
 store.when("requested", function(product) {
@@ -928,29 +934,48 @@ store.when("registered", function(product) {
 
 var initialized = false;
 
+var initializing = false;
+
 var storekitInit = function() {
-    if (initialized) return;
-    initialized = true;
+    if (initialized || initializing) return;
+    initializing = true;
     store.log.debug("ios -> initializing storekit");
     storekit.init({
         debug: store.verbosity >= store.DEBUG ? true : false,
         noAutoFinish: true,
-        ready: storekitReady,
         error: storekitError,
         purchase: storekitPurchased,
         purchasing: storekitPurchasing,
         restore: function(originalTransactionId, productId) {},
         restoreCompleted: function() {},
         restoreFailed: function(errorCode) {}
-    });
+    }, storekitReady, storekitInitFailed);
 };
 
 var storekitReady = function() {
-    store.log.debug("ios -> storekit ready");
+    store.log.info("ios -> storekit ready");
+    initializing = false;
+    initialized = true;
+    storekitLoad();
+};
+
+var storekitInitFailed = function() {
+    store.log.warn("ios -> storekit init failed");
+    initializing = false;
+};
+
+var loaded = false;
+
+var loading = false;
+
+var storekitLoad = function() {
+    if (!initialized) return;
+    if (loaded || loading) return;
+    loading = true;
     var products = [];
     for (var i = 0; i < store.products.length; ++i) products.push(store.products[i].id);
     store.log.debug("ios -> loading products");
-    storekit.load(products, storekitLoaded);
+    storekit.load(products, storekitLoaded, storekitLoadFailed);
 };
 
 var storekitLoaded = function(validProducts, invalidProductIds) {
@@ -976,8 +1001,14 @@ var storekitLoaded = function(validProducts, invalidProductIds) {
         p.trigger("loaded");
     }
     setTimeout(function() {
+        storekit.loading = false;
+        storekit.loaded = true;
         store.ready(true);
     }, 1);
+};
+
+var storekitLoadFailed = function() {
+    loading = false;
 };
 
 var storekitPurchasing = function(productId) {
@@ -1014,9 +1045,6 @@ var storekitError = function(errorCode, errorText, options) {
     var i, p;
     if (!options) options = {};
     store.log.error("ios -> ERROR " + errorCode + ": " + errorText + " - " + JSON.stringify(options));
-    if (errorCode === storekit.ERR_SETUP) {
-        initialized = false;
-    }
     if (errorCode === storekit.ERR_LOAD) {
         for (i = 0; i < store.products.length; ++i) {
             p = store.products[i];
