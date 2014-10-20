@@ -964,6 +964,7 @@ var storekitReady = function() {
 var storekitInitFailed = function() {
     store.log.warn("ios -> storekit init failed");
     initializing = false;
+    retry(storekitInit);
 };
 
 var loaded = false;
@@ -1012,6 +1013,7 @@ var storekitLoaded = function(validProducts, invalidProductIds) {
 var storekitLoadFailed = function() {
     store.log.warn("ios -> loading products failed");
     loading = false;
+    retry(storekitLoad);
 };
 
 var storekitPurchasing = function(productId) {
@@ -1083,5 +1085,34 @@ function isOwned(productId) {
 function setOwned(productId, value) {
     localStorage["__cc_fovea_store_ios_owned_ " + productId] = value ? "1" : "0";
 }
+
+var retryTimeout = 5e3;
+
+var retries = [];
+
+function retry(fn) {
+    var tid = setTimeout(function() {
+        retries = retries.filter(function(o) {
+            return tid !== o.tid;
+        });
+        fn();
+    }, retryTimeout);
+    retries.push({
+        tid: tid,
+        fn: fn
+    });
+    retryTimeout *= 2;
+    if (retryTimeout > 12e4) retryTimeout = 12e4;
+}
+
+document.addEventListener("online", function() {
+    var a = retries;
+    retries = [];
+    retryTimeout = 5e3;
+    for (var i = 0; i < a.length; ++i) {
+        clearTimeout(a[i].tid);
+        a[i].fn.call(this);
+    }
+}, false);
 
 module.exports = store;

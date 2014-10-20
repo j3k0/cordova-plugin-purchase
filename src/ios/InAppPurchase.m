@@ -652,14 +652,13 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error
 {
     DLog(@"AppStore unavailable (ERROR %li)", (unsigned long)error.code);
-    DLog(@"%@", [error localizedDescription]);
     NSString *localizedDescription = [error localizedDescription];
     if (!localizedDescription)
         localizedDescription = @"AppStore unavailable";
+    else
+        DLog(@"%@", localizedDescription);
     CDVPluginResult* pluginResult =
       [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:localizedDescription];
-    DLog(@"Callback ID: %@", self.command.callbackId);
-    DLog(@"commandDelegate %@", self.plugin.commandDelegate);
     [self.plugin.commandDelegate sendPluginResult:pluginResult callbackId:self.command.callbackId];
 }
 

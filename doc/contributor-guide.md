@@ -113,3 +113,11 @@ return true iff the product with given ID has been purchased and finished
 during this or a previous execution of the application.
 #### *setOwned(productId, value)*
 store the boolean OWNED status of a given product.
+
+## Retry failed requests
+When setup and/or load failed, the plugin will retry over and over till it can connect
+to the store.
+
+However, to be nice with the battery, it'll double the retry timeout each time.
+
+Special case, when the device goes online, it'll trigger all retry callback in the queue.
