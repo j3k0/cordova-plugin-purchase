@@ -4,6 +4,10 @@
 /// ## <a name="when"></a>*store.when(query)*
 /// 
 store.when = function(query, once, callback) {
+    
+    // No arguments, will match all products.
+    if (typeof query === 'undefined')
+        query = '';
 
     // In case the first arguemnt is a product, convert to its id
     if (typeof query === 'object' && query instanceof store.Product)
@@ -14,62 +18,60 @@ store.when = function(query, once, callback) {
     }
     else if (typeof once !== 'string') {
 
+        var ret = {};
+        var addPromise = function(name) {
+            ret[name] = function(cb) {
+                store._queries.callbacks.add(query, name, cb, once);
+                return this;
+            };
+        };
+
         /// 
         /// ### return value
         /// 
         /// Return promise with the following methods:
         ///
-        return {
-            ///  - `.loaded(function (product) {})`
-            ///    - Called when [product](#product) data is loaded from the store.
-            loaded: function(cb) {
-                store._queries.callbacks.add(query, "loaded", cb, once);
-                return this;
-            },
 
-            ///  - `.approved(function (order) {})`
-            ///    - Called when an [order](#order) is approved.
-            approved: function(cb) {
-                store._queries.callbacks.add(query, "approved", cb, once);
-                return this;
-            },
+        ///  - `.loaded(function (product) {})`
+        ///    - Called when [product](#product) data is loaded from the store.
+        addPromise('loaded');
 
-            ///  - `.rejected(function (order) {})`
-            ///    - Called when an [order](#order) is rejected.
-            rejected: function(cb) {
-                store._queries.callbacks.add(query, "rejected", cb, once);
-                return this;
-            },
+        ///  - `.approved(function (order) {})`
+        ///    - Called when an [order](#order) is approved.
+        addPromise('approved');
 
-            ///  - `.owned(function (product) {})`
-            ///    - Called when a non-consumable product or subscription is owned.
-            owned: function(cb) {
-                store._queries.callbacks.add(query, "owned", cb, once);
-                return this;
-            },
+        ///  - `.rejected(function (order) {})`
+        ///    - Called when an [order](#order) is rejected.
+        addPromise('rejected');
 
-            ///  - `.updated(function (product) {})`
-            ///    - Called when any change occured to a product.
-            updated: function(cb) {
-                store._queries.callbacks.add(query, "updated", cb, once);
-                return this;
-            },
+        ///  - `.owned(function (product) {})`
+        ///    - Called when a non-consumable product or subscription is owned.
+        addPromise('owned');
 
-            ///  - `.cancelled(function (product) {})`
-            ///    - Called when an [order](#order) is cancelled by the user.
-            cancelled: function(cb) {
-                store._queries.callbacks.add(query, "cancelled", cb, once);
-                return this;
-            },
+        ///  - `.updated(function (product) {})`
+        ///    - Called when any change occured to a product.
+        addPromise('updated');
 
-            ///  - `.error(function (err) {})`
-            ///    - Called when an [order](#order) failed.
-            ///    - The `err` parameter is an [error object](#errors)
-            error: function(cb) {
-                store._queries.callbacks.add(query, "error", cb, once);
-                return this;
-            }
-        };
+        ///  - `.cancelled(function (product) {})`
+        ///    - Called when an [order](#order) is cancelled by the user.
+        addPromise('cancelled');
+
+        ///  - `.error(function (err) {})`
+        ///    - Called when an [order](#order) failed.
+        ///    - The `err` parameter is an [error object](#errors)
+        addPromise('error');
+
+        ///  - Actually, all other product states have their promise
+        ///    - `registered`, `valid`, `invalid`, `requested`,
+        ///      `initiated` and `finished`
+        addPromise('registered');
+        addPromise('valid');
+        addPromise('invalid');
+        addPromise('requested');
+        addPromise('initiated');
+        addPromise('finished');
+
+        return ret;
     }
     else {
         ///

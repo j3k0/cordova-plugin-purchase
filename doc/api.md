@@ -351,6 +351,9 @@ Return promise with the following methods:
  - `.error(function (err) {})`
    - Called when an [order](#order) failed.
    - The `err` parameter is an [error object](#errors)
+ - Actually, all other product states have their promise
+   - `registered`, `valid`, `invalid`, `requested`,
+     `initiated` and `finished`
 
 ### alternative usage
 

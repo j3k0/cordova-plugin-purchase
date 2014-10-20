@@ -132,40 +132,32 @@ store.verbosity = 0;
 (function() {
     "use strict";
     store.when = function(query, once, callback) {
+        if (typeof query === "undefined") query = "";
         if (typeof query === "object" && query instanceof store.Product) query = query.id;
         if (typeof once === "function") {
             return store.when("", query, once);
         } else if (typeof once !== "string") {
-            return {
-                loaded: function(cb) {
-                    store._queries.callbacks.add(query, "loaded", cb, once);
+            var ret = {};
+            var addPromise = function(name) {
+                ret[name] = function(cb) {
+                    store._queries.callbacks.add(query, name, cb, once);
                     return this;
-                },
-                approved: function(cb) {
-                    store._queries.callbacks.add(query, "approved", cb, once);
-                    return this;
-                },
-                rejected: function(cb) {
-                    store._queries.callbacks.add(query, "rejected", cb, once);
-                    return this;
-                },
-                owned: function(cb) {
-                    store._queries.callbacks.add(query, "owned", cb, once);
-                    return this;
-                },
-                updated: function(cb) {
-                    store._queries.callbacks.add(query, "updated", cb, once);
-                    return this;
-                },
-                cancelled: function(cb) {
-                    store._queries.callbacks.add(query, "cancelled", cb, once);
-                    return this;
-                },
-                error: function(cb) {
-                    store._queries.callbacks.add(query, "error", cb, once);
-                    return this;
-                }
+                };
             };
+            addPromise("loaded");
+            addPromise("approved");
+            addPromise("rejected");
+            addPromise("owned");
+            addPromise("updated");
+            addPromise("cancelled");
+            addPromise("error");
+            addPromise("registered");
+            addPromise("valid");
+            addPromise("invalid");
+            addPromise("requested");
+            addPromise("initiated");
+            addPromise("finished");
+            return ret;
         } else {
             var action = once;
             store._queries.callbacks.add(query, action, callback);

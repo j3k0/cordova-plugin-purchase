@@ -88,9 +88,9 @@ store.when("owned", function(product) {
 });
 
 store.when("registered", function(product) {
-    store.log.debug("product " + product.id + " got registered " + (isOwned(product.id) ? "and is owned" : "but isn't owned"));
-    if (isOwned(product.id))
-        product.owned = true;
+    var owned = isOwned(product.id);
+    product.owned = product.owned || owned;
+    store.log.debug("ios -> product " + product.id + " registered" + (owned ? " and owned" : ""));
 });
 
 //!
@@ -163,6 +163,7 @@ var storekitLoaded = function (validProducts, invalidProductIds) {
     for (var i = 0; i < validProducts.length; ++i) {
         p = store.products.byId[validProducts[i].id];
         store.log.debug("ios -> product " + p.id + " is valid (" + p.alias + ")");
+        store.log.debug("ios -> owned? " + p.owned);
         p.set({
             title: validProducts[i].title,
             price: validProducts[i].price,
