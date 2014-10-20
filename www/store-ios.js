@@ -635,7 +635,7 @@ var noop = function() {};
 
 var log = noop;
 
-var ERROR_CODES_BASE = 4983497;
+var ERROR_CODES_BASE = 6777e3;
 
 InAppPurchase.prototype.ERR_SETUP = ERROR_CODES_BASE + 1;
 

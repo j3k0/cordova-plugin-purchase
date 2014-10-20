@@ -30,7 +30,7 @@ var log = noop;
 
 // Error codes
 // (keep synchronized with InAppPurchase.m)
-var ERROR_CODES_BASE = 4983497;
+var ERROR_CODES_BASE = 6777000;
 InAppPurchase.prototype.ERR_SETUP               = ERROR_CODES_BASE + 1;
 InAppPurchase.prototype.ERR_LOAD                = ERROR_CODES_BASE + 2;
 InAppPurchase.prototype.ERR_PURCHASE            = ERROR_CODES_BASE + 3;
