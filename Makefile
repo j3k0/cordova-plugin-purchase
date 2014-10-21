@@ -26,14 +26,22 @@ build: sync-android test-js
 	@echo "- DONE"
 	@echo ""
 
-test-js: check-jshint
+prepare-test-js:
+	@node_modules/.bin/preprocess src/js/store-test.js src/js > test/store-test-src.js
+	@cp test/store-test-src.js test/store-test.js
+
+jshint: check-jshint
 	@echo "- JSHint"
 	@node_modules/.bin/jshint src/js/*.js test/js/*.js
+
+test-js: jshint prepare-test-js
 	@echo "- Mocha"
-	@node_modules/.bin/preprocess src/js/store-test.js src/js > test/store-test.js
-	@echo
-	@#for i in test/js/test-*.js; do printf $$i; node_modules/.bin/mocha -b -R list $$i || exit 1; done
 	@node test/js/run.js
+
+test-js-coverage: jshint prepare-test-js
+	@echo "- Mocha / Instanbul"
+	@node_modules/.bin/istanbul instrument --output test/store-test.js test/store-test-src.js
+	@node_modules/.bin/istanbul cover --root test/ test/js/run.js
 
 test-install: build
 	@./test/run.sh cc.fovea.babygoo babygooinapp1
