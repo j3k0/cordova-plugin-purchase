@@ -16,6 +16,9 @@
     "play",
     "appstore"
   ],
+  "scripts": {
+    "test": "make test-js"
+  },
   "author": "Jean-Christophe Hoelt <hoelt@fovea.cc>",
   "license": "MIT",
   "bugs": {

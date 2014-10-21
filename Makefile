@@ -3,13 +3,14 @@ help:
 	@echo "Usage: make <target>"
 	@echo ""
 	@echo "available targets:"
-	@echo "    build .......... Generate javascript files for iOS and Android."
-	@echo "    tests .......... Run all tests."
-	@echo "    test-js ........ Test javascript files for errors."
-	@echo "    test-install ... Test plugin installation on iOS and Android."
-	@echo "    doc-api ........ Generate API documentation into doc/api.md"
-	@echo "    doc-contrib .... Generate Contributor Guide into doc/contributor-guide.md"
-	@echo "    clean .......... Cleanup the project (temporary and generated files)."
+	@echo "    build ............. Generate javascript files for iOS and Android."
+	@echo "    tests ............. Run all tests."
+	@echo "    test-js ........... Test javascript files for errors."
+	@echo "    test-js-coverage .. Test javascript with coverage information."
+	@echo "    test-install ...... Test plugin installation on iOS and Android."
+	@echo "    doc-api ........... Generate API documentation into doc/api.md"
+	@echo "    doc-contrib ....... Generate Contributor Guide into doc/contributor-guide.md"
+	@echo "    clean ............. Cleanup the project (temporary and generated files)."
 	@echo ""
 	@echo "extra targets"
 	@echo "    all ............ Generate javascript files and documentation"
@@ -28,7 +29,7 @@ build: sync-android test-js
 
 prepare-test-js:
 	@node_modules/.bin/preprocess src/js/store-test.js src/js > test/store-test-src.js
-	@cp test/store-test-src.js test/store-test.js
+	@node_modules/.bin/istanbul instrument --output test/store-test.js test/store-test-src.js
 
 jshint: check-jshint
 	@echo "- JSHint"
@@ -36,11 +37,10 @@ jshint: check-jshint
 
 test-js: jshint prepare-test-js
 	@echo "- Mocha"
-	@node test/js/run.js
+	@node_modules/.bin/istanbul test --root test/ test/js/run.js
 
 test-js-coverage: jshint prepare-test-js
 	@echo "- Mocha / Instanbul"
-	@node_modules/.bin/istanbul instrument --output test/store-test.js test/store-test-src.js
 	@node_modules/.bin/istanbul cover --root test/ test/js/run.js
 
 test-install: build
