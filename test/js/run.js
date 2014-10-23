@@ -7,7 +7,6 @@ var mocha = new Mocha({
 mocha.reporter('list');
 
 mocha.addFile('test/js/test-ready.js');
-mocha.addFile('test/js/test-ask.js');
 mocha.addFile('test/js/test-error.js');
 mocha.addFile('test/js/test-off.js');
 mocha.addFile('test/js/test-order.js');

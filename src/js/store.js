@@ -98,56 +98,25 @@
 /// happens to the product. When the view is hidden, we stop listening to changes
 /// (`store.off(render)`).
 ///
-// #### *ask* the store for information
+
+
+// ### Security
+// 
+// You will initiate a purchase with `store.order("product.id")`.
+// 
+// 99% of the times, the purchase will be approved immediately by billing system.
 //
-//     function show() {
-//         // Fill in some HTML
-//         $el.html("<div class=\"loading\" />");
-//         // Update the view with loaded information.
-//         store.ask("cc.fovea.test1")
-//             .then(render)
-//             .error(render);
-//     }
-//     
-//     function render(product) {
-//         $el.html(
-//             "<div class=\"title\">" + product.title + "</div>"
-//             + "<div class=\"description\">" + product.description + "</div>"
-//             + "<div class=\"price\">" + product.price + "</div>"
-//         );
-//         if (product.owned)
-//             $el.addClass("owned");
-//     }
-//     
-//     function hide() {
-//         // unregister the callback in case it didn't fire before the view is closed
-//         store.off(render);
-//     }
+// However, connection can be lost between you sending a purchase request
+// and the server answering to you. In that case, the purchase shouldn't
+// be lost (because the user paid for it), that's why the store will notify
+// you of an approved purchase during the next application startup.
+// 
+// The same can also happen if the user bought a product from another device, using his
+// same account.
+// 
+// For that reason, you should register all your features-unlocking listeners at 
+// startup, before the first call to `store.refresh()`
 //
-// `show` is called to add a purchase button on screen.
-// It'll show a loading indicator till more information is available,
-// then replace the loading indicator with the loaded data.
-//
-// `hide` does the cleanup.
-//
-//
-/// ### Security
-/// 
-/// You will initiate a purchase with `store.order("product.id")`.
-/// 
-/// 99% of the times, the purchase will be approved immediately by billing system.
-///
-/// However, connection can be lost between you sending a purchase request
-/// and the server answering to you. In that case, the purchase shouldn't
-/// be lost (because the user paid for it), that's why the store will notify
-/// you of an approved purchase during the next application startup.
-/// 
-/// The same can also happen if the user bought a product from another device, using his
-/// same account.
-/// 
-/// For that reason, you should register all your features-unlocking listeners at 
-/// startup, before the first call to `store.refresh()`
-///
 
 /// 
 /// # <a name="store"></a>*store* object ##
@@ -182,7 +151,6 @@ store.verbosity = 0;
 // #include "when.js"
 // #include "once.js"
 // #include "order.js"
-// #include "ask.js"
 // #include "ready.js"
 // #include "off.js"
 

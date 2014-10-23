@@ -50,31 +50,6 @@ describe('Off', function(){
             assert.equal(0, called);
         });
 
-        it('should allow to remove functions registered with ask', function() {
-
-            var called = 0;
-            var f = function() {
-                ++called;
-            };
-
-            store.ask("p1").then(f);
-
-            var product = store.get("p1");
-            product.set("state", store.VALID);
-            assert.equal(1, called, "ask should have been called once, not " + called + " times");
-
-            store.ask("p1").then(f);
-            assert.equal(2, called);
-
-            product.loaded = false;
-            store.ask("p1").then(f);
-            assert.equal(2, called);
-
-            store.off(f);
-            store.trigger("p1", "loaded", product);
-            assert.equal(2, called);
-        });
-
         it('should allow to remove functions registered with error', function() {
             var called = 0;
             var f = function() {

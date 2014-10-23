@@ -3,8 +3,7 @@
 
 /// ## <a name="product"></a>*store.Product* object ##
 /// 
-/// Some methods, like the [`ask` method](#ask), give you access to a `product`
-/// object.
+/// Most events methods give you access to a `product` object.
 
 store.Product = function(options) {
 

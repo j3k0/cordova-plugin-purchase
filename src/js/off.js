@@ -2,7 +2,7 @@
 "use strict";
 
 /// ## <a name="off"></a>*store.off(callback)*
-/// Unregister a callback. Works for callbacks registered with `ready`, `ask`, `when`, `once` and `error`.
+/// Unregister a callback. Works for callbacks registered with `ready`, `when`, `once` and `error`.
 ///
 /// Example use:
 ///
@@ -21,9 +21,6 @@ store.off = function(callback) {
 
     // Unregister from `ready`
     store.ready.unregister(callback);
-
-    // Unregister from `ask`
-    store.ask.unregister(callback);
 
     // Unregister from `when` and `once`
     store.when.unregister(callback);
