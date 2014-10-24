@@ -74,16 +74,16 @@ store.verbosity = 0;
     };
     store.Product.prototype.verify = function() {
         var that = this;
-        var done = function() {};
-        var success = function() {};
-        var error = function() {};
+        var doneCb = function() {};
+        var successCb = function() {};
+        var errorCb = function() {};
         defer(this, function() {
-            store.verify(this, function(success, data) {
+            store.verify(that, function(success, data) {
                 store.log.debug("verify -> " + JSON.stringify(success));
                 if (success) {
                     store.log.debug("verify -> success: " + JSON.stringify(data));
-                    success(that, data);
-                    done();
+                    successCb(that, data);
+                    doneCb();
                     that.trigger("verified");
                 } else {
                     store.log.debug("verify -> error: " + JSON.stringify(data));
@@ -93,23 +93,23 @@ store.verbosity = 0;
                         message: "Transaction verification failed: " + msg
                     });
                     store.error(err);
-                    error(err);
-                    done();
+                    errorCb(err);
+                    doneCb();
                     that.trigger("unverified");
                 }
             });
         });
         var ret = {
             done: function(cb) {
-                done = cb;
+                doneCb = cb;
                 return this;
             },
             success: function(cb) {
-                success = cb;
+                successCb = cb;
                 return this;
             },
             error: function(cb) {
-                error = cb;
+                errorCb = cb;
                 return this;
             }
         };
@@ -329,8 +329,8 @@ store.verbosity = 0;
                 success: function(data) {
                     callback(data && data.ok, data.data);
                 },
-                error: function(status) {
-                    callback(false);
+                error: function(status, message) {
+                    callback(false, "Error " + status + ": " + message);
                 }
             });
         } else {
@@ -342,20 +342,16 @@ store.verbosity = 0;
         xhr.open("POST", options.url, true);
         xhr.onreadystatechange = function(event) {
             try {
-                store.log.debug("verify -> ajax state " + xhr.readyState);
                 if (xhr.readyState === 4) {
-                    store.log.debug("verify -> 4");
                     if (xhr.status === 200) {
-                        store.log.debug("verify -> status == 200");
-                        store.log.debug("verify -> " + JSON.stringify(xhr.responseText));
                         if (options.success) options.success(JSON.parse(xhr.responseText));
                     } else {
-                        store.log.debug("verify -> status != 200");
                         store.log.warn("verify -> request to " + options.url + " failed with status " + status + " (" + xhr.statusText + ")");
                         if (options.error) options.error(xhr.status, xhr.statusText);
                     }
                 }
             } catch (e) {
+                store.log.warn("verify -> request to " + options.url + " failed with an exception: " + e.message);
                 if (options.error) options.error(417, e.message);
             }
         };

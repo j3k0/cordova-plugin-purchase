@@ -39,8 +39,8 @@ store.verify = function(product, callback, isPrepared) {
             success: function(data) {
                 callback(data && data.ok, data.data);
             },
-            error: function(status) {
-                callback(false);
+            error: function(status, message) {
+                callback(false, "Error " + status + ": " + message);
             }
         });
     }
@@ -54,22 +54,18 @@ function ajax(options) { // url, data, success, error) {
     xhr.open('POST', options.url, true);
     xhr.onreadystatechange = function(event) {
         try {
-            store.log.debug("verify -> ajax state " + xhr.readyState);
             if (xhr.readyState === 4) {
-                store.log.debug("verify -> 4");
                 if (xhr.status === 200) {
-                    store.log.debug("verify -> status == 200");
-                    store.log.debug("verify -> " + JSON.stringify(xhr.responseText));
                     if (options.success) options.success(JSON.parse(xhr.responseText));
                 }
                 else {
-                    store.log.debug("verify -> status != 200");
                     store.log.warn("verify -> request to " + options.url + " failed with status " + status + " (" + xhr.statusText + ")");
                     if (options.error) options.error(xhr.status, xhr.statusText);
                 }
             }
         }
         catch (e) {
+            store.log.warn("verify -> request to " + options.url + " failed with an exception: " + e.message);
             if (options.error) options.error(417, e.message);
         }
     };

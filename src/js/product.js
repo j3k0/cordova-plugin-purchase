@@ -106,17 +106,17 @@ store.Product.prototype.finish = function() {
 
 store.Product.prototype.verify = function() {
     var that = this;
-    var done    = function() {};
-    var success = function() {};
-    var error   = function() {};
+    var doneCb    = function() {};
+    var successCb = function() {};
+    var errorCb   = function() {};
 
     defer(this, function() {
-        store.verify(this, function(success, data) {
+        store.verify(that, function(success, data) {
             store.log.debug("verify -> " + JSON.stringify(success));
             if (success) {
                 store.log.debug("verify -> success: " + JSON.stringify(data));
-                success(that, data);
-                done();
+                successCb(that, data);
+                doneCb();
                 that.trigger("verified");
             }
             else {
@@ -127,17 +127,17 @@ store.Product.prototype.verify = function() {
                     message: "Transaction verification failed: " + msg
                 });
                 store.error(err);
-                error(err);
-                done();
+                errorCb(err);
+                doneCb();
                 that.trigger("unverified");
             }
         });
     });
 
     var ret = {
-        done:    function(cb) { done = cb;    return this; },
-        success: function(cb) { success = cb; return this; },
-        error:   function(cb) { error = cb;   return this; }
+        done:    function(cb) { doneCb = cb;    return this; },
+        success: function(cb) { successCb = cb; return this; },
+        error:   function(cb) { errorCb = cb;   return this; }
     };
 
     return ret;
