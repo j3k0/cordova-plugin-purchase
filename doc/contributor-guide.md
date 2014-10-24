@@ -1,6 +1,6 @@
 # Contributor Guide
 
-(generated from source files using `make doc-api)`
+*(generated from source files using `make doc-contrib)`*
 
 # iOS Implementation
 

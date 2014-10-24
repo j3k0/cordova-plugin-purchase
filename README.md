@@ -21,7 +21,7 @@ If you don't know much about In-App Purchases, you'll find a good introduction
 on the subject on Fovea's blog *(coming soon)*.
 
 You probably want to start by installing the plugin into your project.
-This is documented in the [Setup Guide](doc/setup.md). *(coming soon)*
+This is documented in the [Setup Guide](wiki/Setup)
 
 Once your project is setup properly, add the minimal initialization code in
 your project and check that it works. You'll find a [Minimal Example Here](doc/minimal-example.js).
@@ -49,6 +49,7 @@ If you can't get things to work, go through the [Troubleshooting Checklist](doc/
 
 ### Contributors:
 
+ * Jean-Christophe Hoelt
  * Guillaume Charhon (initial Android code)
  * Matt Kane (initial iOS code)
  * Mohammad Naghavi (original unification attempt)

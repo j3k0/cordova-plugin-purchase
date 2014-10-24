@@ -55,14 +55,14 @@ check-jshint:
 doc-api: test-js
 	@echo "# API Documentation" > doc/api.md
 	@echo >> doc/api.md
-	@echo "(generated from source files using \`make doc-api)\`" >> doc/api.md
+	@echo "*(generated from source files using \`make doc-api)\`*" >> doc/api.md
 	@echo >> doc/api.md
-	@cat test/store-test.js | grep "///" | cut -d/ -f4- | cut -d\  -f2- >> doc/api.md
+	@cat test/store-test-src.js | grep "///" | cut -d/ -f4- | cut -d\  -f2- >> doc/api.md
 
 doc-contrib: test-js
 	@echo "# Contributor Guide" > doc/contributor-guide.md
 	@echo >> doc/contributor-guide.md
-	@echo "(generated from source files using \`make doc-api)\`" >> doc/contributor-guide.md
+	@echo "*(generated from source files using \`make doc-contrib)\`*" >> doc/contributor-guide.md
 	@echo >> doc/contributor-guide.md
 	@cat src/js/*.js | grep "//!" | cut -d! -f2- | cut -d\  -f2- >> doc/contributor-guide.md
 

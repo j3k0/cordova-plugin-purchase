@@ -10,11 +10,11 @@ function initializeStore() {
 
     // We register a dummy product. It's ok, it shouldn't
     // prevent the store "ready" event from firing.
-    store.registerProducts([{
+    store.register({
         id:    "com.example.app.inappid1",
         alias: "100 coins",
         type:  store.CONSUMABLE
-    }]);
+    });
 
     // When every goes as expected, it's time to celebrate!
     // The "ready" event should be welcomed with music and fireworks,
