@@ -141,7 +141,7 @@ See [logging levels](#logging levels) for all possible values.
     store.ERR_LOAD_RECEIPTS       = ERROR_CODES_BASE + 4;
     store.ERR_CLIENT_INVALID      = ERROR_CODES_BASE + 5;
     store.ERR_PAYMENT_CANCELLED   = ERROR_CODES_BASE + 6; // Purchase has been cancelled by user.
-    store.ERR_PAYMENT_INVALID     = ERROR_CODES_BASE + 7;
+    store.ERR_PAYMENT_INVALID     = ERROR_CODES_BASE + 7; // Something suspicious about a purchase.
     store.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
     store.ERR_UNKNOWN             = ERROR_CODES_BASE + 10; //
     store.ERR_REFRESH_RECEIPTS    = ERROR_CODES_BASE + 11;
@@ -224,25 +224,25 @@ A product will change state during the application execution.
 
 Find below a diagram of the different states a product can pass by.
 
-    REGISTERED +--> INVALID                                      
-               |                                                 
-               +--> VALID +--> REQUESTED +--> INITIATED +-+     
-                                                          |     
-                    ^      +------------------------------+     
-                    |      |                                     
+    REGISTERED +--> INVALID
+               |
+               +--> VALID +--> REQUESTED +--> INITIATED +-+
+                                                          |
+                    ^      +------------------------------+
+                    |      |
                     |      +--> APPROVED +--> FINISHED +--> OWNED
-                    |                                  |         
-                    +----------------------------------+         
+                    |                                  |
+                    +----------------------------------+
 
 #### states definitions
 
  - `REGISTERED`: right after being declared to the store using [`store.registerProducts()`](#registerProducts)
  - `INVALID`: the server didn't recognize this product, it cannot be used.
  - `VALID`: the server sent extra information about the product (`title`, `price` and such).
- - `REQUESTED`: order (purchase) has been requested by the user
- - `INITIATED`: order has been transmitted to the server
- - `APPROVED`: purchase has been approved by server
- - `FINISHED`: purchase has been delivered by the app.
+ - `REQUESTED`: order (purchase) requested by the user
+ - `INITIATED`: order transmitted to the server
+ - `APPROVED`: purchase approved by server
+ - `FINISHED`: purchase delivered by the app
  - `OWNED`: purchase is owned (only for non-consumable and subscriptions)
 
 #### Notes
@@ -380,6 +380,24 @@ Example use:
     ...
     store.off(fun);
 
+## <a name="validator"></a> *store.validator*
+Set to the URL of the purchase validation service,
+or to your own custom validation callback.
+
+#### example usage
+
+```js
+store.validator = "http://store.fovea.cc:1980/check-purchase"
+```
+
+```js
+store.validator = function(product, callback) {
+    callback(true);
+    // Here, you will typically want to contact your own webservice
+    // where you check transaction receipts with either Apple or
+    // Google servers.
+});
+```
 ## <a name="refresh"></a>*store.refresh()*
 ## <a name="restore"></a>*store.restore()*
 TODO write the doc

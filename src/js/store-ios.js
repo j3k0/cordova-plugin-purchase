@@ -312,6 +312,15 @@ store.restore = function() {
     // TODO
 };
 
+// Load receipts required by server-side validation of purchases.
+store._prepareForValidation = function(product, callback) {
+    storekit.loadReceipts(function(r) {
+        product.transaction.appStoreReceipt = r.appStoreReceipt;
+        product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
+        callback();
+    });
+};
+
 //! 
 //! ## Persistance of the *OWNED* status
 //!

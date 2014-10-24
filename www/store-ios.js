@@ -72,6 +72,43 @@ store.verbosity = 0;
             }
         });
     };
+    store.Product.prototype.verify = function() {
+        var that = this;
+        var done = function() {};
+        if (!success) success = function() {};
+        if (!error) error = function() {};
+        defer(this, function() {
+            store.verify(this, function(success) {
+                if (success) {
+                    success(that);
+                    done();
+                } else {
+                    var err = new Error({
+                        code: store.ERR_VERIFICATION_FAILED,
+                        message: "Could not verify the transaction"
+                    });
+                    store.error(err);
+                    error(err);
+                    done();
+                }
+            });
+        });
+        var ret = {
+            done: function(cb) {
+                done = cb;
+                return this;
+            },
+            success: function(cb) {
+                success = cb;
+                return this;
+            },
+            error: function(cb) {
+                error = cb;
+                return this;
+            }
+        };
+        return ret;
+    };
     function defer(thisArg, cb) {
         window.setTimeout(function() {
             cb.call(thisArg);
@@ -264,6 +301,47 @@ store.verbosity = 0;
         store.order.unregister(callback);
         store.error.unregister(callback);
     };
+}).call(this);
+
+(function() {
+    "use strict";
+    store.validator = null;
+    store.verify = function(product, callback, isPrepared) {
+        if (!store.validator) callback(true);
+        if (store._prepareForValidation && isPrepared !== true) {
+            store._prepareForValidation(product, function() {
+                store.verify(product, callback, true);
+            });
+            return;
+        }
+        if (typeof store.validator === "string") {
+            ajax(store.validator, product, function(data) {
+                callback(data && data.ok, data);
+            }, function(status) {
+                callback(false);
+            });
+        } else {
+            store.validator(product, callback);
+        }
+    };
+    function ajax(url, data, success, error) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", url, true);
+        xhr.responseType = "json";
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhr.onload = function() {
+            var status = xhr.status;
+            store.log.debug("verify -> server response " + status + ": " + JSON.stringify(xhr.response));
+            if (status == 200) {
+                if (success) success(xhr.response);
+            } else {
+                store.log.warn("verify -> request to " + store.validator + " failed with status " + status);
+                if (error) error(status);
+            }
+        };
+        store.log.debug("verify -> send request to " + url);
+        xhr.send(JSON.stringify(data));
+    }
 }).call(this);
 
 store.refresh = function() {
@@ -996,6 +1074,14 @@ var storekitError = function(errorCode, errorText, options) {
 };
 
 store.restore = function() {};
+
+store._prepareForValidation = function(product, callback) {
+    storekit.loadReceipts(function(r) {
+        product.transaction.appStoreReceipt = r.appStoreReceipt;
+        product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
+        callback();
+    });
+};
 
 function isOwned(productId) {
     return localStorage["__cc_fovea_store_ios_owned_ " + productId] === "1";

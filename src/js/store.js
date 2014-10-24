@@ -153,6 +153,7 @@ store.verbosity = 0;
 // #include "order.js"
 // #include "ready.js"
 // #include "off.js"
+// #include "verify.js"
 
 /// ## <a name="refresh"></a>*store.refresh()*
 store.refresh = function() {

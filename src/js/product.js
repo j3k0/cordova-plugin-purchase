@@ -104,6 +104,39 @@ store.Product.prototype.finish = function() {
     });
 };
 
+store.Product.prototype.verify = function() {
+    var that = this;
+    var done    = function() {};
+    if (!success) success = function() {};
+    if (!error)   error   = function() {};
+
+    defer(this, function() {
+        store.verify(this, function(success) {
+            if (success) {
+                success(that);
+                done();
+            }
+            else {
+                var err = new Error({
+                    code: store.ERR_VERIFICATION_FAILED,
+                    message: "Could not verify the transaction"
+                });
+                store.error(err);
+                error(err);
+                done();
+            }
+        });
+    });
+
+    var ret = {
+        done:    function(cb) { done = cb;    return this; },
+        success: function(cb) { success = cb; return this; },
+        error:   function(cb) { error = cb;   return this; }
+    };
+
+    return ret;
+};
+
 function defer(thisArg, cb) {
     window.setTimeout(function() {
         cb.call(thisArg);
@@ -117,25 +150,25 @@ function defer(thisArg, cb) {
 ///
 /// Find below a diagram of the different states a product can pass by.
 ///
-///     REGISTERED +--> INVALID                                      
-///                |                                                 
-///                +--> VALID +--> REQUESTED +--> INITIATED +-+     
-///                                                           |     
-///                     ^      +------------------------------+     
-///                     |      |                                     
+///     REGISTERED +--> INVALID
+///                |
+///                +--> VALID +--> REQUESTED +--> INITIATED +-+
+///                                                           |
+///                     ^      +------------------------------+
+///                     |      |
 ///                     |      +--> APPROVED +--> FINISHED +--> OWNED
-///                     |                                  |         
-///                     +----------------------------------+         
+///                     |                                  |
+///                     +----------------------------------+
 ///
 /// #### states definitions
 ///
 ///  - `REGISTERED`: right after being declared to the store using [`store.registerProducts()`](#registerProducts)
 ///  - `INVALID`: the server didn't recognize this product, it cannot be used.
 ///  - `VALID`: the server sent extra information about the product (`title`, `price` and such).
-///  - `REQUESTED`: order (purchase) has been requested by the user
-///  - `INITIATED`: order has been transmitted to the server
-///  - `APPROVED`: purchase has been approved by server
-///  - `FINISHED`: purchase has been delivered by the app.
+///  - `REQUESTED`: order (purchase) requested by the user
+///  - `INITIATED`: order transmitted to the server
+///  - `APPROVED`: purchase approved by server
+///  - `FINISHED`: purchase delivered by the app
 ///  - `OWNED`: purchase is owned (only for non-consumable and subscriptions)
 ///
 /// #### Notes
