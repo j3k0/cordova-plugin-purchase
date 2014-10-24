@@ -103,29 +103,11 @@ store.verbosity = 0;
 
 (function() {
     "use strict";
-    store.registerProducts = function(products) {
-        for (var i = 0; i < products.length; ++i) {
-            products[i].state = store.REGISTERED;
-            var p = new store.Product(products[i]);
-            if (!p.alias) p.alias = p.id;
-            if (p.id !== store._queries.uniqueQuery(p.id)) continue;
-            if (p.alias !== store._queries.uniqueQuery(p.alias)) continue;
-            if (hasKeyword(p.id) || hasKeyword(p.alias)) continue;
-            this.products.push(p);
-        }
+    store.register = function(product) {
+        if (!product) return;
+        if (!product.length) return store.register([ product ]);
+        store.registerProducts(product);
     };
-    var keywords = [ "product", "order", store.REGISTERED, store.VALID, store.INVALID, store.REQUESTED, store.INITIATED, store.APPROVED, store.OWNED, store.FINISHED, "refreshed" ];
-    function hasKeyword(string) {
-        if (!string) return false;
-        var tokens = string.split(" ");
-        for (var i = 0; i < tokens.length; ++i) {
-            var token = tokens[i];
-            for (var j = 0; j < keywords.length; ++j) {
-                if (token === keywords[j]) return true;
-            }
-        }
-        return false;
-    }
 }).call(this);
 
 (function() {
@@ -247,95 +229,6 @@ store.verbosity = 0;
 
 (function() {
     "use strict";
-    var callbacks = {};
-    var callbackId = 0;
-    store.ask = function(pid) {
-        var that = this;
-        var p = store.products.byId[pid] || store.products.byAlias[pid];
-        if (!p) {
-            p = new store.Product({
-                id: pid,
-                state: store.INVALID,
-                loaded: true,
-                valid: false
-            });
-        }
-        var localCallbackId = callbackId++;
-        var localCallback = callbacks[localCallbackId] = {
-            skip: false
-        };
-        function done() {
-            localCallback.skip = true;
-            delete localCallback.then;
-            delete localCallback.error;
-            delete callbacks[localCallbackId];
-        }
-        return {
-            then: function(cb) {
-                if (p.loaded && p.valid) {
-                    done();
-                    cb(p);
-                } else {
-                    localCallback.then = cb;
-                    p.once(store.VALID, function(p) {
-                        if (localCallback.skip) return;
-                        if (localCallback.then) {
-                            done();
-                            cb(p);
-                        } else {
-                            done();
-                        }
-                    });
-                }
-                return this;
-            },
-            error: function(cb) {
-                if (p.state === store.INVALID) {
-                    done();
-                    cb(new store.Error({
-                        code: store.ERR_INVALID_PRODUCT_ID,
-                        message: "Invalid product"
-                    }), p);
-                } else {
-                    localCallback.error = cb;
-                    that.once(pid).error(function(err, p) {
-                        if (localCallback.skip) return;
-                        if (err.code === store.ERR_LOAD) {
-                            if (localCallback.error) {
-                                done();
-                                cb(err, p);
-                            } else {
-                                done();
-                            }
-                        }
-                    });
-                    that.once(pid, store.INVALID, function(p) {
-                        if (localCallback.skip) return;
-                        if (localCallback.error) {
-                            done();
-                            cb(new store.Error({
-                                code: store.ERR_INVALID_PRODUCT_ID,
-                                message: "Invalid product"
-                            }), p);
-                        } else {
-                            done();
-                        }
-                    });
-                }
-                return this;
-            }
-        };
-    };
-    store.ask.unregister = function(cb) {
-        for (var i in callbacks) {
-            if (callbacks[i].then === cb) delete callbacks[i].then;
-            if (callbacks[i].error === cb) delete callbacks[i].error;
-        }
-    };
-}).call(this);
-
-(function() {
-    "use strict";
     var isReady = false;
     var callbacks = [];
     store.ready = function(cb) {
@@ -367,7 +260,6 @@ store.verbosity = 0;
     "use strict";
     store.off = function(callback) {
         store.ready.unregister(callback);
-        store.ask.unregister(callback);
         store.when.unregister(callback);
         store.order.unregister(callback);
         store.error.unregister(callback);
@@ -455,6 +347,33 @@ store.restore = null;
     store.Product.prototype.trigger = function(action, args) {
         store.trigger(this, action, args);
     };
+}).call(this);
+
+(function() {
+    "use strict";
+    store.registerProducts = function(products) {
+        for (var i = 0; i < products.length; ++i) {
+            products[i].state = store.REGISTERED;
+            var p = new store.Product(products[i]);
+            if (!p.alias) p.alias = p.id;
+            if (p.id !== store._queries.uniqueQuery(p.id)) continue;
+            if (p.alias !== store._queries.uniqueQuery(p.alias)) continue;
+            if (hasKeyword(p.id) || hasKeyword(p.alias)) continue;
+            this.products.push(p);
+        }
+    };
+    var keywords = [ "product", "order", store.REGISTERED, store.VALID, store.INVALID, store.REQUESTED, store.INITIATED, store.APPROVED, store.OWNED, store.FINISHED, "refreshed" ];
+    function hasKeyword(string) {
+        if (!string) return false;
+        var tokens = string.split(" ");
+        for (var i = 0; i < tokens.length; ++i) {
+            var token = tokens[i];
+            for (var j = 0; j < keywords.length; ++j) {
+                if (token === keywords[j]) return true;
+            }
+        }
+        return false;
+    }
 }).call(this);
 
 (function() {
