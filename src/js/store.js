@@ -158,6 +158,11 @@ store.verbosity = 0;
 /// ## <a name="refresh"></a>*store.refresh()*
 store.refresh = function() {
     store.trigger("refreshed");
+    for (var i = 0; i < store.products.length; ++i) {
+        var p = store.products[i];
+        if (p.state === store.APPROVED)
+            p.trigger('approved');
+    }
 };
 
 /// ## <a name="restore"></a>*store.restore()*
