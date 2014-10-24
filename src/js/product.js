@@ -107,8 +107,8 @@ store.Product.prototype.finish = function() {
 store.Product.prototype.verify = function() {
     var that = this;
     var done    = function() {};
-    if (!success) success = function() {};
-    if (!error)   error   = function() {};
+    var success = function() {};
+    var error   = function() {};
 
     defer(this, function() {
         store.verify(this, function(success) {
