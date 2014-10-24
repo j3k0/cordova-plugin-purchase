@@ -146,7 +146,7 @@ store.verbosity = 0;
 // #include "product.js"
 // #include "error.js"
 
-// #include "registerProducts.js"
+// #include "register.js"
 // #include "get.js"
 // #include "when.js"
 // #include "once.js"
@@ -171,6 +171,7 @@ store.restore = null;
 
 // #include "products.js"
 // #include "product-internal.js"
+// #include "registerProducts.js"
 // #include "queries.js"
 // #include "trigger.js"
 // #include "error-callbacks.js"
