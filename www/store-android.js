@@ -339,6 +339,16 @@ store.verbosity = 0;
                 if (error) error(status);
             }
         };
+        xhr.onreadystatechange = function(event) {
+            store.log.debug("verify -> ready state" + xhr.readyState);
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    store.log.debug("verify -> " + xhr.responseText);
+                } else {
+                    store.log.debug("verify -> error " + xhr.statusText);
+                }
+            }
+        };
         store.log.debug("verify -> send request to " + url);
         xhr.send(JSON.stringify(data));
     }
