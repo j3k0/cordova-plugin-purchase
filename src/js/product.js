@@ -111,19 +111,22 @@ store.Product.prototype.verify = function() {
     var error   = function() {};
 
     defer(this, function() {
-        store.verify(this, function(success) {
+        store.verify(this, function(success, data) {
             if (success) {
-                success(that);
+                success(that, data);
                 done();
+                that.trigger("verified");
             }
             else {
+                var msg = (data && data.error && data.error.message ? data.error.message : '');
                 var err = new Error({
                     code: store.ERR_VERIFICATION_FAILED,
-                    message: "Could not verify the transaction"
+                    message: "Transaction verification failed: " + msg
                 });
                 store.error(err);
                 error(err);
                 done();
+                that.trigger("unverified");
             }
         });
     });

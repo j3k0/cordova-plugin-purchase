@@ -71,6 +71,12 @@ store.when = function(query, once, callback) {
         addPromise('initiated');
         addPromise('finished');
 
+        // Product verification successful
+        addPromise('verified');
+
+        // Product verification failed
+        addPromise('unverified');
+
         return ret;
     }
     else {
