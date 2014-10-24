@@ -55,12 +55,12 @@ function ajax(options) { // url, data, success, error) {
     xhr.onreadystatechange = function(event) {
         try {
             store.log.debug("verify -> ajax state " + xhr.readyState);
-            if (+xhr.readyState === 4) {
+            if (xhr.readyState === 4) {
                 store.log.debug("verify -> 4");
-                if (+xhr.status === 200) {
+                if (xhr.status === 200) {
                     store.log.debug("verify -> status == 200");
-                    store.log.debug("verify -> " + xhr.responseText);
-                    if (options.success) options.success(xhr.response);
+                    store.log.debug("verify -> " + JSON.stringify(xhr.responseText));
+                    if (options.success) options.success(JSON.parse(xhr.responseText));
                 }
                 else {
                     store.log.debug("verify -> status != 200");
@@ -75,7 +75,7 @@ function ajax(options) { // url, data, success, error) {
     };
     store.log.debug('verify -> send request to ' + options.url);
     if (options.data) {
-        xhr.responseType = options.dataType || 'json';
+        // xhr.responseType = /* options.dataType || */ 'json';
         xhr.setRequestHeader("Content-Type", options.contentType || "application/json;charset=UTF-8");
         // xhr.setRequestHeader("Content-Type", options.contentType || 'application/x-www-form-urlencoded; charset=UTF-8');
         xhr.send(JSON.stringify(options.data));
