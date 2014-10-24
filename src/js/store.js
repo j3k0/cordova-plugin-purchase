@@ -156,12 +156,20 @@ store.verbosity = 0;
 // #include "verify.js"
 
 /// ## <a name="refresh"></a>*store.refresh()*
+var initialRefresh = true;
 store.refresh = function() {
     store.trigger("refreshed");
+    if (initialRefresh) {
+        initialRefresh = false;
+        return;
+    }
+    store.log.debug("refresh -> checking products state (" + store.products.length + " products)");
     for (var i = 0; i < store.products.length; ++i) {
         var p = store.products[i];
+        store.log.debug("refresh -> product id " + p.id + " (" + p.alias + ")");
+        store.log.debug("           in state '" + p.state + "'");
         if (p.state === store.APPROVED)
-            p.trigger('approved');
+            p.trigger(store.APPROVED);
     }
 };
 

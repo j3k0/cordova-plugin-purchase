@@ -53,15 +53,24 @@ function ajax(options) { // url, data, success, error) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', options.url, true);
     xhr.onreadystatechange = function(event) {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                store.log.debug("verify -> " + xhr.responseText);
-                if (options.success) options.success(xhr.response);
+        try {
+            store.log.debug("verify -> ajax state " + xhr.readyState);
+            if (+xhr.readyState === 4) {
+                store.log.debug("verify -> 4");
+                if (+xhr.status === 200) {
+                    store.log.debug("verify -> status == 200");
+                    store.log.debug("verify -> " + xhr.responseText);
+                    if (options.success) options.success(xhr.response);
+                }
+                else {
+                    store.log.debug("verify -> status != 200");
+                    store.log.warn("verify -> request to " + options.url + " failed with status " + status + " (" + xhr.statusText + ")");
+                    if (options.error) options.error(xhr.status, xhr.statusText);
+                }
             }
-            else {
-                store.log.warn("verify -> request to " + options.url + " failed with status " + status + " (" + xhr.statusText + ")");
-                if (options.error) options.error(xhr.status, xhr.statusText);
-            }
+        }
+        catch (e) {
+            if (options.error) options.error(417, e.message);
         }
     };
     store.log.debug('verify -> send request to ' + options.url);

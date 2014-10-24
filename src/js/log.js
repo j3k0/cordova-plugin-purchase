@@ -30,11 +30,11 @@ store.log = {
 
     /// ### `store.log.warn(message)`
     /// Logs a warning message, only if `store.debug` >= store.WARNING
-    warn: function(o) { log(store.WARNING,  o); },
+    warn: function(o) { log(store.WARNING, o); },
 
     /// ### `store.log.info(message)`
     /// Logs an info message, only if `store.debug` >= store.INFO
-    info: function(o) { log(store.INFO,  o); },
+    info: function(o) { log(store.INFO, o); },
 
     /// ### `store.log.debug(message)`
     /// Logs a debug message, only if `store.debug` >= store.DEBUG

@@ -112,12 +112,15 @@ store.Product.prototype.verify = function() {
 
     defer(this, function() {
         store.verify(this, function(success, data) {
+            store.log.debug("verify -> " + JSON.stringify(success));
             if (success) {
+                store.log.debug("verify -> success: " + JSON.stringify(data));
                 success(that, data);
                 done();
                 that.trigger("verified");
             }
             else {
+                store.log.debug("verify -> error: " + JSON.stringify(data));
                 var msg = (data && data.error && data.error.message ? data.error.message : '');
                 var err = new Error({
                     code: store.ERR_VERIFICATION_FAILED,

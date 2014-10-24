@@ -79,11 +79,14 @@ store.verbosity = 0;
         var error = function() {};
         defer(this, function() {
             store.verify(this, function(success, data) {
+                store.log.debug("verify -> " + JSON.stringify(success));
                 if (success) {
+                    store.log.debug("verify -> success: " + JSON.stringify(data));
                     success(that, data);
                     done();
                     that.trigger("verified");
                 } else {
+                    store.log.debug("verify -> error: " + JSON.stringify(data));
                     var msg = data && data.error && data.error.message ? data.error.message : "";
                     var err = new Error({
                         code: store.ERR_VERIFICATION_FAILED,
@@ -338,14 +341,22 @@ store.verbosity = 0;
         var xhr = new XMLHttpRequest();
         xhr.open("POST", options.url, true);
         xhr.onreadystatechange = function(event) {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    store.log.debug("verify -> " + xhr.responseText);
-                    if (options.success) options.success(xhr.response);
-                } else {
-                    store.log.warn("verify -> request to " + options.url + " failed with status " + status + " (" + xhr.statusText + ")");
-                    if (options.error) options.error(xhr.status, xhr.statusText);
+            try {
+                store.log.debug("verify -> ajax state " + xhr.readyState);
+                if (+xhr.readyState === 4) {
+                    store.log.debug("verify -> 4");
+                    if (+xhr.status === 200) {
+                        store.log.debug("verify -> status == 200");
+                        store.log.debug("verify -> " + xhr.responseText);
+                        if (options.success) options.success(xhr.response);
+                    } else {
+                        store.log.debug("verify -> status != 200");
+                        store.log.warn("verify -> request to " + options.url + " failed with status " + status + " (" + xhr.statusText + ")");
+                        if (options.error) options.error(xhr.status, xhr.statusText);
+                    }
                 }
+            } catch (e) {
+                if (options.error) options.error(417, e.message);
             }
         };
         store.log.debug("verify -> send request to " + options.url);
@@ -359,8 +370,21 @@ store.verbosity = 0;
     }
 }).call(this);
 
+var initialRefresh = true;
+
 store.refresh = function() {
     store.trigger("refreshed");
+    if (initialRefresh) {
+        initialRefresh = false;
+        return;
+    }
+    store.log.debug("refresh -> checking products state (" + store.products.length + " products)");
+    for (var i = 0; i < store.products.length; ++i) {
+        var p = store.products[i];
+        store.log.debug("refresh -> product id " + p.id + " (" + p.alias + ")");
+        store.log.debug("           in state '" + p.state + "'");
+        if (p.state === store.APPROVED) p.trigger(store.APPROVED);
+    }
 };
 
 store.restore = null;
