@@ -622,9 +622,7 @@ store.restore = null;
         callExternal: function(name, callback) {
             try {
                 store.log.debug("calling " + name);
-                var args = Array.prototype.slice.call(arguments);
-                args.shift();
-                args.shift();
+                var args = Array.prototype.slice.call(arguments, 2);
                 if (callback) callback.apply(this, args);
             } catch (e) {
                 store.utils.logError(name, e);

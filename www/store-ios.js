@@ -622,9 +622,7 @@ store.restore = null;
         callExternal: function(name, callback) {
             try {
                 store.log.debug("calling " + name);
-                var args = Array.prototype.slice.call(arguments);
-                args.shift();
-                args.shift();
+                var args = Array.prototype.slice.call(arguments, 2);
                 if (callback) callback.apply(this, args);
             } catch (e) {
                 store.utils.logError(name, e);
@@ -684,6 +682,10 @@ var protectCall = function(callback, context) {
 
 var InAppPurchase = function() {
     this.options = {};
+    this.receiptForTransaction = {};
+    this.receiptForProduct = {};
+    if (window.localStorage && window.localStorage.sk_receiptForTransaction) this.receiptForTransaction = JSON.parse(window.localStorage.sk_receiptForTransaction);
+    if (window.localStorage && window.localStorage.sk_receiptForProduct) this.receiptForProduct = JSON.parse(window.localStorage.sk_receiptForProduct);
 };
 
 var noop = function() {};
@@ -712,6 +714,8 @@ InAppPurchase.prototype.ERR_UNKNOWN = ERROR_CODES_BASE + 10;
 
 InAppPurchase.prototype.ERR_REFRESH_RECEIPTS = ERROR_CODES_BASE + 11;
 
+var initialized = false;
+
 InAppPurchase.prototype.init = function(options, success, error) {
     this.options = {
         error: options.error || noop,
@@ -725,10 +729,6 @@ InAppPurchase.prototype.init = function(options, success, error) {
         restoreFailed: options.restoreFailed || noop,
         restoreCompleted: options.restoreCompleted || noop
     };
-    this.receiptForTransaction = {};
-    this.receiptForProduct = {};
-    if (window.localStorage && window.localStorage.sk_receiptForTransaction) this.receiptForTransaction = JSON.parse(window.localStorage.sk_receiptForTransaction);
-    if (window.localStorage && window.localStorage.sk_receiptForProduct) this.receiptForProduct = JSON.parse(window.localStorage.sk_receiptForProduct);
     if (options.debug) {
         exec("debug", [], noop, noop);
         log = function(msg) {
@@ -743,6 +743,8 @@ InAppPurchase.prototype.init = function(options, success, error) {
         log("setup ok");
         protectCall(that.options.ready, "options.ready");
         protectCall(success, "init.success");
+        initialized = true;
+        that.processPendingUpdates();
     };
     var setupFailed = function() {
         log("setup failed");
@@ -824,7 +826,21 @@ InAppPurchase.prototype.finish = function(transactionId) {
     exec("finishTransaction", [ transactionId ], noop, noop);
 };
 
+var pendingUpdates = [];
+
+InAppPurchase.prototype.processPendingUpdates = function() {
+    for (var i = 0; i < pendingUpdates.length; ++i) {
+        this.updatedTransactionCallback.apply(this, pendingUpdates[i]);
+    }
+    pendingUpdates = [];
+};
+
 InAppPurchase.prototype.updatedTransactionCallback = function(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
+    if (!initialized) {
+        var args = Array.prototype.slice.call(arguments);
+        pendingUpdates.push(args);
+        return;
+    }
     if (transactionReceipt) {
         this.receiptForProduct[productId] = transactionReceipt;
         this.receiptForTransaction[transactionIdentifier] = transactionReceipt;

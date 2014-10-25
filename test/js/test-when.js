@@ -12,7 +12,7 @@ describe('When', function(){
         store.registerProducts([ product ]);
     });
 
-    describe('#when()', function(){
+    describe('#when()', function() {
 
         it('should define chainable promises', function() {
             var nop = function() {};

@@ -23,6 +23,13 @@ var protectCall = function (callback, context) {
 
 var InAppPurchase = function () {
     this.options = {};
+
+    this.receiptForTransaction = {};
+    this.receiptForProduct = {};
+    if (window.localStorage && window.localStorage.sk_receiptForTransaction)
+        this.receiptForTransaction = JSON.parse(window.localStorage.sk_receiptForTransaction);
+    if (window.localStorage && window.localStorage.sk_receiptForProduct)
+        this.receiptForProduct = JSON.parse(window.localStorage.sk_receiptForProduct);
 };
 
 var noop = function () {};
@@ -43,6 +50,8 @@ InAppPurchase.prototype.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
 InAppPurchase.prototype.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
 InAppPurchase.prototype.ERR_REFRESH_RECEIPTS    = ERROR_CODES_BASE + 11;
 
+var initialized = false;
+
 InAppPurchase.prototype.init = function (options, success, error) {
     this.options = {
         error:    options.error    || noop,
@@ -56,13 +65,6 @@ InAppPurchase.prototype.init = function (options, success, error) {
         restoreFailed:     options.restoreFailed    || noop,
         restoreCompleted:  options.restoreCompleted || noop
     };
-
-    this.receiptForTransaction = {};
-    this.receiptForProduct = {};
-    if (window.localStorage && window.localStorage.sk_receiptForTransaction)
-        this.receiptForTransaction = JSON.parse(window.localStorage.sk_receiptForTransaction);
-    if (window.localStorage && window.localStorage.sk_receiptForProduct)
-        this.receiptForProduct = JSON.parse(window.localStorage.sk_receiptForProduct);
 
     if (options.debug) {
         exec('debug', [], noop, noop);
@@ -80,6 +82,8 @@ InAppPurchase.prototype.init = function (options, success, error) {
         log('setup ok');
         protectCall(that.options.ready, 'options.ready');
         protectCall(success, 'init.success');
+        initialized = true;
+        that.processPendingUpdates();
 
         // Is there a reason why we wouldn't like to do this automatically?
         // YES! it does ask the user for his password.
@@ -220,8 +224,26 @@ InAppPurchase.prototype.finish = function (transactionId) {
     exec('finishTransaction', [transactionId], noop, noop);
 };
 
-/* This is called from native.*/
+var pendingUpdates = [];
+InAppPurchase.prototype.processPendingUpdates = function() {
+    for (var i = 0; i < pendingUpdates.length; ++i) {
+        this.updatedTransactionCallback.apply(this, pendingUpdates[i]);
+    }
+    pendingUpdates = [];
+};
+
+// This is called from native.
+// 
+// Note that it may eventually be called before initialization... unfortunately.
+// In this case, we'll just keep pending updates in a list for later processing.
 InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
+
+    if (!initialized) {
+        var args = Array.prototype.slice.call(arguments); 
+        pendingUpdates.push(args);
+        return;
+    }
+
     if (transactionReceipt) {
         this.receiptForProduct[productId] = transactionReceipt;
         this.receiptForTransaction[transactionIdentifier] = transactionReceipt;
