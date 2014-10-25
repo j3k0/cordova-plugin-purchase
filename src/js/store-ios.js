@@ -94,6 +94,13 @@ store.when("registered", function(product) {
     store.log.debug("ios -> product " + product.id + " registered" + (owned ? " and owned" : ""));
 });
 
+//! #### purchase queue cleanup
+
+//! Make sure expired subscriptions do not fill the queue
+store.when("expired", function(product) {
+    product.finish();
+});
+
 //!
 //! ## Initialization
 //!

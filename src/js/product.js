@@ -128,9 +128,17 @@ store.Product.prototype.verify = function() {
                     code: store.ERR_VERIFICATION_FAILED,
                     message: "Transaction verification failed: " + msg
                 });
+                if (data.code === store.PURCHASE_EXPIRED) {
+                    err = new Error({
+                        code: store.ERR_PAYMENT_EXPIRED,
+                        message: "Transaction expired: " + msg
+                    });
+                }
                 store.error(err);
                 errorCb(err);
                 doneCb();
+                if (data.code === store.PURCHASE_EXPIRED)
+                    that.trigger("expired");
                 that.trigger("unverified");
             }
         });

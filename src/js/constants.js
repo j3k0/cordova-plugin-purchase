@@ -39,6 +39,7 @@ var ERROR_CODES_BASE = 6777000;
 /*///*/     store.ERR_VERIFICATION_FAILED = ERROR_CODES_BASE + 17; // Verification of store data failed.
 /*///*/     store.ERR_BAD_RESPONSE        = ERROR_CODES_BASE + 18; // Verification of store data failed.
 /*///*/     store.ERR_REFRESH             = ERROR_CODES_BASE + 19; // Failed to refresh the store.
+/*///*/     store.ERR_PAYMENT_EXPIRED     = ERROR_CODES_BASE + 20;
 
 ///
 /// ### product states
@@ -60,5 +61,12 @@ var ERROR_CODES_BASE = 6777000;
 /*///*/     store.WARNING = 2;
 /*///*/     store.INFO    = 3;
 /*///*/     store.DEBUG   = 4;
+
+//
+// ### validation server error codes
+//
+store.INVALID_PAYLOAD  = 6778001;
+store.CONNECTION_FAILED = 6778002;
+store.PURCHASE_EXPIRED = 6778003;
 
 }).call(this);

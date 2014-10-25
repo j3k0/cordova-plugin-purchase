@@ -153,6 +153,7 @@ See [logging levels](#logging levels) for all possible values.
     store.ERR_VERIFICATION_FAILED = ERROR_CODES_BASE + 17; // Verification of store data failed.
     store.ERR_BAD_RESPONSE        = ERROR_CODES_BASE + 18; // Verification of store data failed.
     store.ERR_REFRESH             = ERROR_CODES_BASE + 19; // Failed to refresh the store.
+    store.ERR_PAYMENT_EXPIRED     = ERROR_CODES_BASE + 20;
 
 ### product states
 

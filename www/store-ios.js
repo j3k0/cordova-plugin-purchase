@@ -27,6 +27,7 @@ store.verbosity = 0;
     store.ERR_VERIFICATION_FAILED = ERROR_CODES_BASE + 17;
     store.ERR_BAD_RESPONSE = ERROR_CODES_BASE + 18;
     store.ERR_REFRESH = ERROR_CODES_BASE + 19;
+    store.ERR_PAYMENT_EXPIRED = ERROR_CODES_BASE + 20;
     store.REGISTERED = "registered";
     store.INVALID = "invalid";
     store.VALID = "valid";
@@ -40,6 +41,9 @@ store.verbosity = 0;
     store.WARNING = 2;
     store.INFO = 3;
     store.DEBUG = 4;
+    store.INVALID_PAYLOAD = 6778001;
+    store.CONNECTION_FAILED = 6778002;
+    store.PURCHASE_EXPIRED = 6778003;
 }).call(this);
 
 (function() {
@@ -93,9 +97,16 @@ store.verbosity = 0;
                         code: store.ERR_VERIFICATION_FAILED,
                         message: "Transaction verification failed: " + msg
                     });
+                    if (data.code === store.PURCHASE_EXPIRED) {
+                        err = new Error({
+                            code: store.ERR_PAYMENT_EXPIRED,
+                            message: "Transaction expired: " + msg
+                        });
+                    }
                     store.error(err);
                     errorCb(err);
                     doneCb();
+                    if (data.code === store.PURCHASE_EXPIRED) that.trigger("expired");
                     that.trigger("unverified");
                 }
             });
@@ -317,7 +328,7 @@ store.verbosity = 0;
     "use strict";
     store.validator = null;
     store.verify = function(product, callback, isPrepared) {
-        if (!store.validator) callback(true);
+        if (!store.validator) callback(true, product);
         if (store._prepareForValidation && isPrepared !== true) {
             store._prepareForValidation(product, function() {
                 store.verify(product, callback, true);
@@ -1002,6 +1013,10 @@ store.when("registered", function(product) {
     var owned = isOwned(product.id);
     product.owned = product.owned || owned;
     store.log.debug("ios -> product " + product.id + " registered" + (owned ? " and owned" : ""));
+});
+
+store.when("expired", function(product) {
+    product.finish();
 });
 
 var initialized = false;

@@ -23,7 +23,7 @@ store.validator = null;
 
 store.verify = function(product, callback, isPrepared) {
     if (!store.validator)
-        callback(true);
+        callback(true, product);
 
     if (store._prepareForValidation && isPrepared !== true) {
         store._prepareForValidation(product, function() {
