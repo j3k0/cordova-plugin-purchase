@@ -23,7 +23,7 @@ If you don't know much about In-App Purchases, you'll find a good introduction
 on the subject on Fovea's blog *(coming soon)*.
 
 You probably want to start by installing the plugin into your project.
-This is documented in the [Setup Guide](wiki/Setup)
+This is documented in the [Setup Guide](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup)
 
 Once your project is setup properly, add the minimal initialization code in
 your project and check that it works. You'll find a [Minimal Example Here](doc/minimal-example.js).
