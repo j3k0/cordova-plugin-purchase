@@ -218,7 +218,11 @@ public class InAppBillingPlugin extends CordovaPlugin {
         // Convert the java list to json
         JSONArray jsonPurchaseList = new JSONArray();
         for (Purchase p : purchaseList) {
-	        jsonPurchaseList.put(new JSONObject(p.getOriginalJson()));
+	        // jsonPurchaseList.put(new JSONObject(p.getOriginalJson()));
+            JSONObject purchaseJsonObject = new JSONObject(p.getOriginalJson());
+            purchaseJsonObject.put("signature", p.getSignature());
+            purchaseJsonObject.put("receipt", p.getOriginalJson().toString());
+	        jsonPurchaseList.put(purchaseJsonObject);
         }
 
         return jsonPurchaseList;
