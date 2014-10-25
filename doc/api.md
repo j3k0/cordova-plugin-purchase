@@ -569,3 +569,37 @@ Execute all error callbacks with the given `error` argument.
 ### *store.error.callbacks.reset()*
 
 Remove all error callbacks.
+## store.utils
+
+### store.utils.logError(context, error)
+Add warning logs on a console describing an exceptions.
+
+This method is mostly used when execting user registered callbacks.
+
+* `context` is a string describing why the method was called
+* `error` is a javascript Error object thrown by a exception
+
+### store.utils.callExternal(context, callback, ...)
+Calls an user-registered callback.
+Won't throw exceptions, only logs errors.
+
+* `name` is a short string describing the callback
+* `callback` is the callback to call (won't fail if undefined)
+
+#### example usage
+```js
+store.utils.callExternal("ajax.error", options.error, 404, "Not found");
+```
+
+### store.utils.ajax(options)
+Simplified version of jQuery's ajax method based on XMLHttpRequest.
+Only supports JSON requests.
+
+Options:
+
+* `url`: 
+* `method`: HTTP method to use (GET, POST, ...)
+* `success`: callback(data)
+* `error`: callback(statusCode, statusText)
+* `data`: body of your request
+

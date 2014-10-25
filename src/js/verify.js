@@ -33,8 +33,9 @@ store.verify = function(product, callback, isPrepared) {
     }
 
     if (typeof store.validator === 'string') {
-        ajax({
+        store.utils.ajax({
             url: store.validator,
+            method: 'POST',
             data: product,
             success: function(data) {
                 callback(data && data.ok, data.data);
@@ -49,36 +50,5 @@ store.verify = function(product, callback, isPrepared) {
     }
 };
 
-function ajax(options) { // url, data, success, error) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', options.url, true);
-    xhr.onreadystatechange = function(event) {
-        try {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    if (options.success) options.success(JSON.parse(xhr.responseText));
-                }
-                else {
-                    store.log.warn("verify -> request to " + options.url + " failed with status " + status + " (" + xhr.statusText + ")");
-                    if (options.error) options.error(xhr.status, xhr.statusText);
-                }
-            }
-        }
-        catch (e) {
-            store.log.warn("verify -> request to " + options.url + " failed with an exception: " + e.message);
-            if (options.error) options.error(417, e.message);
-        }
-    };
-    store.log.debug('verify -> send request to ' + options.url);
-    if (options.data) {
-        // xhr.responseType = /* options.dataType || */ 'json';
-        xhr.setRequestHeader("Content-Type", options.contentType || "application/json;charset=UTF-8");
-        // xhr.setRequestHeader("Content-Type", options.contentType || 'application/x-www-form-urlencoded; charset=UTF-8');
-        xhr.send(JSON.stringify(options.data));
-    }
-    else {
-        xhr.send();
-    }
-}
 
 }).call(this);

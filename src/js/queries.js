@@ -105,7 +105,7 @@ store._queries = {
                     cbs[j].cb.apply(store, args);
                 }
                 catch (err) {
-                    store.helpers.handleCallbackError(action, err);
+                    store.utils.logError(action, err);
                 }
             }
             ///  - Remove callbacks that needed to be called only once
@@ -164,7 +164,7 @@ store._queries = {
                     catch (err) {
 
                         // Generate a store error.
-                        store.helpers.handleCallbackError(q, err);
+                        store.utils.logError(q, err);
 
                         // We will throw the exception, but later,
                         // first let all callbacks do their job.

@@ -17,7 +17,7 @@ store.error.callbacks.trigger = function(error) {
             this[i].call(store, error);
         }
         catch (err) {
-            store.helpers.handleCallbackError("error", err);
+            store.utils.logError("error", err);
             deferThrow(err);
         }
     }

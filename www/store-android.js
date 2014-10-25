@@ -323,8 +323,9 @@ store.verbosity = 0;
             return;
         }
         if (typeof store.validator === "string") {
-            ajax({
+            store.utils.ajax({
                 url: store.validator,
+                method: "POST",
                 data: product,
                 success: function(data) {
                     callback(data && data.ok, data.data);
@@ -337,32 +338,6 @@ store.verbosity = 0;
             store.validator(product, callback);
         }
     };
-    function ajax(options) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", options.url, true);
-        xhr.onreadystatechange = function(event) {
-            try {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        if (options.success) options.success(JSON.parse(xhr.responseText));
-                    } else {
-                        store.log.warn("verify -> request to " + options.url + " failed with status " + status + " (" + xhr.statusText + ")");
-                        if (options.error) options.error(xhr.status, xhr.statusText);
-                    }
-                }
-            } catch (e) {
-                store.log.warn("verify -> request to " + options.url + " failed with an exception: " + e.message);
-                if (options.error) options.error(417, e.message);
-            }
-        };
-        store.log.debug("verify -> send request to " + options.url);
-        if (options.data) {
-            xhr.setRequestHeader("Content-Type", options.contentType || "application/json;charset=UTF-8");
-            xhr.send(JSON.stringify(options.data));
-        } else {
-            xhr.send();
-        }
-    }
 }).call(this);
 
 var initialRefresh = true;
@@ -532,7 +507,7 @@ store.restore = null;
                     try {
                         cbs[j].cb.apply(store, args);
                     } catch (err) {
-                        store.helpers.handleCallbackError(action, err);
+                        store.utils.logError(action, err);
                     }
                 }
                 store._queries.callbacks.byQuery[action] = cbs.filter(isNotOnce);
@@ -557,7 +532,7 @@ store.restore = null;
                         try {
                             cbs[j].cb.apply(store, args);
                         } catch (err) {
-                            store.helpers.handleCallbackError(q, err);
+                            store.utils.logError(q, err);
                             deferThrow(err);
                         }
                     }
@@ -607,7 +582,7 @@ store.restore = null;
             try {
                 this[i].call(store, error);
             } catch (err) {
-                store.helpers.handleCallbackError("error", err);
+                store.utils.logError("error", err);
                 deferThrow(err);
             }
         }
@@ -633,14 +608,60 @@ store.restore = null;
 
 (function() {
     "use strict";
-    store.helpers = {
-        handleCallbackError: function(query, err) {
-            store.log.warn("queries -> a callback for '" + query + "' failed with an exception.");
+    store.utils = {
+        logError: function(context, err) {
+            store.log.warn("A callback in '" + context + "' failed with an exception.");
             if (typeof err === "string") store.log.warn("           " + err); else if (err) {
                 if (err.fileName) store.log.warn("           " + err.fileName + ":" + err.lineNumber);
                 if (err.message) store.log.warn("           " + err.message);
                 if (err.stack) store.log.warn("           " + err.stack);
             }
+        },
+        callExternal: function(name, callback) {
+            try {
+                store.log.debug("calling " + name);
+                var args = Array.prototype.slice.call(arguments);
+                args.shift();
+                args.shift();
+                if (callback) callback.apply(this, args);
+            } catch (e) {
+                store.utils.logError(name, e);
+            }
+        },
+        ajax: function(options) {
+            var doneCb = function() {};
+            var xhr = new XMLHttpRequest();
+            xhr.open(options.method || "POST", options.url, true);
+            xhr.onreadystatechange = function(event) {
+                try {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            store.utils.callExternal("ajax.success", options.success, JSON.parse(xhr.responseText));
+                        } else {
+                            store.log.warn("ajax -> request to " + options.url + " failed with status " + xhr.status + " (" + xhr.statusText + ")");
+                            store.utils.callExternal("ajax.error", options.error, xhr.status, xhr.statusText);
+                        }
+                    }
+                } catch (e) {
+                    store.log.warn("ajax -> request to " + options.url + " failed with an exception: " + e.message);
+                    if (options.error) options.error(417, e.message);
+                }
+                if (xhr.readyState === 4) store.utils.callExternal("ajax.done", doneCb);
+            };
+            store.log.debug("ajax -> send request to " + options.url);
+            if (options.data) {
+                xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                xhr.send(JSON.stringify(options.data));
+            } else {
+                xhr.send();
+            }
+            return {
+                done: function(cb) {
+                    console.log("donecb");
+                    doneCb = cb;
+                    return this;
+                }
+            };
         }
     };
 }).call(this);

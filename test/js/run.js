@@ -13,6 +13,7 @@ mocha.addFile('test/js/test-order.js');
 mocha.addFile('test/js/test-queries.js');
 mocha.addFile('test/js/test-registerProducts.js');
 mocha.addFile('test/js/test-when.js');
+mocha.addFile('test/js/test-utils.js');
 
 mocha.run(function(){
     console.log('done');
