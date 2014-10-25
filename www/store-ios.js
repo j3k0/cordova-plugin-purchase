@@ -1012,9 +1012,20 @@ store.when("requested", function(product) {
 });
 
 store.when("finished", function(product) {
-    storekit.finish(product.transaction.id);
-    product.set("state", product.type === store.CONSUMABLE ? store.VALID : store.OWNED);
+    storekitFinish(product);
+    if (product.type === store.CONSUMABLE) product.set("state", store.VALID); else product.set("state", store.OWNED);
 });
+
+function storekitFinish(product) {
+    if (product.type === store.CONSUMABLE) {
+        if (product.transaction.id) storekit.finish(product.transaction.id);
+    } else {
+        for (var i = 0; i < product.transactions.length; ++i) {
+            storekit.finish(product.transactions[i].id);
+        }
+        product.transactions = [];
+    }
+}
 
 store.when("owned", function(product) {
     if (!isOwned(product.id)) setOwned(product.id, true);
@@ -1030,7 +1041,7 @@ store.when("expired", function(product) {
     store.log.debug("ios -> product " + product.id + " expired");
     product.owned = false;
     setOwned(product.id, false);
-    if (product.transaction.id) storekit.finish(product.transaction.id);
+    storekitFinish(product);
 });
 
 var initialized = false;
@@ -1141,6 +1152,8 @@ var storekitPurchased = function(transactionId, productId) {
             type: "ios-appstore",
             id: transactionId
         };
+        if (!product.transactions) product.transactions = [];
+        product.transactions.push(product.transaction);
         product.set("state", store.APPROVED);
     });
 };
