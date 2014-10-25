@@ -88,26 +88,56 @@ function iabLoaded(validProducts) {
                         store.log.warn("android -> user owns a non-registered product");
                         continue;
                     }
-                    setProductApproved(p, purchase);
+                    setProductData(p, purchase);
                 }
             }
             store.ready(true);
         },
-        function() { // errro
+        function() { // error
+            // TODO
         }
     );
-
-    // TODO getPurchases
-    // consumable in the list should enter the APPROVED state
-    // non-consumable in the list should enter the OWNED state
 }
 
-function setProductApproved(product, data) {
+//   {
+//     "purchaseToken":"tokenabc",
+//     "developerPayload":"mypayload1",
+//     "packageName":"com.example.MyPackage",
+//     "purchaseState":0, [0=purchased, 1=canceled, 2=refunded]
+//     "orderId":"12345.6789",
+//     "purchaseTime":1382517909216,
+//     "productId":"example_subscription"
+//   }
+function setProductData(product, data) {
     product.transaction = {
         type: 'android-playstore',
-        id: data.orderId
+        id: data.orderId,
+        purchaseToken: data.purchaseToken,
+        developerPayload: data.developerPayload
     };
-    product.set("state", store.APPROVED);
+
+    // When the product is owned, adjust the state if necessary
+    if (product.state !== store.OWNED && product.state !== store.FINISHED &&
+        product.state !== store.APPROVED) {
+
+        if (data.purchaseState === 0) {
+            product.set("state", store.APPROVED);
+        }
+    }
+
+    // When the product is cancelled or refunded, adjust the state if necessary
+    if (product.state === store.OWNED || product.state === store.FINISHED ||
+        product.state === store.APPROVED) {
+
+        if (data.purchaseState === 1) {
+            product.trigger("cancelled");
+            product.set("state", store.VALID);
+        }
+        else if (data.purchaseState === 2) {
+            product.trigger("refunded");
+            product.set("state", store.VALID);
+        }
+    }
 }
 
 store.when("requested", function(product) {
@@ -144,7 +174,7 @@ store.when("requested", function(product) {
             //     "receipt":        "{...}",
             //     "signature":      "qs54SGHgjGSJHSKJHIU"
             // }
-            setProductApproved(product, data);
+            setProductData(product, data);
         },
         function(err, code) {
             store.log.info("android -> buy error " + code);

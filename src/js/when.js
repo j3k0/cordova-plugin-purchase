@@ -55,6 +55,10 @@ store.when = function(query, once, callback) {
         ///  - `.cancelled(function (product) {})`
         ///    - Called when an [order](#order) is cancelled by the user.
         addPromise('cancelled');
+ 
+        ///  - `.refunded(function (product) {})`
+        ///    - Called when an [order](#order) is refunded by the user.
+        addPromise('refunded');
 
         ///  - `.error(function (err) {})`
         ///    - Called when an [order](#order) failed.
@@ -71,10 +75,10 @@ store.when = function(query, once, callback) {
         addPromise('initiated');
         addPromise('finished');
 
-        // Product verification successful
+        ///  - Product verification successful
         addPromise('verified');
 
-        // Product verification failed
+        /// Product verification failed
         addPromise('unverified');
 
         return ret;

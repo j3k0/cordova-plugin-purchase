@@ -182,6 +182,7 @@ store.verbosity = 0;
             addPromise("owned");
             addPromise("updated");
             addPromise("cancelled");
+            addPromise("refunded");
             addPromise("error");
             addPromise("registered");
             addPromise("valid");
@@ -838,18 +839,33 @@ store.restore = null;
                         store.log.warn("android -> user owns a non-registered product");
                         continue;
                     }
-                    setProductApproved(p, purchase);
+                    setProductData(p, purchase);
                 }
             }
             store.ready(true);
         }, function() {});
     }
-    function setProductApproved(product, data) {
+    function setProductData(product, data) {
         product.transaction = {
             type: "android-playstore",
-            id: data.orderId
+            id: data.orderId,
+            purchaseToken: data.purchaseToken,
+            developerPayload: data.developerPayload
         };
-        product.set("state", store.APPROVED);
+        if (product.state !== store.OWNED && product.state !== store.FINISHED && product.state !== store.APPROVED) {
+            if (data.purchaseState === 0) {
+                product.set("state", store.APPROVED);
+            }
+        }
+        if (product.state === store.OWNED || product.state === store.FINISHED || product.state === store.APPROVED) {
+            if (data.purchaseState === 1) {
+                product.trigger("cancelled");
+                product.set("state", store.VALID);
+            } else if (data.purchaseState === 2) {
+                product.trigger("refunded");
+                product.set("state", store.VALID);
+            }
+        }
     }
     store.when("requested", function(product) {
         store.ready(function() {
@@ -869,7 +885,7 @@ store.restore = null;
             }
             product.set("state", store.INITIATED);
             store.android.buy(function(data) {
-                setProductApproved(product, data);
+                setProductData(product, data);
             }, function(err, code) {
                 store.log.info("android -> buy error " + code);
                 if (code === store.ERR_PAYMENT_CANCELLED) {

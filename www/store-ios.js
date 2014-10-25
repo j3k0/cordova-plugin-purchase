@@ -182,6 +182,7 @@ store.verbosity = 0;
             addPromise("owned");
             addPromise("updated");
             addPromise("cancelled");
+            addPromise("refunded");
             addPromise("error");
             addPromise("registered");
             addPromise("valid");

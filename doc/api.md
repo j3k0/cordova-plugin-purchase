@@ -329,12 +329,16 @@ Return promise with the following methods:
    - Called when any change occured to a product.
  - `.cancelled(function (product) {})`
    - Called when an [order](#order) is cancelled by the user.
+ - `.refunded(function (product) {})`
+   - Called when an [order](#order) is refunded by the user.
  - `.error(function (err) {})`
    - Called when an [order](#order) failed.
    - The `err` parameter is an [error object](#errors)
  - Actually, all other product states have their promise
    - `registered`, `valid`, `invalid`, `requested`,
      `initiated` and `finished`
+ - Product verification successful
+Product verification failed
 
 ### alternative usage
 
