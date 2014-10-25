@@ -49,8 +49,6 @@ A non-consumable product, once `OWNED` always will be.
 
 http://stackoverflow.com/questions/6429186/can-we-check-if-a-users-in-app-purchase-has-been-refunded-by-apple
 
-#### purchase queue cleanup
-Make sure expired subscriptions do not fill the queue
 
 ## Initialization
 

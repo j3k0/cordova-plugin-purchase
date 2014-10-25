@@ -106,8 +106,12 @@ store.verbosity = 0;
                     store.error(err);
                     errorCb(err);
                     doneCb();
-                    if (data.code === store.PURCHASE_EXPIRED) that.trigger("expired");
-                    that.trigger("unverified");
+                    if (data.code === store.PURCHASE_EXPIRED) {
+                        that.trigger("expired");
+                        that.set("state", store.VALID);
+                    } else {
+                        that.trigger("unverified");
+                    }
                 }
             });
         });
@@ -353,22 +357,24 @@ store.verbosity = 0;
     };
 }).call(this);
 
-var initialRefresh = true;
-
-store.refresh = function() {
-    store.trigger("refreshed");
-    if (initialRefresh) {
-        initialRefresh = false;
-        return;
-    }
-    store.log.debug("refresh -> checking products state (" + store.products.length + " products)");
-    for (var i = 0; i < store.products.length; ++i) {
-        var p = store.products[i];
-        store.log.debug("refresh -> product id " + p.id + " (" + p.alias + ")");
-        store.log.debug("           in state '" + p.state + "'");
-        if (p.state === store.APPROVED) p.trigger(store.APPROVED);
-    }
-};
+(function() {
+    "use strict";
+    var initialRefresh = true;
+    store.refresh = function() {
+        store.trigger("refreshed");
+        if (initialRefresh) {
+            initialRefresh = false;
+            return;
+        }
+        store.log.debug("refresh -> checking products state (" + store.products.length + " products)");
+        for (var i = 0; i < store.products.length; ++i) {
+            var p = store.products[i];
+            store.log.debug("refresh -> product id " + p.id + " (" + p.alias + ")");
+            store.log.debug("           in state '" + p.state + "'");
+            if (p.state === store.APPROVED) p.trigger(store.APPROVED); else if (p.state === store.OWNED && (p.type == store.FREE_SUBSCRIPTION || p.type === store.PAID_SUBSCRIPTION)) p.trigger(store.APPROVED);
+        }
+    };
+}).call(this);
 
 store.restore = null;
 
@@ -1016,7 +1022,10 @@ store.when("registered", function(product) {
 });
 
 store.when("expired", function(product) {
-    product.finish();
+    store.log.debug("ios -> product " + product.id + " expired");
+    product.owned = false;
+    setOwned(product.id, false);
+    if (product.transaction.id) storekit.finish(product.transaction.id);
 });
 
 var initialized = false;
@@ -1165,8 +1174,13 @@ store.restore = function() {};
 
 store._prepareForValidation = function(product, callback) {
     storekit.loadReceipts(function(r) {
+        if (!product.transaction) {
+            product.transaction = {
+                type: "ios-appstore"
+            };
+        }
         product.transaction.appStoreReceipt = r.appStoreReceipt;
-        product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
+        if (product.transaction.id) product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
         callback();
     });
 };

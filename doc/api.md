@@ -404,8 +404,6 @@ store.validator = function(product, callback) {
 });
 ```
 ## <a name="refresh"></a>*store.refresh()*
-## <a name="restore"></a>*store.restore()*
-TODO write the doc
 ## *store.log* object
 ### `store.log.error(message)`
 Logs an error message, only if `store.debug` >= store.ERROR

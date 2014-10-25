@@ -94,11 +94,12 @@ store.when("registered", function(product) {
     store.log.debug("ios -> product " + product.id + " registered" + (owned ? " and owned" : ""));
 });
 
-//! #### purchase queue cleanup
-
-//! Make sure expired subscriptions do not fill the queue
 store.when("expired", function(product) {
-    product.finish();
+    store.log.debug("ios -> product " + product.id + " expired");
+    product.owned = false;
+    setOwned(product.id, false);
+    if (product.transaction.id)
+        storekit.finish(product.transaction.id);
 });
 
 //!
@@ -322,8 +323,14 @@ store.restore = function() {
 // Load receipts required by server-side validation of purchases.
 store._prepareForValidation = function(product, callback) {
     storekit.loadReceipts(function(r) {
+        if (!product.transaction) {
+            product.transaction = {
+                type: 'ios-appstore'
+            };
+        }
         product.transaction.appStoreReceipt = r.appStoreReceipt;
-        product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
+        if (product.transaction.id)
+            product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
         callback();
     });
 };

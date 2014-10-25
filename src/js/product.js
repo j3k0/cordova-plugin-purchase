@@ -137,9 +137,13 @@ store.Product.prototype.verify = function() {
                 store.error(err);
                 errorCb(err);
                 doneCb();
-                if (data.code === store.PURCHASE_EXPIRED)
+                if (data.code === store.PURCHASE_EXPIRED) {
                     that.trigger("expired");
-                that.trigger("unverified");
+                    that.set("state", store.VALID);
+                }
+                else {
+                    that.trigger("unverified");
+                }
             }
         });
     });
