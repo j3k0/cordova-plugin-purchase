@@ -186,7 +186,7 @@ store.when("requested", function(product) {
             setProductData(product, data);
         },
         function(err, code) {
-            store.log.info("android -> buy error " + code);
+            store.log.info("android -> " + method + " error " + code);
             if (code === store.ERR_PAYMENT_CANCELLED) {
                 // This isn't an error,
                 // just trigger the cancelled event.

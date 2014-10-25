@@ -38,7 +38,7 @@ InAppBilling.prototype.init = function (success, fail, options, skus) {
             	if (this.options.showLog) {
             		log(msg);
             	}
-				fail(msg);
+				fail(msg, store.ERR_INVALID_PRODUCT_ID);
             	return;
         	}
         	if (this.options.showLog) {
@@ -49,10 +49,10 @@ InAppBilling.prototype.init = function (success, fail, options, skus) {
 	}
 	
 	if(hasSKUs){
-		return cordova.exec(success, fail, "InAppBillingPlugin", "init", [skus]);
+		return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", [skus]);
     }else {
         //No SKUs
-		return cordova.exec(success, fail, "InAppBillingPlugin", "init", []);
+		return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", []);
     }
 };
 InAppBilling.prototype.getPurchases = function (success, fail) {
@@ -71,19 +71,19 @@ InAppBilling.prototype.subscribe = function (success, fail, productId) {
 	if (this.options.showLog) {
 		log('subscribe called!');
 	}
-	return cordova.exec(success, fail, "InAppBillingPlugin", "subscribe", [productId]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId]);
 };
 InAppBilling.prototype.consumePurchase = function (success, fail, productId) {
 	if (this.options.showLog) {
 		log('consumePurchase called!');
 	}
-	return cordova.exec(success, fail, "InAppBillingPlugin", "consumePurchase", [productId]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "consumePurchase", [productId]);
 };
 InAppBilling.prototype.getAvailableProducts = function (success, fail) {
 	if (this.options.showLog) {
 		log('getAvailableProducts called!');
 	}
-	return cordova.exec(success, fail, "InAppBillingPlugin", "getAvailableProducts", ["null"]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getAvailableProducts", ["null"]);
 };
 InAppBilling.prototype.getProductDetails = function (success, fail, skus) {
 	if (this.options.showLog) {
@@ -100,13 +100,13 @@ InAppBilling.prototype.getProductDetails = function (success, fail, skus) {
         if (typeof skus[0] !== 'string') {
             var msg = 'invalid productIds: ' + JSON.stringify(skus);
             log(msg);
-			fail(msg);
+			fail(msg, store.ERR_INVALID_PRODUCT_ID);
             return;
         }
         if (this.options.showLog) {
         	log('load ' + JSON.stringify(skus));
         }
-		return cordova.exec(success, fail, "InAppBillingPlugin", "getProductDetails", [skus]);
+		return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getProductDetails", [skus]);
     }
 };
 
