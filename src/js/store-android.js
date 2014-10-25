@@ -9,6 +9,10 @@ store.when("refreshed", function() {
     if (!initialized) init();
 });
 
+store.when("re-refreshed", function() {
+    iabGetPurchases();
+});
+
 var initialized = false;
 var skus = [];
 
@@ -64,6 +68,10 @@ function iabLoaded(validProducts) {
         }
     }
 
+    iabGetPurchases();
+}
+
+function iabGetPurchases() {
     store.android.getPurchases(
         function(purchases) { // success
             // example purchases data:

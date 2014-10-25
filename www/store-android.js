@@ -813,6 +813,9 @@ store.verbosity = 0;
     store.when("refreshed", function() {
         if (!initialized) init();
     });
+    store.when("re-refreshed", function() {
+        iabGetPurchases();
+    });
     var initialized = false;
     var skus = [];
     var init = function() {
@@ -858,6 +861,9 @@ store.verbosity = 0;
                 p.trigger("loaded");
             }
         }
+        iabGetPurchases();
+    }
+    function iabGetPurchases() {
         store.android.getPurchases(function(purchases) {
             if (purchases && purchases.length) {
                 for (var i = 0; i < purchases.length; ++i) {
