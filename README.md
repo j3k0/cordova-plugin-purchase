@@ -94,6 +94,7 @@ The plugin adds the `window.storekit` object, with the following methods:
         error:    function (errorCode, errorText) {},
         purchase: function (transactionId, productId) {},
         restore:  function (originalTransactionId, productId) {}
+        refreshReceipts: function(appReceipt) {}
         restoreCompleted: function () {},
         restoreFailed:    function (errorCode) {}
     })
@@ -116,6 +117,9 @@ In your `deviceready` listener, call:
 
         purchase: function (transactionId, productId) {
             console.log('purchased: ' + productId);
+        },
+        refreshReceipts: function(appReceiptBase64) {
+            console.log('new app receipt: ' + appReceiptBase64);
         },
         restore: function (transactionId, productId) {
             console.log('restored: ' + productId);
@@ -153,6 +157,10 @@ To make a purchase:
 
     window.storekit.purchase("com.example.app.inappid1", 1);
 
+To refresh the application receipt (IOS 7)
+
+    window.storekit.refreshReceipts();
+
 Error codes:
 
  * storekit.ERR_SETUP
@@ -163,6 +171,8 @@ Error codes:
     * Failed to purchase the item
  * storekit.ERR_LOAD_RECEIPTS
     * Cannot load receipts from Apple servers.
+ * storekit.ERR_REFRESH_RECEIPTS
+    * Cannot refresh receipts from Apple servers.
  * storekit.ERR_CLIENT_INVALID
     * Client doesn't support in-app purchase. (eg Simulator)
  * storekit.ERR_PAYMENT_CANCELLED

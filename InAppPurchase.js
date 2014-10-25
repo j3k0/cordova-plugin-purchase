@@ -40,6 +40,7 @@ InAppPurchase.prototype.ERR_PAYMENT_CANCELLED   = ERROR_CODES_BASE + 6;
 InAppPurchase.prototype.ERR_PAYMENT_INVALID     = ERROR_CODES_BASE + 7;
 InAppPurchase.prototype.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
 InAppPurchase.prototype.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
+InAppPurchase.prototype.ERR_REFRESH_RECEIPTS    = ERROR_CODES_BASE + 11;
 
 InAppPurchase.prototype.init = function (options) {
     this.options = {
@@ -49,6 +50,7 @@ InAppPurchase.prototype.init = function (options) {
         purchaseEnqueued: options.purchaseEnqueued || noop,
         finish:   options.finish   || noop,
         restore:  options.restore  || noop,
+        refreshReceipts: options.refreshReceipts || noop,
         restoreFailed:     options.restoreFailed    || noop,
         restoreCompleted:  options.restoreCompleted || noop
     };
@@ -252,6 +254,22 @@ InAppPurchase.prototype.restoreCompletedTransactionsFailed = function (errorCode
     protectCall(this.options.restoreFailed, 'options.restoreFailed', errorCode);
 };
 
+InAppPurchase.prototype.refreshReceipts = function() {
+    var that = this;
+    that.appStoreReceipt = null;
+
+    var loaded = function (base64) {
+        that.appStoreReceipt = base64;
+        protectCall(that.options.refreshReceipts, 'options.refreshReceipts', base64);
+    };
+
+    var error = function(errMessage) {
+        log('refresh receipt failed: ' + errMessage);
+        protectcall(options.error, 'options.error', InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
+    };
+
+    exec('appStoreRefreshReceipt', [], loaded, error);
+};
 InAppPurchase.prototype.loadReceipts = function (callback) {
 
     var that = this;
