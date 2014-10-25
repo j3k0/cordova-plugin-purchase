@@ -377,8 +377,9 @@ store.verbosity = 0;
             var p = store.products[i];
             store.log.debug("refresh -> product id " + p.id + " (" + p.alias + ")");
             store.log.debug("           in state '" + p.state + "'");
-            if (p.state === store.APPROVED) p.trigger(store.APPROVED); else if (p.state === store.OWNED && (p.type == store.FREE_SUBSCRIPTION || p.type === store.PAID_SUBSCRIPTION)) p.trigger(store.APPROVED);
+            if (p.state === store.APPROVED) p.trigger(store.APPROVED); else if (p.state === store.OWNED && (p.type === store.FREE_SUBSCRIPTION || p.type === store.PAID_SUBSCRIPTION)) p.trigger(store.APPROVED);
         }
+        store.trigger("re-refreshed");
     };
 }).call(this);
 
@@ -1046,9 +1047,9 @@ var storekitInit = function() {
         error: storekitError,
         purchase: storekitPurchased,
         purchasing: storekitPurchasing,
-        restore: function(originalTransactionId, productId) {},
-        restoreCompleted: function() {},
-        restoreFailed: function(errorCode) {}
+        restore: storekitRestored,
+        restoreCompleted: storekitRestoreCompleted,
+        restoreFailed: storekitRestoreFailed
     }, storekitReady, storekitInitFailed);
 };
 
@@ -1174,7 +1175,26 @@ var storekitError = function(errorCode, errorText, options) {
     });
 };
 
-store.restore = function() {};
+store.when("re-refreshed", function() {
+    storekit.restore();
+});
+
+function storekitRestored(originalTransactionId, productId) {
+    store.log.info("ios -> restored purchase " + productId);
+    storekitPurchased(originalTransactionId, productId);
+}
+
+function storekitRestoreCompleted() {
+    store.log.info("ios -> restore completed");
+}
+
+function storekitRestoreFailed(errorCode) {
+    store.log.warn("ios -> restore failed");
+    store.error({
+        code: store.ERR_REFRESH,
+        message: "Failed to restore purchases during refresh"
+    });
+}
 
 store._prepareForValidation = function(product, callback) {
     storekit.loadReceipts(function(r) {

@@ -39,7 +39,6 @@ store.when("refreshed", function() {
     storekitLoad(); // try to load if needed
 });
 
-
 //! #### initiate a purchase
 //!
 //! When a product enters the store.REQUESTED state, initiate a purchase with `storekit`.
@@ -132,9 +131,9 @@ var storekitInit = function () {
         error:    storekitError,
         purchase: storekitPurchased,
         purchasing: storekitPurchasing,
-        restore:  function (originalTransactionId, productId) {},
-        restoreCompleted: function () {},
-        restoreFailed:    function (errorCode) {}
+        restore:    storekitRestored,
+        restoreCompleted: storekitRestoreCompleted,
+        restoreFailed:    storekitRestoreFailed
     }, storekitReady, storekitInitFailed);
 };
 
@@ -316,9 +315,28 @@ var storekitError = function(errorCode, errorText, options) {
 };
 
 // Restore purchases.
-store.restore = function() {
-    // TODO
-};
+// store.restore = function() {
+// };
+store.when("re-refreshed", function() {
+    storekit.restore();
+});
+
+function storekitRestored(originalTransactionId, productId) {
+    store.log.info("ios -> restored purchase " + productId);
+    storekitPurchased(originalTransactionId, productId);
+}
+
+function storekitRestoreCompleted() {
+    store.log.info("ios -> restore completed");
+}
+
+function storekitRestoreFailed(errorCode) {
+    store.log.warn("ios -> restore failed");
+    store.error({
+        code: store.ERR_REFRESH,
+        message: "Failed to restore purchases during refresh"
+    });
+}
 
 // Load receipts required by server-side validation of purchases.
 store._prepareForValidation = function(product, callback) {

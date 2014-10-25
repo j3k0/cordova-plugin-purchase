@@ -6,6 +6,7 @@
 var initialRefresh = true;
 
 store.refresh = function() {
+
     store.trigger("refreshed");
     if (initialRefresh) {
         initialRefresh = false;
@@ -25,9 +26,11 @@ store.refresh = function() {
             p.trigger(store.APPROVED);
 
         // also send back subscription to approved so their expiry date gets validated again
-        else if (p.state === store.OWNED && (p.type == store.FREE_SUBSCRIPTION || p.type === store.PAID_SUBSCRIPTION))
+        else if (p.state === store.OWNED && (p.type === store.FREE_SUBSCRIPTION || p.type === store.PAID_SUBSCRIPTION))
             p.trigger(store.APPROVED);
     }
+    
+    store.trigger("re-refreshed");
 };
 
 

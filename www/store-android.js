@@ -377,8 +377,9 @@ store.verbosity = 0;
             var p = store.products[i];
             store.log.debug("refresh -> product id " + p.id + " (" + p.alias + ")");
             store.log.debug("           in state '" + p.state + "'");
-            if (p.state === store.APPROVED) p.trigger(store.APPROVED); else if (p.state === store.OWNED && (p.type == store.FREE_SUBSCRIPTION || p.type === store.PAID_SUBSCRIPTION)) p.trigger(store.APPROVED);
+            if (p.state === store.APPROVED) p.trigger(store.APPROVED); else if (p.state === store.OWNED && (p.type === store.FREE_SUBSCRIPTION || p.type === store.PAID_SUBSCRIPTION)) p.trigger(store.APPROVED);
         }
+        store.trigger("re-refreshed");
     };
 }).call(this);
 
