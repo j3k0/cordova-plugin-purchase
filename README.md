@@ -1,5 +1,7 @@
 # Cordova Purchase Plugin
 
+[![Build Status](https://travis-ci.org/j3k0/cordova-plugin-purchase.svg)](https://travis-ci.org/j3k0/cordova-plugin-purchase) [![Coverage Status](https://img.shields.io/coveralls/j3k0/cordova-plugin-purchase.svg)](https://coveralls.io/r/j3k0/cordova-plugin-purchase)
+
 **Author**: Jean-Christophe Hoelt - <hoelt@fovea.cc>
 
 ## Summary

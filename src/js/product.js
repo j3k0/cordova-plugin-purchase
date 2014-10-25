@@ -23,7 +23,9 @@ store.Product = function(options) {
     this.alias = options.alias || options.id || null;
 
     ///  - `product.type` - Family of product, should be one of the defined [product types](#product-types).
-    this.type = options.type || null;
+    var type = this.type = options.type || null;
+    if (type !== store.CONSUMABLE && type !== store.NON_CONSUMABLE && type !== store.PAID_SUBSCRIPTION && type !== store.FREE_SUBSCRIPTION)
+        throw new TypeError("Invalid product type");
 
     ///  - `product.price` - Non-localized price, without the currency
     this.price = options.price || null;

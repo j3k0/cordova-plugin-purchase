@@ -48,7 +48,8 @@ store.verbosity = 0;
         if (!options) options = {};
         this.id = options.id || null;
         this.alias = options.alias || options.id || null;
-        this.type = options.type || null;
+        var type = this.type = options.type || null;
+        if (type !== store.CONSUMABLE && type !== store.NON_CONSUMABLE && type !== store.PAID_SUBSCRIPTION && type !== store.FREE_SUBSCRIPTION) throw new TypeError("Invalid product type");
         this.price = options.price || null;
         this.currency = options.currency || null;
         this.title = options.title || options.localizedTitle || null;
@@ -846,6 +847,8 @@ store.restore = null;
         }, function() {});
     }
     function setProductData(product, data) {
+        store.log.debug("android -> product data for " + product.id);
+        store.log.debug(data);
         product.transaction = {
             type: "android-playstore",
             id: data.orderId,
@@ -884,7 +887,11 @@ store.restore = null;
                 return;
             }
             product.set("state", store.INITIATED);
-            store.android.buy(function(data) {
+            var method = "subscribe";
+            if (product.type === store.NON_CONSUMABLE || product.type === store.CONSUMABLE) {
+                method = "buy";
+            }
+            store.android[method](function(data) {
                 setProductData(product, data);
             }, function(err, code) {
                 store.log.info("android -> buy error " + code);

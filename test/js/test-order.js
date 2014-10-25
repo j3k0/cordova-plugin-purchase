@@ -9,15 +9,18 @@ describe('Order', function(){
         beforeEach(function() {
             product = {
                 id:    "p1",
-                alias: "product"
+                alias: "product",
+                type: store.CONSUMABLE
             };
-            store.registerProducts([ product ]);
+            store.register(product);
         });
 
         it('should exist and define promises', function() {
-            assert.ok(store.order);
-            assert.ok(store.order("").initiated);
-            assert.ok(store.order("").error);
+            assert.ok(store.order, "store.order should be defined");
+            assert.ok(store.order("p1").initiated, "store.order should return a initiated promise");
+            assert.ok(store.order("p1").error, "store.order should return a error promise");
         });
+
+        // TODO more tests
     });
 });

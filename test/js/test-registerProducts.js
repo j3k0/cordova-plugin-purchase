@@ -33,6 +33,14 @@ describe('Register products', function(){
             }]);
             assert.ok(!store.products.byId.order);
         });
+
+        it('should fail when registering products without types', function() {
+            assert.throws(function() {
+                store.register({
+                    id: "blah"
+                });
+            });
+        });
     });
 });
 

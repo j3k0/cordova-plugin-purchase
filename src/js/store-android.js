@@ -109,6 +109,10 @@ function iabLoaded(validProducts) {
 //     "productId":"example_subscription"
 //   }
 function setProductData(product, data) {
+
+    store.log.debug("android -> product data for " + product.id);
+    store.log.debug(data);
+
     product.transaction = {
         type: 'android-playstore',
         id: data.orderId,
@@ -160,7 +164,12 @@ store.when("requested", function(product) {
         // Initiate the purchase
         product.set("state", store.INITIATED);
 
-        store.android.buy(function(data) {
+        var method = 'subscribe';
+        if (product.type === store.NON_CONSUMABLE || product.type === store.CONSUMABLE) {
+            method = 'buy';
+        }
+
+        store.android[method](function(data) {
             // Success callabck.
             //
             // example data:

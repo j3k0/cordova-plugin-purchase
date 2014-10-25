@@ -5,7 +5,8 @@ describe('When', function(){
 
     var product = {
         id: "p1",
-        alias: "product-alias"
+        alias: "product-alias",
+        type: store.CONSUMABLE
     };
     before(function() {
         store.registerProducts([ product ]);

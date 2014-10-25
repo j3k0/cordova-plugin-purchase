@@ -4,7 +4,8 @@ var store = require("../store-test");
 describe('Off', function(){
 
     var product = {
-        id: "p1"
+        id: "p1",
+        type: store.CONSUMABLE
     };
     before(function() {
         store.registerProducts([ product ]);

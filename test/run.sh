@@ -4,7 +4,8 @@
 cd `dirname $0`/..
 ROOT_DIR=`pwd`
 TEST_DIR="$ROOT_DIR/test"
-BUILD_DIR="$TEST_DIR/build"
+
+BUILD_DIR="/tmp/build-$RANDOM"
 
 # Create and enter the build directory
 rm -fr "$BUILD_DIR"
@@ -14,7 +15,8 @@ cd "$TEST_DIR"
 BUNDLE_ID="$1"
 IAP_ID="$2"
 
-PLUGIN_URL="git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git#unified"
+#PLUGIN_URL="git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git#unified"
+PLUGIN_URL="$ROOT_DIR"
 
 if [ "x$IAP_ID" = "x" ] || [ "x$1" = "x--help" ]; then
     echo
