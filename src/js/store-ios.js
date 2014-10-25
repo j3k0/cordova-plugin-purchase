@@ -68,6 +68,7 @@ store.when("requested", function(product) {
 //! When a product enters the store.FINISHED state, `finish()` the storekit transaction.
 //!
 store.when("finished", function(product) {
+    store.log.debug("ios -> finishing " + product.id);
     storekitFinish(product);
     if (product.type === store.CONSUMABLE)
         product.set("state", store.VALID);
@@ -80,8 +81,10 @@ function storekitFinish(product) {
         if (product.transaction.id)
             storekit.finish(product.transaction.id);
     }
-    else {
+    else if (product.transactions) {
+        store.log.debug("ios -> finishing all " + product.transactions.length + " transactions for " + product.id);
         for (var i = 0; i < product.transactions.length; ++i) {
+            store.log.debug("ios -> finishing " + product.transactions[i]);
             storekit.finish(product.transactions[i]);
         }
         product.transactions = [];
@@ -265,7 +268,6 @@ var storekitPurchasing = function (productId) {
 //! with the order's transaction identifier.
 //!
 var storekitPurchased = function (transactionId, productId) {
-    var a = Math.random();
     store.ready(function() {
         var product = store.get(productId);
         if (!product) {
@@ -275,6 +277,16 @@ var storekitPurchased = function (transactionId, productId) {
             });
             return;
         }
+
+        // Check if processing of this transaction isn't already in progress
+        // Exit if so.
+        if (product.transactions) {
+            for (var i = 0; i < product.transactions.length; ++i) {
+                if (transactionId === product.transactions[i])
+                    return;
+            }
+        }
+
         product.transaction = {
             type: 'ios-appstore',
             id:   transactionId
