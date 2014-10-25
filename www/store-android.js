@@ -79,11 +79,12 @@ store.verbosity = 0;
     };
     store.Product.prototype.verify = function() {
         var that = this;
+        var nRetryLeft = 2;
         var doneCb = function() {};
         var successCb = function() {};
         var expiredCb = function() {};
         var errorCb = function() {};
-        defer(this, function() {
+        var tryValidation = function() {
             store._validator(that, function(success, data) {
                 store.log.debug("verify -> " + JSON.stringify(success));
                 if (success) {
@@ -111,12 +112,16 @@ store.verbosity = 0;
                         that.trigger("expired");
                         that.set("state", store.VALID);
                         store.utils.callExternal("verify.expired", expiredCb, that);
+                    } else if (nRetryLeft > 0) {
+                        nRetryLeft -= 1;
+                        defer(this, tryValidation, 2e3);
                     } else {
                         that.trigger("unverified");
                     }
                 }
             });
-        });
+        };
+        defer(this, tryValidation);
         var ret = {
             done: function(cb) {
                 doneCb = cb;
@@ -137,10 +142,10 @@ store.verbosity = 0;
         };
         return ret;
     };
-    function defer(thisArg, cb) {
+    function defer(thisArg, cb, delay) {
         window.setTimeout(function() {
             cb.call(thisArg);
-        }, 1);
+        }, delay || 1);
     }
 }).call(this);
 

@@ -108,13 +108,15 @@ store.Product.prototype.finish = function() {
 store.Product.prototype.verify = function() {
     var that = this;
 
+    var nRetryLeft = 2;
+
     // Callbacks set by the Promise
     var doneCb    = function() {};
     var successCb = function() {};
     var expiredCb = function() {};
     var errorCb   = function() {};
 
-    defer(this, function() {
+    var tryValidation = function() {
         store._validator(that, function(success, data) {
             store.log.debug("verify -> " + JSON.stringify(success));
             if (success) {
@@ -144,12 +146,19 @@ store.Product.prototype.verify = function() {
                     that.set("state", store.VALID);
                     store.utils.callExternal('verify.expired', expiredCb, that);
                 }
+                else if (nRetryLeft > 0) {
+                    // It failed... let's try one more time.
+                    nRetryLeft -= 1;
+                    defer(this, tryValidation, 1000);
+                }
                 else {
                     that.trigger("unverified");
                 }
             }
         });
-    });
+    };
+
+    defer(this, tryValidation);
 
     /// #### return value
     /// A Promise with the following methods:
@@ -172,10 +181,10 @@ store.Product.prototype.verify = function() {
     return ret;
 };
 
-function defer(thisArg, cb) {
+function defer(thisArg, cb, delay) {
     window.setTimeout(function() {
         cb.call(thisArg);
-    }, 1);
+    }, delay || 1);
 }
 
 /// 
