@@ -173,6 +173,9 @@ See [logging levels](#logging levels) for all possible values.
     store.WARNING = 2;
     store.INFO    = 3;
     store.DEBUG   = 4;
+
+### validation error codes
+
 ## <a name="product"></a>*store.Product* object ##
 
 Most events methods give you access to a `product` object.
@@ -199,25 +202,40 @@ Products object have the following fields and methods.
 
 ### public methods
 
-#### <a name="finishOrder"></a>`finish()` ##
+#### <a name="finish"></a>`finish()` ##
 
 Call to confirm to the store that an approved order has been delivered.
 This will change the product state from `APPROVED` to `FINISHED` (see [life-cycle](#life-cycle)).
 
-As long as you keep the product in its APPROVED:
+As long as you keep the product in state `APPROVED`:
 
- - the money will not be in your account (i.e. user isn't charged)
+ - the money may not be in your account (i.e. user isn't charged)
  - you will receive the `approved` event each time the application starts,
    to try finishing the pending transaction
  - on iOS, the user will be prompted for its password at starts
 
 ##### example use
 ```js
-store.when("product.id").approved(function(order){
+store.when("product.id").approved(function(product){
     app.unlockFeature();
-    order.finish();
+    product.finish();
 });
 ```
+#### <a name="verify"></a>`verify()` ##
+
+Initiate purchase validation as defined by [`store.validator`](#validator).
+
+#### return value
+A Promise with the following methods:
+
+ - `done(function(product){})`
+ - `expiredCb(function(product){})`
+ - `success(function(product, purchaseData){})`
+   - where `purchaseData` is device dependent transaction details,
+     which you can most probably ignore.
+ - `error(function(err){})`
+   - where `err` in an [store.Error object](#errors)
+
 
 ### life-cycle
 
@@ -386,23 +404,39 @@ Example use:
     store.off(fun);
 
 ## <a name="validator"></a> *store.validator*
-Set to the URL of the purchase validation service,
-or to your own custom validation callback.
+Set this attribute to either:
+
+ - the URL of your purchase validation service
+ - a custom validation callback method
 
 #### example usage
 
 ```js
-store.validator = "http://store.fovea.cc:1980/check-purchase"
+store.validator = "http://store.fovea.cc:1980/check-purchase";
 ```
 
 ```js
 store.validator = function(product, callback) {
-    callback(true);
+
+    callback(true, { ... transaction details ... }); // success!
+
+    // OR
+    callback(false, {
+        error: {
+            code: store.PURCHASE_EXPIRED,
+            message: "XYZ"
+        }
+    });
+
+    // OR
+    callback(false, "Impossible to proceed with validation");
+
     // Here, you will typically want to contact your own webservice
     // where you check transaction receipts with either Apple or
     // Google servers.
 });
 ```
+Validation error codes are [documented here](#validation-error-codes).
 ## <a name="refresh"></a>*store.refresh()*
 ## *store.log* object
 ### `store.log.error(message)`

@@ -2,32 +2,49 @@
 'use strict';
 
 /// ## <a name="validator"></a> *store.validator*
-/// Set to the URL of the purchase validation service,
-/// or to your own custom validation callback.
+/// Set this attribute to either:
+///
+///  - the URL of your purchase validation service
+///  - a custom validation callback method
 ///
 /// #### example usage
 ///
 /// ```js
-/// store.validator = "http://store.fovea.cc:1980/check-purchase"
+/// store.validator = "http://store.fovea.cc:1980/check-purchase";
 /// ```
 /// 
 /// ```js
 /// store.validator = function(product, callback) {
-///     callback(true);
+///
+///     callback(true, { ... transaction details ... }); // success!
+///
+///     // OR
+///     callback(false, {
+///         error: {
+///             code: store.PURCHASE_EXPIRED,
+///             message: "XYZ"
+///         }
+///     });
+///
+///     // OR
+///     callback(false, "Impossible to proceed with validation");
+///
 ///     // Here, you will typically want to contact your own webservice
 ///     // where you check transaction receipts with either Apple or
 ///     // Google servers.
 /// });
 /// ```
+/// Validation error codes are [documented here](#validation-error-codes).
 store.validator = null;
 
-store.verify = function(product, callback, isPrepared) {
+//
+store._validator = function(product, callback, isPrepared) {
     if (!store.validator)
         callback(true, product);
 
     if (store._prepareForValidation && isPrepared !== true) {
         store._prepareForValidation(product, function() {
-            store.verify(product, callback, true);
+            store._validator(product, callback, true);
         });
         return;
     }
@@ -49,6 +66,5 @@ store.verify = function(product, callback, isPrepared) {
         store.validator(product, callback);
     }
 };
-
 
 }).call(this);

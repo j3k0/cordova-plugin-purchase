@@ -153,12 +153,8 @@ store.verbosity = 0;
 // #include "order.js"
 // #include "ready.js"
 // #include "off.js"
-// #include "verify.js"
+// #include "validator.js"
 // #include "refresh.js"
-
-// ## <a name="restore"></a>*store.restore()*
-// TODO write the doc
-store.restore = null;
 
 // #include "log.js"
 

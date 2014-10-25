@@ -70,23 +70,23 @@ store.Product = function(options) {
 /// ### public methods
 ///
 
-/// #### <a name="finishOrder"></a>`finish()` ##
+/// #### <a name="finish"></a>`finish()` ##
 ///
 /// Call to confirm to the store that an approved order has been delivered.
 /// This will change the product state from `APPROVED` to `FINISHED` (see [life-cycle](#life-cycle)).
 ///
-/// As long as you keep the product in its APPROVED:
+/// As long as you keep the product in state `APPROVED`:
 ///
-///  - the money will not be in your account (i.e. user isn't charged)
+///  - the money may not be in your account (i.e. user isn't charged)
 ///  - you will receive the `approved` event each time the application starts,
 ///    to try finishing the pending transaction
 ///  - on iOS, the user will be prompted for its password at starts
 ///
 /// ##### example use
 /// ```js
-/// store.when("product.id").approved(function(order){
+/// store.when("product.id").approved(function(product){
 ///     app.unlockFeature();
-///     order.finish();
+///     product.finish();
 /// });
 /// ```
 store.Product.prototype.finish = function() {
@@ -97,28 +97,30 @@ store.Product.prototype.finish = function() {
             this.set('state', store.FINISHED);
             // The platform store should now handle the FINISHED event
             // and change the product status to VALID or OWNED.
-            // defer(this, function() {
-            //     store.log.debug("product -> " + this.id + " is a " + this.type);
-            //     if (this.type !== store.CONSUMABLE)
-            //         this.set('state', store.OWNED);
-            // });
         }
     });
 };
 
+/// #### <a name="verify"></a>`verify()` ##
+///
+/// Initiate purchase validation as defined by [`store.validator`](#validator).
+///
 store.Product.prototype.verify = function() {
     var that = this;
+
+    // Callbacks set by the Promise
     var doneCb    = function() {};
     var successCb = function() {};
+    var expiredCb = function() {};
     var errorCb   = function() {};
 
     defer(this, function() {
-        store.verify(that, function(success, data) {
+        store._validator(that, function(success, data) {
             store.log.debug("verify -> " + JSON.stringify(success));
             if (success) {
                 store.log.debug("verify -> success: " + JSON.stringify(data));
-                successCb(that, data);
-                doneCb();
+                store.utils.callExternal('verify.success', successCb, that, data);
+                store.utils.callExternal('verify.done', doneCb, that);
                 that.trigger("verified");
             }
             else {
@@ -135,11 +137,12 @@ store.Product.prototype.verify = function() {
                     });
                 }
                 store.error(err);
-                errorCb(err);
-                doneCb();
+                store.utils.callExternal('verify.error', errorCb, err);
+                store.utils.callExternal('verify.done', doneCb, that);
                 if (data.code === store.PURCHASE_EXPIRED) {
                     that.trigger("expired");
                     that.set("state", store.VALID);
+                    store.utils.callExternal('verify.expired', expiredCb, that);
                 }
                 else {
                     that.trigger("unverified");
@@ -148,11 +151,23 @@ store.Product.prototype.verify = function() {
         });
     });
 
+    /// #### return value
+    /// A Promise with the following methods:
+    ///
     var ret = {
+        ///  - `done(function(product){})`
         done:    function(cb) { doneCb = cb;    return this; },
+        ///  - `expiredCb(function(product){})`
+        expired: function(cb) { expiredCb = cb; return this; },
+        ///  - `success(function(product, purchaseData){})`
+        ///    - where `purchaseData` is device dependent transaction details,
+        ///      which you can most probably ignore.
         success: function(cb) { successCb = cb; return this; },
+        ///  - `error(function(err){})`
+        ///    - where `err` in an [store.Error object](#errors)
         error:   function(cb) { errorCb = cb;   return this; }
     };
+    ///
 
     return ret;
 };

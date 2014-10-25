@@ -62,9 +62,9 @@ var ERROR_CODES_BASE = 6777000;
 /*///*/     store.INFO    = 3;
 /*///*/     store.DEBUG   = 4;
 
-//
-// ### validation server error codes
-//
+///
+/// ### validation error codes
+///
 store.INVALID_PAYLOAD  = 6778001;
 store.CONNECTION_FAILED = 6778002;
 store.PURCHASE_EXPIRED = 6778003;

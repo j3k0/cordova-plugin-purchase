@@ -81,14 +81,15 @@ store.verbosity = 0;
         var that = this;
         var doneCb = function() {};
         var successCb = function() {};
+        var expiredCb = function() {};
         var errorCb = function() {};
         defer(this, function() {
-            store.verify(that, function(success, data) {
+            store._validator(that, function(success, data) {
                 store.log.debug("verify -> " + JSON.stringify(success));
                 if (success) {
                     store.log.debug("verify -> success: " + JSON.stringify(data));
-                    successCb(that, data);
-                    doneCb();
+                    store.utils.callExternal("verify.success", successCb, that, data);
+                    store.utils.callExternal("verify.done", doneCb, that);
                     that.trigger("verified");
                 } else {
                     store.log.debug("verify -> error: " + JSON.stringify(data));
@@ -104,11 +105,12 @@ store.verbosity = 0;
                         });
                     }
                     store.error(err);
-                    errorCb(err);
-                    doneCb();
+                    store.utils.callExternal("verify.error", errorCb, err);
+                    store.utils.callExternal("verify.done", doneCb, that);
                     if (data.code === store.PURCHASE_EXPIRED) {
                         that.trigger("expired");
                         that.set("state", store.VALID);
+                        store.utils.callExternal("verify.expired", expiredCb, that);
                     } else {
                         that.trigger("unverified");
                     }
@@ -118,6 +120,10 @@ store.verbosity = 0;
         var ret = {
             done: function(cb) {
                 doneCb = cb;
+                return this;
+            },
+            expired: function(cb) {
+                expiredCb = cb;
                 return this;
             },
             success: function(cb) {
@@ -331,11 +337,11 @@ store.verbosity = 0;
 (function() {
     "use strict";
     store.validator = null;
-    store.verify = function(product, callback, isPrepared) {
+    store._validator = function(product, callback, isPrepared) {
         if (!store.validator) callback(true, product);
         if (store._prepareForValidation && isPrepared !== true) {
             store._prepareForValidation(product, function() {
-                store.verify(product, callback, true);
+                store._validator(product, callback, true);
             });
             return;
         }
@@ -375,8 +381,6 @@ store.verbosity = 0;
         }
     };
 }).call(this);
-
-store.restore = null;
 
 (function() {
     "use strict";
