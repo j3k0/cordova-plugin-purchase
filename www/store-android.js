@@ -886,7 +886,9 @@ store.verbosity = 0;
             type: "android-playstore",
             id: data.orderId,
             purchaseToken: data.purchaseToken,
-            developerPayload: data.developerPayload
+            developerPayload: data.developerPayload,
+            receipt: data.receipt,
+            signature: data.signature
         };
         if (product.state !== store.OWNED && product.state !== store.FINISHED && product.state !== store.APPROVED) {
             if (data.purchaseState === 0) {

@@ -125,7 +125,9 @@ function setProductData(product, data) {
         type: 'android-playstore',
         id: data.orderId,
         purchaseToken: data.purchaseToken,
-        developerPayload: data.developerPayload
+        developerPayload: data.developerPayload,
+        receipt: data.receipt,
+        signature: data.signature
     };
 
     // When the product is owned, adjust the state if necessary
