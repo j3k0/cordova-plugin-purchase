@@ -79,7 +79,7 @@ store.verbosity = 0;
     };
     store.Product.prototype.verify = function() {
         var that = this;
-        var nRetryLeft = 2;
+        var nRetry = 0;
         var doneCb = function() {};
         var successCb = function() {};
         var expiredCb = function() {};
@@ -112,9 +112,9 @@ store.verbosity = 0;
                         that.trigger("expired");
                         that.set("state", store.VALID);
                         store.utils.callExternal("verify.expired", expiredCb, that);
-                    } else if (nRetryLeft > 0) {
-                        nRetryLeft -= 1;
-                        delay(this, tryValidation, 1e3);
+                    } else if (nRetry < 4) {
+                        nRetry += 1;
+                        delay(this, tryValidation, 1e3 * nRetry * nRetry);
                     } else {
                         that.trigger("unverified");
                     }

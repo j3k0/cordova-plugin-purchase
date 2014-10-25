@@ -108,7 +108,7 @@ store.Product.prototype.finish = function() {
 store.Product.prototype.verify = function() {
     var that = this;
 
-    var nRetryLeft = 2;
+    var nRetry = 0;
 
     // Callbacks set by the Promise
     var doneCb    = function() {};
@@ -146,10 +146,10 @@ store.Product.prototype.verify = function() {
                     that.set("state", store.VALID);
                     store.utils.callExternal('verify.expired', expiredCb, that);
                 }
-                else if (nRetryLeft > 0) {
+                else if (nRetry < 4) {
                     // It failed... let's try one more time. Maybe the appStoreReceipt wasn't updated yet.
-                    nRetryLeft -= 1;
-                    delay(this, tryValidation, 1000);
+                    nRetry += 1;
+                    delay(this, tryValidation, 1000 * nRetry * nRetry);
                 }
                 else {
                     that.trigger("unverified");
@@ -158,7 +158,7 @@ store.Product.prototype.verify = function() {
         });
     };
 
-    // For some reason, the appStoreReceipt isn't immediately 
+    // For some reason, the appStoreReceipt isn't always immediately available.
     delay(this, tryValidation, 1000);
 
     /// #### return value
