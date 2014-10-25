@@ -412,7 +412,9 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 
 			case SKPaymentTransactionStateRestored:
 				state = @"PaymentTransactionStateRestored";
-				transactionIdentifier = transaction.originalTransaction.transactionIdentifier;
+				transactionIdentifier = transaction.transactionIdentifier;
+                if (!transactionIdentifier)
+                    transactionIdentifier = transaction.originalTransaction.transactionIdentifier;
 				transactionReceipt = [[transaction transactionReceipt] base64EncodedString];
 				productId = transaction.originalTransaction.payment.productIdentifier;
                 break;
