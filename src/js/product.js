@@ -147,9 +147,9 @@ store.Product.prototype.verify = function() {
                     store.utils.callExternal('verify.expired', expiredCb, that);
                 }
                 else if (nRetryLeft > 0) {
-                    // It failed... let's try one more time.
+                    // It failed... let's try one more time. Maybe the appStoreReceipt wasn't updated yet.
                     nRetryLeft -= 1;
-                    defer(this, tryValidation, 1000);
+                    delay(this, tryValidation, 1000);
                 }
                 else {
                     that.trigger("unverified");
@@ -158,7 +158,8 @@ store.Product.prototype.verify = function() {
         });
     };
 
-    defer(this, tryValidation);
+    // For some reason, the appStoreReceipt isn't immediately 
+    delay(this, tryValidation, 1000);
 
     /// #### return value
     /// A Promise with the following methods:
@@ -181,11 +182,12 @@ store.Product.prototype.verify = function() {
     return ret;
 };
 
-function defer(thisArg, cb, delay) {
+var defer = function(thisArg, cb, delay) {
     window.setTimeout(function() {
         cb.call(thisArg);
     }, delay || 1);
-}
+};
+var delay = defer;
 
 /// 
 /// ### life-cycle

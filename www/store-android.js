@@ -114,14 +114,14 @@ store.verbosity = 0;
                         store.utils.callExternal("verify.expired", expiredCb, that);
                     } else if (nRetryLeft > 0) {
                         nRetryLeft -= 1;
-                        defer(this, tryValidation, 2e3);
+                        delay(this, tryValidation, 1e3);
                     } else {
                         that.trigger("unverified");
                     }
                 }
             });
         };
-        defer(this, tryValidation);
+        delay(this, tryValidation, 1e3);
         var ret = {
             done: function(cb) {
                 doneCb = cb;
@@ -142,11 +142,12 @@ store.verbosity = 0;
         };
         return ret;
     };
-    function defer(thisArg, cb, delay) {
+    var defer = function(thisArg, cb, delay) {
         window.setTimeout(function() {
             cb.call(thisArg);
         }, delay || 1);
-    }
+    };
+    var delay = defer;
 }).call(this);
 
 (function() {
