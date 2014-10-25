@@ -19,7 +19,7 @@ store.ready = function (cb) {
         if (isReady) return this;
         isReady = true;
         for (var i = 0; i < callbacks.length; ++i)
-            callbacks[i].call(this);
+            store.utils.callExternal('ready.callback', callbacks[i]);
         callbacks = [];
     }
     else if (cb) {

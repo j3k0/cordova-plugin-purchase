@@ -82,7 +82,7 @@ function storekitFinish(product) {
     }
     else {
         for (var i = 0; i < product.transactions.length; ++i) {
-            storekit.finish(product.transactions[i].id);
+            storekit.finish(product.transactions[i]);
         }
         product.transactions = [];
     }
@@ -114,6 +114,8 @@ store.when("expired", function(product) {
     product.owned = false;
     setOwned(product.id, false);
     storekitFinish(product);
+    if (product.state === store.OWNED)
+        product.set("state", store.VALID);
 });
 
 //!
@@ -263,6 +265,7 @@ var storekitPurchasing = function (productId) {
 //! with the order's transaction identifier.
 //!
 var storekitPurchased = function (transactionId, productId) {
+    var a = Math.random();
     store.ready(function() {
         var product = store.get(productId);
         if (!product) {
@@ -278,7 +281,8 @@ var storekitPurchased = function (transactionId, productId) {
         };
         if (!product.transactions)
             product.transactions = [];
-        product.transactions.push(product.transaction);
+        product.transactions.push(transactionId);
+        store.log.info("ios -> transaction " + transactionId + " purchased (" + product.transactions.length + " in the queue for " + productId + ")");
         product.set("state", store.APPROVED);
     });
 };

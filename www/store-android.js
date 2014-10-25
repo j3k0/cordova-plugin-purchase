@@ -303,7 +303,7 @@ store.verbosity = 0;
         if (cb === true) {
             if (isReady) return this;
             isReady = true;
-            for (var i = 0; i < callbacks.length; ++i) callbacks[i].call(this);
+            for (var i = 0; i < callbacks.length; ++i) store.utils.callExternal("ready.callback", callbacks[i]);
             callbacks = [];
         } else if (cb) {
             if (isReady) {

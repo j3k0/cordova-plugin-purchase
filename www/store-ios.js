@@ -303,7 +303,7 @@ store.verbosity = 0;
         if (cb === true) {
             if (isReady) return this;
             isReady = true;
-            for (var i = 0; i < callbacks.length; ++i) callbacks[i].call(this);
+            for (var i = 0; i < callbacks.length; ++i) store.utils.callExternal("ready.callback", callbacks[i]);
             callbacks = [];
         } else if (cb) {
             if (isReady) {
@@ -1021,7 +1021,7 @@ function storekitFinish(product) {
         if (product.transaction.id) storekit.finish(product.transaction.id);
     } else {
         for (var i = 0; i < product.transactions.length; ++i) {
-            storekit.finish(product.transactions[i].id);
+            storekit.finish(product.transactions[i]);
         }
         product.transactions = [];
     }
@@ -1042,6 +1042,7 @@ store.when("expired", function(product) {
     product.owned = false;
     setOwned(product.id, false);
     storekitFinish(product);
+    if (product.state === store.OWNED) product.set("state", store.VALID);
 });
 
 var initialized = false;
@@ -1139,6 +1140,7 @@ var storekitPurchasing = function(productId) {
 };
 
 var storekitPurchased = function(transactionId, productId) {
+    var a = Math.random();
     store.ready(function() {
         var product = store.get(productId);
         if (!product) {
@@ -1153,7 +1155,8 @@ var storekitPurchased = function(transactionId, productId) {
             id: transactionId
         };
         if (!product.transactions) product.transactions = [];
-        product.transactions.push(product.transaction);
+        product.transactions.push(transactionId);
+        store.log.info("ios -> transaction " + transactionId + " purchased (" + product.transactions.length + " in the queue for " + productId + ")");
         product.set("state", store.APPROVED);
     });
 };
