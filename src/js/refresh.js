@@ -26,8 +26,10 @@ store.refresh = function() {
             p.trigger(store.APPROVED);
 
         // also send back subscription to approved so their expiry date gets validated again
+        // BEWARE. If user is offline, he won't be able to access the content
+        // because validation will fail with a connection timeout.
         else if (p.state === store.OWNED && (p.type === store.FREE_SUBSCRIPTION || p.type === store.PAID_SUBSCRIPTION))
-            p.trigger(store.APPROVED);
+            p.set("state", store.APPROVED);
     }
     
     store.trigger("re-refreshed");

@@ -117,6 +117,12 @@ store.Product.prototype.verify = function() {
     var errorCb   = function() {};
 
     var tryValidation = function() {
+
+        // No need to verifiy a which status isn't approved
+        // It means it already has been 
+        if (that.state !== store.APPROVED)
+            return;
+
         store._validator(that, function(success, data) {
             store.log.debug("verify -> " + JSON.stringify(success));
             if (success) {

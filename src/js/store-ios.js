@@ -216,8 +216,12 @@ var storekitLoaded = function (validProducts, invalidProductIds) {
             state: store.VALID
         });
         p.trigger("loaded");
-        if (isOwned(p.id))
-            p.set("state", store.OWNED);
+        if (isOwned(p.id)) {
+            if (p.type === store.NON_CONSUMABLE)
+                p.set("state", store.OWNED);
+            else // recheck subscriptions at each application start
+                p.set("state", store.APPROVED);
+        }
     }
     for (var j = 0; j < invalidProductIds.length; ++j) {
         p = store.products.byId[invalidProductIds[j]];

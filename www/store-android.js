@@ -85,6 +85,7 @@ store.verbosity = 0;
         var expiredCb = function() {};
         var errorCb = function() {};
         var tryValidation = function() {
+            if (that.state !== store.APPROVED) return;
             store._validator(that, function(success, data) {
                 store.log.debug("verify -> " + JSON.stringify(success));
                 if (success) {
@@ -383,7 +384,7 @@ store.verbosity = 0;
             var p = store.products[i];
             store.log.debug("refresh -> product id " + p.id + " (" + p.alias + ")");
             store.log.debug("           in state '" + p.state + "'");
-            if (p.state === store.APPROVED) p.trigger(store.APPROVED); else if (p.state === store.OWNED && (p.type === store.FREE_SUBSCRIPTION || p.type === store.PAID_SUBSCRIPTION)) p.trigger(store.APPROVED);
+            if (p.state === store.APPROVED) p.trigger(store.APPROVED); else if (p.state === store.OWNED && (p.type === store.FREE_SUBSCRIPTION || p.type === store.PAID_SUBSCRIPTION)) p.set("state", store.APPROVED);
         }
         store.trigger("re-refreshed");
     };
