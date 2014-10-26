@@ -9,7 +9,7 @@ describe('When', function(){
         type: store.CONSUMABLE
     };
     before(function() {
-        store.registerProducts([ product ]);
+        store.register(product);
     });
 
     describe('#when()', function() {

@@ -409,7 +409,7 @@ Find below a diagram of the different states a product can pass by.
 
 #### states definitions
 
- - `REGISTERED`: right after being declared to the store using [`store.registerProducts()`](#registerProducts)
+ - `REGISTERED`: right after being declared to the store using [`store.register()`](#register)
  - `INVALID`: the server didn't recognize this product, it cannot be used.
  - `VALID`: the server sent extra information about the product (`title`, `price` and such).
  - `REQUESTED`: order (purchase) requested by the user
@@ -488,6 +488,22 @@ store.register({
     type: store.NON_CONSUMABLE
 });
 ```
+
+
+### Reserved keywords
+Some reserved keywords can't be used in the product `id` and `alias`:
+
+ - `product`
+ - `order`
+ - `registered`
+ - `valid`
+ - `invalid`
+ - `requested`
+ - `initiated`
+ - `approved`
+ - `owned`
+ - `finished`
+ - `refreshed`
 
 ## <a name="get"></a>*store.get(id)*
 Retrieve a [product](#product) from its `id` or `alias`.
@@ -766,33 +782,6 @@ Registered products indexed by their alias
 
     store.products.byAlias["full version"]```
 ### aliases to `store` methods, added for conveniance.
-## <a name="registerProducts"></a>*store.registerProducts(products)*
-Adds (or register) products into the store. Products can't be used
-unless registered first!
-
-Products is an array of object with fields :
-
- - `id`
- - `type`
- - `alias` (optional)
-
-See documentation for the [product](#product) object for more information.
-
-### Reserved keywords
-Some reserved keywords can't be used in the product `id` and `alias`:
-
- - `product`
- - `order`
- - `registered`
- - `valid`
- - `invalid`
- - `requested`
- - `initiated`
- - `approved`
- - `owned`
- - `finished`
- - `refreshed`
-
 
 ## *store._queries* object
 The `queries` object handles the callbacks registered for any given couple

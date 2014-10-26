@@ -8,7 +8,7 @@ describe('Off', function(){
         type: store.CONSUMABLE
     };
     before(function() {
-        store.registerProducts([ product ]);
+        store.register([ product ]);
     });
 
     describe('#off()', function(){
