@@ -145,17 +145,75 @@
 ///
 /// During initialization:
 /// ```js
-/// store.when("full version").approved(function(product){
-///     app.unlockFullVersion();
-///     product.finish();
+/// store.when("extra chapter").approved(function(product) {
+///     // download the feature
+///     app.downloadExtraChapter().then(function() {
+///         product.finish();
+///     });
 /// });
-/// ````
+/// ```
 ///
 /// When the purchase button is clicked:
 /// ```js
 /// store.order("full version");
 /// ```
 ///
+/// #### un-finished purchases
+///
+/// If your app wasn't able to deliver the content, `finish()` wasn't call.
+///
+/// Don't worry: the `approved` event will be re-triggered the next time you
+/// call [`store.refresh()`](#refresh), which can very well be the next time
+/// the application starts. Pending transactions are persistant.
+///
+/// ### Receipt validation
+///
+/// Some unthoughtful users will try to use faked "purchases" to access features
+/// they should normally pay for. If that's a concern, you should implement
+/// receipt validation, ideally server side validation.
+///
+/// When a purchase has been approved by the store, it's enriched with
+/// [transaction](#transactions) information (product.transaction field).
+///
+/// Two verfify a purchase you'll have to do two things:
+///
+///  - configure the [validator](#validator).
+///  - call [`product.verify()`](#verify) from the `approved` event,
+///    before finishing the transaction.
+///  - finish the transaction when transaction is `verified`.
+///
+/// #### example using a validation URL
+///
+/// ```js
+/// store.validator = "http://192.168.0.7:1980/check-purchase";
+///
+/// store.when("my stuff").approved(function(product) {
+///     product.verify();
+/// });
+///
+/// store.when("my stuff").verified(function(product) {
+///     product.finish();
+/// });
+/// ```
+///
+/// For an example using a validation callback instead, see documentation for [the validator method](#validator).
+///
+/// ### Subscriptions
+///
+/// For subscription, you MUST implement remote [receipt validation](#receipt-validation).
+///
+/// If the validator returns a `store.PURCHASE_EXPIRED` error code, the subscription will
+/// automatically loose its `owned` status.
+/// 
+/// Typically, you'll enable and disable access to your content this way.
+/// ```js
+/// store.when("cc.fovea.subcription").updated(function(product) {
+///     if (product.owned)
+///         app.subscriberMode();
+///     else
+///         app.guestMode();
+/// });
+/// ```
 
 // ### Security
 // 

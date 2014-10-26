@@ -5,6 +5,7 @@
 /// Set this attribute to either:
 ///
 ///  - the URL of your purchase validation service
+///     - [reeceipt](http://reeceipt.fovea.cc) or your own.
 ///  - a custom validation callback method
 ///
 /// #### example usage
@@ -37,6 +38,13 @@
 /// Validation error codes are [documented here](#validation-error-codes).
 store.validator = null;
 
+// 
+// ## store._validator
+// 
+// Execute the internal validation call, either to a webservice
+// or to the provided callback.
+//
+// Also makes sure to refresh the receipts.
 //
 store._validator = function(product, callback, isPrepared) {
     if (!store.validator)
@@ -66,5 +74,22 @@ store._validator = function(product, callback, isPrepared) {
         store.validator(product, callback);
     }
 };
+
+///
+/// ## transactions
+///
+/// A purchased product will contain transaction information that can be
+/// sent to a remote server for validation. This information is stored
+/// in the `product.transaction` field. It has the following format:
+///
+/// - `type`: "ios-appstore" or "android-playstore"
+/// - store specific data
+///
+/// Refer to [this documentation for iOS](https://developer.apple.com/library/ios/releasenotes/General/ValidateAppStoreReceipt/Chapters/ReceiptFields.html#//apple_ref/doc/uid/TP40010573-CH106-SW1).
+/// 
+/// Start [here for Android](https://developer.android.com/google/play/billing/billing_integrate.html#billing-security).
+///
+/// Another option is to use [Fovea's reeceipt validation service](http://reeceipt.fovea.cc/) that implements all the best practices to secure your transactions.
+///
 
 }).call(this);

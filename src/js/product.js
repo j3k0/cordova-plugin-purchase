@@ -27,11 +27,8 @@ store.Product = function(options) {
     if (type !== store.CONSUMABLE && type !== store.NON_CONSUMABLE && type !== store.PAID_SUBSCRIPTION && type !== store.FREE_SUBSCRIPTION)
         throw new TypeError("Invalid product type");
 
-    ///  - `product.price` - Non-localized price, without the currency
-    this.price = options.price || null;
-
-    ///  - `product.currency` - Currency code
-    this.currency = options.currency || null;
+    ///  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
+    this.state = options.state || "";
 
     ///  - `product.title` - Non-localized name or short description
     this.title = options.title || options.localizedTitle || null;
@@ -39,14 +36,20 @@ store.Product = function(options) {
     ///  - `product.description` - Non-localized longer description
     this.description = options.description || options.localizedDescription || null;
 
-    ///  - `product.localizedTitle` - Localized name or short description ready for display
-    this.localizedTitle = options.localizedTitle || options.title || null;
+    ///  - `product.price` - Non-localized price, without the currency
+    this.price = options.price || null;
 
-    ///  - `product.localizedDescription` - Localized longer description ready for display
-    this.localizedDescription = options.localizedDescription || options.description || null;
+    ///  - `product.currency` - Currency code
+    this.currency = options.currency || null;
 
-    ///  - `product.localizedPrice` - Localized price (with currency) ready for display
-    this.localizedPrice = options.localizedPrice || null;
+    //  - `product.localizedTitle` - Localized name or short description ready for display
+    // this.localizedTitle = options.localizedTitle || options.title || null;
+
+    //  - `product.localizedDescription` - Localized longer description ready for display
+    // this.localizedDescription = options.localizedDescription || options.description || null;
+
+    //  - `product.localizedPrice` - Localized price (with currency) ready for display
+    // this.localizedPrice = options.localizedPrice || null;
 
     ///  - `product.loaded` - Product has been loaded from server, however it can still be either `valid` or not
     this.loaded = options.loaded;
@@ -60,8 +63,8 @@ store.Product = function(options) {
     ///  - `product.owned` - Product is owned
     this.owned = options.owned;
 
-    ///  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
-    this.state = options.state || "";
+    ///  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
+    this.transaction = null;
 
     this.stateChanged();
 };
@@ -231,7 +234,7 @@ var delay = defer;
 ///
 /// #### state changes
 ///
-/// Each time the product changes state, an event is triggered.
+/// Each time the product changes state, an event is triggered (see [events](#events)).
 ///
 
 }).call(this);

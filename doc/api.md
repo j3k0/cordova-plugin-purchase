@@ -148,17 +148,75 @@ To confirm delivery, you'll use the [`product.finish()`](#finish) method.
 
 During initialization:
 ```js
-store.when("full version").approved(function(product){
-    app.unlockFullVersion();
-    product.finish();
+store.when("extra chapter").approved(function(product) {
+    // download the feature
+    app.downloadExtraChapter().then(function() {
+        product.finish();
+    });
 });
-````
+```
 
 When the purchase button is clicked:
 ```js
 store.order("full version");
 ```
 
+#### un-finished purchases
+
+If your app wasn't able to deliver the content, `finish()` wasn't call.
+
+Don't worry: the `approved` event will be re-triggered the next time you
+call [`store.refresh()`](#refresh), which can very well be the next time
+the application starts. Pending transactions are persistant.
+
+### Receipt validation
+
+Some unthoughtful users will try to use faked "purchases" to access features
+they should normally pay for. If that's a concern, you should implement
+receipt validation, ideally server side validation.
+
+When a purchase has been approved by the store, it's enriched with
+[transaction](#transactions) information (product.transaction field).
+
+Two verfify a purchase you'll have to do two things:
+
+ - configure the [validator](#validator).
+ - call [`product.verify()`](#verify) from the `approved` event,
+   before finishing the transaction.
+ - finish the transaction when transaction is `verified`.
+
+#### example using a validation URL
+
+```js
+store.validator = "http://192.168.0.7:1980/check-purchase";
+
+store.when("my stuff").approved(function(product) {
+    product.verify();
+});
+
+store.when("my stuff").verified(function(product) {
+    product.finish();
+});
+```
+
+For an example using a validation callback instead, see documentation for [the validator method](#validator).
+
+### Subscriptions
+
+For subscription, you MUST implement remote [receipt validation](#receipt-validation).
+
+If the validator returns a `store.PURCHASE_EXPIRED` error code, the subscription will
+automatically loose its `owned` status.
+
+Typically, you'll enable and disable access to your content this way.
+```js
+store.when("cc.fovea.subcription").updated(function(product) {
+    if (product.owned)
+        app.subscriberMode();
+    else
+        app.guestMode();
+});
+```
 
 # <a name="store"></a>*store* object ##
 
@@ -244,18 +302,16 @@ Products object have the following fields and methods.
  - `product.id` - Identifier of the product on the store
  - `product.alias` - Alias that can be used for more explicit [queries](#queries)
  - `product.type` - Family of product, should be one of the defined [product types](#product-types).
- - `product.price` - Non-localized price, without the currency
- - `product.currency` - Currency code
+ - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
  - `product.title` - Non-localized name or short description
  - `product.description` - Non-localized longer description
- - `product.localizedTitle` - Localized name or short description ready for display
- - `product.localizedDescription` - Localized longer description ready for display
- - `product.localizedPrice` - Localized price (with currency) ready for display
+ - `product.price` - Non-localized price, without the currency
+ - `product.currency` - Currency code
  - `product.loaded` - Product has been loaded from server, however it can still be either `valid` or not
  - `product.valid` - Product has been loaded and is a valid product
  - `product.canPurchase` - Product is in a state where it can be purchased
  - `product.owned` - Product is owned
- - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
+ - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
 
 ### public methods
 
@@ -329,7 +385,7 @@ Find below a diagram of the different states a product can pass by.
 
 #### state changes
 
-Each time the product changes state, an event is triggered.
+Each time the product changes state, an event is triggered (see [events](#events)).
 
 
 ## <a name="errors"></a>*store.Error* object
@@ -467,6 +523,7 @@ Example use:
 Set this attribute to either:
 
  - the URL of your purchase validation service
+    - [reeceipt](http://reeceipt.fovea.cc) or your own.
  - a custom validation callback method
 
 #### example usage
@@ -497,6 +554,22 @@ store.validator = function(product, callback) {
 });
 ```
 Validation error codes are [documented here](#validation-error-codes).
+
+## transactions
+
+A purchased product will contain transaction information that can be
+sent to a remote server for validation. This information is stored
+in the `product.transaction` field. It has the following format:
+
+- `type`: "ios-appstore" or "android-playstore"
+- store specific data
+
+Refer to [this documentation for iOS](https://developer.apple.com/library/ios/releasenotes/General/ValidateAppStoreReceipt/Chapters/ReceiptFields.html#//apple_ref/doc/uid/TP40010573-CH106-SW1).
+
+Start [here for Android](https://developer.android.com/google/play/billing/billing_integrate.html#billing-security).
+
+Another option is to use [Fovea's reeceipt validation service](http://reeceipt.fovea.cc/) that implements all the best practices to secure your transactions.
+
 ## <a name="refresh"></a>*store.refresh()*
 ## *store.log* object
 ### `store.log.error(message)`
