@@ -166,6 +166,22 @@
 /// call [`store.refresh()`](#refresh), which can very well be the next time
 /// the application starts. Pending transactions are persistant.
 ///
+/// #### simple case
+///
+/// In the most simple case, where:
+/// 
+///  - delivery of purchases is only local ;
+///  - you don't want to implement receipt validation ;
+///
+/// you may just want to finish all purchases automatically. You can do it this way:
+/// ```js
+/// store.when("product").approved(function(p) {
+///     p.finish();
+/// });
+/// ```
+///
+/// NOTE: the "product" query will match any purchases (see [here](#queries) to learn more details about queries).
+///
 /// ### Receipt validation
 ///
 /// Some unthoughtful users will try to use faked "purchases" to access features

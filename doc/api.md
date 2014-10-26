@@ -169,6 +169,22 @@ Don't worry: the `approved` event will be re-triggered the next time you
 call [`store.refresh()`](#refresh), which can very well be the next time
 the application starts. Pending transactions are persistant.
 
+#### simple case
+
+In the most simple case, where:
+
+ - delivery of purchases is only local ;
+ - you don't want to implement receipt validation ;
+
+you may just want to finish all purchases automatically. You can do it this way:
+```js
+store.when("product").approved(function(p) {
+    p.finish();
+});
+```
+
+NOTE: the "product" query will match any purchases (see [here](#queries) to learn more details about queries).
+
 ### Receipt validation
 
 Some unthoughtful users will try to use faked "purchases" to access features
@@ -639,12 +655,41 @@ The [`when`](#when) and [`once`](#once) methods take a `query` parameter.
 Those queries allow to select part of the products (or orders) registered
 into the store and get notified of events related to those products.
 
+No filters:
+
+ - `"product"` or `"order"` - for all products.
+
+Filter by product types:
+
+ - `"consumable"` - all consumable products.
+ - `"non consumable"` - all non consumable products.
+ - `"subscription"` - all subscriptions.
+ - `"free subscription"` - all free subscriptions.
+ - `"paid subscription"` - all paid subscriptions.
+
+Filter by product state:
+
+ - `"valid"` - all products in the VALID state.
+ - `"invalid"` - all products in the INVALID state.
+ - `"owned"` - all products in the INVALID state.
+ - etc. (see [here](#product-states) for all product states).
+
+Filter individual products:
+
+ - `"PRODUCT_ID"` - product with the given product id (replace by your own product id)
+ - `"ALIAS"` - product with the given alias
+
+Notice that you can add the "product" and "order" keywords anywhere in your query,
+it won't change anything but may seem nicer to read.
+
 #### example
 
  - `"consumable order"` - all consumable products
  - `"full version"` - the `alias` of a registered [`product`](#product)
  - `"order cc.fovea.inapp1"` - the `id` of a registered [`product`](#product)
+   - equivalent to just `"cc.fovea.inapp1"`
  - `"invalid product"` - an invalid product
+   - equivalent to just `"invalid"`
 
 ## *store._queries* object
 The `queries` object handles the callbacks registered for any given couple
