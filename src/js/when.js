@@ -28,42 +28,41 @@ store.when = function(query, once, callback) {
 
         /// 
         /// ### return value
-        /// 
-        /// Return promise with the following methods:
+        ///
+        /// Return a Promise with methods to register a callback for
+        /// know product events.
+        ///
+        /// #### events
         ///
 
-        ///  - `.loaded(function (product) {})`
+        ///  - `loaded(product)`
         ///    - Called when [product](#product) data is loaded from the store.
         addPromise('loaded');
 
-        ///  - `.approved(function (order) {})`
-        ///    - Called when an [order](#order) is approved.
-        addPromise('approved');
-
-        ///  - `.rejected(function (order) {})`
-        ///    - Called when an [order](#order) is rejected.
-        addPromise('rejected');
-
-        ///  - `.owned(function (product) {})`
-        ///    - Called when a non-consumable product or subscription is owned.
-        addPromise('owned');
-
-        ///  - `.updated(function (product) {})`
-        ///    - Called when any change occured to a product.
-        addPromise('updated');
-
-        ///  - `.cancelled(function (product) {})`
-        ///    - Called when an [order](#order) is cancelled by the user.
-        addPromise('cancelled');
- 
-        ///  - `.refunded(function (product) {})`
-        ///    - Called when an [order](#order) is refunded by the user.
-        addPromise('refunded');
-
-        ///  - `.error(function (err) {})`
+        ///  - `error(err)`
         ///    - Called when an [order](#order) failed.
         ///    - The `err` parameter is an [error object](#errors)
         addPromise('error');
+
+        ///  - `approved(product)`
+        ///    - Called when a product [order](#order) is approved.
+        addPromise('approved');
+
+        ///  - `owned(product)`
+        ///    - Called when a non-consumable product or subscription is owned.
+        addPromise('owned');
+
+        ///  - `updated(product)`
+        ///    - Called when any change occured to a product.
+        addPromise('updated');
+
+        ///  - `cancelled(product)`
+        ///    - Called when a product [order](#order) is cancelled by the user.
+        addPromise('cancelled');
+ 
+        ///  - `refunded(product)`
+        ///    - Called when an order is refunded by the user.
+        addPromise('refunded');
 
         ///  - Actually, all other product states have their promise
         ///    - `registered`, `valid`, `invalid`, `requested`,
@@ -75,10 +74,12 @@ store.when = function(query, once, callback) {
         addPromise('initiated');
         addPromise('finished');
 
-        ///  - Product verification successful
+        ///  - `verified(product)`
+        ///    - Receipt validation successful
         addPromise('verified');
 
-        /// Product verification failed
+        ///  - `unverified(product)`
+        ///    - Receipt verification failed
         addPromise('unverified');
 
         return ret;

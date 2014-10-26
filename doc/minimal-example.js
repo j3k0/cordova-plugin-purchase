@@ -23,9 +23,8 @@ function initializeStore() {
         console.log("\\o/ STORE READY \\o/");
     });
 
-    // After we've done our setup, we tell the store that he can now
-    // do whatever it has to do. Nothing will ever happen if
-    // we do not call store.refresh()
+    // After we've done our setup, we tell the store to do
+    // it's first refresh. Nothing will happen if we do not call store.refresh()
     store.refresh();
 }
 

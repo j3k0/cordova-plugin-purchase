@@ -19,7 +19,6 @@ describe('When', function(){
             store.when("p1").
                 loaded(nop).
                 approved(nop).
-                rejected(nop).
                 updated(nop).
                 cancelled(nop);
                 

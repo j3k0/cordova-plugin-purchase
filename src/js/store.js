@@ -1,38 +1,42 @@
 /// ### Philosophy
 ///
 /// The `store` API is mostly events based. As a user of this plugin,
-/// you will have to register listeners to changes happening to the product
-/// you defined.
+/// you will have to register listeners to changes happening to the [`products`](#product)
+/// you [`register`](#register).
 ///
-/// The core of the listening mechanism is the `when` method. It allows you to
-/// be notified of changes to one or a group of products using a query mechanism:
+/// The core of the listening mechanism is the [`when`](#when) method. It allows you to
+/// be notified of changes to one or a group of products using a [`query`](#queries) mechanism:
 ///
 ///     store.when("product").updated(refreshScreen);
-///     store.when("full version").purchased(unlockApp);
-///     store.when("subscription").updated(serverCheck);
+///     store.when("full version").owned(unlockApp);
+///     store.when("subscription").approved(serverCheck);
 ///     etc.
 ///
 /// The `updated` event is fired whenever one of the fields of a product is
 /// changed (its `owned` status for instance).
+///
 /// This event provides a generic way to track the statuses of your purchases,
 /// to unlock features when needed and to refresh your views accordingly.
 /// 
-/// ### Defining products
+/// ### Registering products
 ///
 /// The store needs to know the type and identifiers of your products before you
 /// can use them in your code.
 /// 
-/// Use [`store.registerProducts()`](#registerProducts) before your first call to
+/// Use [`store.register()`](#register) before your first call to
 /// [`store.refresh()`](#refresh).
+///
+/// Once registered, you can use [`store.get()`](#get) to retrieve
+/// the [`product object`](#product) from the store.
 ///
 /// ### Displaying products
 ///
 /// Right after you registered your products, nothing much is known about them
 /// except their `id`, `type` and an optional `alias`.
 ///
-/// When you perform the initial [refresh](#refresh), the store's server will
-/// be contacted to retrieve informations about the registered products: human
-/// readable `title` and `description`, `price`, `currency`, etc.
+/// When you perform the initial [`refresh()`](#refresh) call, the store's server will
+/// be contacted to load informations about the registered products: human
+/// readable `title` and `description`, `price`, etc.
 ///
 /// This isn't an optional step as some despotic store owners (like Apple) require you
 /// to display information about a product as retrieved from their server: no 
@@ -44,10 +48,11 @@
 /// them appears on screen. For you, the best option is to have your view monitor
 /// changes made to the product.
 ///
-/// #### monitor your products
+/// #### monitor changes
 ///
 /// Let's demonstrate this with an example:
 ///
+///     // method called when the screen showing your purchase is made visible
 ///     function show() {
 ///         render();
 ///         store.when("cc.fovea.test1").updated(render);
@@ -89,16 +94,53 @@
 ///         }
 ///     }
 ///     
+///     // method called when the view is hidden
 ///     function hide() {
 ///         // stop monitoring the product
 ///         store.off(render);
 ///     }
 ///
-/// In this example, `render` assumes nothing and redraw the whole view whatever
+/// In this example, `render` redraw the purchase element whatever
 /// happens to the product. When the view is hidden, we stop listening to changes
 /// (`store.off(render)`).
 ///
 
+/// ### Purchasing
+///
+/// #### initiate a purchase
+///
+/// Purchases are initiated using the [`store.order()`](#order) method.
+///
+/// The store will manage the internal purchase flow that'll end:
+///
+///  - with an `approved` [event](#events). The product enters the `APPROVED` state.
+///  - with a `cancelled` [event](#events). The product gets back to the `VALID` state.
+///  - with an `error` [event](#events). The product gets back to the `VALID` state.
+///
+/// See [product life-cycle](#life-cycle) for details about product states.
+///
+/// #### finish a purchase
+///
+/// Once the transaction is approved, the product still isn't owned: the store needs
+/// confirmation that the purchase was delivered before closing the transaction.
+///
+/// To confirm delivery, you'll use the [`product.finish()`](#finish) method.
+///
+/// #### example usage
+///
+/// During initialization:
+/// ```js
+/// store.when("full version").approved(function(product){
+///     app.unlockFullVersion();
+///     product.finish();
+/// });
+/// ````
+///
+/// When the purchase button is clicked:
+/// ```js
+/// store.order("full version");
+/// ```
+///
 
 // ### Security
 // 

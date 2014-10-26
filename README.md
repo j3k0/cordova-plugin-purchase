@@ -8,19 +8,27 @@
 
 This plugin allows **In-App Purchases** to be made from **Cordova and PhoneGap** applications.
 
-It lets you handle both platforms with a single codebase, reducing development time
-and removing the need for platform specific plugins.
+It lets you handle both platforms with a single codebase.
 
-## Supported platforms
+### Features
 
- - **iOS** version 5.0 or higher.
+ - consumable purchases (e.g. virtual currencies)
+ - non consumable purchases (e.g. features unlocking)
+ - paid and free subscriptions
+ - receipts validation
+ - restoring of purchases made on other devices
+
+### Supported platforms
+
+ - **iOS** version 6.0 or higher.
  - **Android** version 2.2 (API level 8) or higher
    - with Google Play client version 3.9.16 or higher
 
 ## Getting Started
 
 If you don't know much about In-App Purchases, you'll find a good introduction
-on the subject on Fovea's blog *(coming soon)*.
+on the subject here: [In-App Purchase Guidelines](https://developer.apple.com/in-app-purchase/In-App-Purchase-Guidelines.pdf).
+It's from Apple, but the exact same concepts apply to Android.
 
 You probably want to start by installing the plugin into your project.
 This is documented in the [Setup Guide](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup)
