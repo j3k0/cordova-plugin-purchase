@@ -28,7 +28,9 @@ build: sync-android test-js
 	@echo ""
 
 prepare-test-js:
+	@mkdir -p test/tmp
 	@node_modules/.bin/preprocess src/js/store-test.js src/js > test/tmp/store-test.js
+	@cp src/js/platforms/*-adapter.js test/tmp/
 	@#node_modules/.bin/istanbul instrument --no-compact --output test/tmp/store-test.js test/store-test-src.js
 
 jshint: check-jshint
@@ -71,7 +73,7 @@ doc: doc-api doc-contrib
 
 sync-android:
 	@rsync -qrv git_modules/android_iap/v3/src/android/ src/android
-	@cp git_modules/android_iap/v3/www/inappbilling.js src/js/android.js
+	@cp git_modules/android_iap/v3/www/inappbilling.js src/js/platforms/android-bridge.js
 
 clean:
 	@find . -name '*~' -exec rm '{}' ';'

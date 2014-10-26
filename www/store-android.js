@@ -681,7 +681,6 @@ store.verbosity = 0;
             }
             return {
                 done: function(cb) {
-                    console.log("donecb");
                     doneCb = cb;
                     return this;
                 }
