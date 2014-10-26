@@ -17,7 +17,7 @@ describe('Order', function(){
 
         it('should exist and define promises', function() {
             assert.ok(store.order, "store.order should be defined");
-            assert.ok(store.order("p1").initiated, "store.order should return a initiated promise");
+            assert.ok(store.order("p1").then, "store.order should return a then promise");
             assert.ok(store.order("p1").error, "store.order should return a error promise");
         });
 

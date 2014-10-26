@@ -13,6 +13,7 @@
 ///  - `alias` (optional)
 ///
 /// See documentation for the [product](#product) object for more information.
+///
 store.register = function(product) {
     if (!product)
         return;
@@ -20,5 +21,16 @@ store.register = function(product) {
         return store.register([product]);
     store.registerProducts(product);
 };
+
+/// ##### example usage
+///
+/// ```js
+/// store.register({
+///     id: "cc.fovea.inapp1",
+///     alias: "full version",
+///     type: store.NON_CONSUMABLE
+/// });
+/// ```
+///
 
 }).call(this);

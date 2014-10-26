@@ -2,6 +2,34 @@
 'use strict';
 
 /// ## <a name="refresh"></a>*store.refresh()*
+///
+/// After you're done registering your store's product and events handlers,
+/// time to call `store.refresh()`.
+///
+/// This will initiate all the complex behind-the-scene work, to load product
+/// data from the servers and restore whatever already have been
+/// purchased by the user.
+///
+/// Note that you can call this method again later during the application
+/// execution to re-trigger all that hard-work. It's kind of expensive in term of
+/// processing, so you'd better consider it twice.
+///
+/// One good way of doing it is to add a "Refresh Purchases" button in your
+/// applications settings. This way, if delivery of a purchase failed or
+/// if a user wants to restore purchases he made from another device, he'll
+/// have a way to do just that.
+///
+/// ##### example usage
+///
+/// ```js
+///    // ...
+///    // register products and events handlers here
+///    // ...
+///    //
+///    // then and only then, call refresh.
+///    store.refresh();
+/// ```
+///
 
 var initialRefresh = true;
 

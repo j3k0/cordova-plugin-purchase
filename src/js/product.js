@@ -13,7 +13,7 @@ store.Product = function(options) {
     ///
     /// Products object have the following fields and methods.
     ///
-    /// ### public fields
+    /// ### *store.Product* public attributes
     ///
 
     ///  - `product.id` - Identifier of the product on the store
@@ -30,16 +30,16 @@ store.Product = function(options) {
     ///  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
     this.state = options.state || "";
 
-    ///  - `product.title` - Non-localized name or short description
+    ///  - `product.title` - Localized name or short description
     this.title = options.title || options.localizedTitle || null;
 
-    ///  - `product.description` - Non-localized longer description
+    ///  - `product.description` - Localized longer description
     this.description = options.description || options.localizedDescription || null;
 
-    ///  - `product.price` - Non-localized price, without the currency
+    ///  - `product.price` - Localized price, with currency symbol
     this.price = options.price || null;
 
-    ///  - `product.currency` - Currency code
+    ///  - `product.currency` - Currency code (optionaly)
     this.currency = options.currency || null;
 
     //  - `product.localizedTitle` - Localized name or short description ready for display
@@ -70,26 +70,35 @@ store.Product = function(options) {
 };
 
 ///
-/// ### public methods
+/// ### *store.Product* public methods
 ///
 
-/// #### <a name="finish"></a>`finish()` ##
+/// #### <a name="finish"></a>`product.finish()` ##
 ///
-/// Call to confirm to the store that an approved order has been delivered.
+/// Call `product.finish()` to confirm to the store that an approved order has been delivered.
 /// This will change the product state from `APPROVED` to `FINISHED` (see [life-cycle](#life-cycle)).
 ///
 /// As long as you keep the product in state `APPROVED`:
 ///
 ///  - the money may not be in your account (i.e. user isn't charged)
 ///  - you will receive the `approved` event each time the application starts,
-///    to try finishing the pending transaction
-///  - on iOS, the user will be prompted for its password at starts
+///    where you should try again to finish the pending transaction.
 ///
 /// ##### example use
 /// ```js
 /// store.when("product.id").approved(function(product){
+///     // synchronous
 ///     app.unlockFeature();
 ///     product.finish();
+/// });
+/// ```
+///
+/// ```js
+/// store.when("product.id").approved(function(product){
+///     // asynchronous
+///     app.downloadFeature(function() {
+///         product.finish();
+///     });
 /// });
 /// ```
 store.Product.prototype.finish = function() {
@@ -104,9 +113,9 @@ store.Product.prototype.finish = function() {
     });
 };
 
-/// #### <a name="verify"></a>`verify()` ##
+/// #### <a name="verify"></a>`product.verify()` ##
 ///
-/// Initiate purchase validation as defined by [`store.validator`](#validator).
+/// Initiate purchase validation as defined by the [`store.validator`](#validator).
 ///
 store.Product.prototype.verify = function() {
     var that = this;
@@ -170,20 +179,26 @@ store.Product.prototype.verify = function() {
     // For some reason, the appStoreReceipt isn't always immediately available.
     delay(this, tryValidation, 1000);
 
-    /// #### return value
+    /// ##### return value
     /// A Promise with the following methods:
     ///
     var ret = {
         ///  - `done(function(product){})`
+        ///    - called whether verification failed or succeeded.
         done:    function(cb) { doneCb = cb;    return this; },
         ///  - `expiredCb(function(product){})`
+        ///    - called if the purchase expired.
         expired: function(cb) { expiredCb = cb; return this; },
         ///  - `success(function(product, purchaseData){})`
-        ///    - where `purchaseData` is device dependent transaction details,
-        ///      which you can most probably ignore.
+        ///    - called if the purchase is valid and verified.
+        ///    - `purchaseData` is the device dependent transaction details
+        ///      returned by the validator, which you can most probably ignore.
         success: function(cb) { successCb = cb; return this; },
         ///  - `error(function(err){})`
-        ///    - where `err` in an [store.Error object](#errors)
+        ///    - validation failed, either because of expiry or communication
+        ///      failure.
+        ///    - `err` is a [store.Error object](#errors), with a code expected to be 
+        ///      `store.ERR_PAYMENT_EXPIRED` or `store.ERR_VERIFICATION_FAILED`.
         error:   function(cb) { errorCb = cb;   return this; }
     };
     ///
@@ -228,13 +243,15 @@ var delay = defer;
 ///
 /// #### Notes
 ///
-///  - When finished, a consumable product will get back to the `VALID` state.
-///  - Any error in the purchase process will bring the product back to the `VALID` state.
-///  - During application startup, product will go instantly from `REGISTERED` to `OWNED` if it's a purchased non-consumable or non-expired subscription.
+///  - When finished, a consumable product will get back to the `VALID` state, while other will enter the `OWNED` state.
+///  - Any error in the purchase process will bring a product back to the `VALID` state.
+///  - During application startup, products may go instantly from `REGISTERED` to `APPROVED` or `OWNED`, for example if they are purchased non-consumables or non-expired subscriptions.
 ///
 /// #### state changes
 ///
-/// Each time the product changes state, an event is triggered (see [events](#events)).
+/// Each time the product changes state, appropriate events is triggered.
+/// 
+/// Learn more about events [here](#events) and about listening to events [here](#when).
 ///
 
 }).call(this);

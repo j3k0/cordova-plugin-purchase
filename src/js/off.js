@@ -6,6 +6,7 @@
 ///
 /// Example use:
 ///
+/// ```js
 ///     var fun = function(product) {
 ///         // Product loaded while the store screen is visible.
 ///         // Refresh some stuff.
@@ -16,6 +17,7 @@
 ///     [later]
 ///     ...
 ///     store.off(fun);
+/// ```
 ///
 store.off = function(callback) {
 

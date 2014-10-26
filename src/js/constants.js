@@ -2,7 +2,7 @@
 'use strict';
 
 ///
-/// ## constants
+/// ## Constants
 ///
 
 ///
@@ -65,8 +65,8 @@ var ERROR_CODES_BASE = 6777000;
 ///
 /// ### validation error codes
 ///
-store.INVALID_PAYLOAD  = 6778001;
-store.CONNECTION_FAILED = 6778002;
-store.PURCHASE_EXPIRED = 6778003;
+/*///*/     store.INVALID_PAYLOAD   = 6778001;
+/*///*/     store.CONNECTION_FAILED = 6778002;
+/*///*/     store.PURCHASE_EXPIRED  = 6778003;
 
 }).call(this);

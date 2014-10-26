@@ -263,7 +263,7 @@ store.verbosity = 0;
         var localCallbackId = callbackId++;
         var localCallback = callbacks[localCallbackId] = {};
         function done() {
-            delete localCallback.initiated;
+            delete localCallback.then;
             delete localCallback.error;
             delete callbacks[localCallbackId];
         }
@@ -271,8 +271,8 @@ store.verbosity = 0;
             p.set("state", store.REQUESTED);
         });
         return {
-            initiated: function(cb) {
-                localCallback.initiated = cb;
+            then: function(cb) {
+                localCallback.then = cb;
                 store.once(p.id, "initiated", function() {
                     if (!localCallback.then) return;
                     done();
@@ -293,7 +293,7 @@ store.verbosity = 0;
     };
     store.order.unregister = function(cb) {
         for (var i in callbacks) {
-            if (callbacks[i].initiated === cb) delete callbacks[i].initiated;
+            if (callbacks[i].then === cb) delete callbacks[i].then;
             if (callbacks[i].error === cb) delete callbacks[i].error;
         }
     };
@@ -311,7 +311,9 @@ store.verbosity = 0;
             callbacks = [];
         } else if (cb) {
             if (isReady) {
-                setTimeout(cb, 0);
+                setTimeout(function() {
+                    store.utils.callExternal("ready.callback", cb);
+                }, 1);
                 return this;
             } else {
                 callbacks.push(cb);

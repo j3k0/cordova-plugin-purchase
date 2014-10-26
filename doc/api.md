@@ -123,7 +123,7 @@ In this example, `render` redraw the purchase element whatever
 happens to the product. When the view is hidden, we stop listening to changes
 (`store.off(render)`).
 
-### Purchasing
+### <a name="purchasing"></a> Purchasing
 
 #### initiate a purchase
 
@@ -242,6 +242,8 @@ As with any other plugin, this object shouldn't be used before
 the "deviceready" event is fired. Check cordova's documentation
 for more details if needed.
 
+Find below all public attributes and methods you can use.
+
 ## <a name="verbosity"></a>*store.verbosity*
 
 The `verbosity` property defines how much you want `store.js` to write on the console. Set to:
@@ -252,9 +254,9 @@ The `verbosity` property defines how much you want `store.js` to write on the co
  - `store.INFO` or `3` to also show information messages
  - `store.DEBUG` or `4` to enable internal debugging messages.
 
-See [logging levels](#logging levels) for all possible values.
+See the [logging levels](#logging-levels) constants.
 
-## constants
+## Constants
 
 
 ### product types
@@ -307,63 +309,81 @@ See [logging levels](#logging levels) for all possible values.
 
 ### validation error codes
 
+    store.INVALID_PAYLOAD   = 6778001;
+    store.CONNECTION_FAILED = 6778002;
+    store.PURCHASE_EXPIRED  = 6778003;
 ## <a name="product"></a>*store.Product* object ##
 
 Most events methods give you access to a `product` object.
 
 Products object have the following fields and methods.
 
-### public fields
+### *store.Product* public attributes
 
  - `product.id` - Identifier of the product on the store
  - `product.alias` - Alias that can be used for more explicit [queries](#queries)
  - `product.type` - Family of product, should be one of the defined [product types](#product-types).
  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
- - `product.title` - Non-localized name or short description
- - `product.description` - Non-localized longer description
- - `product.price` - Non-localized price, without the currency
- - `product.currency` - Currency code
+ - `product.title` - Localized name or short description
+ - `product.description` - Localized longer description
+ - `product.price` - Localized price, with currency symbol
+ - `product.currency` - Currency code (optionaly)
  - `product.loaded` - Product has been loaded from server, however it can still be either `valid` or not
  - `product.valid` - Product has been loaded and is a valid product
  - `product.canPurchase` - Product is in a state where it can be purchased
  - `product.owned` - Product is owned
  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
 
-### public methods
+### *store.Product* public methods
 
-#### <a name="finish"></a>`finish()` ##
+#### <a name="finish"></a>`product.finish()` ##
 
-Call to confirm to the store that an approved order has been delivered.
+Call `product.finish()` to confirm to the store that an approved order has been delivered.
 This will change the product state from `APPROVED` to `FINISHED` (see [life-cycle](#life-cycle)).
 
 As long as you keep the product in state `APPROVED`:
 
  - the money may not be in your account (i.e. user isn't charged)
  - you will receive the `approved` event each time the application starts,
-   to try finishing the pending transaction
- - on iOS, the user will be prompted for its password at starts
+   where you should try again to finish the pending transaction.
 
 ##### example use
 ```js
 store.when("product.id").approved(function(product){
+    // synchronous
     app.unlockFeature();
     product.finish();
 });
 ```
-#### <a name="verify"></a>`verify()` ##
 
-Initiate purchase validation as defined by [`store.validator`](#validator).
+```js
+store.when("product.id").approved(function(product){
+    // asynchronous
+    app.downloadFeature(function() {
+        product.finish();
+    });
+});
+```
+#### <a name="verify"></a>`product.verify()` ##
 
-#### return value
+Initiate purchase validation as defined by the [`store.validator`](#validator).
+
+##### return value
 A Promise with the following methods:
 
  - `done(function(product){})`
+   - called whether verification failed or succeeded.
  - `expiredCb(function(product){})`
+   - called if the purchase expired.
  - `success(function(product, purchaseData){})`
-   - where `purchaseData` is device dependent transaction details,
-     which you can most probably ignore.
+   - called if the purchase is valid and verified.
+   - `purchaseData` is the device dependent transaction details
+     returned by the validator, which you can most probably ignore.
  - `error(function(err){})`
-   - where `err` in an [store.Error object](#errors)
+   - validation failed, either because of expiry or communication
+     failure.
+   - `err` is a [store.Error object](#errors), with a code expected to be 
+     `store.ERR_PAYMENT_EXPIRED` or `store.ERR_VERIFICATION_FAILED`.
 
 
 ### life-cycle
@@ -395,13 +415,15 @@ Find below a diagram of the different states a product can pass by.
 
 #### Notes
 
- - When finished, a consumable product will get back to the `VALID` state.
- - Any error in the purchase process will bring the product back to the `VALID` state.
- - During application startup, product will go instantly from `REGISTERED` to `OWNED` if it's a purchased non-consumable or non-expired subscription.
+ - When finished, a consumable product will get back to the `VALID` state, while other will enter the `OWNED` state.
+ - Any error in the purchase process will bring a product back to the `VALID` state.
+ - During application startup, products may go instantly from `REGISTERED` to `APPROVED` or `OWNED`, for example if they are purchased non-consumables or non-expired subscriptions.
 
 #### state changes
 
-Each time the product changes state, an event is triggered (see [events](#events)).
+Each time the product changes state, appropriate events is triggered.
+
+Learn more about events [here](#events) and about listening to events [here](#when).
 
 
 ## <a name="errors"></a>*store.Error* object
@@ -451,12 +473,24 @@ Product is an object with fields :
  - `alias` (optional)
 
 See documentation for the [product](#product) object for more information.
+
+##### example usage
+
+```js
+store.register({
+    id: "cc.fovea.inapp1",
+    alias: "full version",
+    type: store.NON_CONSUMABLE
+});
+```
+
 ## <a name="get"></a>*store.get(id)*
 Retrieve a [product](#product) from its `id` or `alias`.
 
-Example use:
-
+##### example usage
+```js
     var product = store.get("cc.fovea.product1");
+```
 
 ## <a name="when"></a>*store.when(query)*
 
@@ -562,21 +596,45 @@ After being called, the callback will be unregistered.
 
 
 ## <a name="order"></a>*store.order(product)*
+
+Initiate the purchase of a product.
+
+The `product` argument can be either:
+
+ - the `store.Product` object
+ - the product `id`
+ - the product `alias`
+
+See the ["Purchasing section"](#purchasing) to learn more about
+the purchase process.
+
+### return value
+
+`store.order()` returns a Promise with the following methods:
+
+ - `then` - called when the order was successfully initiated
+ - `error` - called if the order couldn't be initiated
+
+
+As usual, you can unregister the callbacks by using [`store.off()`](#off).
+
 ## <a name="ready"></a>*store.ready(callback)*
 Register the `callback` to be called when the store is ready to be used.
 
-If the store is already ready, `callback` is called immediatly.
+If the store is already ready, `callback` is executed immediatly.
+
+`store.ready()` without arguments will return the `ready` status.
+
 ### alternate usage (internal)
 
 `store.ready(true)` will set the `ready` status to true,
-and call the registered callbacks
-
-`store.ready()` without arguments will return the `ready` status.
+and call the registered callbacks.
 ## <a name="off"></a>*store.off(callback)*
 Unregister a callback. Works for callbacks registered with `ready`, `when`, `once` and `error`.
 
 Example use:
 
+```js
     var fun = function(product) {
         // Product loaded while the store screen is visible.
         // Refresh some stuff.
@@ -587,12 +645,13 @@ Example use:
     [later]
     ...
     store.off(fun);
+```
 
 ## <a name="validator"></a> *store.validator*
 Set this attribute to either:
 
  - the URL of your purchase validation service
-    - [reeceipt](http://reeceipt.fovea.cc) or your own.
+    - Fovea's [reeceipt](http://reeceipt.fovea.cc) or your own service.
  - a custom validation callback method
 
 #### example usage
@@ -640,6 +699,34 @@ Start [here for Android](https://developer.android.com/google/play/billing/billi
 Another option is to use [Fovea's reeceipt validation service](http://reeceipt.fovea.cc/) that implements all the best practices to secure your transactions.
 
 ## <a name="refresh"></a>*store.refresh()*
+
+After you're done registering your store's product and events handlers,
+time to call `store.refresh()`.
+
+This will initiate all the complex behind-the-scene work, to load product
+data from the servers and restore whatever already have been
+purchased by the user.
+
+Note that you can call this method again later during the application
+execution to re-trigger all that hard-work. It's kind of expensive in term of
+processing, so you'd better consider it twice.
+
+One good way of doing it is to add a "Refresh Purchases" button in your
+applications settings. This way, if delivery of a purchase failed or
+if a user wants to restore purchases he made from another device, he'll
+have a way to do just that.
+
+##### example usage
+
+```js
+   // ...
+   // register products and events handlers here
+   // ...
+   //
+   // then and only then, call refresh.
+   store.refresh();
+```
+
 ## *store.log* object
 ### `store.log.error(message)`
 Logs an error message, only if `store.debug` >= store.ERROR

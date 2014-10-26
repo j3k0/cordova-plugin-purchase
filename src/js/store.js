@@ -120,7 +120,7 @@
 /// (`store.off(render)`).
 ///
 
-/// ### Purchasing
+/// ### <a name="purchasing"></a> Purchasing
 ///
 /// #### initiate a purchase
 ///
@@ -258,6 +258,8 @@
 /// the "deviceready" event is fired. Check cordova's documentation
 /// for more details if needed.
 ///
+/// Find below all public attributes and methods you can use.
+///
 var store = {};
 
 /// ## <a name="verbosity"></a>*store.verbosity*
@@ -270,7 +272,7 @@ var store = {};
 ///  - `store.INFO` or `3` to also show information messages
 ///  - `store.DEBUG` or `4` to enable internal debugging messages.
 ///
-/// See [logging levels](#logging levels) for all possible values.
+/// See the [logging levels](#logging-levels) constants.
 store.verbosity = 0;
 
 // #include "constants.js"

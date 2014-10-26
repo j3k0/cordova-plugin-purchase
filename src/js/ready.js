@@ -8,13 +8,16 @@ var callbacks = [];
 /// ## <a name="ready"></a>*store.ready(callback)*
 /// Register the `callback` to be called when the store is ready to be used.
 ///
-/// If the store is already ready, `callback` is called immediatly.
+/// If the store is already ready, `callback` is executed immediatly.
+///
+/// `store.ready()` without arguments will return the `ready` status.
+///
 store.ready = function (cb) {
 
     /// ### alternate usage (internal)
     ///
     /// `store.ready(true)` will set the `ready` status to true,
-    /// and call the registered callbacks
+    /// and call the registered callbacks.
     if (cb === true) {
         if (isReady) return this;
         isReady = true;
@@ -26,7 +29,9 @@ store.ready = function (cb) {
         if (isReady) {
             // defer execution to prevent falsy belief that code works
             // whereas it only works synchronously.
-            setTimeout(cb, 0);
+            setTimeout(function() {
+                store.utils.callExternal('ready.callback', cb);
+            }, 1);
             return this;
         }
         else {
@@ -34,8 +39,6 @@ store.ready = function (cb) {
         }
     }
     else {
-        ///
-        /// `store.ready()` without arguments will return the `ready` status.
         return isReady;
     }
     return this;

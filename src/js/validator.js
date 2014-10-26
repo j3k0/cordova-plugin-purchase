@@ -5,7 +5,7 @@
 /// Set this attribute to either:
 ///
 ///  - the URL of your purchase validation service
-///     - [reeceipt](http://reeceipt.fovea.cc) or your own.
+///     - Fovea's [reeceipt](http://reeceipt.fovea.cc) or your own service.
 ///  - a custom validation callback method
 ///
 /// #### example usage
