@@ -38,6 +38,8 @@ your project and check that it works. You'll find a [Minimal Example Here](doc/m
 
 If you can't get things to work, go through the [Troubleshooting Checklist](doc/troubleshooting.md). *(coming soon)*
 
+You're all good? Time to read some more documentation. Hooray!
+
 ## Documentation
 
  - [API Documentation](doc/api.md)

@@ -42,6 +42,11 @@
 ///     var p = store.get("cc.fovea.purchase.consumable1");
 /// ```
 ///
+/// The product `id` and `type` have to match products defined in your
+/// Apple and Google developer consoles.
+///
+/// Learn how to do that in [HOWTO: Create New Products](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#create-new-products).
+///
 /// ### Displaying products
 ///
 /// Right after you registered your products, nothing much is known about them
@@ -95,7 +100,7 @@
 ///             );
 ///             
 ///             // Is this product owned? Give him a special class.
-///             if (product.state === store.OWNED)
+///             if (product.owned)
 ///                 $el.addClass("owned");
 ///             else
 ///                 $el.removeClass("owned");
@@ -184,14 +189,14 @@
 ///
 /// ### Receipt validation
 ///
-/// Some unthoughtful users will try to use faked "purchases" to access features
+/// Some unthoughtful users will try to use fake "purchases" to access features
 /// they should normally pay for. If that's a concern, you should implement
 /// receipt validation, ideally server side validation.
 ///
 /// When a purchase has been approved by the store, it's enriched with
-/// [transaction](#transactions) information (product.transaction field).
+/// [transaction](#transactions) information (`product.transaction` attribute).
 ///
-/// Two verfify a purchase you'll have to do two things:
+/// To verfify a purchase you'll have to do three things:
 ///
 ///  - configure the [validator](#validator).
 ///  - call [`product.verify()`](#verify) from the `approved` event,
@@ -212,7 +217,7 @@
 /// });
 /// ```
 ///
-/// For an example using a validation callback instead, see documentation for [the validator method](#validator).
+/// For an example using a validation callback instead, see the documentation of [the validator method](#validator).
 ///
 /// ### Subscriptions
 ///
