@@ -1,5 +1,6 @@
 var assert = require("assert");
 var store = require("../tmp/store-test");
+var helper = require("./helper");
 
 describe('When', function(){
 
@@ -9,8 +10,10 @@ describe('When', function(){
         type: store.CONSUMABLE
     };
     before(function() {
+        helper.resetTest();
         store.register(product);
     });
+    after(helper.resetTest);
 
     describe('#when()', function() {
 

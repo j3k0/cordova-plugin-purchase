@@ -51,4 +51,9 @@ store.ready.unregister = function(cb) {
     });
 };
 
+store.ready.reset = function() {
+    isReady = false;
+    callbacks = [];
+};
+
 }).call(this);

@@ -351,6 +351,10 @@ store.verbosity = 0;
             return o !== cb;
         });
     };
+    store.ready.reset = function() {
+        isReady = false;
+        callbacks = [];
+    };
 }).call(this);
 
 (function() {
@@ -451,6 +455,11 @@ store.verbosity = 0;
     };
     store.products.byId = {};
     store.products.byAlias = {};
+    store.products.reset = function() {
+        while (this.length > 0) this.shift();
+        this.byAlias = {};
+        this.byId = {};
+    };
 }).call(this);
 
 (function() {
