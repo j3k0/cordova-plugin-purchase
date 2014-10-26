@@ -5,16 +5,17 @@
 ### Philosophy
 
 The `store` API is mostly events based. As a user of this plugin,
-you will have to register listeners to changes happening to the [`products`](#product)
-you [`register`](#register).
+you will have to register listeners to changes happening to the products
+you register.
 
-The core of the listening mechanism is the [`when`](#when) method. It allows you to
-be notified of changes to one or a group of products using a [`query`](#queries) mechanism:
-
+The core of the listening mechanism is the [`when()`](#when) method. It allows you to
+be notified of changes to one or a set of products using a [`query`](#queries) mechanism:
+```js
     store.when("product").updated(refreshScreen);
     store.when("full version").owned(unlockApp);
     store.when("subscription").approved(serverCheck);
     etc.
+```
 
 The `updated` event is fired whenever one of the fields of a product is
 changed (its `owned` status for instance).
@@ -32,6 +33,18 @@ Use [`store.register()`](#register) before your first call to
 
 Once registered, you can use [`store.get()`](#get) to retrieve
 the [`product object`](#product) from the store.
+
+```js
+    store.register({
+      id: "cc.fovea.purchase.consumable1",
+      alias: "100 coins",
+      type: store.CONSUMABLE
+    });
+    ...
+    var p = store.get("100 coins");
+    // or
+    var p = store.get("cc.fovea.purchase.consumable1");
+```
 
 ### Displaying products
 
@@ -56,6 +69,7 @@ changes made to the product.
 
 Let's demonstrate this with an example:
 
+```js
     // method called when the screen showing your purchase is made visible
     function show() {
         render();
@@ -103,6 +117,7 @@ Let's demonstrate this with an example:
         // stop monitoring the product
         store.off(render);
     }
+```
 
 In this example, `render` redraw the purchase element whatever
 happens to the product. When the view is hidden, we stop listening to changes
