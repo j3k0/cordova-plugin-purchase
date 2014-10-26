@@ -66,6 +66,30 @@ describe('Off', function(){
             assert.equal(2, called);
         });
 
+        it('should allow to remove functions registered with order', function() {
+
+            var called = 0;
+            var f = function() {
+                ++called;
+            };
+
+            store.order("p1").then(f).error(f);
+            store.get("p1").trigger("initiated");
+            assert.equal(1, called);
+
+            store.get("p1").trigger("error");
+            assert.equal(1, called);
+
+            store.order("p1").then(f).error(f);
+            store.get("p1").trigger("initiated");
+            assert.equal(2, called);
+
+            store.order("p1").then(f).error(f);
+            store.off(f);
+            store.get("p1").trigger("initiated");
+            assert.equal(2, called);
+        });
+
     });
 });
 
