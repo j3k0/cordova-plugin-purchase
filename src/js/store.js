@@ -302,7 +302,6 @@ store.verbosity = 0;
 
 // #include "products.js"
 // #include "product-internal.js"
-// #include "registerProducts.js"
 // #include "queries.js"
 // #include "trigger.js"
 // #include "error-callbacks.js"

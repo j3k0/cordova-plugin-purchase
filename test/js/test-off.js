@@ -1,5 +1,5 @@
 var assert = require("assert");
-var store = require("../store-test");
+var store = require("../tmp/store-test");
 
 describe('Off', function(){
 
@@ -8,7 +8,7 @@ describe('Off', function(){
         type: store.CONSUMABLE
     };
     before(function() {
-        store.registerProducts([ product ]);
+        store.register([ product ]);
     });
 
     describe('#off()', function(){
@@ -63,6 +63,30 @@ describe('Off', function(){
             assert.equal(2, called);
             store.off(f);
             store.error.callbacks.trigger();
+            assert.equal(2, called);
+        });
+
+        it('should allow to remove functions registered with order', function() {
+
+            var called = 0;
+            var f = function() {
+                ++called;
+            };
+
+            store.order("p1").then(f).error(f);
+            store.get("p1").trigger("initiated");
+            assert.equal(1, called);
+
+            store.get("p1").trigger("error");
+            assert.equal(1, called);
+
+            store.order("p1").then(f).error(f);
+            store.get("p1").trigger("initiated");
+            assert.equal(2, called);
+
+            store.order("p1").then(f).error(f);
+            store.off(f);
+            store.get("p1").trigger("initiated");
             assert.equal(2, called);
         });
 

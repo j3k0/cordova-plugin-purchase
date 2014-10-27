@@ -232,7 +232,7 @@ var delay = defer;
 ///
 /// #### states definitions
 ///
-///  - `REGISTERED`: right after being declared to the store using [`store.registerProducts()`](#registerProducts)
+///  - `REGISTERED`: right after being declared to the store using [`store.register()`](#register)
 ///  - `INVALID`: the server didn't recognize this product, it cannot be used.
 ///  - `VALID`: the server sent extra information about the product (`title`, `price` and such).
 ///  - `REQUESTED`: order (purchase) requested by the user

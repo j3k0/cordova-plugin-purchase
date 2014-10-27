@@ -176,8 +176,31 @@ store.verbosity = 0;
     store.register = function(product) {
         if (!product) return;
         if (!product.length) return store.register([ product ]);
-        store.registerProducts(product);
+        registerProducts(product);
     };
+    function registerProducts(products) {
+        for (var i = 0; i < products.length; ++i) {
+            products[i].state = store.REGISTERED;
+            var p = new store.Product(products[i]);
+            if (!p.alias) p.alias = p.id;
+            if (p.id !== store._queries.uniqueQuery(p.id)) continue;
+            if (p.alias !== store._queries.uniqueQuery(p.alias)) continue;
+            if (hasKeyword(p.id) || hasKeyword(p.alias)) continue;
+            store.products.push(p);
+        }
+    }
+    var keywords = [ "product", "order", store.REGISTERED, store.VALID, store.INVALID, store.REQUESTED, store.INITIATED, store.APPROVED, store.OWNED, store.FINISHED, "refreshed" ];
+    function hasKeyword(string) {
+        if (!string) return false;
+        var tokens = string.split(" ");
+        for (var i = 0; i < tokens.length; ++i) {
+            var token = tokens[i];
+            for (var j = 0; j < keywords.length; ++j) {
+                if (token === keywords[j]) return true;
+            }
+        }
+        return false;
+    }
 }).call(this);
 
 (function() {
@@ -328,6 +351,10 @@ store.verbosity = 0;
             return o !== cb;
         });
     };
+    store.ready.reset = function() {
+        isReady = false;
+        callbacks = [];
+    };
 }).call(this);
 
 (function() {
@@ -428,6 +455,11 @@ store.verbosity = 0;
     };
     store.products.byId = {};
     store.products.byAlias = {};
+    store.products.reset = function() {
+        while (this.length > 0) this.shift();
+        this.byAlias = {};
+        this.byId = {};
+    };
 }).call(this);
 
 (function() {
@@ -464,33 +496,6 @@ store.verbosity = 0;
     store.Product.prototype.trigger = function(action, args) {
         store.trigger(this, action, args);
     };
-}).call(this);
-
-(function() {
-    "use strict";
-    store.registerProducts = function(products) {
-        for (var i = 0; i < products.length; ++i) {
-            products[i].state = store.REGISTERED;
-            var p = new store.Product(products[i]);
-            if (!p.alias) p.alias = p.id;
-            if (p.id !== store._queries.uniqueQuery(p.id)) continue;
-            if (p.alias !== store._queries.uniqueQuery(p.alias)) continue;
-            if (hasKeyword(p.id) || hasKeyword(p.alias)) continue;
-            this.products.push(p);
-        }
-    };
-    var keywords = [ "product", "order", store.REGISTERED, store.VALID, store.INVALID, store.REQUESTED, store.INITIATED, store.APPROVED, store.OWNED, store.FINISHED, "refreshed" ];
-    function hasKeyword(string) {
-        if (!string) return false;
-        var tokens = string.split(" ");
-        for (var i = 0; i < tokens.length; ++i) {
-            var token = tokens[i];
-            for (var j = 0; j < keywords.length; ++j) {
-                if (token === keywords[j]) return true;
-            }
-        }
-        return false;
-    }
 }).call(this);
 
 (function() {
@@ -685,7 +690,6 @@ store.verbosity = 0;
             }
             return {
                 done: function(cb) {
-                    console.log("donecb");
                     doneCb = cb;
                     return this;
                 }

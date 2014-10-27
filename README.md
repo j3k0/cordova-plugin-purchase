@@ -36,6 +36,8 @@ This is documented in the [Setup Guide](https://github.com/j3k0/cordova-plugin-p
 Once your project is setup properly, add the minimal initialization code in
 your project and check that it works. You'll find a [Minimal Example Here](doc/minimal-example.js).
 
+Find a more [Complete Example Here](https://github.com/Fovea/cordova-plugin-purchase-demo).
+
 If you can't get things to work, go through the [Troubleshooting Checklist](doc/troubleshooting.md). *(coming soon)*
 
 You're all good? Time to read some more documentation. Hooray!

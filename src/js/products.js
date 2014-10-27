@@ -34,4 +34,15 @@ store.products.byId = {};
 ///     store.products.byAlias["full version"]```
 store.products.byAlias = {};
 
+//
+// ### *store.products.reset()*
+//
+// Remove all products (for testing only).
+store.products.reset = function() {
+    while (this.length > 0)
+        this.shift();
+    this.byAlias = {};
+    this.byId = {};
+};
+
 }).call(this);

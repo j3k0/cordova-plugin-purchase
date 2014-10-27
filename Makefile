@@ -28,8 +28,10 @@ build: sync-android test-js
 	@echo ""
 
 prepare-test-js:
-	@node_modules/.bin/preprocess src/js/store-test.js src/js > test/store-test-src.js
-	@node_modules/.bin/istanbul instrument --output test/store-test.js test/store-test-src.js
+	@mkdir -p test/tmp
+	@node_modules/.bin/preprocess src/js/store-test.js src/js > test/tmp/store-test.js
+	@cp src/js/platforms/*-adapter.js test/tmp/
+	@#node_modules/.bin/istanbul instrument --no-compact --output test/tmp/store-test.js test/store-test-src.js
 
 jshint: check-jshint
 	@echo "- JSHint"
@@ -37,11 +39,12 @@ jshint: check-jshint
 
 test-js: jshint prepare-test-js
 	@echo "- Mocha"
-	@node_modules/.bin/istanbul test --root test/ test/js/run.js
+	@node_modules/.bin/istanbul test --root test/tmp test/js/run.js
 
 test-js-coverage: jshint prepare-test-js
 	@echo "- Mocha / Instanbul"
 	@node_modules/.bin/istanbul cover --root test/ test/js/run.js
+	@node_modules/.bin/coveralls < coverage/lcov.info
 
 test-install: build
 	@./test/run.sh cc.fovea.babygoo babygooinapp1
@@ -57,7 +60,7 @@ doc-api: test-js
 	@echo >> doc/api.md
 	@echo "*(generated from source files using \`make doc-api)\`*" >> doc/api.md
 	@echo >> doc/api.md
-	@cat test/store-test-src.js | grep "///" | cut -d/ -f4- | cut -d\  -f2- >> doc/api.md
+	@cat test/tmp/store-test.js | grep "///" | cut -d/ -f4- | cut -d\  -f2- >> doc/api.md
 
 doc-contrib: test-js
 	@echo "# Contributor Guide" > doc/contributor-guide.md
@@ -70,7 +73,7 @@ doc: doc-api doc-contrib
 
 sync-android:
 	@rsync -qrv git_modules/android_iap/v3/src/android/ src/android
-	@cp git_modules/android_iap/v3/www/inappbilling.js src/js/android.js
+	@cp git_modules/android_iap/v3/www/inappbilling.js src/js/platforms/android-bridge.js
 
 clean:
 	@find . -name '*~' -exec rm '{}' ';'

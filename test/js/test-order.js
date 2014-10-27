@@ -1,5 +1,5 @@
 var assert = require("assert");
-var store = require("../store-test");
+var store = require("../tmp/store-test");
 
 describe('Order', function(){
 

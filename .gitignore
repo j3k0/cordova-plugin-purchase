@@ -1,6 +1,5 @@
 /test/build/
 /node_modules/
 /coverage/
-/test/store-test.js
-/test/store-test-src.js
+/test/tmp/
 *~

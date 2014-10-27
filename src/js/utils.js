@@ -94,7 +94,7 @@ store.utils = {
             xhr.send();
         }
         return {
-            done: function(cb) { console.log("donecb"); doneCb = cb; return this; }
+            done: function(cb) { doneCb = cb; return this; }
         };
     }
 };
