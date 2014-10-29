@@ -147,20 +147,20 @@ store.Product.prototype.verify = function() {
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));
                 var msg = (data && data.error && data.error.message ? data.error.message : '');
-                var err = new Error({
+                var err = new store.Error({
                     code: store.ERR_VERIFICATION_FAILED,
                     message: "Transaction verification failed: " + msg
                 });
                 if (data.code === store.PURCHASE_EXPIRED) {
-                    err = new Error({
+                    err = new store.Error({
                         code: store.ERR_PAYMENT_EXPIRED,
                         message: "Transaction expired: " + msg
                     });
                 }
-                store.error(err);
-                store.utils.callExternal('verify.error', errorCb, err);
-                store.utils.callExternal('verify.done', doneCb, that);
                 if (data.code === store.PURCHASE_EXPIRED) {
+                    store.error(err);
+                    store.utils.callExternal('verify.error', errorCb, err);
+                    store.utils.callExternal('verify.done', doneCb, that);
                     that.trigger("expired");
                     that.set("state", store.VALID);
                     store.utils.callExternal('verify.expired', expiredCb, that);
@@ -171,11 +171,28 @@ store.Product.prototype.verify = function() {
                     delay(this, tryValidation, 1000 * nRetry * nRetry);
                 }
                 else {
+                    store.log.debug("validation failed 5 times, stop retrying, trigger an error");
+                    store.error(err);
+                    store.utils.callExternal('verify.error', errorCb, err);
+                    store.utils.callExternal('verify.done', doneCb, that);
                     that.trigger("unverified");
                 }
             }
         });
     };
+
+    defer(this, function() {
+        if (that.state !== store.APPROVED) {
+            var err = new store.Error({
+                code: store.ERR_VERIFICATION_FAILED,
+                message: "Product isn't in the APPROVED state"
+            });
+            store.error(err);
+            store.utils.callExternal('verify.error', errorCb, err);
+            store.utils.callExternal('verify.done', doneCb, that);
+            return;
+        }
+    });
 
     // For some reason, the appStoreReceipt isn't always immediately available.
     delay(this, tryValidation, 1000);

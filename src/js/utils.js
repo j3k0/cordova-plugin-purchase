@@ -40,8 +40,8 @@ store.utils = {
     /// ```
     callExternal: function(name, callback) {
         try {
-            store.log.debug("calling " + name);
             var args = Array.prototype.slice.call(arguments, 2);
+            // store.log.debug("calling " + name + "(" + JSON.stringify(args2) + ")");
             if (callback) callback.apply(this, args);
         }
         catch (e) {
