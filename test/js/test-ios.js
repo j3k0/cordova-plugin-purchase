@@ -42,26 +42,20 @@ global.storekit = {
     }
 };
 
-var timeFactor = 1;
-var pSetTimeout = global.setTimeout;
-global.setTimeout = function(fn, delay) {
-    pSetTimeout(fn, delay / timeFactor);
-};
-
 describe('iOS', function(){
 
     before(helper.resetTest);
     after(helper.resetTest);
 
     afterEach(function() {
-        timeFactor = 1;
+        helper.setTimeoutFactor(1);
     });
 
     describe('#init', function(){
 
         it('should initialize storekit at first refresh()', function(done) {
             require("../tmp/ios-adapter");
-            timeFactor = 1000;
+            helper.setTimeoutFactor(1000);
 
             // first initialization will fail, but the implementation
             // will retry after 5 seconds.
@@ -106,7 +100,7 @@ describe('iOS', function(){
                     assert.equal(store.VALID, store.get("cc.fovea.ps").state);
                     assert.equal(store.INVALID, store.get("cc.fovea.i").state);
 
-                    timeFactor = 1;
+                    helper.setTimeoutFactor(1);
                     done();
                 }, 20000);
             }, 6000);

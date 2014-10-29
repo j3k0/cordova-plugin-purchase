@@ -123,10 +123,11 @@ store.Product.prototype.verify = function() {
     var nRetry = 0;
 
     // Callbacks set by the Promise
-    var doneCb    = function() {};
-    var successCb = function() {};
-    var expiredCb = function() {};
-    var errorCb   = function() {};
+    var noop      = function() {};
+    var doneCb    = noop;
+    var successCb = noop;
+    var expiredCb = noop;
+    var errorCb   = noop;
 
     var tryValidation = function() {
 
@@ -207,7 +208,7 @@ store.Product.prototype.verify = function() {
 };
 
 var defer = function(thisArg, cb, delay) {
-    window.setTimeout(function() {
+    setTimeout(function() {
         cb.call(thisArg);
     }, delay || 1);
 };
