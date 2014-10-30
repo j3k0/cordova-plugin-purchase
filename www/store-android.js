@@ -809,7 +809,7 @@ store.verbosity = 0;
     function errorCb(fail) {
         return function(error) {
             if (!fail) return;
-            var tokens = error.split("|");
+            var tokens = typeof error === "string" ? error.split("|") : [ error ];
             if (tokens.length > 1 && /^[-+]?(\d+)$/.test(tokens[0])) {
                 var code = tokens[0];
                 var message = tokens[1];
