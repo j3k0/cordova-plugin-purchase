@@ -1,6 +1,9 @@
 (function() {
 "use strict";
 
+var initialized = false;
+var skus = [];
+
 store.when("refreshed", function() {
     if (!initialized) init();
 });
@@ -9,10 +12,7 @@ store.when("re-refreshed", function() {
     iabGetPurchases();
 });
 
-var initialized = false;
-var skus = [];
-
-var init = function () {
+function init() {
     if (initialized) return;
     initialized = true;
 
@@ -30,7 +30,7 @@ var init = function () {
             showLog: store.verbosity >= store.DEBUG ? true : false
         },
         skus);
-};
+}
 
 function iabReady() {
     store.log.debug("android -> ready");
@@ -225,7 +225,7 @@ store.when("product", "finished", function(product) {
             function(err, code) { // error
                 // can't finish.
                 store.error({
-                    code: code || ERR_UNKNOWN,
+                    code: code || store.ERR_UNKNOWN,
                     message: err
                 });
             },
@@ -236,4 +236,4 @@ store.when("product", "finished", function(product) {
     }
 });
 
-}).call(this);
+})();

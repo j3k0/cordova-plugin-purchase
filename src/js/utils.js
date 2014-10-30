@@ -56,17 +56,17 @@ store.utils = {
     ///
     /// Options:
     ///
-    /// * `url`: 
+    /// * `url`:
     /// * `method`: HTTP method to use (GET, POST, ...)
     /// * `success`: callback(data)
     /// * `error`: callback(statusCode, statusText)
     /// * `data`: body of your request
-    /// 
+    ///
     ajax: function(options) {
         var doneCb = function(){};
         var xhr = new XMLHttpRequest();
         xhr.open(options.method || 'POST', options.url, true);
-        xhr.onreadystatechange = function(event) {
+        xhr.onreadystatechange = function(/*event*/) {
             try {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
@@ -99,4 +99,4 @@ store.utils = {
     }
 };
 
-}).call(this);
+})();

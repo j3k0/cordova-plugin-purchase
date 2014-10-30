@@ -56,4 +56,4 @@ store.ready.reset = function() {
     callbacks = [];
 };
 
-}).call(this);
+})();

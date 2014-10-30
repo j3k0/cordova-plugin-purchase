@@ -2,6 +2,7 @@
  * Copyright (C) 2012-2013 by Guillaume Charhon
  * Modifications 10/16/2013 by Brian Thurlow
  */
+/*global cordova */
 
 (function() {
 "use strict";
@@ -21,38 +22,39 @@ InAppBilling.prototype.init = function (success, fail, options, skus) {
 	this.options = {
 		showLog: options.showLog !== false
 	};
-	
+
 	if (this.options.showLog) {
 		log('setup ok');
 	}
-	
+
 	var hasSKUs = false;
 	//Optional Load SKUs to Inventory.
 	if(typeof skus !== "undefined"){
 		if (typeof skus === "string") {
-        	skus = [skus];
-    	}
-    	if (skus.length > 0) {
-        	if (typeof skus[0] !== 'string') {
-            	var msg = 'invalid productIds: ' + JSON.stringify(skus);
-            	if (this.options.showLog) {
-            		log(msg);
-            	}
+			skus = [skus];
+		}
+		if (skus.length > 0) {
+			if (typeof skus[0] !== 'string') {
+				var msg = 'invalid productIds: ' + JSON.stringify(skus);
+				if (this.options.showLog) {
+					log(msg);
+				}
 				fail(msg, store.ERR_INVALID_PRODUCT_ID);
-            	return;
-        	}
-        	if (this.options.showLog) {
-        		log('load ' + JSON.stringify(skus));
-        	}
+				return;
+			}
+			if (this.options.showLog) {
+				log('load ' + JSON.stringify(skus));
+			}
 			hasSKUs = true;
-    	}
+		}
 	}
-	
-	if(hasSKUs){
-		return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", [skus]);
-    }else {
+
+	if (hasSKUs) {
+		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", [skus]);
+    }
+	else {
         //No SKUs
-		return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", []);
+		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", []);
     }
 };
 InAppBilling.prototype.getPurchases = function (success, fail) {
@@ -89,7 +91,7 @@ InAppBilling.prototype.getProductDetails = function (success, fail, skus) {
 	if (this.options.showLog) {
 		log('getProductDetails called!');
 	}
-	
+
 	if (typeof skus === "string") {
         skus = [skus];
     }
@@ -104,9 +106,9 @@ InAppBilling.prototype.getProductDetails = function (success, fail, skus) {
             return;
         }
         if (this.options.showLog) {
-        	log('load ' + JSON.stringify(skus));
+			log('load ' + JSON.stringify(skus));
         }
-		return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getProductDetails", [skus]);
+		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getProductDetails", [skus]);
     }
 };
 
@@ -140,4 +142,4 @@ window.inappbilling = new InAppBilling();
 try { store.android = window.inappbilling; }
 catch (e) {}
 
-}).call(this);
+})();

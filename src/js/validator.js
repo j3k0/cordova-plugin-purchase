@@ -13,7 +13,7 @@
 /// ```js
 /// store.validator = "http://store.fovea.cc:1980/check-purchase";
 /// ```
-/// 
+///
 /// ```js
 /// store.validator = function(product, callback) {
 ///
@@ -38,9 +38,9 @@
 /// Validation error codes are [documented here](#validation-error-codes).
 store.validator = null;
 
-// 
+//
 // ## store._validator
-// 
+//
 // Execute the internal validation call, either to a webservice
 // or to the provided callback.
 //
@@ -86,10 +86,10 @@ store._validator = function(product, callback, isPrepared) {
 /// - store specific data
 ///
 /// Refer to [this documentation for iOS](https://developer.apple.com/library/ios/releasenotes/General/ValidateAppStoreReceipt/Chapters/ReceiptFields.html#//apple_ref/doc/uid/TP40010573-CH106-SW1).
-/// 
+///
 /// Start [here for Android](https://developer.android.com/google/play/billing/billing_integrate.html#billing-security).
 ///
 /// Another option is to use [Fovea's reeceipt validation service](http://reeceipt.fovea.cc/) that implements all the best practices to secure your transactions.
 ///
 
-}).call(this);
+})();

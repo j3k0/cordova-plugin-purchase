@@ -44,10 +44,16 @@ store.verbosity = 0;
     store.INVALID_PAYLOAD = 6778001;
     store.CONNECTION_FAILED = 6778002;
     store.PURCHASE_EXPIRED = 6778003;
-}).call(this);
+})();
 
 (function() {
     "use strict";
+    function defer(thisArg, cb, delay) {
+        setTimeout(function() {
+            cb.call(thisArg);
+        }, delay || 1);
+    }
+    var delay = defer;
     store.Product = function(options) {
         if (!options) options = {};
         this.id = options.id || null;
@@ -78,10 +84,11 @@ store.verbosity = 0;
     store.Product.prototype.verify = function() {
         var that = this;
         var nRetry = 0;
-        var doneCb = function() {};
-        var successCb = function() {};
-        var expiredCb = function() {};
-        var errorCb = function() {};
+        var noop = function() {};
+        var doneCb = noop;
+        var successCb = noop;
+        var expiredCb = noop;
+        var errorCb = noop;
         var tryValidation = function() {
             if (that.state !== store.APPROVED) return;
             store._validator(that, function(success, data) {
@@ -94,20 +101,20 @@ store.verbosity = 0;
                 } else {
                     store.log.debug("verify -> error: " + JSON.stringify(data));
                     var msg = data && data.error && data.error.message ? data.error.message : "";
-                    var err = new Error({
+                    var err = new store.Error({
                         code: store.ERR_VERIFICATION_FAILED,
                         message: "Transaction verification failed: " + msg
                     });
                     if (data.code === store.PURCHASE_EXPIRED) {
-                        err = new Error({
+                        err = new store.Error({
                             code: store.ERR_PAYMENT_EXPIRED,
                             message: "Transaction expired: " + msg
                         });
                     }
-                    store.error(err);
-                    store.utils.callExternal("verify.error", errorCb, err);
-                    store.utils.callExternal("verify.done", doneCb, that);
                     if (data.code === store.PURCHASE_EXPIRED) {
+                        store.error(err);
+                        store.utils.callExternal("verify.error", errorCb, err);
+                        store.utils.callExternal("verify.done", doneCb, that);
                         that.trigger("expired");
                         that.set("state", store.VALID);
                         store.utils.callExternal("verify.expired", expiredCb, that);
@@ -115,11 +122,27 @@ store.verbosity = 0;
                         nRetry += 1;
                         delay(this, tryValidation, 1e3 * nRetry * nRetry);
                     } else {
+                        store.log.debug("validation failed 5 times, stop retrying, trigger an error");
+                        store.error(err);
+                        store.utils.callExternal("verify.error", errorCb, err);
+                        store.utils.callExternal("verify.done", doneCb, that);
                         that.trigger("unverified");
                     }
                 }
             });
         };
+        defer(this, function() {
+            if (that.state !== store.APPROVED) {
+                var err = new store.Error({
+                    code: store.ERR_VERIFICATION_FAILED,
+                    message: "Product isn't in the APPROVED state"
+                });
+                store.error(err);
+                store.utils.callExternal("verify.error", errorCb, err);
+                store.utils.callExternal("verify.done", doneCb, that);
+                return;
+            }
+        });
         delay(this, tryValidation, 1e3);
         var ret = {
             done: function(cb) {
@@ -141,13 +164,7 @@ store.verbosity = 0;
         };
         return ret;
     };
-    var defer = function(thisArg, cb, delay) {
-        window.setTimeout(function() {
-            cb.call(thisArg);
-        }, delay || 1);
-    };
-    var delay = defer;
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -169,14 +186,13 @@ store.verbosity = 0;
     store.error.unregister = function(cb) {
         store.error.callbacks.unregister(cb);
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
     store.register = function(product) {
         if (!product) return;
-        if (!product.length) return store.register([ product ]);
-        registerProducts(product);
+        if (!product.length) store.register([ product ]); else registerProducts(product);
     };
     function registerProducts(products) {
         for (var i = 0; i < products.length; ++i) {
@@ -201,7 +217,7 @@ store.verbosity = 0;
         }
         return false;
     }
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -209,7 +225,7 @@ store.verbosity = 0;
         var product = store.products.byId[id] || store.products.byAlias[id];
         return product;
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -250,7 +266,7 @@ store.verbosity = 0;
     store.when.unregister = function(cb) {
         store._queries.callbacks.unregister(cb);
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -264,14 +280,13 @@ store.verbosity = 0;
         }
     };
     store.once.unregister = store.when.unregister;
-}).call(this);
+})();
 
 (function() {
     "use strict";
     var callbacks = {};
     var callbackId = 0;
     store.order = function(pid) {
-        var that = this;
         var p = pid;
         if (typeof pid === "string") {
             p = store.products.byId[pid] || store.products.byAlias[pid];
@@ -308,7 +323,7 @@ store.verbosity = 0;
                 store.once(p.id, "error", function(err) {
                     if (!localCallback.error) return;
                     done();
-                    cb(p);
+                    cb(err);
                 });
                 return this;
             }
@@ -320,7 +335,7 @@ store.verbosity = 0;
             if (callbacks[i].error === cb) delete callbacks[i].error;
         }
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -355,7 +370,7 @@ store.verbosity = 0;
         isReady = false;
         callbacks = [];
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -365,7 +380,7 @@ store.verbosity = 0;
         store.order.unregister(callback);
         store.error.unregister(callback);
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -394,7 +409,7 @@ store.verbosity = 0;
             store.validator(product, callback);
         }
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -414,7 +429,7 @@ store.verbosity = 0;
         }
         store.trigger("re-refreshed");
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -443,7 +458,7 @@ store.verbosity = 0;
             log(store.DEBUG, o);
         }
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -460,7 +475,7 @@ store.verbosity = 0;
         this.byAlias = {};
         this.byId = {};
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -496,7 +511,7 @@ store.verbosity = 0;
     store.Product.prototype.trigger = function(action, args) {
         store.trigger(this, action, args);
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -551,7 +566,7 @@ store.verbosity = 0;
         triggerWhenProduct: function(product, action, args) {
             var queries = [];
             if (product && product.id) queries.push(product.id + " " + action);
-            if (product && product.alias && product.alias != product.id) queries.push(product.alias + " " + action);
+            if (product && product.alias && product.alias !== product.id) queries.push(product.alias + " " + action);
             if (product && product.type) queries.push(product.type + " " + action);
             if (product && product.type && (product.type === store.FREE_SUBSCRIPTION || product.type === store.PAID_SUBSCRIPTION)) queries.push("subscription " + action);
             if (product && product.valid === true) queries.push("valid " + action);
@@ -585,7 +600,7 @@ store.verbosity = 0;
             throw err;
         }, 1);
     }
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -607,7 +622,7 @@ store.verbosity = 0;
         }
         store._queries.triggerWhenProduct(product, action, args);
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -639,7 +654,7 @@ store.verbosity = 0;
             throw err;
         }, 1);
     }
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -654,7 +669,6 @@ store.verbosity = 0;
         },
         callExternal: function(name, callback) {
             try {
-                store.log.debug("calling " + name);
                 var args = Array.prototype.slice.call(arguments, 2);
                 if (callback) callback.apply(this, args);
             } catch (e) {
@@ -665,7 +679,7 @@ store.verbosity = 0;
             var doneCb = function() {};
             var xhr = new XMLHttpRequest();
             xhr.open(options.method || "POST", options.url, true);
-            xhr.onreadystatechange = function(event) {
+            xhr.onreadystatechange = function() {
                 try {
                     if (xhr.readyState === 4) {
                         if (xhr.status === 200) {
@@ -696,7 +710,7 @@ store.verbosity = 0;
             };
         }
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -735,9 +749,9 @@ store.verbosity = 0;
             }
         }
         if (hasSKUs) {
-            return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", [ skus ]);
+            cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", [ skus ]);
         } else {
-            return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", []);
+            cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", []);
         }
     };
     InAppBilling.prototype.getPurchases = function(success, fail) {
@@ -789,7 +803,7 @@ store.verbosity = 0;
             if (this.options.showLog) {
                 log("load " + JSON.stringify(skus));
             }
-            return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getProductDetails", [ skus ]);
+            cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getProductDetails", [ skus ]);
         }
     };
     function errorCb(fail) {
@@ -809,19 +823,19 @@ store.verbosity = 0;
     try {
         store.android = window.inappbilling;
     } catch (e) {}
-}).call(this);
+})();
 
 (function() {
     "use strict";
+    var initialized = false;
+    var skus = [];
     store.when("refreshed", function() {
         if (!initialized) init();
     });
     store.when("re-refreshed", function() {
         iabGetPurchases();
     });
-    var initialized = false;
-    var skus = [];
-    var init = function() {
+    function init() {
         if (initialized) return;
         initialized = true;
         for (var i = 0; i < store.products.length; ++i) skus.push(store.products[i].id);
@@ -833,7 +847,7 @@ store.verbosity = 0;
         }, {
             showLog: store.verbosity >= store.DEBUG ? true : false
         }, skus);
-    };
+    }
     function iabReady() {
         store.log.debug("android -> ready");
         store.android.getAvailableProducts(iabLoaded, function(err) {
@@ -955,7 +969,7 @@ store.verbosity = 0;
                 product.set("state", store.VALID);
             }, function(err, code) {
                 store.error({
-                    code: code || ERR_UNKNOWN,
+                    code: code || store.ERR_UNKNOWN,
                     message: err
                 });
             }, product.id);
@@ -963,7 +977,7 @@ store.verbosity = 0;
             product.set("state", store.OWNED);
         }
     });
-}).call(this);
+})();
 
 if (window) {
     window.store = store;

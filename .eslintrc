@@ -1,0 +1,18 @@
+{
+    "env" : {
+        "node" : true,
+        "browser" : true
+    },
+    "rules" : {
+        "strict": 1,
+        "quotes": 0,
+        "no-underscore-dangle": 0,
+        "no-multi-spaces": 0,
+        "key-spacing": 0,
+        "curly": 0,
+        "no-use-before-define": [ 1, "nofunc" ]
+    },
+    "globals" : {
+        "store": true
+    }
+}

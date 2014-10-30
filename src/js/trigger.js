@@ -41,4 +41,4 @@ store.trigger = function(product, action, args) {
     store._queries.triggerWhenProduct(product, action, args);
 };
 
-}).call(this);
+})();

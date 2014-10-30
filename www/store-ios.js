@@ -44,10 +44,16 @@ store.verbosity = 0;
     store.INVALID_PAYLOAD = 6778001;
     store.CONNECTION_FAILED = 6778002;
     store.PURCHASE_EXPIRED = 6778003;
-}).call(this);
+})();
 
 (function() {
     "use strict";
+    function defer(thisArg, cb, delay) {
+        setTimeout(function() {
+            cb.call(thisArg);
+        }, delay || 1);
+    }
+    var delay = defer;
     store.Product = function(options) {
         if (!options) options = {};
         this.id = options.id || null;
@@ -78,10 +84,11 @@ store.verbosity = 0;
     store.Product.prototype.verify = function() {
         var that = this;
         var nRetry = 0;
-        var doneCb = function() {};
-        var successCb = function() {};
-        var expiredCb = function() {};
-        var errorCb = function() {};
+        var noop = function() {};
+        var doneCb = noop;
+        var successCb = noop;
+        var expiredCb = noop;
+        var errorCb = noop;
         var tryValidation = function() {
             if (that.state !== store.APPROVED) return;
             store._validator(that, function(success, data) {
@@ -94,20 +101,20 @@ store.verbosity = 0;
                 } else {
                     store.log.debug("verify -> error: " + JSON.stringify(data));
                     var msg = data && data.error && data.error.message ? data.error.message : "";
-                    var err = new Error({
+                    var err = new store.Error({
                         code: store.ERR_VERIFICATION_FAILED,
                         message: "Transaction verification failed: " + msg
                     });
                     if (data.code === store.PURCHASE_EXPIRED) {
-                        err = new Error({
+                        err = new store.Error({
                             code: store.ERR_PAYMENT_EXPIRED,
                             message: "Transaction expired: " + msg
                         });
                     }
-                    store.error(err);
-                    store.utils.callExternal("verify.error", errorCb, err);
-                    store.utils.callExternal("verify.done", doneCb, that);
                     if (data.code === store.PURCHASE_EXPIRED) {
+                        store.error(err);
+                        store.utils.callExternal("verify.error", errorCb, err);
+                        store.utils.callExternal("verify.done", doneCb, that);
                         that.trigger("expired");
                         that.set("state", store.VALID);
                         store.utils.callExternal("verify.expired", expiredCb, that);
@@ -115,11 +122,27 @@ store.verbosity = 0;
                         nRetry += 1;
                         delay(this, tryValidation, 1e3 * nRetry * nRetry);
                     } else {
+                        store.log.debug("validation failed 5 times, stop retrying, trigger an error");
+                        store.error(err);
+                        store.utils.callExternal("verify.error", errorCb, err);
+                        store.utils.callExternal("verify.done", doneCb, that);
                         that.trigger("unverified");
                     }
                 }
             });
         };
+        defer(this, function() {
+            if (that.state !== store.APPROVED) {
+                var err = new store.Error({
+                    code: store.ERR_VERIFICATION_FAILED,
+                    message: "Product isn't in the APPROVED state"
+                });
+                store.error(err);
+                store.utils.callExternal("verify.error", errorCb, err);
+                store.utils.callExternal("verify.done", doneCb, that);
+                return;
+            }
+        });
         delay(this, tryValidation, 1e3);
         var ret = {
             done: function(cb) {
@@ -141,13 +164,7 @@ store.verbosity = 0;
         };
         return ret;
     };
-    var defer = function(thisArg, cb, delay) {
-        window.setTimeout(function() {
-            cb.call(thisArg);
-        }, delay || 1);
-    };
-    var delay = defer;
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -169,14 +186,13 @@ store.verbosity = 0;
     store.error.unregister = function(cb) {
         store.error.callbacks.unregister(cb);
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
     store.register = function(product) {
         if (!product) return;
-        if (!product.length) return store.register([ product ]);
-        registerProducts(product);
+        if (!product.length) store.register([ product ]); else registerProducts(product);
     };
     function registerProducts(products) {
         for (var i = 0; i < products.length; ++i) {
@@ -201,7 +217,7 @@ store.verbosity = 0;
         }
         return false;
     }
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -209,7 +225,7 @@ store.verbosity = 0;
         var product = store.products.byId[id] || store.products.byAlias[id];
         return product;
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -250,7 +266,7 @@ store.verbosity = 0;
     store.when.unregister = function(cb) {
         store._queries.callbacks.unregister(cb);
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -264,14 +280,13 @@ store.verbosity = 0;
         }
     };
     store.once.unregister = store.when.unregister;
-}).call(this);
+})();
 
 (function() {
     "use strict";
     var callbacks = {};
     var callbackId = 0;
     store.order = function(pid) {
-        var that = this;
         var p = pid;
         if (typeof pid === "string") {
             p = store.products.byId[pid] || store.products.byAlias[pid];
@@ -308,7 +323,7 @@ store.verbosity = 0;
                 store.once(p.id, "error", function(err) {
                     if (!localCallback.error) return;
                     done();
-                    cb(p);
+                    cb(err);
                 });
                 return this;
             }
@@ -320,7 +335,7 @@ store.verbosity = 0;
             if (callbacks[i].error === cb) delete callbacks[i].error;
         }
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -355,7 +370,7 @@ store.verbosity = 0;
         isReady = false;
         callbacks = [];
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -365,7 +380,7 @@ store.verbosity = 0;
         store.order.unregister(callback);
         store.error.unregister(callback);
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -394,7 +409,7 @@ store.verbosity = 0;
             store.validator(product, callback);
         }
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -414,7 +429,7 @@ store.verbosity = 0;
         }
         store.trigger("re-refreshed");
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -443,7 +458,7 @@ store.verbosity = 0;
             log(store.DEBUG, o);
         }
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -460,7 +475,7 @@ store.verbosity = 0;
         this.byAlias = {};
         this.byId = {};
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -496,7 +511,7 @@ store.verbosity = 0;
     store.Product.prototype.trigger = function(action, args) {
         store.trigger(this, action, args);
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -551,7 +566,7 @@ store.verbosity = 0;
         triggerWhenProduct: function(product, action, args) {
             var queries = [];
             if (product && product.id) queries.push(product.id + " " + action);
-            if (product && product.alias && product.alias != product.id) queries.push(product.alias + " " + action);
+            if (product && product.alias && product.alias !== product.id) queries.push(product.alias + " " + action);
             if (product && product.type) queries.push(product.type + " " + action);
             if (product && product.type && (product.type === store.FREE_SUBSCRIPTION || product.type === store.PAID_SUBSCRIPTION)) queries.push("subscription " + action);
             if (product && product.valid === true) queries.push("valid " + action);
@@ -585,7 +600,7 @@ store.verbosity = 0;
             throw err;
         }, 1);
     }
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -607,7 +622,7 @@ store.verbosity = 0;
         }
         store._queries.triggerWhenProduct(product, action, args);
     };
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -639,7 +654,7 @@ store.verbosity = 0;
             throw err;
         }, 1);
     }
-}).call(this);
+})();
 
 (function() {
     "use strict";
@@ -654,7 +669,6 @@ store.verbosity = 0;
         },
         callExternal: function(name, callback) {
             try {
-                store.log.debug("calling " + name);
                 var args = Array.prototype.slice.call(arguments, 2);
                 if (callback) callback.apply(this, args);
             } catch (e) {
@@ -665,7 +679,7 @@ store.verbosity = 0;
             var doneCb = function() {};
             var xhr = new XMLHttpRequest();
             xhr.open(options.method || "POST", options.url, true);
-            xhr.onreadystatechange = function(event) {
+            xhr.onreadystatechange = function() {
                 try {
                     if (xhr.readyState === 4) {
                         if (xhr.status === 200) {
@@ -696,305 +710,276 @@ store.verbosity = 0;
             };
         }
     };
-}).call(this);
+})();
 
-var exec = function(methodName, options, success, error) {
-    cordova.exec(success, error, "InAppPurchase", methodName, options);
-};
-
-var protectCall = function(callback, context) {
-    if (!callback) return;
-    try {
-        var args = Array.prototype.slice.call(arguments, 2);
-        callback.apply(this, args);
-    } catch (err) {
-        log("exception in " + context + ': "' + err + '"');
-    }
-};
-
-var InAppPurchase = function() {
-    this.options = {};
-    this.receiptForTransaction = {};
-    this.receiptForProduct = {};
-    if (window.localStorage && window.localStorage.sk_receiptForTransaction) this.receiptForTransaction = JSON.parse(window.localStorage.sk_receiptForTransaction);
-    if (window.localStorage && window.localStorage.sk_receiptForProduct) this.receiptForProduct = JSON.parse(window.localStorage.sk_receiptForProduct);
-};
-
-var noop = function() {};
-
-var log = noop;
-
-var ERROR_CODES_BASE = 6777e3;
-
-InAppPurchase.prototype.ERR_SETUP = ERROR_CODES_BASE + 1;
-
-InAppPurchase.prototype.ERR_LOAD = ERROR_CODES_BASE + 2;
-
-InAppPurchase.prototype.ERR_PURCHASE = ERROR_CODES_BASE + 3;
-
-InAppPurchase.prototype.ERR_LOAD_RECEIPTS = ERROR_CODES_BASE + 4;
-
-InAppPurchase.prototype.ERR_CLIENT_INVALID = ERROR_CODES_BASE + 5;
-
-InAppPurchase.prototype.ERR_PAYMENT_CANCELLED = ERROR_CODES_BASE + 6;
-
-InAppPurchase.prototype.ERR_PAYMENT_INVALID = ERROR_CODES_BASE + 7;
-
-InAppPurchase.prototype.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
-
-InAppPurchase.prototype.ERR_UNKNOWN = ERROR_CODES_BASE + 10;
-
-InAppPurchase.prototype.ERR_REFRESH_RECEIPTS = ERROR_CODES_BASE + 11;
-
-var initialized = false;
-
-InAppPurchase.prototype.init = function(options, success, error) {
-    this.options = {
-        error: options.error || noop,
-        ready: options.ready || noop,
-        purchase: options.purchase || noop,
-        purchaseEnqueued: options.purchaseEnqueued || noop,
-        purchasing: options.purchasing || noop,
-        finish: options.finish || noop,
-        restore: options.restore || noop,
-        receiptsRefreshed: options.receiptsRefreshed || noop,
-        restoreFailed: options.restoreFailed || noop,
-        restoreCompleted: options.restoreCompleted || noop
+(function() {
+    "use strict";
+    var exec = function(methodName, options, success, error) {
+        cordova.exec(success, error, "InAppPurchase", methodName, options);
     };
-    if (options.debug) {
-        exec("debug", [], noop, noop);
-        log = function(msg) {
-            console.log("InAppPurchase[js]: " + msg);
-        };
-    }
-    if (options.noAutoFinish) {
-        exec("noAutoFinish", [], noop, noop);
-    }
-    var that = this;
-    var setupOk = function() {
-        log("setup ok");
-        protectCall(that.options.ready, "options.ready");
-        protectCall(success, "init.success");
-        initialized = true;
-        that.processPendingUpdates();
-    };
-    var setupFailed = function() {
-        log("setup failed");
-        protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_SETUP, "Setup failed");
-        protectCall(error, "init.error");
-    };
-    exec("setup", [], setupOk, setupFailed);
-};
-
-InAppPurchase.prototype.purchase = function(productId, quantity) {
-    quantity = quantity | 0 || 1;
-    var options = this.options;
-    if (!InAppPurchase._productIds || InAppPurchase._productIds.indexOf(productId) < 0) {
-        var msg = "Purchasing " + productId + " failed.  Ensure the product was loaded first with storekit.load(...)!";
-        log(msg);
-        if (typeof options.error === "function") {
-            protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_PURCHASE, "Trying to purchase a unknown product.", productId, quantity);
-        }
-        return;
-    }
-    var purchaseOk = function() {
-        log("Purchased " + productId);
-        if (typeof options.purchaseEnqueued === "function") {
-            protectCall(options.purchaseEnqueued, "options.purchaseEnqueued", productId, quantity);
-        }
-    };
-    var purchaseFailed = function() {
-        var msg = "Purchasing " + productId + " failed";
-        log(msg);
-        if (typeof options.error === "function") {
-            protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_PURCHASE, msg, productId, quantity);
-        }
-    };
-    return exec("purchase", [ productId, quantity ], purchaseOk, purchaseFailed);
-};
-
-InAppPurchase.prototype.restore = function() {
-    this.needRestoreNotification = true;
-    return exec("restoreCompletedTransactions", []);
-};
-
-InAppPurchase.prototype.load = function(productIds, success, error) {
-    var options = this.options;
-    if (typeof productIds === "string") {
-        productIds = [ productIds ];
-    }
-    if (!productIds) {
-        protectCall(success, "load.success", [], []);
-    } else if (!productIds.length) {
-        protectCall(success, "load.success", [], []);
-    } else {
-        if (typeof productIds[0] !== "string") {
-            var msg = "invalid productIds given to store.load: " + JSON.stringify(productIds);
-            log(msg);
-            protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_LOAD, msg);
-            protectCall(error, "load.error", InAppPurchase.prototype.ERR_LOAD, msg);
+    var protectCall = function(callback, context) {
+        if (!callback) {
             return;
         }
-        log("load " + JSON.stringify(productIds));
-        var loadOk = function(array) {
-            var valid = array[0];
-            var invalid = array[1];
-            log("load ok: { valid:" + JSON.stringify(valid) + " invalid:" + JSON.stringify(invalid) + " }");
-            protectCall(success, "load.success", valid, invalid);
-        };
-        var loadFailed = function(errMessage) {
-            log("load failed");
-            log(errMessage);
-            var message = "Load failed: " + errMessage;
-            protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_LOAD, message);
-            protectCall(error, "load.error", InAppPurchase.prototype.ERR_LOAD, message);
-        };
-        InAppPurchase._productIds = productIds;
-        exec("load", [ productIds ], loadOk, loadFailed);
-    }
-};
-
-InAppPurchase.prototype.finish = function(transactionId) {
-    exec("finishTransaction", [ transactionId ], noop, noop);
-};
-
-var pendingUpdates = [];
-
-InAppPurchase.prototype.processPendingUpdates = function() {
-    for (var i = 0; i < pendingUpdates.length; ++i) {
-        this.updatedTransactionCallback.apply(this, pendingUpdates[i]);
-    }
-    pendingUpdates = [];
-};
-
-InAppPurchase.prototype.updatedTransactionCallback = function(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
-    if (!initialized) {
-        var args = Array.prototype.slice.call(arguments);
-        pendingUpdates.push(args);
-        return;
-    }
-    if (transactionReceipt) {
-        this.receiptForProduct[productId] = transactionReceipt;
-        this.receiptForTransaction[transactionIdentifier] = transactionReceipt;
-        if (window.localStorage) {
-            window.localStorage.sk_receiptForProduct = JSON.stringify(this.receiptForProduct);
-            window.localStorage.sk_receiptForTransaction = JSON.stringify(this.receiptForTransaction);
+        try {
+            var args = Array.prototype.slice.call(arguments, 2);
+            callback.apply(this, args);
+        } catch (err) {
+            log("exception in " + context + ': "' + err + '"');
         }
-    }
-    switch (state) {
-      case "PaymentTransactionStatePurchasing":
-        protectCall(this.options.purchasing, "options.purchasing", productId);
-        return;
-
-      case "PaymentTransactionStatePurchased":
-        protectCall(this.options.purchase, "options.purchase", transactionIdentifier, productId);
-        return;
-
-      case "PaymentTransactionStateFailed":
-        protectCall(this.options.error, "options.error", errorCode, errorText, {
-            productId: productId
-        });
-        return;
-
-      case "PaymentTransactionStateRestored":
-        protectCall(this.options.restore, "options.restore", transactionIdentifier, productId);
-        return;
-
-      case "PaymentTransactionStateFinished":
-        protectCall(this.options.finish, "options.finish", transactionIdentifier, productId);
-        return;
-    }
-};
-
-InAppPurchase.prototype.restoreCompletedTransactionsFinished = function() {
-    if (this.needRestoreNotification) delete this.needRestoreNotification; else return;
-    protectCall(this.options.restoreCompleted, "options.restoreCompleted");
-};
-
-InAppPurchase.prototype.restoreCompletedTransactionsFailed = function(errorCode) {
-    if (this.needRestoreNotification) delete this.needRestoreNotification; else return;
-    protectCall(this.options.restoreFailed, "options.restoreFailed", errorCode);
-};
-
-InAppPurchase.prototype.refreshReceipts = function() {
-    var that = this;
-    that.appStoreReceipt = null;
-    var loaded = function(base64) {
-        that.appStoreReceipt = base64;
-        protectCall(that.options.receiptsRefreshed, "options.receiptsRefreshed", base64);
     };
-    var error = function(errMessage) {
-        log("refresh receipt failed: " + errMessage);
-        protectcall(options.error, "options.error", InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, "Failed to refresh receipt: " + errMessage);
+    var InAppPurchase = function() {
+        this.options = {};
+        this.receiptForTransaction = {};
+        this.receiptForProduct = {};
+        if (window.localStorage && window.localStorage.sk_receiptForTransaction) this.receiptForTransaction = JSON.parse(window.localStorage.sk_receiptForTransaction);
+        if (window.localStorage && window.localStorage.sk_receiptForProduct) this.receiptForProduct = JSON.parse(window.localStorage.sk_receiptForProduct);
     };
-    exec("appStoreRefreshReceipt", [], loaded, error);
-};
+    var noop = function() {};
+    var log = noop;
+    var ERROR_CODES_BASE = 6777e3;
+    InAppPurchase.prototype.ERR_SETUP = ERROR_CODES_BASE + 1;
+    InAppPurchase.prototype.ERR_LOAD = ERROR_CODES_BASE + 2;
+    InAppPurchase.prototype.ERR_PURCHASE = ERROR_CODES_BASE + 3;
+    InAppPurchase.prototype.ERR_LOAD_RECEIPTS = ERROR_CODES_BASE + 4;
+    InAppPurchase.prototype.ERR_CLIENT_INVALID = ERROR_CODES_BASE + 5;
+    InAppPurchase.prototype.ERR_PAYMENT_CANCELLED = ERROR_CODES_BASE + 6;
+    InAppPurchase.prototype.ERR_PAYMENT_INVALID = ERROR_CODES_BASE + 7;
+    InAppPurchase.prototype.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
+    InAppPurchase.prototype.ERR_UNKNOWN = ERROR_CODES_BASE + 10;
+    InAppPurchase.prototype.ERR_REFRESH_RECEIPTS = ERROR_CODES_BASE + 11;
+    var initialized = false;
+    InAppPurchase.prototype.init = function(options, success, error) {
+        this.options = {
+            error: options.error || noop,
+            ready: options.ready || noop,
+            purchase: options.purchase || noop,
+            purchaseEnqueued: options.purchaseEnqueued || noop,
+            purchasing: options.purchasing || noop,
+            finish: options.finish || noop,
+            restore: options.restore || noop,
+            receiptsRefreshed: options.receiptsRefreshed || noop,
+            restoreFailed: options.restoreFailed || noop,
+            restoreCompleted: options.restoreCompleted || noop
+        };
+        if (options.debug) {
+            exec("debug", [], noop, noop);
+            log = function(msg) {
+                console.log("InAppPurchase[js]: " + msg);
+            };
+        }
+        if (options.noAutoFinish) {
+            exec("noAutoFinish", [], noop, noop);
+        }
+        var that = this;
+        var setupOk = function() {
+            log("setup ok");
+            protectCall(that.options.ready, "options.ready");
+            protectCall(success, "init.success");
+            initialized = true;
+            that.processPendingUpdates();
+        };
+        var setupFailed = function() {
+            log("setup failed");
+            protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_SETUP, "Setup failed");
+            protectCall(error, "init.error");
+        };
+        exec("setup", [], setupOk, setupFailed);
+    };
+    InAppPurchase.prototype.purchase = function(productId, quantity) {
+        quantity = quantity | 0 || 1;
+        var options = this.options;
+        if (!InAppPurchase._productIds || InAppPurchase._productIds.indexOf(productId) < 0) {
+            var msg = "Purchasing " + productId + " failed.  Ensure the product was loaded first with storekit.load(...)!";
+            log(msg);
+            if (typeof options.error === "function") {
+                protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_PURCHASE, "Trying to purchase a unknown product.", productId, quantity);
+            }
+            return;
+        }
+        var purchaseOk = function() {
+            log("Purchased " + productId);
+            if (typeof options.purchaseEnqueued === "function") {
+                protectCall(options.purchaseEnqueued, "options.purchaseEnqueued", productId, quantity);
+            }
+        };
+        var purchaseFailed = function() {
+            var errmsg = "Purchasing " + productId + " failed";
+            log(errmsg);
+            if (typeof options.error === "function") {
+                protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_PURCHASE, errmsg, productId, quantity);
+            }
+        };
+        exec("purchase", [ productId, quantity ], purchaseOk, purchaseFailed);
+    };
+    InAppPurchase.prototype.restore = function() {
+        this.needRestoreNotification = true;
+        exec("restoreCompletedTransactions", []);
+    };
+    InAppPurchase.prototype.load = function(productIds, success, error) {
+        var options = this.options;
+        if (typeof productIds === "string") {
+            productIds = [ productIds ];
+        }
+        if (!productIds) {
+            protectCall(success, "load.success", [], []);
+        } else if (!productIds.length) {
+            protectCall(success, "load.success", [], []);
+        } else {
+            if (typeof productIds[0] !== "string") {
+                var msg = "invalid productIds given to store.load: " + JSON.stringify(productIds);
+                log(msg);
+                protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_LOAD, msg);
+                protectCall(error, "load.error", InAppPurchase.prototype.ERR_LOAD, msg);
+                return;
+            }
+            log("load " + JSON.stringify(productIds));
+            var loadOk = function(array) {
+                var valid = array[0];
+                var invalid = array[1];
+                log("load ok: { valid:" + JSON.stringify(valid) + " invalid:" + JSON.stringify(invalid) + " }");
+                protectCall(success, "load.success", valid, invalid);
+            };
+            var loadFailed = function(errMessage) {
+                log("load failed");
+                log(errMessage);
+                var message = "Load failed: " + errMessage;
+                protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_LOAD, message);
+                protectCall(error, "load.error", InAppPurchase.prototype.ERR_LOAD, message);
+            };
+            InAppPurchase._productIds = productIds;
+            exec("load", [ productIds ], loadOk, loadFailed);
+        }
+    };
+    InAppPurchase.prototype.finish = function(transactionId) {
+        exec("finishTransaction", [ transactionId ], noop, noop);
+    };
+    var pendingUpdates = [];
+    InAppPurchase.prototype.processPendingUpdates = function() {
+        for (var i = 0; i < pendingUpdates.length; ++i) {
+            this.updatedTransactionCallback.apply(this, pendingUpdates[i]);
+        }
+        pendingUpdates = [];
+    };
+    InAppPurchase.prototype.updatedTransactionCallback = function(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
+        if (!initialized) {
+            var args = Array.prototype.slice.call(arguments);
+            pendingUpdates.push(args);
+            return;
+        }
+        if (transactionReceipt) {
+            this.receiptForProduct[productId] = transactionReceipt;
+            this.receiptForTransaction[transactionIdentifier] = transactionReceipt;
+            if (window.localStorage) {
+                window.localStorage.sk_receiptForProduct = JSON.stringify(this.receiptForProduct);
+                window.localStorage.sk_receiptForTransaction = JSON.stringify(this.receiptForTransaction);
+            }
+        }
+        switch (state) {
+          case "PaymentTransactionStatePurchasing":
+            protectCall(this.options.purchasing, "options.purchasing", productId);
+            return;
 
-InAppPurchase.prototype.loadReceipts = function(callback) {
-    var that = this;
-    that.appStoreReceipt = null;
-    var loaded = function(base64) {
-        that.appStoreReceipt = base64;
-        callCallback();
-    };
-    var error = function(errMessage) {
-        log("load failed: " + errMessage);
-        protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_LOAD_RECEIPTS, "Failed to load receipt: " + errMessage);
-    };
-    var callCallback = function() {
-        if (callback) {
-            protectCall(callback, "loadReceipts.callback", {
-                appStoreReceipt: that.appStoreReceipt,
-                forTransaction: function(transactionId) {
-                    return that.receiptForTransaction[transactionId] || null;
-                },
-                forProduct: function(productId) {
-                    return that.receiptForProduct[productId] || null;
-                }
+          case "PaymentTransactionStatePurchased":
+            protectCall(this.options.purchase, "options.purchase", transactionIdentifier, productId);
+            return;
+
+          case "PaymentTransactionStateFailed":
+            protectCall(this.options.error, "options.error", errorCode, errorText, {
+                productId: productId
             });
+            return;
+
+          case "PaymentTransactionStateRestored":
+            protectCall(this.options.restore, "options.restore", transactionIdentifier, productId);
+            return;
+
+          case "PaymentTransactionStateFinished":
+            protectCall(this.options.finish, "options.finish", transactionIdentifier, productId);
+            return;
         }
     };
-    exec("appStoreReceipt", [], loaded, error);
-};
-
-InAppPurchase.prototype.runQueue = function() {
-    if (!this.eventQueue.length || !this.onPurchased && !this.onFailed && !this.onRestored) {
-        return;
-    }
-    var args;
-    var queue = this.eventQueue.slice();
-    this.eventQueue = [];
-    args = queue.shift();
-    while (args) {
-        this.updatedTransactionCallback.apply(this, args);
+    InAppPurchase.prototype.restoreCompletedTransactionsFinished = function() {
+        if (this.needRestoreNotification) delete this.needRestoreNotification; else return;
+        protectCall(this.options.restoreCompleted, "options.restoreCompleted");
+    };
+    InAppPurchase.prototype.restoreCompletedTransactionsFailed = function(errorCode) {
+        if (this.needRestoreNotification) delete this.needRestoreNotification; else return;
+        protectCall(this.options.restoreFailed, "options.restoreFailed", errorCode);
+    };
+    InAppPurchase.prototype.refreshReceipts = function() {
+        var that = this;
+        that.appStoreReceipt = null;
+        var loaded = function(base64) {
+            that.appStoreReceipt = base64;
+            protectCall(that.options.receiptsRefreshed, "options.receiptsRefreshed", base64);
+        };
+        var error = function(errMessage) {
+            log("refresh receipt failed: " + errMessage);
+            protectCall(that.options.error, "options.error", InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, "Failed to refresh receipt: " + errMessage);
+        };
+        exec("appStoreRefreshReceipt", [], loaded, error);
+    };
+    InAppPurchase.prototype.loadReceipts = function(callback) {
+        var that = this;
+        that.appStoreReceipt = null;
+        var loaded = function(base64) {
+            that.appStoreReceipt = base64;
+            callCallback();
+        };
+        var error = function(errMessage) {
+            log("load failed: " + errMessage);
+            protectCall(that.options.error, "options.error", InAppPurchase.prototype.ERR_LOAD_RECEIPTS, "Failed to load receipt: " + errMessage);
+        };
+        function callCallback() {
+            if (callback) {
+                protectCall(callback, "loadReceipts.callback", {
+                    appStoreReceipt: that.appStoreReceipt,
+                    forTransaction: function(transactionId) {
+                        return that.receiptForTransaction[transactionId] || null;
+                    },
+                    forProduct: function(productId) {
+                        return that.receiptForProduct[productId] || null;
+                    }
+                });
+            }
+        }
+        exec("appStoreReceipt", [], loaded, error);
+    };
+    InAppPurchase.prototype.runQueue = function() {
+        if (!this.eventQueue.length || !this.onPurchased && !this.onFailed && !this.onRestored) {
+            return;
+        }
+        var args;
+        var queue = this.eventQueue.slice();
+        this.eventQueue = [];
         args = queue.shift();
-    }
-    if (!this.eventQueue.length) {
-        this.unWatchQueue();
-    }
-};
-
-InAppPurchase.prototype.watchQueue = function() {
-    if (this.timer) {
-        return;
-    }
-    this.timer = window.setInterval(function() {
-        window.storekit.runQueue();
-    }, 1e4);
-};
-
-InAppPurchase.prototype.unWatchQueue = function() {
-    if (this.timer) {
-        window.clearInterval(this.timer);
-        this.timer = null;
-    }
-};
-
-InAppPurchase.prototype.eventQueue = [];
-
-InAppPurchase.prototype.timer = null;
-
-window.storekit = new InAppPurchase();
+        while (args) {
+            this.updatedTransactionCallback.apply(this, args);
+            args = queue.shift();
+        }
+        if (!this.eventQueue.length) {
+            this.unWatchQueue();
+        }
+    };
+    InAppPurchase.prototype.watchQueue = function() {
+        if (this.timer) {
+            return;
+        }
+        this.timer = window.setInterval(function() {
+            window.storekit.runQueue();
+        }, 1e4);
+    };
+    InAppPurchase.prototype.unWatchQueue = function() {
+        if (this.timer) {
+            window.clearInterval(this.timer);
+            this.timer = null;
+        }
+    };
+    InAppPurchase.prototype.eventQueue = [];
+    InAppPurchase.prototype.timer = null;
+    window.storekit = new InAppPurchase();
+})();
 
 (function() {
     "use strict";
@@ -1055,7 +1040,7 @@ window.storekit = new InAppPurchase();
     });
     var initialized = false;
     var initializing = false;
-    var storekitInit = function() {
+    function storekitInit() {
         if (initialized || initializing) return;
         initializing = true;
         store.log.debug("ios -> initializing storekit");
@@ -1069,21 +1054,21 @@ window.storekit = new InAppPurchase();
             restoreCompleted: storekitRestoreCompleted,
             restoreFailed: storekitRestoreFailed
         }, storekitReady, storekitInitFailed);
-    };
-    var storekitReady = function() {
+    }
+    function storekitReady() {
         store.log.info("ios -> storekit ready");
         initializing = false;
         initialized = true;
         storekitLoad();
-    };
-    var storekitInitFailed = function() {
+    }
+    function storekitInitFailed() {
         store.log.warn("ios -> storekit init failed");
         initializing = false;
         retry(storekitInit);
-    };
+    }
     var loaded = false;
     var loading = false;
-    var storekitLoad = function() {
+    function storekitLoad() {
         if (!initialized) return;
         if (loaded || loading) return;
         loading = true;
@@ -1091,8 +1076,8 @@ window.storekit = new InAppPurchase();
         for (var i = 0; i < store.products.length; ++i) products.push(store.products[i].id);
         store.log.debug("ios -> loading products");
         storekit.load(products, storekitLoaded, storekitLoadFailed);
-    };
-    var storekitLoaded = function(validProducts, invalidProductIds) {
+    }
+    function storekitLoaded(validProducts, invalidProductIds) {
         store.log.debug("ios -> products loaded");
         var p;
         for (var i = 0; i < validProducts.length; ++i) {
@@ -1121,13 +1106,13 @@ window.storekit = new InAppPurchase();
             storekit.loaded = true;
             store.ready(true);
         }, 1);
-    };
-    var storekitLoadFailed = function() {
+    }
+    function storekitLoadFailed() {
         store.log.warn("ios -> loading products failed");
         loading = false;
         retry(storekitLoad);
-    };
-    var storekitPurchasing = function(productId) {
+    }
+    function storekitPurchasing(productId) {
         store.log.debug("ios -> is purchasing " + productId);
         store.ready(function() {
             var product = store.get(productId);
@@ -1137,8 +1122,8 @@ window.storekit = new InAppPurchase();
             }
             if (product.state !== store.INITIATED) product.set("state", store.INITIATED);
         });
-    };
-    var storekitPurchased = function(transactionId, productId) {
+    }
+    function storekitPurchased(transactionId, productId) {
         store.ready(function() {
             var product = store.get(productId);
             if (!product) {
@@ -1162,8 +1147,8 @@ window.storekit = new InAppPurchase();
             store.log.info("ios -> transaction " + transactionId + " purchased (" + product.transactions.length + " in the queue for " + productId + ")");
             product.set("state", store.APPROVED);
         });
-    };
-    var storekitError = function(errorCode, errorText, options) {
+    }
+    function storekitError(errorCode, errorText, options) {
         var i, p;
         if (!options) options = {};
         store.log.error("ios -> ERROR " + errorCode + ": " + errorText + " - " + JSON.stringify(options));
@@ -1191,7 +1176,7 @@ window.storekit = new InAppPurchase();
             code: errorCode,
             message: errorText
         });
-    };
+    }
     store.when("re-refreshed", function() {
         storekit.restore();
     });
@@ -1202,7 +1187,7 @@ window.storekit = new InAppPurchase();
     function storekitRestoreCompleted() {
         store.log.info("ios -> restore completed");
     }
-    function storekitRestoreFailed(errorCode) {
+    function storekitRestoreFailed() {
         store.log.warn("ios -> restore failed");
         store.error({
             code: store.ERR_REFRESH,
@@ -1252,6 +1237,6 @@ window.storekit = new InAppPurchase();
             a[i].fn.call(this);
         }
     }, false);
-}).call(this);
+})();
 
 module.exports = store;

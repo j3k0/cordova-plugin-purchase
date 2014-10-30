@@ -1,10 +1,12 @@
+/*eslint-env mocha */
+/*global describe, it, before, beforeEach, after, afterEach, storekit */
 var assert = require("assert");
 var store = require("../tmp/store-test");
 var helper = require("./helper");
 
 global.store = store;
 global.document = {
-    addEventListener: function(event, callback) {}
+    addEventListener: function(/*event, callback*/) { "use strict"; }
 };
 global.localStorage = {};
 
@@ -12,6 +14,7 @@ global.localStorage = {};
 global.storekit = {
     initShouldFail: false,
     init: function(options, success, error) {
+        "use strict";
         this.options = options;
         this.initCalled = (this.initCalled || 0) + 1;
         if (this.initShouldFail) {
@@ -25,6 +28,7 @@ global.storekit = {
     },
     loadShouldFail: false,
     load: function(products, success, error) {
+        "use strict";
         this.products = products;
         this.loadCalled = (this.loadCalled || 0) + 1;
         if (this.loadShouldFail) {
@@ -43,6 +47,7 @@ global.storekit = {
 };
 
 describe('iOS', function(){
+    "use strict";
 
     before(helper.resetTest);
     after(helper.resetTest);

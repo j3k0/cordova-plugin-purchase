@@ -42,7 +42,7 @@ store._queries = {
     callbacks: {
         /// #### *store._queries.callbacks.byQuery* dictionary
         /// Dictionary of:
-        /// 
+        ///
         ///  - *key*: a string equals to `query + " " + action`
         ///  - *value*: array of callbacks
         ///
@@ -55,7 +55,7 @@ store._queries = {
 
         /// #### *store._queries.callbacks.add(query, action, callback, once)*
         /// Simplify the query with `uniqueQuery()`, then add it to the dictionary.
-        /// 
+        ///
         /// `action` is concatenated to the `query` string to create the key.
         add: function(query, action, cb, once) {
             var fullQuery = store._queries.uniqueQuery(query ? query + " " + action : action);
@@ -112,12 +112,12 @@ store._queries = {
         /// The method generates all possible queries for the given `product` and `action`.
         var queries = [];
 
-        /// 
+        ///
         ///  - product.id + " " + action
         if (product && product.id)
             queries.push(product.id + " " + action);
         ///  - product.alias + " " + action
-        if (product && product.alias && product.alias != product.id)
+        if (product && product.alias && product.alias !== product.id)
             queries.push(product.alias + " " + action);
         ///  - product.type + " " + action
         if (product && product.type)
@@ -133,7 +133,7 @@ store._queries = {
             queries.push("invalid " + action);
         ///  - action
         queries.push(action);
-    
+
         ///
         /// Then, for each query:
         ///
@@ -162,14 +162,14 @@ store._queries = {
                 store._queries.callbacks.byQuery[q] = cbs.filter(isNotOnce);
             }
         }
-        
+
         ///
         /// **Note**: All events also trigger the `updated` event
         if (action !== "updated" && action !== 'error')
             this.triggerWhenProduct(product, "updated", [ product ]);
     }
     ///
-  
+
 };
 
 // isNotOnce return true iff a callback should be called more than once.
@@ -181,4 +181,4 @@ function deferThrow(err) {
     setTimeout(function() { throw err; }, 1);
 }
 
-}).call(this);
+})();

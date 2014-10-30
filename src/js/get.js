@@ -15,4 +15,4 @@ store.get = function(id) {
     return product;
 };
 
-}).call(this);
+})();

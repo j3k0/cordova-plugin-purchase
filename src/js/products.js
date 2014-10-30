@@ -45,4 +45,4 @@ store.products.reset = function() {
     this.byId = {};
 };
 
-}).call(this);
+})();

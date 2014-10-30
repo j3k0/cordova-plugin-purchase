@@ -1,5 +1,5 @@
 //! # iOS Implementation
-//! 
+//!
 //! The implementation of the unified API is a small layer
 //! built on top of the legacy "PhoneGap-InAppPurchase-iOS" plugin.
 //!

@@ -48,7 +48,7 @@ store.refresh = function() {
         store.log.debug("           in state '" + p.state + "'");
 
         // resend the "approved" event to all approved purchases.
-        // give user a chance to try delivering the content again and 
+        // give user a chance to try delivering the content again and
         // finish the purchase.
         if (p.state === store.APPROVED)
             p.trigger(store.APPROVED);
@@ -59,9 +59,9 @@ store.refresh = function() {
         else if (p.state === store.OWNED && (p.type === store.FREE_SUBSCRIPTION || p.type === store.PAID_SUBSCRIPTION))
             p.set("state", store.APPROVED);
     }
-    
+
     store.trigger("re-refreshed");
 };
 
 
-}).call(this);
+})();

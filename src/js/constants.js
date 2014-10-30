@@ -69,4 +69,4 @@ var ERROR_CODES_BASE = 6777000;
 /*///*/     store.CONNECTION_FAILED = 6778002;
 /*///*/     store.PURCHASE_EXPIRED  = 6778003;
 
-}).call(this);
+})();

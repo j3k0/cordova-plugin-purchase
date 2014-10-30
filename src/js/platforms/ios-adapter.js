@@ -1,3 +1,4 @@
+/*global storekit */
 (function() {
 "use strict";
 
@@ -119,7 +120,7 @@ store.when("expired", function(product) {
 //!
 var initialized = false;
 var initializing = false;
-var storekitInit = function () {
+function storekitInit() {
     if (initialized || initializing) return;
     initializing = true;
     store.log.debug("ios -> initializing storekit");
@@ -133,7 +134,7 @@ var storekitInit = function () {
         restoreCompleted: storekitRestoreCompleted,
         restoreFailed:    storekitRestoreFailed
     }, storekitReady, storekitInitFailed);
-};
+}
 
 //!
 //! ## *storekit* events handlers
@@ -145,22 +146,22 @@ var storekitInit = function () {
 //!
 //! Loads all registered products, triggers `storekitLoaded()` when done.
 //!
-var storekitReady = function () {
+function storekitReady() {
     store.log.info("ios -> storekit ready");
     initializing = false;
     initialized = true;
     storekitLoad();
-};
+}
 
-var storekitInitFailed = function() {
+function storekitInitFailed() {
     store.log.warn("ios -> storekit init failed");
     initializing = false;
     retry(storekitInit);
-};
+}
 
 var loaded = false;
 var loading = false;
-var storekitLoad = function() {
+function storekitLoad() {
     if (!initialized) return;
     if (loaded || loading) return;
     loading = true;
@@ -169,7 +170,7 @@ var storekitLoad = function() {
         products.push(store.products[i].id);
     store.log.debug("ios -> loading products");
     storekit.load(products, storekitLoaded, storekitLoadFailed);
-};
+}
 
 //! ### <a name="storekitLoaded"></a> *storekitLoaded()*
 //!
@@ -180,7 +181,7 @@ var storekitLoad = function() {
 //!  3. Set the products state to `OWNED` (if it is so)
 //!  4. Set the store status to "ready".
 //!
-var storekitLoaded = function (validProducts, invalidProductIds) {
+function storekitLoaded(validProducts, invalidProductIds) {
     store.log.debug("ios -> products loaded");
     var p;
     for (var i = 0; i < validProducts.length; ++i) {
@@ -215,13 +216,13 @@ var storekitLoaded = function (validProducts, invalidProductIds) {
         storekit.loaded = true;
         store.ready(true);
     }, 1);
-};
+}
 
-var storekitLoadFailed = function() {
+function storekitLoadFailed() {
     store.log.warn("ios -> loading products failed");
     loading = false;
     retry(storekitLoad);
-};
+}
 
 //! ### <a name="storekitPurchasing"></a> *storekitPurchasing()*
 //!
@@ -229,7 +230,7 @@ var storekitLoadFailed = function() {
 //!
 //! It will set the product state to `INITIATED`.
 //!
-var storekitPurchasing = function (productId) {
+function storekitPurchasing(productId) {
     store.log.debug("ios -> is purchasing " + productId);
     store.ready(function() {
         var product = store.get(productId);
@@ -240,7 +241,7 @@ var storekitPurchasing = function (productId) {
         if (product.state !== store.INITIATED)
             product.set("state", store.INITIATED);
     });
-};
+}
 
 //! ### <a name="storekitPurchased"></a> *storekitPurchased()*
 //!
@@ -249,7 +250,7 @@ var storekitPurchasing = function (productId) {
 //! It will set the product state to `APPROVED` and associates the product
 //! with the order's transaction identifier.
 //!
-var storekitPurchased = function (transactionId, productId) {
+function storekitPurchased(transactionId, productId) {
     store.ready(function() {
         var product = store.get(productId);
         if (!product) {
@@ -279,7 +280,7 @@ var storekitPurchased = function (transactionId, productId) {
         store.log.info("ios -> transaction " + transactionId + " purchased (" + product.transactions.length + " in the queue for " + productId + ")");
         product.set("state", store.APPROVED);
     });
-};
+}
 
 //! ### <a name="storekitError"></a> *storekitError()*
 //!
@@ -287,9 +288,9 @@ var storekitPurchased = function (transactionId, productId) {
 //!
 //! Will convert storekit errors to a [`store.Error`](api.md/#errors).
 //!
-var storekitError = function(errorCode, errorText, options) {
+function storekitError(errorCode, errorText, options) {
 
-    var i,p;
+    var i, p;
 
     if (!options)
         options = {};
@@ -328,7 +329,7 @@ var storekitError = function(errorCode, errorText, options) {
         code:    errorCode,
         message: errorText
     });
-};
+}
 
 // Restore purchases.
 // store.restore = function() {
@@ -346,7 +347,7 @@ function storekitRestoreCompleted() {
     store.log.info("ios -> restore completed");
 }
 
-function storekitRestoreFailed(errorCode) {
+function storekitRestoreFailed(/*errorCode*/) {
     store.log.warn("ios -> restore failed");
     store.error({
         code: store.ERR_REFRESH,
@@ -369,7 +370,7 @@ store._prepareForValidation = function(product, callback) {
     });
 };
 
-//! 
+//!
 //! ## Persistance of the *OWNED* status
 //!
 
@@ -423,4 +424,4 @@ document.addEventListener("online", function() {
     }
 }, false);
 
-}).call(this);
+})();

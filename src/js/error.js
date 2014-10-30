@@ -3,7 +3,7 @@
 
 ///
 /// ## <a name="errors"></a>*store.Error* object
-/// 
+///
 /// All error callbacks takes an `error` object as parameter.
 
 store.Error = function(options) {
@@ -80,4 +80,4 @@ store.error.unregister = function(cb) {
     store.error.callbacks.unregister(cb);
 };
 
-}).call(this);
+})();

@@ -1,7 +1,10 @@
+/*eslint-env mocha */
+/*global describe, it, before, beforeEach, after, afterEach */
 var assert = require("assert");
 var store = require("../tmp/store-test");
 
 describe('Errors', function(){
+    "use strict";
 
     beforeEach(function() {
         store.error.callbacks.reset();

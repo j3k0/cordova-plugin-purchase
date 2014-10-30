@@ -1,18 +1,22 @@
-var timeFactor = 1;
-var pSetTimeout = global.setTimeout;
-global.setTimeout = function(fn, delay) {
-    pSetTimeout(fn, delay / timeFactor);
-};
+(function(){
+    "use strict";
 
-exports.resetTest = function() {
-    var store = require("../tmp/store-test");
-    store._queries.callbacks.byQuery = {};
-    store.ready.reset();
-    store.products.reset();
-    store.error.callbacks.reset();
-    timeFactor = 1;
-};
+    var timeFactor = 1;
+    var pSetTimeout = global.setTimeout;
+    global.setTimeout = function(fn, delay) {
+        pSetTimeout(fn, delay / timeFactor);
+    };
 
-exports.setTimeoutFactor = function(value) {
-    timeFactor = value;
-};
+    exports.resetTest = function() {
+        var store = require("../tmp/store-test");
+        store._queries.callbacks.byQuery = {};
+        store.ready.reset();
+        store.products.reset();
+        store.error.callbacks.reset();
+        timeFactor = 1;
+    };
+
+    exports.setTimeoutFactor = function(value) {
+        timeFactor = value;
+    };
+})();

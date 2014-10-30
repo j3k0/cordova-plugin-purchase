@@ -33,15 +33,19 @@ prepare-test-js:
 	@cp src/js/platforms/*-adapter.js test/tmp/
 	@#node_modules/.bin/istanbul instrument --no-compact --output test/tmp/store-test.js test/store-test-src.js
 
-jshint: check-jshint
+jshint: check-jshint sync-android
 	@echo "- JSHint"
-	@node_modules/.bin/jshint src/js/*.js test/js/*.js
+	@node_modules/.bin/jshint --config .jshintrc src/js/*.js src/js/platforms/*.js test/js/*.js
 
-test-js: jshint prepare-test-js
+eslint: jshint
+	@echo "- ESLint"
+	@node_modules/.bin/eslint --config .eslintrc src/js/*.js src/js/platforms/*.js test/js/*.js
+
+test-js: jshint eslint prepare-test-js
 	@echo "- Mocha"
 	@node_modules/.bin/istanbul test --root test/tmp test/js/run.js
 
-test-js-coverage: jshint prepare-test-js
+test-js-coverage: jshint eslint prepare-test-js
 	@echo "- Mocha / Instanbul"
 	@node_modules/.bin/istanbul cover --root test/ test/js/run.js
 	@node_modules/.bin/coveralls < coverage/lcov.info

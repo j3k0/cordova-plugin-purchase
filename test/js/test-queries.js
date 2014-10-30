@@ -1,7 +1,10 @@
+/*eslint-env mocha */
+/*global describe, it, before, beforeEach, after, afterEach */
 var assert = require("assert");
 var store = require("../tmp/store-test");
 
 describe('Queries', function(){
+    "use strict";
 
     describe('#uniqueQuery()', function(){
 
@@ -41,12 +44,12 @@ describe('Queries', function(){
                 approved = true;
             });
             assert.equal(false, approved);
-            store._queries.triggerWhenProduct({id:"full version"}, "approved");
+            store._queries.triggerWhenProduct({id: "full version"}, "approved");
             assert.equal(true, approved);
 
             approved = false;
             assert.equal(false, approved);
-            store._queries.triggerWhenProduct({id:"full version"}, "approved");
+            store._queries.triggerWhenProduct({id: "full version"}, "approved");
             assert.equal(true, approved);
         });
 
@@ -58,12 +61,12 @@ describe('Queries', function(){
                 approved = true;
             }, true);
             assert.equal(false, approved);
-            store._queries.triggerWhenProduct({id:"lite version"}, "approved");
+            store._queries.triggerWhenProduct({id: "lite version"}, "approved");
             assert.equal(true, approved);
 
             approved = false;
             assert.equal(false, approved);
-            store._queries.triggerWhenProduct({id:"lite version"}, "approved");
+            store._queries.triggerWhenProduct({id: "lite version"}, "approved");
             assert.equal(false, approved);
         });
 
@@ -75,30 +78,34 @@ describe('Queries', function(){
                 approved = true;
             });
             assert.equal(false, approved);
-            store._queries.triggerWhenProduct({id:"anything", type:store.FREE_SUBSCRIPTION}, "approved");
+            store._queries.triggerWhenProduct({id: "anything", type: store.FREE_SUBSCRIPTION}, "approved");
             assert.equal(true, approved);
         });
 
         it('should execute all callbacks even if one fails with an exception', function() {
-            var f1_called = false;
-            var f1_returned = false;
-            var f2_called = false;
-            var f2_returned = false;
+            var f1Called = false;
+            var f1Returned = false;
+            var f2Called = false;
+            var f2Returned = false;
             store._queries.callbacks.add("", "yyy", function() {
-                f1_called = true;
-                if (f1_called) throw "ERROR";
-                f1_returned = true;
+                f1Called = true;
+                if (f1Called) {
+                    throw "ERROR";
+                }
+                f1Returned = true;
             }, true);
             store._queries.callbacks.add("", "yyy", function() {
-                f2_called = true;
-                if (f2_called) throw "ERROR";
-                f2_returned = true;
+                f2Called = true;
+                if (f2Called) {
+                    throw "ERROR";
+                }
+                f2Returned = true;
             }, true);
             store._queries.triggerAction("yyy");
-            assert.equal(true, f1_called);
-            assert.equal(false, f1_returned);
-            assert.equal(true, f2_called);
-            assert.equal(false, f2_returned);
+            assert.equal(true, f1Called);
+            assert.equal(false, f1Returned);
+            assert.equal(true, f2Called);
+            assert.equal(false, f2Returned);
         });
 
         it('should trigger an update for any event', function(done) {
@@ -106,24 +113,24 @@ describe('Queries', function(){
                 assert.equal("test.updated1", product.id);
                 done();
             });
-            store._queries.triggerWhenProduct({id:"test.updated1"}, "xyz");
+            store._queries.triggerWhenProduct({id: "test.updated1"}, "xyz");
         });
 
         it('should not trigger an update for error events', function(done) {
-            store._queries.callbacks.add("product", "updated", function(product) {
-                console.log("updated2");
+            store._queries.callbacks.add("product", "updated", function(/*product*/) {
                 assert(false, "updated shouldn't be called");
             });
-            store._queries.triggerWhenProduct({id:"test.updated2"}, "error");
+            store._queries.triggerWhenProduct({id: "test.updated2"}, "error");
             setTimeout(done, 6);
         });
 
         it('should not trigger "updated" events twice', function(done) {
             var nCalls = 0;
             store._queries.callbacks.add("product", "updated", function(product) {
+                assert.equal("test.updated2", product.id);
                 nCalls++;
             });
-            store._queries.triggerWhenProduct({id:"test.updated2"}, "udpated");
+            store._queries.triggerWhenProduct({id: "test.updated2"}, "udpated");
             setTimeout(function() {
                 assert.equal(1, nCalls);
                 done();

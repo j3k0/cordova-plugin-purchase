@@ -34,5 +34,4 @@ store.off = function(callback) {
     store.error.unregister(callback);
 };
 
-}).call(this);
-
+})();
