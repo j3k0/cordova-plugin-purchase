@@ -910,16 +910,18 @@ store.verbosity = 0;
         if (this.needRestoreNotification) delete this.needRestoreNotification; else return;
         protectCall(this.options.restoreFailed, "options.restoreFailed", errorCode);
     };
-    InAppPurchase.prototype.refreshReceipts = function() {
+    InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
         var that = this;
         that.appStoreReceipt = null;
         var loaded = function(base64) {
             that.appStoreReceipt = base64;
             protectCall(that.options.receiptsRefreshed, "options.receiptsRefreshed", base64);
+            protectCall(successCb, "refreshReceipts.success", base64);
         };
         var error = function(errMessage) {
             log("refresh receipt failed: " + errMessage);
             protectCall(that.options.error, "options.error", InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, "Failed to refresh receipt: " + errMessage);
+            protectCall(errorCb, "refreshReceipts.error", InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, "Failed to refresh receipt: " + errMessage);
         };
         exec("appStoreRefreshReceipt", [], loaded, error);
     };
