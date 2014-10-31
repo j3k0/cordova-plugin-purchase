@@ -22,6 +22,8 @@
 @property (nonatomic,retain) NSMutableDictionary *list;
 @property (nonatomic,retain) NSMutableDictionary *retainer;
 
+- (void) canMakePayments: (CDVInvokedUrlCommand*)command;
+
 - (void) setup: (CDVInvokedUrlCommand*)command;
 - (void) load: (CDVInvokedUrlCommand*)command;
 - (void) purchase: (CDVInvokedUrlCommand*)command;
