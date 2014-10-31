@@ -812,6 +812,9 @@ store.verbosity = 0;
         };
         exec("purchase", [ productId, quantity ], purchaseOk, purchaseFailed);
     };
+    InAppPurchase.prototype.canMakePayments = function(success, error) {
+        return exec("canMakePayments", [], success, error);
+    };
     InAppPurchase.prototype.restore = function() {
         this.needRestoreNotification = true;
         exec("restoreCompletedTransactions", []);
