@@ -307,9 +307,21 @@ InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
     var that = this;
     that.appStoreReceipt = null;
 
-    var loaded = function (base64) {
+    var loaded = function (args) {
+        var base64 = args[0];
+        var bundleIdentifier = args[1];
+        var bundleShortVersion = args[2];
+        var bundleNumericVersion = args[3];
+        var bundleSignature = args[4];
+        log('infoPlist: ' + bundleIdentifier + "," + bundleShortVersion + "," + bundleNumericVersion  + "," + bundleSignature);
         that.appStoreReceipt = base64;
-        protectCall(that.options.receiptsRefreshed, 'options.receiptsRefreshed', base64);
+        protectCall(that.options.receiptsRefreshed, 'options.receiptsRefreshed', {
+            appStoreReceipt: base64,
+            bundleIdentifier: bundleIdentifier,
+            bundleShortVersion: bundleShortVersion,
+            bundleNumericVersion: bundleNumericVersion,
+            bundleSignature: bundleSignature
+        });
         protectCall(successCb, "refreshReceipts.success", base64);
     };
 
@@ -338,19 +350,18 @@ InAppPurchase.prototype.loadReceipts = function (callback) {
     };
 
     function callCallback() {
-        if (callback) {
-            protectCall(callback, 'loadReceipts.callback', {
-                appStoreReceipt: that.appStoreReceipt,
-                forTransaction: function (transactionId) {
-                    return that.receiptForTransaction[transactionId] || null;
-                },
-                forProduct:     function (productId) {
-                    return that.receiptForProduct[productId] || null;
-                }
-            });
-        }
+        protectCall(callback, 'loadReceipts.callback', {
+            appStoreReceipt: that.appStoreReceipt,
+            forTransaction: function (transactionId) {
+                return that.receiptForTransaction[transactionId] || null;
+            },
+            forProduct:     function (productId) {
+                return that.receiptForProduct[productId] || null;
+            }
+        });
     }
 
+    log('appStoreReceipt?');
     exec('appStoreReceipt', [], loaded, error);
 };
 
