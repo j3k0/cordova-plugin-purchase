@@ -397,6 +397,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 		error = state = transactionIdentifier = transactionReceipt = productId = @"";
 		errorCode = 0;
         DLog(@"Transaction updated: %@", transaction.payment.productIdentifier);
+        BOOL canFinish = NO;
 
         switch (transaction.transactionState)
         {
@@ -411,6 +412,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 				transactionIdentifier = transaction.transactionIdentifier;
 				transactionReceipt = [[transaction transactionReceipt] base64EncodedString];
 				productId = transaction.payment.productIdentifier;
+                canFinish = YES;
                 break;
 
 			case SKPaymentTransactionStateFailed:
@@ -418,8 +420,9 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 				error = transaction.error.localizedDescription;
 				errorCode = jsErrorCode(transaction.error.code);
 				productId = transaction.payment.productIdentifier;
+                canFinish = YES;
 				DLog(@"Error %@ - %@", jsErrorCodeAsString(errorCode), error);
-				
+
 				// Finish failed transactions, when autoFinish is off
 				if (!g_autoFinishEnabled) {
 					[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
@@ -434,6 +437,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
                     transactionIdentifier = transaction.originalTransaction.transactionIdentifier;
 				transactionReceipt = [[transaction transactionReceipt] base64EncodedString];
 				productId = transaction.originalTransaction.payment.productIdentifier;
+                canFinish = YES;
                 break;
 
             default:
@@ -454,7 +458,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
             [callbackArgs JSONSerialize]];
 		// DLog(@"js: %@", js);
         [self.commandDelegate evalJs:js];
-        if (g_autoFinishEnabled) {
+        if (g_autoFinishEnabled && canFinish) {
             [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
             [self transactionFinished:transaction];
         }
@@ -574,7 +578,7 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
         // Verify the signature
         BIO *b_receiptPayload;
         int result = PKCS7_verify(p7, NULL, store, b_receiptPayload, 0);
-        
+ 
         free(receiptBytes);
         free(appleBytes);
 
