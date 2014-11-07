@@ -71,7 +71,7 @@ doc-contrib: test-js
 	@echo >> doc/contributor-guide.md
 	@echo "*(generated from source files using \`make doc-contrib)\`*" >> doc/contributor-guide.md
 	@echo >> doc/contributor-guide.md
-	@cat src/js/*.js | grep "//!" | cut -d! -f2- | cut -d\  -f2- >> doc/contributor-guide.md
+	@cat src/js/*.js src/js/platforms/*.js | grep "//!" | cut -d! -f2- | cut -d\  -f2- >> doc/contributor-guide.md
 
 doc: doc-api doc-contrib
 

@@ -3,7 +3,7 @@
 //! The implementation of the unified API is a small layer
 //! built on top of the legacy "PhoneGap-InAppPurchase-iOS" plugin.
 //!
-//! This was first decided as a temporary "get-things"done" solution.
+//! This was first decided as a temporary "get-things-done" solution.
 //! However, I found this ended-up providing a nice separation of concerns:
 //!
 //!  - the `platforms/ios-bridge.js` file exposes an API called `storekit` that matches the
