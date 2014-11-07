@@ -256,7 +256,7 @@ store.Product.prototype.verify = function() {
 ///  - `REQUESTED`: order (purchase) requested by the user
 ///  - `INITIATED`: order transmitted to the server
 ///  - `APPROVED`: purchase approved by server
-///  - `FINISHED`: purchase delivered by the app
+///  - `FINISHED`: purchase delivered by the app (see [Finish a Purchase](#finish-a-purchase))
 ///  - `OWNED`: purchase is owned (only for non-consumable and subscriptions)
 ///
 /// #### Notes
