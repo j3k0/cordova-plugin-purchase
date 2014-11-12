@@ -102,6 +102,7 @@ InAppPurchase.prototype.init = function (options, success, error) {
         protectCall(error, 'init.error');
     };
 
+    this.loadAppStoreReceipt();
     exec('setup', [], setupOk, setupFailed);
 };
 
@@ -305,7 +306,6 @@ InAppPurchase.prototype.restoreCompletedTransactionsFailed = function (errorCode
 
 InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
     var that = this;
-    that.appStoreReceipt = null;
 
     var loaded = function (args) {
         var base64 = args[0];
@@ -314,7 +314,7 @@ InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
         var bundleNumericVersion = args[3];
         var bundleSignature = args[4];
         log('infoPlist: ' + bundleIdentifier + "," + bundleShortVersion + "," + bundleNumericVersion  + "," + bundleSignature);
-        that.appStoreReceipt = base64;
+        that.setAppStoreReceipt(base64);
         protectCall(that.options.receiptsRefreshed, 'options.receiptsRefreshed', {
             appStoreReceipt: base64,
             bundleIdentifier: bundleIdentifier,
@@ -331,16 +331,18 @@ InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
         protectCall(errorCb, "refreshReceipts.error", InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
     };
 
+    log('refreshing appStoreReceipt');
     exec('appStoreRefreshReceipt', [], loaded, error);
 };
 
 InAppPurchase.prototype.loadReceipts = function (callback) {
 
     var that = this;
-    that.appStoreReceipt = null;
+    // that.appStoreReceipt = null;
 
     var loaded = function (base64) {
-        that.appStoreReceipt = base64;
+        // that.appStoreReceipt = base64;
+        that.setAppStoreReceipt(base64);
         callCallback();
     };
 
@@ -361,8 +363,29 @@ InAppPurchase.prototype.loadReceipts = function (callback) {
         });
     }
 
-    log('appStoreReceipt?');
-    exec('appStoreReceipt', [], loaded, error);
+    if (that.appStoreReceipt) {
+        log('appStoreReceipt already loaded:');
+        log(that.appStoreReceipt);
+        callCallback();
+    }
+    else {
+        log('loading appStoreReceipt');
+        exec('appStoreReceipt', [], loaded, error);
+    }
+};
+
+InAppPurchase.prototype.setAppStoreReceipt = function(base64) {
+    this.appStoreReceipt = base64;
+    if (window.localStorage && base64) {
+        window.localStorage.sk_appStoreReceipt = base64;
+    }
+};
+InAppPurchase.prototype.loadAppStoreReceipt = function() {
+    if (window.localStorage && window.localStorage.sk_appStoreReceipt) {
+        this.appStoreReceipt = window.localStorage.sk_appStoreReceipt;
+    }
+    if (this.appStoreReceipt === 'null')
+        this.appStoreReceipt = null;
 };
 
 /*

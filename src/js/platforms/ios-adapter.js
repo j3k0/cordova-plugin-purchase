@@ -224,6 +224,38 @@ function storekitLoadFailed() {
     retry(storekitLoad);
 }
 
+var refreshCallbacks = [];
+var refreshing = false;
+function storekitRefreshReceipts(callback) {
+    if (callback)
+        refreshCallbacks.push(callback);
+    if (refreshing)
+        return;
+    refreshing = true;
+
+    function callCallbacks() {
+        var callbacks = refreshCallbacks;
+        refreshCallbacks = [];
+        for (var i = 0; i < callbacks.length; ++i)
+            callbacks[i]();
+    }
+
+    storekit.refreshReceipts(function() {
+        // success
+        refreshing = false;
+        callCallbacks();
+    },
+    function() {
+        // error
+        refreshing = false;
+        callCallbacks();
+    });
+}
+
+store.when("expired", function() {
+    storekitRefreshReceipts();
+});
+
 //! ### <a name="storekitPurchasing"></a> *storekitPurchasing()*
 //!
 //! Called by `storekit` when a purchase is in progress.
@@ -376,19 +408,38 @@ function storekitRestoreFailed(/*errorCode*/) {
     });
 }
 
+store._refreshForValidation = function(callback) {
+    storekitRefreshReceipts(callback);
+};
+
 // Load receipts required by server-side validation of purchases.
 store._prepareForValidation = function(product, callback) {
-    storekit.loadReceipts(function(r) {
-        if (!product.transaction) {
-            product.transaction = {
-                type: 'ios-appstore'
-            };
-        }
-        product.transaction.appStoreReceipt = r.appStoreReceipt;
-        if (product.transaction.id)
-            product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
-        callback();
-    });
+    var nRetry = 0;
+    function loadReceipts() {
+        storekit.loadReceipts(function(r) {
+            if (!product.transaction) {
+                product.transaction = {
+                    type: 'ios-appstore'
+                };
+            }
+            product.transaction.appStoreReceipt = r.appStoreReceipt;
+            if (product.transaction.id)
+                product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
+            if (!product.transaction.appStoreReceipt && !product.transaction.transactionReceipt) {
+                nRetry ++;
+                if (nRetry < 2) {
+                    setTimeout(loadReceipts, 500);
+                    return;
+                }
+                else if (nRetry === 2) {
+                    storekit.refreshReceipts(loadReceipts);
+                    return;
+                }
+            }
+            callback();
+        });
+    }
+    loadReceipts();
 };
 
 //!
