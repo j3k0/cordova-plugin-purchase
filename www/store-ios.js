@@ -112,12 +112,19 @@ store.verbosity = 0;
                         });
                     }
                     if (data.code === store.PURCHASE_EXPIRED) {
-                        store.error(err);
-                        store.utils.callExternal("verify.error", errorCb, err);
-                        store.utils.callExternal("verify.done", doneCb, that);
-                        that.trigger("expired");
-                        that.set("state", store.VALID);
-                        store.utils.callExternal("verify.expired", expiredCb, that);
+                        if (nRetry < 2 && store._refreshForValidation) {
+                            nRetry += 1;
+                            store._refreshForValidation(function() {
+                                delay(that, tryValidation, 300);
+                            });
+                        } else {
+                            store.error(err);
+                            store.utils.callExternal("verify.error", errorCb, err);
+                            store.utils.callExternal("verify.done", doneCb, that);
+                            that.trigger("expired");
+                            that.set("state", store.VALID);
+                            store.utils.callExternal("verify.expired", expiredCb, that);
+                        }
                     } else if (nRetry < 4) {
                         nRetry += 1;
                         delay(this, tryValidation, 1e3 * nRetry * nRetry);
@@ -784,6 +791,7 @@ store.verbosity = 0;
             protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_SETUP, "Setup failed");
             protectCall(error, "init.error");
         };
+        this.loadAppStoreReceipt();
         exec("setup", [], setupOk, setupFailed);
     };
     InAppPurchase.prototype.purchase = function(productId, quantity) {
@@ -907,24 +915,37 @@ store.verbosity = 0;
         if (this.needRestoreNotification) delete this.needRestoreNotification; else return;
         protectCall(this.options.restoreFailed, "options.restoreFailed", errorCode);
     };
-    InAppPurchase.prototype.refreshReceipts = function() {
+    InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
         var that = this;
-        that.appStoreReceipt = null;
-        var loaded = function(base64) {
-            that.appStoreReceipt = base64;
-            protectCall(that.options.receiptsRefreshed, "options.receiptsRefreshed", base64);
+        var loaded = function(args) {
+            var base64 = args[0];
+            var bundleIdentifier = args[1];
+            var bundleShortVersion = args[2];
+            var bundleNumericVersion = args[3];
+            var bundleSignature = args[4];
+            log("infoPlist: " + bundleIdentifier + "," + bundleShortVersion + "," + bundleNumericVersion + "," + bundleSignature);
+            that.setAppStoreReceipt(base64);
+            protectCall(that.options.receiptsRefreshed, "options.receiptsRefreshed", {
+                appStoreReceipt: base64,
+                bundleIdentifier: bundleIdentifier,
+                bundleShortVersion: bundleShortVersion,
+                bundleNumericVersion: bundleNumericVersion,
+                bundleSignature: bundleSignature
+            });
+            protectCall(successCb, "refreshReceipts.success", base64);
         };
         var error = function(errMessage) {
             log("refresh receipt failed: " + errMessage);
             protectCall(that.options.error, "options.error", InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, "Failed to refresh receipt: " + errMessage);
+            protectCall(errorCb, "refreshReceipts.error", InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, "Failed to refresh receipt: " + errMessage);
         };
+        log("refreshing appStoreReceipt");
         exec("appStoreRefreshReceipt", [], loaded, error);
     };
     InAppPurchase.prototype.loadReceipts = function(callback) {
         var that = this;
-        that.appStoreReceipt = null;
         var loaded = function(base64) {
-            that.appStoreReceipt = base64;
+            that.setAppStoreReceipt(base64);
             callCallback();
         };
         var error = function(errMessage) {
@@ -932,19 +953,36 @@ store.verbosity = 0;
             protectCall(that.options.error, "options.error", InAppPurchase.prototype.ERR_LOAD_RECEIPTS, "Failed to load receipt: " + errMessage);
         };
         function callCallback() {
-            if (callback) {
-                protectCall(callback, "loadReceipts.callback", {
-                    appStoreReceipt: that.appStoreReceipt,
-                    forTransaction: function(transactionId) {
-                        return that.receiptForTransaction[transactionId] || null;
-                    },
-                    forProduct: function(productId) {
-                        return that.receiptForProduct[productId] || null;
-                    }
-                });
-            }
+            protectCall(callback, "loadReceipts.callback", {
+                appStoreReceipt: that.appStoreReceipt,
+                forTransaction: function(transactionId) {
+                    return that.receiptForTransaction[transactionId] || null;
+                },
+                forProduct: function(productId) {
+                    return that.receiptForProduct[productId] || null;
+                }
+            });
         }
-        exec("appStoreReceipt", [], loaded, error);
+        if (that.appStoreReceipt) {
+            log("appStoreReceipt already loaded:");
+            log(that.appStoreReceipt);
+            callCallback();
+        } else {
+            log("loading appStoreReceipt");
+            exec("appStoreReceipt", [], loaded, error);
+        }
+    };
+    InAppPurchase.prototype.setAppStoreReceipt = function(base64) {
+        this.appStoreReceipt = base64;
+        if (window.localStorage && base64) {
+            window.localStorage.sk_appStoreReceipt = base64;
+        }
+    };
+    InAppPurchase.prototype.loadAppStoreReceipt = function() {
+        if (window.localStorage && window.localStorage.sk_appStoreReceipt) {
+            this.appStoreReceipt = window.localStorage.sk_appStoreReceipt;
+        }
+        if (this.appStoreReceipt === "null") this.appStoreReceipt = null;
     };
     InAppPurchase.prototype.runQueue = function() {
         if (!this.eventQueue.length || !this.onPurchased && !this.onFailed && !this.onRestored) {
@@ -1102,8 +1140,8 @@ store.verbosity = 0;
             p.trigger("loaded");
         }
         setTimeout(function() {
-            storekit.loading = false;
-            storekit.loaded = true;
+            loading = false;
+            loaded = true;
             store.ready(true);
         }, 1);
     }
@@ -1112,6 +1150,28 @@ store.verbosity = 0;
         loading = false;
         retry(storekitLoad);
     }
+    var refreshCallbacks = [];
+    var refreshing = false;
+    function storekitRefreshReceipts(callback) {
+        if (callback) refreshCallbacks.push(callback);
+        if (refreshing) return;
+        refreshing = true;
+        function callCallbacks() {
+            var callbacks = refreshCallbacks;
+            refreshCallbacks = [];
+            for (var i = 0; i < callbacks.length; ++i) callbacks[i]();
+        }
+        storekit.refreshReceipts(function() {
+            refreshing = false;
+            callCallbacks();
+        }, function() {
+            refreshing = false;
+            callCallbacks();
+        });
+    }
+    store.when("expired", function() {
+        storekitRefreshReceipts();
+    });
     function storekitPurchasing(productId) {
         store.log.debug("ios -> is purchasing " + productId);
         store.ready(function() {
@@ -1179,6 +1239,27 @@ store.verbosity = 0;
     }
     store.when("re-refreshed", function() {
         storekit.restore();
+        storekit.refreshReceipts(function(data) {
+            if (data) {
+                var p = data.bundleIdentifier ? store.get(data.bundleIdentifier) : null;
+                if (!p) {
+                    p = new store.Product({
+                        id: data.bundleIdentifier || "application data",
+                        alias: "application data",
+                        type: store.NON_CONSUMABLE
+                    });
+                    store.register(p);
+                }
+                p.version = data.bundleShortVersion;
+                p.transaction = {
+                    type: "ios-appstore",
+                    appStoreReceipt: data.appStoreReceipt,
+                    signature: data.signature
+                };
+                p.trigger("loaded");
+                p.set("state", store.APPROVED);
+            }
+        });
     });
     function storekitRestored(originalTransactionId, productId) {
         store.log.info("ios -> restored purchase " + productId);
@@ -1194,17 +1275,34 @@ store.verbosity = 0;
             message: "Failed to restore purchases during refresh"
         });
     }
+    store._refreshForValidation = function(callback) {
+        storekitRefreshReceipts(callback);
+    };
     store._prepareForValidation = function(product, callback) {
-        storekit.loadReceipts(function(r) {
-            if (!product.transaction) {
-                product.transaction = {
-                    type: "ios-appstore"
-                };
-            }
-            product.transaction.appStoreReceipt = r.appStoreReceipt;
-            if (product.transaction.id) product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
-            callback();
-        });
+        var nRetry = 0;
+        function loadReceipts() {
+            storekit.loadReceipts(function(r) {
+                if (!product.transaction) {
+                    product.transaction = {
+                        type: "ios-appstore"
+                    };
+                }
+                product.transaction.appStoreReceipt = r.appStoreReceipt;
+                if (product.transaction.id) product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
+                if (!product.transaction.appStoreReceipt && !product.transaction.transactionReceipt) {
+                    nRetry++;
+                    if (nRetry < 2) {
+                        setTimeout(loadReceipts, 500);
+                        return;
+                    } else if (nRetry === 2) {
+                        storekit.refreshReceipts(loadReceipts);
+                        return;
+                    }
+                }
+                callback();
+            });
+        }
+        loadReceipts();
     };
     function isOwned(productId) {
         return localStorage["__cc_fovea_store_ios_owned_ " + productId] === "1";

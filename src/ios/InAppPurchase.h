@@ -26,6 +26,7 @@
 - (void) load: (CDVInvokedUrlCommand*)command;
 - (void) purchase: (CDVInvokedUrlCommand*)command;
 - (void) appStoreReceipt: (CDVInvokedUrlCommand*)command;
+- (void) appStoreRefreshReceipt: (CDVInvokedUrlCommand*)command;
 
 - (void) paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions;
 - (void) paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error;
@@ -44,5 +45,13 @@
 
 @property (nonatomic,retain) InAppPurchase* plugin;
 @property (nonatomic,retain) CDVInvokedUrlCommand* command;
-
 @end;
+
+@interface RefreshReceiptDelegate : NSObject <SKRequestDelegate> {
+    InAppPurchase*        plugin;
+    CDVInvokedUrlCommand* command;
+}
+
+@property (nonatomic,retain) InAppPurchase* plugin;
+@property (nonatomic,retain) CDVInvokedUrlCommand* command;
+@end

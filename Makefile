@@ -24,7 +24,7 @@ build: sync-android test-js
 	@echo "- Preprocess"
 	@node_modules/.bin/preprocess src/js/store-ios.js src/js | node_modules/.bin/uglifyjs -b > www/store-ios.js
 	@node_modules/.bin/preprocess src/js/store-android.js src/js | node_modules/.bin/uglifyjs -b > www/store-android.js
-	@echo "- DONE"
+	@echo "- Done"
 	@echo ""
 
 prepare-test-js:
@@ -44,6 +44,7 @@ eslint: jshint
 test-js: jshint eslint prepare-test-js
 	@echo "- Mocha"
 	@node_modules/.bin/istanbul test --root test/tmp test/js/run.js
+	@echo
 
 test-js-coverage: jshint eslint prepare-test-js
 	@echo "- Mocha / Instanbul"
