@@ -212,8 +212,8 @@ function storekitLoaded(validProducts, invalidProductIds) {
     //! Note: the execution of "ready" is deferred to make sure state
     //! changes have been processed.
     setTimeout(function() {
-        storekit.loading = false;
-        storekit.loaded = true;
+        loading = false;
+        loaded = true;
         store.ready(true);
     }, 1);
 }
@@ -223,6 +223,38 @@ function storekitLoadFailed() {
     loading = false;
     retry(storekitLoad);
 }
+
+var refreshCallbacks = [];
+var refreshing = false;
+function storekitRefreshReceipts(callback) {
+    if (callback)
+        refreshCallbacks.push(callback);
+    if (refreshing)
+        return;
+    refreshing = true;
+
+    function callCallbacks() {
+        var callbacks = refreshCallbacks;
+        refreshCallbacks = [];
+        for (var i = 0; i < callbacks.length; ++i)
+            callbacks[i]();
+    }
+
+    storekit.refreshReceipts(function() {
+        // success
+        refreshing = false;
+        callCallbacks();
+    },
+    function() {
+        // error
+        refreshing = false;
+        callCallbacks();
+    });
+}
+
+store.when("expired", function() {
+    storekitRefreshReceipts();
+});
 
 //! ### <a name="storekitPurchasing"></a> *storekitPurchasing()*
 //!
@@ -336,6 +368,27 @@ function storekitError(errorCode, errorText, options) {
 // };
 store.when("re-refreshed", function() {
     storekit.restore();
+    storekit.refreshReceipts(function(data) {
+        if (data) {
+            var p = data.bundleIdentifier ? store.get(data.bundleIdentifier) : null;
+            if (!p) {
+                p = new store.Product({
+                    id:    data.bundleIdentifier || "application data",
+                    alias: "application data",
+                    type:  store.NON_CONSUMABLE
+                });
+                store.register(p);
+            }
+            p.version = data.bundleShortVersion;
+            p.transaction = {
+                type: 'ios-appstore',
+                appStoreReceipt: data.appStoreReceipt,
+                signature: data.signature
+            };
+            p.trigger("loaded");
+            p.set('state', store.APPROVED);
+        }
+    });
 });
 
 function storekitRestored(originalTransactionId, productId) {
@@ -355,19 +408,38 @@ function storekitRestoreFailed(/*errorCode*/) {
     });
 }
 
+store._refreshForValidation = function(callback) {
+    storekitRefreshReceipts(callback);
+};
+
 // Load receipts required by server-side validation of purchases.
 store._prepareForValidation = function(product, callback) {
-    storekit.loadReceipts(function(r) {
-        if (!product.transaction) {
-            product.transaction = {
-                type: 'ios-appstore'
-            };
-        }
-        product.transaction.appStoreReceipt = r.appStoreReceipt;
-        if (product.transaction.id)
-            product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
-        callback();
-    });
+    var nRetry = 0;
+    function loadReceipts() {
+        storekit.loadReceipts(function(r) {
+            if (!product.transaction) {
+                product.transaction = {
+                    type: 'ios-appstore'
+                };
+            }
+            product.transaction.appStoreReceipt = r.appStoreReceipt;
+            if (product.transaction.id)
+                product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
+            if (!product.transaction.appStoreReceipt && !product.transaction.transactionReceipt) {
+                nRetry ++;
+                if (nRetry < 2) {
+                    setTimeout(loadReceipts, 500);
+                    return;
+                }
+                else if (nRetry === 2) {
+                    storekit.refreshReceipts(loadReceipts);
+                    return;
+                }
+            }
+            callback();
+        });
+    }
+    loadReceipts();
 };
 
 //!

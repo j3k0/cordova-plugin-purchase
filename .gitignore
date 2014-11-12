@@ -2,4 +2,6 @@
 /node_modules/
 /coverage/
 /test/tmp/
+/www/.store-android.js
+/www/.store-ios.js
 *~

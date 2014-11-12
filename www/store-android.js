@@ -112,12 +112,19 @@ store.verbosity = 0;
                         });
                     }
                     if (data.code === store.PURCHASE_EXPIRED) {
-                        store.error(err);
-                        store.utils.callExternal("verify.error", errorCb, err);
-                        store.utils.callExternal("verify.done", doneCb, that);
-                        that.trigger("expired");
-                        that.set("state", store.VALID);
-                        store.utils.callExternal("verify.expired", expiredCb, that);
+                        if (nRetry < 2 && store._refreshForValidation) {
+                            nRetry += 1;
+                            store._refreshForValidation(function() {
+                                delay(that, tryValidation, 300);
+                            });
+                        } else {
+                            store.error(err);
+                            store.utils.callExternal("verify.error", errorCb, err);
+                            store.utils.callExternal("verify.done", doneCb, that);
+                            that.trigger("expired");
+                            that.set("state", store.VALID);
+                            store.utils.callExternal("verify.expired", expiredCb, that);
+                        }
                     } else if (nRetry < 4) {
                         nRetry += 1;
                         delay(this, tryValidation, 1e3 * nRetry * nRetry);

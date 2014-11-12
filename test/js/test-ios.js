@@ -4,9 +4,11 @@ var assert = require("assert");
 var store = require("../tmp/store-test");
 var helper = require("./helper");
 
+(function() {
+"use strict";
 global.store = store;
 global.document = {
-    addEventListener: function(/*event, callback*/) { "use strict"; }
+    addEventListener: function(/*event, callback*/) {}
 };
 global.localStorage = {};
 
@@ -14,7 +16,6 @@ global.localStorage = {};
 global.storekit = {
     initShouldFail: false,
     init: function(options, success, error) {
-        "use strict";
         this.options = options;
         this.initCalled = (this.initCalled || 0) + 1;
         if (this.initShouldFail) {
@@ -28,7 +29,6 @@ global.storekit = {
     },
     loadShouldFail: false,
     load: function(products, success, error) {
-        "use strict";
         this.products = products;
         this.loadCalled = (this.loadCalled || 0) + 1;
         if (this.loadShouldFail) {
@@ -43,8 +43,19 @@ global.storekit = {
                 }),
                 ["cc.fovea.i"]);
         }
+    },
+    refreshReceipts: function(s/*,e*/) {
+        if (s) {
+            s(null);
+        }
+    },
+    loadReceipts: function(cb) {
+        if (cb) {
+            cb({});
+        }
     }
 };
+})();
 
 describe('iOS', function(){
     "use strict";
