@@ -3,16 +3,16 @@
     xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="cc.fovea.cordova.purchase"
-    version="3.9.0-beta.1">
+    version="3.9.0-beta.4">
 
     <name>Purchase</name>
-	<description>Cordova Purchase plugin for Apple AppStore for iOS and Google Play Store for Android</description>
+	<description>Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)</description>
     <engines>
         <engine name="cordova" version=">=2.4.0" />
     </engines>
-    <repo>https://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git</repo>
-    <issue>https://github.com/j3k0/PhoneGap-InAppPurchase-iOS/issues</issue>
-	
+    <repo>https://github.com/j3k0/cordova-plugin-purchase.git</repo>
+    <issue>https://github.com/j3k0/cordova-plugin-purchase/issues</issue>
+
 	<license>MIT</license>
     <keywords>cordova,phonegap,purchase,storekit,ios,android,play,appstore</keywords>
 
@@ -21,10 +21,10 @@
         <js-module src="www/store-ios.js" name="InAppPurchase">
             <clobbers target="store" />
         </js-module>
-        
+
         <!-- Cordova 2.2 -->
         <plugins-plist key="InAppPurchase" string="InAppPurchase" />
-                    
+
         <!-- Cordova 2.5+ -->
         <config-file target="config.xml" parent="/*">
             <feature name="InAppPurchase">
@@ -53,11 +53,11 @@
 
         <!-- Cordova >= 3.0.0 -->
         <config-file target="res/xml/config.xml" parent="/*">
-            <feature name="InAppBillingPlugin">   
+            <feature name="InAppBillingPlugin">
 				<param name="android-package" value="com.smartmobilesoftware.inappbilling.InAppBillingPlugin"/>
 			</feature>
         </config-file>
-        
+
         <!-- In-app Billing Library -->
 		<source-file src="src/android/com/android/vending/billing/IInAppBillingService.aidl" target-dir="src/com/android/vending/billing" />
 

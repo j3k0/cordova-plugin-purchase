@@ -1,7 +1,7 @@
 {
   "name": "cordova-purchase-plugin",
-  "version": "3.5.0-dev",
-  "description": "Cordova Purchase plugin for Apple AppStore for iOS and Google Play Store for Android",
+  "version": "3.9.0-beta.4",
+  "description": "Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)",
   "repository": {
     "type": "git",
     "url": "https://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git"
