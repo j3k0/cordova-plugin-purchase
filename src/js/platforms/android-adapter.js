@@ -46,19 +46,26 @@ function iabLoaded(validProducts) {
     store.log.debug("android -> loaded - " + JSON.stringify(validProducts));
     var p, i;
     for (i = 0; i < validProducts.length; ++i) {
-        p = store.products.byId[validProducts[i].productId];
-        p.set({
-            title: validProducts[i].title,
-            price: validProducts[i].price,
-            description: validProducts[i].description,
-            currency: validProducts[i].price_currency_code,
-            state: store.VALID
-        });
-        p.trigger("loaded");
+
+        if (validProducts[i].productId)
+            p = store.products.byId[validProducts[i].productId];
+        else
+            p = null;
+
+        if (p) {
+            p.set({
+                title: validProducts[i].title,
+                price: validProducts[i].price,
+                description: validProducts[i].description,
+                currency: validProducts[i].price_currency_code,
+                state: store.VALID
+            });
+            p.trigger("loaded");
+        }
     }
     for (i = 0; i < skus.length; ++i) {
         p = store.products.byId[skus[i]];
-        if (!p.valid) {
+        if (p && !p.valid) {
             p.set("state", store.INVALID);
             p.trigger("loaded");
         }
