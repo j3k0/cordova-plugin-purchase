@@ -1,12 +1,17 @@
 # Setup
 
-## Add your license key
+# Add Android Billing Key
 
-As android uses a public key for verification of purchase data consistency, you have to put the public key of your application inside the config.xml file under a preference tag like this:
+Your license key for in-app billing should be added manually to your project. This key is found in `Services and API` in the Google Play Developer Console.
 
-    <preference name="android-iabplugin-license-key"    value="yourpublickey" />
-
-You can find your public key inside Google Developer Console under SERVICES & APIS tab of the specific application.
+Create a file called `platform/android/res/values/billing_key.xml`. Set its content as follows:
+```xml
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="billing_key">MIIB...AQAB</string>
+</resources>
+```
+Replace `MIIB...AQAB` with your own android license key.
 
 ## PlayStore
 
