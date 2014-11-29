@@ -1,6 +1,6 @@
 {
   "name": "cordova-purchase-plugin",
-  "version": "3.9.0-beta.4",
+  "version": "3.9.1",
   "description": "Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)",
   "repository": {
     "type": "git",
