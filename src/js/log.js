@@ -41,4 +41,4 @@ store.log = {
     debug: function(o) { log(store.DEBUG, o); }
 };
 
-}).call(this);
+})();

@@ -49,4 +49,4 @@ store.Product.prototype.trigger = function(action, args) {
     store.trigger(this, action, args);
 };
 
-}).call(this);
+})();

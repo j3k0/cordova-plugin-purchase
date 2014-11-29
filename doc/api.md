@@ -61,7 +61,7 @@ be contacted to load informations about the registered products: human
 readable `title` and `description`, `price`, etc.
 
 This isn't an optional step as some despotic store owners (like Apple) require you
-to display information about a product as retrieved from their server: no 
+to display information about a product as retrieved from their server: no
 hard-coding of price and title allowed! This is also convenient for you
 as you can change the price of your items knowing that it'll be reflected instantly
 on your clients' devices.
@@ -80,9 +80,9 @@ Let's demonstrate this with an example:
         render();
         store.when("cc.fovea.test1").updated(render);
     }
-    
+
     function render() {
-        
+
         // Get the product from the pool.
         var product = store.get("cc.fovea.test1");
 
@@ -102,13 +102,13 @@ Let's demonstrate this with an example:
                 + "<div class=\"description\">" + product.description + "</div>"
                 + "<div class=\"price\">"       + product.price       + "</div>"
             );
-            
+
             // Is this product owned? Give him a special class.
             if (product.owned)
                 $el.addClass("owned");
             else
                 $el.removeClass("owned");
-            
+
             // Is an order for this product in progress? Can't be ordered right now?
             if (product.canPurchase)
                 $el.addClass("can-purchase");
@@ -116,7 +116,7 @@ Let's demonstrate this with an example:
                 $el.removeClass("can-purchase");
         }
     }
-    
+
     // method called when the view is hidden
     function hide() {
         // stop monitoring the product
@@ -387,7 +387,7 @@ A Promise with the following methods:
  - `error(function(err){})`
    - validation failed, either because of expiry or communication
      failure.
-   - `err` is a [store.Error object](#errors), with a code expected to be 
+   - `err` is a [store.Error object](#errors), with a code expected to be
      `store.ERR_PAYMENT_EXPIRED` or `store.ERR_VERIFICATION_FAILED`.
 
 
@@ -415,7 +415,7 @@ Find below a diagram of the different states a product can pass by.
  - `REQUESTED`: order (purchase) requested by the user
  - `INITIATED`: order transmitted to the server
  - `APPROVED`: purchase approved by server
- - `FINISHED`: purchase delivered by the app
+ - `FINISHED`: purchase delivered by the app (see [Finish a Purchase](#finish-a-purchase))
  - `OWNED`: purchase is owned (only for non-consumable and subscriptions)
 
 #### Notes
@@ -904,7 +904,7 @@ Only supports JSON requests.
 
 Options:
 
-* `url`: 
+* `url`:
 * `method`: HTTP method to use (GET, POST, ...)
 * `success`: callback(data)
 * `error`: callback(statusCode, statusText)

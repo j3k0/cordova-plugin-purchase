@@ -13,7 +13,7 @@ var callbackId = 0;
 /// Initiate the purchase of a product.
 ///
 /// The `product` argument can be either:
-/// 
+///
 ///  - the `store.Product` object
 ///  - the product `id`
 ///  - the product `alias`
@@ -23,9 +23,8 @@ var callbackId = 0;
 ///
 store.order = function(pid) {
 
-    var that = this;
     var p = pid;
-    
+
     if (typeof pid === "string") {
         p = store.products.byId[pid] || store.products.byAlias[pid];
         if (!p) {
@@ -75,7 +74,7 @@ store.order = function(pid) {
                 if (!localCallback.error)
                     return;
                 done();
-                cb(p);
+                cb(err);
             });
             return this;
         }
@@ -97,4 +96,4 @@ store.order.unregister = function(cb) {
     }
 };
 
-}).call(this);
+})();

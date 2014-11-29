@@ -1,8 +1,12 @@
+/*eslint-env mocha */
+/*global describe, it, before, beforeEach, after, afterEach */
 var assert = require("assert");
 var store = require("../tmp/store-test");
 var helper = require("./helper");
 
 describe('Verify', function() {
+    "use strict";
+
     before(function() {
         require("./helper").resetTest();
         store.register({
@@ -34,8 +38,9 @@ describe('Verify', function() {
                 callback(true, product);
             };
 
-            step1();
-            function step1() {
+            var step1, step2;
+
+            step1 = function() {
                 p.set('state', store.VALID);
                 var doneCalled = 0;
                 var errorCalled = 0;
@@ -51,9 +56,9 @@ describe('Verify', function() {
                     assert.equal(1, errorCalled, "error should be called");
                     step2();
                 }, 1500);
-            }
+            };
 
-            function step2() {
+            step2 = function() {
                 p.set('state', store.APPROVED);
                 var successCalled = 0;
                 var doneCalled = 0;
@@ -68,7 +73,9 @@ describe('Verify', function() {
                     assert.equal(1, doneCalled,    "done should be called");
                     done();
                 }, 1500);
-            }
+            };
+
+            step1();
         });
 
         it('should retry 5 times when validator fails', function(done) {
@@ -80,7 +87,6 @@ describe('Verify', function() {
             };
             p.set('state', store.APPROVED);
             helper.setTimeoutFactor(4000);
-            step();
 
             function step() {
                 var successCalled = 0;
@@ -105,7 +111,8 @@ describe('Verify', function() {
                     done();
                 }, 200000);
             }
+
+            step();
         });
     });
 });
-

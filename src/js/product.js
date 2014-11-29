@@ -1,8 +1,15 @@
 (function() {
 'use strict';
 
+function defer(thisArg, cb, delay) {
+    setTimeout(function() {
+        cb.call(thisArg);
+    }, delay || 1);
+}
+var delay = defer;
+
 /// ## <a name="product"></a>*store.Product* object ##
-/// 
+///
 /// Most events methods give you access to a `product` object.
 
 store.Product = function(options) {
@@ -132,7 +139,7 @@ store.Product.prototype.verify = function() {
     var tryValidation = function() {
 
         // No need to verifiy a which status isn't approved
-        // It means it already has been 
+        // It means it already has been
         if (that.state !== store.APPROVED)
             return;
 
@@ -158,12 +165,20 @@ store.Product.prototype.verify = function() {
                     });
                 }
                 if (data.code === store.PURCHASE_EXPIRED) {
-                    store.error(err);
-                    store.utils.callExternal('verify.error', errorCb, err);
-                    store.utils.callExternal('verify.done', doneCb, that);
-                    that.trigger("expired");
-                    that.set("state", store.VALID);
-                    store.utils.callExternal('verify.expired', expiredCb, that);
+                    if (nRetry < 2 && store._refreshForValidation) {
+                        nRetry += 1;
+                        store._refreshForValidation(function() {
+                            delay(that, tryValidation, 300);
+                        });
+                    }
+                    else {
+                        store.error(err);
+                        store.utils.callExternal('verify.error', errorCb, err);
+                        store.utils.callExternal('verify.done', doneCb, that);
+                        that.trigger("expired");
+                        that.set("state", store.VALID);
+                        store.utils.callExternal('verify.expired', expiredCb, that);
+                    }
                 }
                 else if (nRetry < 4) {
                     // It failed... let's try one more time. Maybe the appStoreReceipt wasn't updated yet.
@@ -215,7 +230,7 @@ store.Product.prototype.verify = function() {
         ///  - `error(function(err){})`
         ///    - validation failed, either because of expiry or communication
         ///      failure.
-        ///    - `err` is a [store.Error object](#errors), with a code expected to be 
+        ///    - `err` is a [store.Error object](#errors), with a code expected to be
         ///      `store.ERR_PAYMENT_EXPIRED` or `store.ERR_VERIFICATION_FAILED`.
         error:   function(cb) { errorCb = cb;   return this; }
     };
@@ -224,14 +239,7 @@ store.Product.prototype.verify = function() {
     return ret;
 };
 
-var defer = function(thisArg, cb, delay) {
-    setTimeout(function() {
-        cb.call(thisArg);
-    }, delay || 1);
-};
-var delay = defer;
-
-/// 
+///
 /// ### life-cycle
 ///
 /// A product will change state during the application execution.
@@ -256,7 +264,7 @@ var delay = defer;
 ///  - `REQUESTED`: order (purchase) requested by the user
 ///  - `INITIATED`: order transmitted to the server
 ///  - `APPROVED`: purchase approved by server
-///  - `FINISHED`: purchase delivered by the app
+///  - `FINISHED`: purchase delivered by the app (see [Finish a Purchase](#finish-a-purchase))
 ///  - `OWNED`: purchase is owned (only for non-consumable and subscriptions)
 ///
 /// #### Notes
@@ -268,8 +276,8 @@ var delay = defer;
 /// #### state changes
 ///
 /// Each time the product changes state, appropriate events is triggered.
-/// 
+///
 /// Learn more about events [here](#events) and about listening to events [here](#when).
 ///
 
-}).call(this);
+})();

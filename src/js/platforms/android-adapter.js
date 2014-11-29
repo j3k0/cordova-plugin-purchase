@@ -1,6 +1,9 @@
 (function() {
 "use strict";
 
+var initialized = false;
+var skus = [];
+
 store.when("refreshed", function() {
     if (!initialized) init();
 });
@@ -9,10 +12,7 @@ store.when("re-refreshed", function() {
     iabGetPurchases();
 });
 
-var initialized = false;
-var skus = [];
-
-var init = function () {
+function init() {
     if (initialized) return;
     initialized = true;
 
@@ -30,7 +30,7 @@ var init = function () {
             showLog: store.verbosity >= store.DEBUG ? true : false
         },
         skus);
-};
+}
 
 function iabReady() {
     store.log.debug("android -> ready");
@@ -46,19 +46,26 @@ function iabLoaded(validProducts) {
     store.log.debug("android -> loaded - " + JSON.stringify(validProducts));
     var p, i;
     for (i = 0; i < validProducts.length; ++i) {
-        p = store.products.byId[validProducts[i].productId];
-        p.set({
-            title: validProducts[i].title,
-            price: validProducts[i].price,
-            description: validProducts[i].description,
-            currency: validProducts[i].price_currency_code,
-            state: store.VALID
-        });
-        p.trigger("loaded");
+
+        if (validProducts[i].productId)
+            p = store.products.byId[validProducts[i].productId];
+        else
+            p = null;
+
+        if (p) {
+            p.set({
+                title: validProducts[i].title,
+                price: validProducts[i].price,
+                description: validProducts[i].description,
+                currency: validProducts[i].price_currency_code,
+                state: store.VALID
+            });
+            p.trigger("loaded");
+        }
     }
     for (i = 0; i < skus.length; ++i) {
         p = store.products.byId[skus[i]];
-        if (!p.valid) {
+        if (p && !p.valid) {
             p.set("state", store.INVALID);
             p.trigger("loaded");
         }
@@ -225,7 +232,7 @@ store.when("product", "finished", function(product) {
             function(err, code) { // error
                 // can't finish.
                 store.error({
-                    code: code || ERR_UNKNOWN,
+                    code: code || store.ERR_UNKNOWN,
                     message: err
                 });
             },
@@ -236,4 +243,4 @@ store.when("product", "finished", function(product) {
     }
 });
 
-}).call(this);
+})();

@@ -1,10 +1,14 @@
+/*eslint-env mocha */
+/*global describe, it, before, beforeEach, after, afterEach, storekit */
 var assert = require("assert");
 var store = require("../tmp/store-test");
 var helper = require("./helper");
 
+(function() {
+"use strict";
 global.store = store;
 global.document = {
-    addEventListener: function(event, callback) {}
+    addEventListener: function(/*event, callback*/) {}
 };
 global.localStorage = {};
 
@@ -39,10 +43,22 @@ global.storekit = {
                 }),
                 ["cc.fovea.i"]);
         }
+    },
+    refreshReceipts: function(s/*,e*/) {
+        if (s) {
+            s(null);
+        }
+    },
+    loadReceipts: function(cb) {
+        if (cb) {
+            cb({});
+        }
     }
 };
+})();
 
 describe('iOS', function(){
+    "use strict";
 
     before(helper.resetTest);
     after(helper.resetTest);

@@ -2,11 +2,11 @@
 'use strict';
 
 /// ## <a name="when"></a>*store.when(query)*
-/// 
+///
 /// Register a callback for a product-related event.
 ///
 store.when = function(query, once, callback) {
-    
+
     // No arguments, will match all products.
     if (typeof query === 'undefined')
         query = '';
@@ -28,7 +28,7 @@ store.when = function(query, once, callback) {
             };
         };
 
-        /// 
+        ///
         /// ### return value
         ///
         /// Return a Promise with methods to register callbacks for
@@ -61,7 +61,7 @@ store.when = function(query, once, callback) {
         ///  - `cancelled(product)`
         ///    - Called when a product [order](#order) is cancelled by the user.
         addPromise('cancelled');
- 
+
         ///  - `refunded(product)`
         ///    - Called when an order is refunded by the user.
         addPromise('refunded');
@@ -131,7 +131,7 @@ store.when.unregister = function(cb) {
 ///  - `"subscription"` - all subscriptions.
 ///  - `"free subscription"` - all free subscriptions.
 ///  - `"paid subscription"` - all paid subscriptions.
-/// 
+///
 /// Filter by product state:
 ///
 ///  - `"valid"` - all products in the VALID state.
@@ -155,6 +155,6 @@ store.when.unregister = function(cb) {
 ///    - equivalent to just `"cc.fovea.inapp1"`
 ///  - `"invalid product"` - an invalid product
 ///    - equivalent to just `"invalid"`
-/// 
+///
 
-}).call(this);
+})();

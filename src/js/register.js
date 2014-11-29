@@ -18,8 +18,9 @@ store.register = function(product) {
     if (!product)
         return;
     if (!product.length)
-        return store.register([product]);
-    registerProducts(product);
+        store.register([product]);
+    else
+        registerProducts(product);
 };
 
 /// ##### example usage
@@ -95,4 +96,4 @@ function hasKeyword(string) {
     return false;
 }
 
-}).call(this);
+})();

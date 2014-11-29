@@ -32,6 +32,7 @@ static BOOL g_autoFinishEnabled = YES;
 #define ERR_PAYMENT_INVALID   (ERROR_CODES_BASE + 7)
 #define ERR_PAYMENT_NOT_ALLOWED (ERROR_CODES_BASE + 8)
 #define ERR_UNKNOWN (ERROR_CODES_BASE + 10)
+#define ERR_REFRESH_RECEIPTS (ERROR_CODES_BASE + 11)
 
 static NSInteger jsErrorCode(NSInteger storeKitErrorCode)
 {
@@ -56,6 +57,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         case ERR_LOAD: return @"ERR_LOAD";
         case ERR_PURCHASE: return @"ERR_PURCHASE";
         case ERR_LOAD_RECEIPTS: return @"ERR_LOAD_RECEIPTS";
+        case ERR_REFRESH_RECEIPTS: return @"ERR_REFRESH_RECEIPTS";
         case ERR_CLIENT_INVALID: return @"ERR_CLIENT_INVALID";
         case ERR_PAYMENT_CANCELLED: return @"ERR_PAYMENT_CANCELLED";
         case ERR_PAYMENT_INVALID: return @"ERR_PAYMENT_INVALID";
@@ -71,32 +73,32 @@ const static char* b64="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123
 
 // maps A=>0,B=>1..
 const static unsigned char unb64[]={
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //10 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //20 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //30 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //40 
-  0,   0,   0,  62,   0,   0,   0,  63,  52,  53, //50 
- 54,  55,  56,  57,  58,  59,  60,  61,   0,   0, //60 
-  0,   0,   0,   0,   0,   0,   1,   2,   3,   4, //70 
-  5,   6,   7,   8,   9,  10,  11,  12,  13,  14, //80 
- 15,  16,  17,  18,  19,  20,  21,  22,  23,  24, //90 
- 25,   0,   0,   0,   0,   0,   0,  26,  27,  28, //100 
- 29,  30,  31,  32,  33,  34,  35,  36,  37,  38, //110 
- 39,  40,  41,  42,  43,  44,  45,  46,  47,  48, //120 
- 49,  50,  51,   0,   0,   0,   0,   0,   0,   0, //130 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //140 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //150 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //160 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //170 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //180 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //190 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //200 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //210 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //220 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //230 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //240 
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //250 
-  0,   0,   0,   0,   0,   0, 
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //10
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //20
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //30
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //40
+  0,   0,   0,  62,   0,   0,   0,  63,  52,  53, //50
+ 54,  55,  56,  57,  58,  59,  60,  61,   0,   0, //60
+  0,   0,   0,   0,   0,   0,   1,   2,   3,   4, //70
+  5,   6,   7,   8,   9,  10,  11,  12,  13,  14, //80
+ 15,  16,  17,  18,  19,  20,  21,  22,  23,  24, //90
+ 25,   0,   0,   0,   0,   0,   0,  26,  27,  28, //100
+ 29,  30,  31,  32,  33,  34,  35,  36,  37,  38, //110
+ 39,  40,  41,  42,  43,  44,  45,  46,  47,  48, //120
+ 49,  50,  51,   0,   0,   0,   0,   0,   0,   0, //130
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //140
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //150
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //160
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //170
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //180
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //190
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //200
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //210
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //220
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //230
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //240
+  0,   0,   0,   0,   0,   0,   0,   0,   0,   0, //250
+  0,   0,   0,   0,   0,   0,
 }; // This array has 255 elements
 
 // Converts binary data of length=len to base64 characters.
@@ -380,6 +382,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 		error = state = transactionIdentifier = transactionReceipt = productId = @"";
 		errorCode = 0;
         DLog(@"Transaction updated: %@", transaction.payment.productIdentifier);
+        BOOL canFinish = NO;
 
         switch (transaction.transactionState)
         {
@@ -394,6 +397,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 				transactionIdentifier = transaction.transactionIdentifier;
 				transactionReceipt = [[transaction transactionReceipt] base64EncodedString];
 				productId = transaction.payment.productIdentifier;
+                canFinish = YES;
                 break;
 
 			case SKPaymentTransactionStateFailed:
@@ -401,8 +405,9 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 				error = transaction.error.localizedDescription;
 				errorCode = jsErrorCode(transaction.error.code);
 				productId = transaction.payment.productIdentifier;
+                canFinish = YES;
 				DLog(@"Error %@ - %@", jsErrorCodeAsString(errorCode), error);
-				
+
 				// Finish failed transactions, when autoFinish is off
 				if (!g_autoFinishEnabled) {
 					[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
@@ -417,6 +422,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
                     transactionIdentifier = transaction.originalTransaction.transactionIdentifier;
 				transactionReceipt = [[transaction transactionReceipt] base64EncodedString];
 				productId = transaction.originalTransaction.payment.productIdentifier;
+                canFinish = YES;
                 break;
 
             default:
@@ -437,7 +443,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
             [callbackArgs JSONSerialize]];
 		// DLog(@"js: %@", js);
         [self.commandDelegate evalJs:js];
-        if (g_autoFinishEnabled) {
+        if (g_autoFinishEnabled && canFinish) {
             [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
             [self transactionFinished:transaction];
         }
@@ -557,7 +563,7 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
         // Verify the signature
         BIO *b_receiptPayload;
         int result = PKCS7_verify(p7, NULL, store, b_receiptPayload, 0);
-        
+ 
         free(receiptBytes);
         free(appleBytes);
 
@@ -591,6 +597,26 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+- (void) appStoreRefreshReceipt: (CDVInvokedUrlCommand*)command {
+    DLog(@"Request to refresh app receipt");
+    RefreshReceiptDelegate* delegate = [[RefreshReceiptDelegate alloc] init];
+    SKReceiptRefreshRequest* recreq = [[SKReceiptRefreshRequest alloc] init];
+    recreq.delegate = delegate;
+    delegate.plugin  = self;
+    delegate.command = command;
+    
+#if ARC_ENABLED
+    self.retainer[@"receiptRefreshRequest"] = recreq;
+    self.retainer[@"receiptRefreshRequestDelegate"] = delegate;
+#else
+    [delegate retain];
+#endif
+
+    DLog(@"Starting receipt refresh request...");
+    [recreq start];
+    DLog(@"Receipt refresh request started");
+}
+
 - (void) dispose {
     self.retainer = nil;
     self.list = nil;
@@ -600,6 +626,61 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
 
     [super dispose];
 }
+
+@end
+/**
+ * Receive refreshed app receipt
+ */
+@implementation RefreshReceiptDelegate
+
+@synthesize plugin, command;
+
+- (void) requestDidFinish:(SKRequest *)request {
+    DLog(@"Got refreshed receipt");
+    NSString *base64 = nil;
+    NSData *receiptData = [self.plugin appStoreReceipt];
+    if (receiptData != nil) {
+        base64 = [receiptData convertToBase64];
+        // DLog(@"base64 receipt: %@", base64);
+    }
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSArray *callbackArgs = [NSArray arrayWithObjects:
+                             NILABLE(base64),
+                             NILABLE([bundle.infoDictionary objectForKey:@"CFBundleIdentifier"]),
+                             NILABLE([bundle.infoDictionary objectForKey:@"CFBundleShortVersionString"]),
+                             NILABLE([bundle.infoDictionary objectForKey:@"CFBundleNumericVersion"]),
+                             NILABLE([bundle.infoDictionary objectForKey:@"CFBundleSignature"]),
+                             nil];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                                      messageAsArray:callbackArgs];
+    DLog(@"Send new receipt data");
+    [self.plugin.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+
+#if ARC_ENABLED
+    [self.plugin.retainer removeObjectForKey:@"receiptRefreshRequest"];
+    [self.plugin.retainer removeObjectForKey:@"receiptRefreshRequestDelegate"];
+#else
+    [request release];
+    [self    release];
+#endif
+}
+
+- (void):(SKRequest *)request didFailWithError:(NSError*) error {
+    DLog(@"In-App Store unavailable (ERROR %li)", (unsigned long)error.code);
+    DLog(@"%@", [error localizedDescription]);
+
+    CDVPluginResult* pluginResult =
+    [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+    [self.plugin.commandDelegate sendPluginResult:pluginResult callbackId:self.command.callbackId];
+}
+
+#if ARC_DISABLED
+- (void) dealloc {
+    [plugin  release];   
+    [command release];
+    [super   dealloc];
+}
+#endif
 
 @end
 

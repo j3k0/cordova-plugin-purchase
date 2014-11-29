@@ -1,8 +1,11 @@
+/*eslint-env mocha */
+/*global describe, it, before, beforeEach, after, afterEach */
 var assert = require("assert");
 var store = require("../tmp/store-test");
 var helper = require("./helper");
 
 describe('When', function(){
+    "use strict";
 
     var product = {
         id: "p1",
@@ -24,7 +27,6 @@ describe('When', function(){
                 approved(nop).
                 updated(nop).
                 cancelled(nop);
-                
         });
 
         it('should be called on id', function(){
@@ -33,15 +35,16 @@ describe('When', function(){
             var loaded = false;
             store.when("p1").loaded(function(product) {
                 loaded = true;
+                assert.equal(product.id, "p1");
             });
 
-            assert.equal(loaded, false);
-            store._queries.triggerWhenProduct(product, "loaded");
-            assert.equal(loaded, true);
+            assert.equal(loaded, false, "loaded should not be called initially");
+            store._queries.triggerWhenProduct(product, "loaded", [product]);
+            assert.equal(loaded, true, "loaded should be called after the 'loaded' event");
 
             loaded = false;
-            store._queries.triggerWhenProduct(product, "loaded");
-            assert.equal(loaded, true);
+            store._queries.triggerWhenProduct(product, "loaded", [product]);
+            assert.equal(loaded, true, "loaded should be called every 'loaded' event");
         });
 
         it('should be called on aliases', function(){
@@ -49,15 +52,16 @@ describe('When', function(){
 
             var loaded = false;
             store.when("product").loaded(function(product) {
+                assert.equal(product.id, "p1");
                 loaded = true;
             });
 
             assert.equal(loaded, false);
-            store._queries.triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded", [product]);
             assert.equal(loaded, true);
 
             loaded = false;
-            store._queries.triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded", [product]);
             assert.equal(loaded, true);
         });
 
@@ -89,15 +93,16 @@ describe('When', function(){
 
             var loaded = false;
             store.once("p1").loaded(function(product) {
+                assert.equal(product.id, "p1");
                 loaded = true;
             });
 
             assert.equal(loaded, false);
-            store._queries.triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded", [product]);
             assert.equal(loaded, true);
 
             loaded = false;
-            store._queries.triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded", [product]);
             assert.equal(loaded, false);
         });
 
@@ -106,15 +111,16 @@ describe('When', function(){
 
             var loaded = false;
             store.once("product").loaded(function(product) {
+                assert.equal(product.id, "p1");
                 loaded = true;
             });
 
             assert.equal(loaded, false);
-            store._queries.triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded", [product]);
             assert.equal(loaded, true);
 
             loaded = false;
-            store._queries.triggerWhenProduct(product, "loaded");
+            store._queries.triggerWhenProduct(product, "loaded", [product]);
             assert.equal(loaded, false);
         });
     });

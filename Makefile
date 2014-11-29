@@ -24,7 +24,7 @@ build: sync-android test-js
 	@echo "- Preprocess"
 	@node_modules/.bin/preprocess src/js/store-ios.js src/js | node_modules/.bin/uglifyjs -b > www/store-ios.js
 	@node_modules/.bin/preprocess src/js/store-android.js src/js | node_modules/.bin/uglifyjs -b > www/store-android.js
-	@echo "- DONE"
+	@echo "- Done"
 	@echo ""
 
 prepare-test-js:
@@ -33,15 +33,20 @@ prepare-test-js:
 	@cp src/js/platforms/*-adapter.js test/tmp/
 	@#node_modules/.bin/istanbul instrument --no-compact --output test/tmp/store-test.js test/store-test-src.js
 
-jshint: check-jshint
+jshint: check-jshint sync-android
 	@echo "- JSHint"
-	@node_modules/.bin/jshint src/js/*.js test/js/*.js
+	@node_modules/.bin/jshint --config .jshintrc src/js/*.js src/js/platforms/*.js test/js/*.js
 
-test-js: jshint prepare-test-js
+eslint: jshint
+	@echo "- ESLint"
+	@node_modules/.bin/eslint --config .eslintrc src/js/*.js src/js/platforms/*.js test/js/*.js
+
+test-js: jshint eslint prepare-test-js
 	@echo "- Mocha"
 	@node_modules/.bin/istanbul test --root test/tmp test/js/run.js
+	@echo
 
-test-js-coverage: jshint prepare-test-js
+test-js-coverage: jshint eslint prepare-test-js
 	@echo "- Mocha / Instanbul"
 	@node_modules/.bin/istanbul cover --root test/ test/js/run.js
 	@node_modules/.bin/coveralls < coverage/lcov.info
@@ -67,7 +72,7 @@ doc-contrib: test-js
 	@echo >> doc/contributor-guide.md
 	@echo "*(generated from source files using \`make doc-contrib)\`*" >> doc/contributor-guide.md
 	@echo >> doc/contributor-guide.md
-	@cat src/js/*.js | grep "//!" | cut -d! -f2- | cut -d\  -f2- >> doc/contributor-guide.md
+	@cat src/js/*.js src/js/platforms/*.js | grep "//!" | cut -d! -f2- | cut -d\  -f2- >> doc/contributor-guide.md
 
 doc: doc-api doc-contrib
 

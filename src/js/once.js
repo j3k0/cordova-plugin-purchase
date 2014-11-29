@@ -2,7 +2,7 @@
 "use strict";
 
 /// ## <a name="once"></a>*store.once(query)*
-/// 
+///
 /// Identical to [`store.when`](#when), but the callback will be called only once.
 /// After being called, the callback will be unregistered.
 store.once = function(query, action, callback) {
@@ -25,4 +25,4 @@ store.once = function(query, action, callback) {
 
 store.once.unregister = store.when.unregister;
 
-}).call(this);
+})();

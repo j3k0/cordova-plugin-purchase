@@ -1,4 +1,4 @@
-/** 
+/**
  * A plugin to enable iOS In-App Purchases.
  *
  * Copyright (c) Matt Kane 2011
@@ -6,14 +6,21 @@
  * Copyright (c) Jean-Christophe Hoelt 2013
  */
 
+/*eslint camelcase:0 */
+/*global cordova, window */
+(function(){
+"use strict";
+
 var exec = function (methodName, options, success, error) {
     cordova.exec(success, error, "InAppPurchase", methodName, options);
 };
 
 var protectCall = function (callback, context) {
-    if (!callback) return;
+    if (!callback) {
+        return;
+    }
     try {
-        var args = Array.prototype.slice.call(arguments, 2); 
+        var args = Array.prototype.slice.call(arguments, 2);
         callback.apply(this, args);
     }
     catch (err) {
@@ -95,17 +102,18 @@ InAppPurchase.prototype.init = function (options, success, error) {
         protectCall(error, 'init.error');
     };
 
+    this.loadAppStoreReceipt();
     exec('setup', [], setupOk, setupFailed);
 };
 
 /**
- * Makes an in-app purchase. 
- * 
+ * Makes an in-app purchase.
+ *
  * @param {String} productId The product identifier. e.g. "com.example.MyApp.myproduct"
- * @param {int} quantity 
+ * @param {int} quantity
  */
 InAppPurchase.prototype.purchase = function (productId, quantity) {
-	quantity = (quantity|0) || 1;
+	quantity = (quantity | 0) || 1;
     var options = this.options;
 
     // Many people forget to load information about their products from apple's servers before allowing
@@ -127,23 +135,23 @@ InAppPurchase.prototype.purchase = function (productId, quantity) {
         }
     };
     var purchaseFailed = function () {
-        var msg = 'Purchasing ' + productId + ' failed';
-        log(msg);
+        var errmsg = 'Purchasing ' + productId + ' failed';
+        log(errmsg);
         if (typeof options.error === 'function') {
-            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_PURCHASE, msg, productId, quantity);
+            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_PURCHASE, errmsg, productId, quantity);
         }
     };
-    return exec('purchase', [productId, quantity], purchaseOk, purchaseFailed);
+    exec('purchase', [productId, quantity], purchaseOk, purchaseFailed);
 };
 
 /**
  * Asks the payment queue to restore previously completed purchases.
  * The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
- * 
+ *
  */
 InAppPurchase.prototype.restore = function() {
     this.needRestoreNotification = true;
-    return exec('restoreCompletedTransactions', []);
+    exec('restoreCompletedTransactions', []);
 };
 
 /**
@@ -233,13 +241,13 @@ InAppPurchase.prototype.processPendingUpdates = function() {
 };
 
 // This is called from native.
-// 
+//
 // Note that it may eventually be called before initialization... unfortunately.
 // In this case, we'll just keep pending updates in a list for later processing.
 InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
 
     if (!initialized) {
-        var args = Array.prototype.slice.call(arguments); 
+        var args = Array.prototype.slice.call(arguments);
         pendingUpdates.push(args);
         return;
     }
@@ -258,7 +266,7 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
             return;
 		case "PaymentTransactionStatePurchased":
             protectCall(this.options.purchase, 'options.purchase', transactionIdentifier, productId);
-			return; 
+			return;
 		case "PaymentTransactionStateFailed":
             protectCall(this.options.error, 'options.error', errorCode, errorText, {
                 productId: productId
@@ -289,57 +297,92 @@ InAppPurchase.prototype.restoreCompletedTransactionsFailed = function (errorCode
     protectCall(this.options.restoreFailed, 'options.restoreFailed', errorCode);
 };
 
-InAppPurchase.prototype.refreshReceipts = function() {
+InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
     var that = this;
-    that.appStoreReceipt = null;
 
-    var loaded = function (base64) {
-        that.appStoreReceipt = base64;
-        protectCall(that.options.receiptsRefreshed, 'options.receiptsRefreshed', base64);
+    var loaded = function (args) {
+        var base64 = args[0];
+        var bundleIdentifier = args[1];
+        var bundleShortVersion = args[2];
+        var bundleNumericVersion = args[3];
+        var bundleSignature = args[4];
+        log('infoPlist: ' + bundleIdentifier + "," + bundleShortVersion + "," + bundleNumericVersion  + "," + bundleSignature);
+        that.setAppStoreReceipt(base64);
+        protectCall(that.options.receiptsRefreshed, 'options.receiptsRefreshed', {
+            appStoreReceipt: base64,
+            bundleIdentifier: bundleIdentifier,
+            bundleShortVersion: bundleShortVersion,
+            bundleNumericVersion: bundleNumericVersion,
+            bundleSignature: bundleSignature
+        });
+        protectCall(successCb, "refreshReceipts.success", base64);
     };
 
     var error = function(errMessage) {
         log('refresh receipt failed: ' + errMessage);
-        protectcall(options.error, 'options.error', InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
+        protectCall(that.options.error, 'options.error', InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
+        protectCall(errorCb, "refreshReceipts.error", InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
     };
 
+    log('refreshing appStoreReceipt');
     exec('appStoreRefreshReceipt', [], loaded, error);
 };
 
 InAppPurchase.prototype.loadReceipts = function (callback) {
 
     var that = this;
-    that.appStoreReceipt = null;
+    // that.appStoreReceipt = null;
 
     var loaded = function (base64) {
-        that.appStoreReceipt = base64;
+        // that.appStoreReceipt = base64;
+        that.setAppStoreReceipt(base64);
         callCallback();
     };
 
     var error = function (errMessage) {
         log('load failed: ' + errMessage);
-        protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
+        protectCall(that.options.error, 'options.error', InAppPurchase.prototype.ERR_LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
     };
 
-    var callCallback = function () {
-        if (callback) {
-            protectCall(callback, 'loadReceipts.callback', {
-                appStoreReceipt: that.appStoreReceipt,
-                forTransaction: function (transactionId) {
-                    return that.receiptForTransaction[transactionId] || null;
-                },
-                forProduct:     function (productId) {
-                    return that.receiptForProduct[productId] || null;
-                }
-            });
-        }
-    };
+    function callCallback() {
+        protectCall(callback, 'loadReceipts.callback', {
+            appStoreReceipt: that.appStoreReceipt,
+            forTransaction: function (transactionId) {
+                return that.receiptForTransaction[transactionId] || null;
+            },
+            forProduct:     function (productId) {
+                return that.receiptForProduct[productId] || null;
+            }
+        });
+    }
 
-    exec('appStoreReceipt', [], loaded, error);
+    if (that.appStoreReceipt) {
+        log('appStoreReceipt already loaded:');
+        log(that.appStoreReceipt);
+        callCallback();
+    }
+    else {
+        log('loading appStoreReceipt');
+        exec('appStoreReceipt', [], loaded, error);
+    }
+};
+
+InAppPurchase.prototype.setAppStoreReceipt = function(base64) {
+    this.appStoreReceipt = base64;
+    if (window.localStorage && base64) {
+        window.localStorage.sk_appStoreReceipt = base64;
+    }
+};
+InAppPurchase.prototype.loadAppStoreReceipt = function() {
+    if (window.localStorage && window.localStorage.sk_appStoreReceipt) {
+        this.appStoreReceipt = window.localStorage.sk_appStoreReceipt;
+    }
+    if (this.appStoreReceipt === 'null')
+        this.appStoreReceipt = null;
 };
 
 /*
- * This queue stuff is here because we may be sent events before listeners have been registered. This is because if we have 
+ * This queue stuff is here because we may be sent events before listeners have been registered. This is because if we have
  * incomplete transactions when we quit, the app will try to run these when we resume. If we don't register to receive these
  * right away then they may be missed. As soon as a callback has been registered then it will be sent any events waiting
  * in the queue.
@@ -357,7 +400,7 @@ InAppPurchase.prototype.runQueue = function () {
 		this.updatedTransactionCallback.apply(this, args);
         args = queue.shift();
 	}
-	if (!this.eventQueue.length) {	
+	if (!this.eventQueue.length) {
 		this.unWatchQueue();
 	}
 };
@@ -382,3 +425,4 @@ InAppPurchase.prototype.eventQueue = [];
 InAppPurchase.prototype.timer = null;
 
 window.storekit = new InAppPurchase();
+})();

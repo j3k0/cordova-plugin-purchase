@@ -1,7 +1,14 @@
+/*eslint-env mocha */
+/*global describe, it, before, beforeEach, after, afterEach */
 var assert = require("assert");
 var store = require("../tmp/store-test");
 
 describe('Register', function(){
+    "use strict";
+
+    var helper = require("./helper");
+    before(helper.resetTest);
+    after(helper.resetTest);
 
     describe('#register()', function(){
 
@@ -43,4 +50,3 @@ describe('Register', function(){
         });
     });
 });
-

@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 
-/// 
+///
 /// ## *store.error.callbacks* array
 ///
 /// Array of user registered error callbacks.
@@ -47,4 +47,4 @@ function deferThrow(err) {
     setTimeout(function() { throw err; }, 1);
 }
 
-}).call(this);
+})();

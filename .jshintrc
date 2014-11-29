@@ -1,0 +1,9 @@
+{
+    "node": true,
+    "browser": true,
+    "undef": true,
+    "globals": {
+        "store": true,
+        "cordova": true
+    }
+}

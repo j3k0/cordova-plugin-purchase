@@ -18,12 +18,12 @@
 ///
 /// This event provides a generic way to track the statuses of your purchases,
 /// to unlock features when needed and to refresh your views accordingly.
-/// 
+///
 /// ### Registering products
 ///
 /// The store needs to know the type and identifiers of your products before you
 /// can use them in your code.
-/// 
+///
 /// Use [`store.register()`](#register) before your first call to
 /// [`store.refresh()`](#refresh).
 ///
@@ -57,7 +57,7 @@
 /// readable `title` and `description`, `price`, etc.
 ///
 /// This isn't an optional step as some despotic store owners (like Apple) require you
-/// to display information about a product as retrieved from their server: no 
+/// to display information about a product as retrieved from their server: no
 /// hard-coding of price and title allowed! This is also convenient for you
 /// as you can change the price of your items knowing that it'll be reflected instantly
 /// on your clients' devices.
@@ -76,9 +76,9 @@
 ///         render();
 ///         store.when("cc.fovea.test1").updated(render);
 ///     }
-///     
+///
 ///     function render() {
-///         
+///
 ///         // Get the product from the pool.
 ///         var product = store.get("cc.fovea.test1");
 ///
@@ -98,13 +98,13 @@
 ///                 + "<div class=\"description\">" + product.description + "</div>"
 ///                 + "<div class=\"price\">"       + product.price       + "</div>"
 ///             );
-///             
+///
 ///             // Is this product owned? Give him a special class.
 ///             if (product.owned)
 ///                 $el.addClass("owned");
 ///             else
 ///                 $el.removeClass("owned");
-///             
+///
 ///             // Is an order for this product in progress? Can't be ordered right now?
 ///             if (product.canPurchase)
 ///                 $el.addClass("can-purchase");
@@ -112,7 +112,7 @@
 ///                 $el.removeClass("can-purchase");
 ///         }
 ///     }
-///     
+///
 ///     // method called when the view is hidden
 ///     function hide() {
 ///         // stop monitoring the product
@@ -174,7 +174,7 @@
 /// #### simple case
 ///
 /// In the most simple case, where:
-/// 
+///
 ///  - delivery of purchases is only local ;
 ///  - you don't want to implement receipt validation ;
 ///
@@ -225,7 +225,7 @@
 ///
 /// If the validator returns a `store.PURCHASE_EXPIRED` error code, the subscription will
 /// automatically loose its `owned` status.
-/// 
+///
 /// Typically, you'll enable and disable access to your content this way.
 /// ```js
 /// store.when("cc.fovea.subcription").updated(function(product) {
@@ -237,26 +237,26 @@
 /// ```
 
 // ### Security
-// 
+//
 // You will initiate a purchase with `store.order("product.id")`.
-// 
+//
 // 99% of the times, the purchase will be approved immediately by billing system.
 //
 // However, connection can be lost between you sending a purchase request
 // and the server answering to you. In that case, the purchase shouldn't
 // be lost (because the user paid for it), that's why the store will notify
 // you of an approved purchase during the next application startup.
-// 
+//
 // The same can also happen if the user bought a product from another device, using his
 // same account.
-// 
-// For that reason, you should register all your features-unlocking listeners at 
+//
+// For that reason, you should register all your features-unlocking listeners at
 // startup, before the first call to `store.refresh()`
 //
 
-/// 
+///
 /// # <a name="store"></a>*store* object ##
-/// 
+///
 /// `store` is the global object exported by the purchase plugin.
 ///
 /// As with any other plugin, this object shouldn't be used before
@@ -270,7 +270,7 @@ var store = {};
 /// ## <a name="verbosity"></a>*store.verbosity*
 ///
 /// The `verbosity` property defines how much you want `store.js` to write on the console. Set to:
-/// 
+///
 ///  - `store.QUIET` or `0` to disable all logging (default)
 ///  - `store.ERROR` or `1` to show only error messages
 ///  - `store.WARNING` or `2` to show warnings and errors

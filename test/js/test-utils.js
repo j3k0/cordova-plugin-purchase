@@ -1,18 +1,21 @@
+/*eslint-env mocha */
+/*global describe, it, before, beforeEach, after, afterEach */
 var assert = require("assert");
 var store = require("../tmp/store-test");
 
 describe('Utils', function(){
+    "use strict";
 
     describe('#ajax', function(){
 
-        XMLHttpRequest = function() {
+        global.XMLHttpRequest = function() {
             this.open = function(method, url) {
                 this.method = method;
                 this.url = url;
             };
-            this.setRequestHeader = function(key,value) {};
-            this.onreadystatechange = function(event) {};
-            this.send = function(data) {
+            this.setRequestHeader   = function(/*key,value*/) {};
+            this.onreadystatechange = function(/*event*/) {};
+            this.send = function(/*data*/) {
                 this.readyState = 1;
                 this.onreadystatechange({});
                 this.readyState = 2;
@@ -43,7 +46,7 @@ describe('Utils', function(){
                     assert.ok(data.success, "request should send success status");
                     done();
                 },
-                error: function(status, message) {
+                error: function(/*status, message*/) {
                     assert.ok(false, "this request shouldn't fail");
                 }
             });
@@ -54,11 +57,12 @@ describe('Utils', function(){
                 url: 'error404',
                 method: 'POST',
                 data: { a: 1, b: 2 },
-                success: function(data) {
+                success: function(/*data*/) {
                     assert.ok(false, "request should not send success status");
                 },
                 error: function(status, message) {
                     assert.equal(404, status, "this request should fail with status 404");
+                    assert.ok(message, "this request should send an error message");
                     done();
                 }
             });
@@ -69,10 +73,10 @@ describe('Utils', function(){
                 url: 'dummy',
                 method: 'POST',
                 data: { a: 1, b: 2 },
-                success: function(data) {
-                    a.b.c = 0;
+                success: function(/*data*/) {
+                    throw new Error();
                 },
-                error: function(status, message) {
+                error: function(/*status, message*/) {
                     assert.ok(false, "Error callback shoudn't be called");
                 }
             }).done(function() {
@@ -81,4 +85,3 @@ describe('Utils', function(){
         });
     });
 });
-

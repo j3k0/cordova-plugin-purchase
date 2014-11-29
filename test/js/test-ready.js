@@ -1,7 +1,10 @@
+/*eslint-env mocha */
+/*global describe, it, before, beforeEach, after, afterEach */
 var assert = require("assert");
 var store = require("../tmp/store-test");
 
 describe('Ready', function(){
+    "use strict";
 
     describe('#ready()', function(){
 
