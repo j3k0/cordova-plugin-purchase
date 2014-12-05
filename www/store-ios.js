@@ -1078,7 +1078,7 @@ store.verbosity = 0;
         product.owned = false;
         setOwned(product.id, false);
         storekitFinish(product);
-        if (product.state === store.OWNED) product.set("state", store.VALID);
+        if (product.state === store.OWNED || product.state === store.APPROVED) product.set("state", store.VALID);
     });
     var initialized = false;
     var initializing = false;
