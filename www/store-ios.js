@@ -264,6 +264,7 @@ store.verbosity = 0;
             addPromise("finished");
             addPromise("verified");
             addPromise("unverified");
+            addPromise("expired");
             return ret;
         } else {
             var action = once;
@@ -820,6 +821,9 @@ store.verbosity = 0;
         };
         exec("purchase", [ productId, quantity ], purchaseOk, purchaseFailed);
     };
+    InAppPurchase.prototype.canMakePayments = function(success, error) {
+        return exec("canMakePayments", [], success, error);
+    };
     InAppPurchase.prototype.restore = function() {
         this.needRestoreNotification = true;
         exec("restoreCompletedTransactions", []);
@@ -1074,7 +1078,7 @@ store.verbosity = 0;
         product.owned = false;
         setOwned(product.id, false);
         storekitFinish(product);
-        if (product.state === store.OWNED) product.set("state", store.VALID);
+        if (product.state === store.OWNED || product.state === store.APPROVED) product.set("state", store.VALID);
     });
     var initialized = false;
     var initializing = false;

@@ -84,6 +84,10 @@ store.when = function(query, once, callback) {
         ///    - Called when receipt verification failed
         addPromise('unverified');
 
+        ///  - `expired(product)`
+        ///    - Called when validation find a subscription to be expired
+        addPromise('expired');
+
         return ret;
     }
     else {

@@ -145,6 +145,13 @@ InAppPurchase.prototype.purchase = function (productId, quantity) {
 };
 
 /**
+ * Checks if device/user is allowed to make in-app purchases
+ */
+InAppPurchase.prototype.canMakePayments = function(success, error){
+    return exec("canMakePayments", [], success, error);
+};
+
+/**
  * Asks the payment queue to restore previously completed purchases.
  * The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
  *

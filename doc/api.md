@@ -547,6 +547,8 @@ product events defined below.
    - Called when receipt validation successful
  - `unverified(product)`
    - Called when receipt verification failed
+ - `expired(product)`
+   - Called when validation find a subscription to be expired
 
 ### alternative usage
 

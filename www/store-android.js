@@ -264,6 +264,7 @@ store.verbosity = 0;
             addPromise("finished");
             addPromise("verified");
             addPromise("unverified");
+            addPromise("expired");
             return ret;
         } else {
             var action = once;

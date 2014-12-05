@@ -96,7 +96,7 @@ store.when("expired", function(product) {
     product.owned = false;
     setOwned(product.id, false);
     storekitFinish(product);
-    if (product.state === store.OWNED)
+    if (product.state === store.OWNED || product.state === store.APPROVED)
         product.set("state", store.VALID);
 });
 

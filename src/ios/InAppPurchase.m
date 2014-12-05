@@ -364,6 +364,23 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 	[[SKPaymentQueue defaultQueue] addPayment:payment];
 }
 
+//Check if user/device is allowed to make in-app purchases
+- (void) canMakePayments: (CDVInvokedUrlCommand*)command
+{
+  CDVPluginResult* pluginResult = nil;
+  
+  if (![SKPaymentQueue canMakePayments]) {
+        DLog(@"Device can't make payments.");
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Can't make payments"];
+    }
+  else{
+    DLog(@"Device can make payments.");
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"Can make payments"];
+  }
+  
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
 - (void) restoreCompletedTransactions: (CDVInvokedUrlCommand*)command
 {
     [[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
