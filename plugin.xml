@@ -3,7 +3,7 @@
     xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="de.4brains.cordova.purchase"
-    version="3.9.1_beta1">
+    version="3.9.1-dev">
 
     <name>Purchase</name>
 	<description>Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)</description>
