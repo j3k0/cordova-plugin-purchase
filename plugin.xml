@@ -2,8 +2,8 @@
 <plugin
     xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    id="cc.fovea.cordova.purchase"
-    version="3.9.1">
+    id="de.4brains.cordova.purchase"
+    version="3.9.1-dev">
 
     <name>Purchase</name>
 	<description>Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)</description>
@@ -42,6 +42,8 @@
 
     <!-- android -->
     <platform name="android">
+        <preference name="BILLING_KEY" />
+
         <js-module src="www/store-android.js" name="InAppBillingPlugin">
             <clobbers target="store" />
         </js-module>
@@ -57,6 +59,12 @@
 				<param name="android-package" value="com.smartmobilesoftware.inappbilling.InAppBillingPlugin"/>
 			</feature>
         </config-file>
+
+      <source-file src="res/values/billing_key_param.xml" target-dir="res/values/" />
+      <config-file target="res/values/billing_key_param.xml" parent="/*">
+          <string name="billing_key_param">$BILLING_KEY</string>
+      </config-file>
+
 
         <!-- In-app Billing Library -->
 		<source-file src="src/android/com/android/vending/billing/IInAppBillingService.aidl" target-dir="src/com/android/vending/billing" />
