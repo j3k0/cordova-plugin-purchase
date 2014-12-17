@@ -129,11 +129,10 @@ public class InAppBillingPlugin extends CordovaPlugin {
 	// Initialize the plugin
 	private void init(final List<String> skus){
 		Log.d(TAG, "init start");
+
 		// Some sanity checks to see if the developer (that's you!) really followed the
-        // instructions to run this plugin
-                int billingKey = cordova.getActivity().getResources().getIdentifier("billing_key", "string", cordova.getActivity().getPackageName());
-                // String base64EncodedPublicKey = cordova.getActivity().getString(billingKey);
-                String base64EncodedPublicKey = getPublicKey();
+    // instructions to run this plugin
+    String base64EncodedPublicKey = getPublicKey();
 
 	 	if (base64EncodedPublicKey.contains("CONSTRUCT_YOUR"))
 	 		throw new RuntimeException("Please put your app's public key in InAppBillingPlugin.java. See ReadMe.");
