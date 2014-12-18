@@ -42,6 +42,8 @@
 
     <!-- android -->
     <platform name="android">
+        <preference name="BILLING_KEY" />
+
         <js-module src="www/store-android.js" name="InAppBillingPlugin">
             <clobbers target="store" />
         </js-module>
@@ -56,6 +58,11 @@
             <feature name="InAppBillingPlugin">
 				<param name="android-package" value="com.smartmobilesoftware.inappbilling.InAppBillingPlugin"/>
 			</feature>
+        </config-file>
+
+        <source-file src="src/android/billing_key_param.xml" target-dir="res/values/" />
+        <config-file target="res/values/billing_key_param.xml" parent="/*">
+            <string name="billing_key_param">$BILLING_KEY</string>
         </config-file>
 
         <!-- In-app Billing Library -->
@@ -74,5 +81,7 @@
 		<source-file src="src/android/com/smartmobilesoftware/util/Security.java" target-dir="src/com/smartmobilesoftware/util" />
 		<source-file src="src/android/com/smartmobilesoftware/util/SkuDetails.java" target-dir="src/com/smartmobilesoftware/util" />
     </platform>
-
+<!--
+vim: ts=4:sw=4:et
+-->
 </plugin>
