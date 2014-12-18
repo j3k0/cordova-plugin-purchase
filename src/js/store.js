@@ -165,7 +165,7 @@
 ///
 /// #### un-finished purchases
 ///
-/// If your app wasn't able to deliver the content, `finish()` wasn't call.
+/// If your app wasn't able to deliver the content, `product.finish()` won't be called.
 ///
 /// Don't worry: the `approved` event will be re-triggered the next time you
 /// call [`store.refresh()`](#refresh), which can very well be the next time
