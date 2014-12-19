@@ -42,7 +42,7 @@
 
     <!-- android -->
     <platform name="android">
-        <preference name="BILLING_KEY" />
+        <!-- preference name="BILLING_KEY" / -->
 
         <js-module src="www/store-android.js" name="InAppBillingPlugin">
             <clobbers target="store" />

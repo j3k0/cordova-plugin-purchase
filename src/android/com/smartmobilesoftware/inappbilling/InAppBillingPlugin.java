@@ -113,16 +113,30 @@ public class InAppBillingPlugin extends CordovaPlugin {
 		return isValidAction;
 	}
 
+    private String getPublicKey() {
+        int billingKeyFromParam = cordova.getActivity().getResources().getIdentifier("billing_key_param", "string", cordova.getActivity().getPackageName());
+        String ret = "";
+
+        if (billingKeyFromParam > 0) {
+            ret = cordova.getActivity().getString(billingKeyFromParam);
+            if (ret.length() > 0) {
+                return ret;
+            }
+        }
+
+        int billingKey = cordova.getActivity().getResources().getIdentifier("billing_key", "string", cordova.getActivity().getPackageName());
+        return cordova.getActivity().getString(billingKey);
+    }
+
 	// Initialize the plugin
 	private void init(final List<String> skus){
 		Log.d(TAG, "init start");
 		// Some sanity checks to see if the developer (that's you!) really followed the
         // instructions to run this plugin
-                int billingKey = cordova.getActivity().getResources().getIdentifier("billing_key", "string", cordova.getActivity().getPackageName());
-                String base64EncodedPublicKey = cordova.getActivity().getString(billingKey);
+        String base64EncodedPublicKey = getPublicKey();
 
 	 	if (base64EncodedPublicKey.contains("CONSTRUCT_YOUR"))
-	 		throw new RuntimeException("Please put your app's public key in InAppBillingPlugin.java. See ReadMe.");
+	 		throw new RuntimeException("Please configure your app's public key.");
 
 	 	// Create the helper, passing it our context and the public key to verify signatures with
         Log.d(TAG, "Creating IAB helper.");
