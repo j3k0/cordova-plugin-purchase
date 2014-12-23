@@ -138,7 +138,7 @@ store.Product.prototype.verify = function() {
 
     var tryValidation = function() {
 
-        // No need to verifiy a which status isn't approved
+        // No need to verify a which status isn't approved
         // It means it already has been
         if (that.state !== store.APPROVED)
             return;
