@@ -22,7 +22,6 @@ var callbackId = 0;
 /// the purchase process.
 ///
 store.order = function(p, developerPayload) {
-    
     if (typeof p === "string") {
         var pid = p;
         p = store.products.byId[pid] || store.products.byAlias[pid];
@@ -35,7 +34,6 @@ store.order = function(p, developerPayload) {
         }
     }
     p.developerPayload = developerPayload;
-    
     var localCallbackId = callbackId++;
     var localCallback = callbacks[localCallbackId] = {};
 
