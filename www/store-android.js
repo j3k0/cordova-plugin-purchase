@@ -295,19 +295,19 @@ store.verbosity = 0;
     "use strict";
     var callbacks = {};
     var callbackId = 0;
-    store.order = function(pid, developerPayload) {
-        var p = pid;
-        if (typeof pid === "string") {
+    store.order = function(p, developerPayload) {
+        if (typeof p === "string") {
+            var pid = p;
             p = store.products.byId[pid] || store.products.byAlias[pid];
             if (!p) {
                 p = new store.Product({
-                    id               : pid,
-                    developerPayload : developerPayload,
-                    loaded           : true,
-                    valid            : false
+                    id     : pid,
+                    loaded : true,
+                    valid  : false
                 });
             }
         }
+        p.developerPayload = developerPayload;
         var localCallbackId = callbackId++;
         var localCallback = callbacks[localCallbackId] = {};
         function done() {
