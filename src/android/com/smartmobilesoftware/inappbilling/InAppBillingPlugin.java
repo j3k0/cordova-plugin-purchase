@@ -180,7 +180,6 @@ public class InAppBillingPlugin extends CordovaPlugin {
 	
 	// Buy an item
 	private void buy(final String sku, final String developerPayload){
-		
 		if (mHelper == null){
 			callbackContext.error(IabHelper.ERR_PURCHASE + "|Billing plugin was not initialized");
 			return;
@@ -427,5 +426,4 @@ public class InAppBillingPlugin extends CordovaPlugin {
     		mHelper = null;
     	}
     }
-    
 }
