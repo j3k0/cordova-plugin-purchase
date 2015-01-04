@@ -75,12 +75,14 @@ public class InAppBillingPlugin extends CordovaPlugin {
 				// Buy an item
 				// Get Product Id 
 				final String sku = data.getString(0);
-				buy(sku);
+    final String developerPayload = data.getString(1);
+				buy(sku, developerPayload);
 			} else if ("subscribe".equals(action)) {
 				// Subscribe to an item
 				// Get Product Id 
 				final String sku = data.getString(0);
-				subscribe(sku);
+    final String developerPayload = data.getString(1);
+				subscribe(sku, developerPayload);
 			} else if ("consumePurchase".equals(action)) {
 				consumePurchase(data);
 			} else if ("getAvailableProducts".equals(action)) {
@@ -177,7 +179,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
     }
 	
 	// Buy an item
-	private void buy(final String sku, String developerPayload){
+	private void buy(final String sku, final String developerPayload){
 		
 		if (mHelper == null){
 			callbackContext.error(IabHelper.ERR_PURCHASE + "|Billing plugin was not initialized");
@@ -192,7 +194,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
 	}
 	
 	// Buy an item
-	private void subscribe(final String sku, developerPayload){
+	private void subscribe(final String sku, final String developerPayload){
 		if (mHelper == null){
 			callbackContext.error(IabHelper.ERR_PURCHASE + "|Billing plugin was not initialized");
 			return;
