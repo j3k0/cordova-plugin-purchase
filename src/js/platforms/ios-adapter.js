@@ -398,6 +398,7 @@ function storekitRestored(originalTransactionId, productId) {
 
 function storekitRestoreCompleted() {
     store.log.info("ios -> restore completed");
+    store.trigger('refresh-completed');
 }
 
 function storekitRestoreFailed(/*errorCode*/) {
@@ -406,6 +407,7 @@ function storekitRestoreFailed(/*errorCode*/) {
         code: store.ERR_REFRESH,
         message: "Failed to restore purchases during refresh"
     });
+    store.trigger('refresh-failed');
 }
 
 store._refreshForValidation = function(callback) {
