@@ -1,3 +1,0 @@
-[submodule "git_modules/android_iap"]
-    path = git_modules/android_iap
-    url = https://github.com/j3k0/AndroidInAppBilling.git

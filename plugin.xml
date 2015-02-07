@@ -3,7 +3,7 @@
     xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="cc.fovea.cordova.purchase"
-    version="3.10.0">
+    version="3.10.1">
 
     <name>Purchase</name>
 	<description>Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)</description>

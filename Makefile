@@ -77,8 +77,8 @@ doc-contrib: test-js
 doc: doc-api doc-contrib
 
 sync-android:
-	@rsync -qrv git_modules/android_iap/v3/src/android/ src/android
-	@cp git_modules/android_iap/v3/www/inappbilling.js src/js/platforms/android-bridge.js
+	@#rsync -qrv git_modules/android_iap/v3/src/android/ src/android
+	@#cp git_modules/android_iap/v3/www/inappbilling.js src/js/platforms/android-bridge.js
 
 clean:
 	@find . -name '*~' -exec rm '{}' ';'
