@@ -752,13 +752,13 @@ have a way to do just that.
 
 ## *store.log* object
 ### `store.log.error(message)`
-Logs an error message, only if `store.debug` >= store.ERROR
+Logs an error message, only if `store.verbosity` >= store.ERROR
 ### `store.log.warn(message)`
-Logs a warning message, only if `store.debug` >= store.WARNING
+Logs a warning message, only if `store.verbosity` >= store.WARNING
 ### `store.log.info(message)`
-Logs an info message, only if `store.debug` >= store.INFO
+Logs an info message, only if `store.verbosity` >= store.INFO
 ### `store.log.debug(message)`
-Logs a debug message, only if `store.debug` >= store.DEBUG
+Logs a debug message, only if `store.verbosity` >= store.DEBUG
 
 # internal APIs
 USE AT YOUR OWN RISKS
