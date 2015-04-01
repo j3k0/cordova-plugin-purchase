@@ -212,7 +212,7 @@ store.when("requested", function(product) {
                     message: "Purchase failed: " + err
                 });
             }
-            product.set("state", store.VALID);
+            product.set("state", (code===7) ? store.APPROVED : store.VALID);
         }, product.id);
     });
 });
