@@ -26,6 +26,9 @@ store.Product = function(options) {
     ///  - `product.id` - Identifier of the product on the store
     this.id = options.id || null;
 
+    /// - `product.DeveloperPayload` - Custom payload data in the transaction object.
+    this.developerPayload = options.developerPayload || undefined;
+
     ///  - `product.alias` - Alias that can be used for more explicit [queries](#queries)
     this.alias = options.alias || options.id || null;
 

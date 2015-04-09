@@ -125,12 +125,12 @@ function setProductData(product, data) {
     store.log.debug(data);
 
     product.transaction = {
-        type: 'android-playstore',
-        id: data.orderId,
-        purchaseToken: data.purchaseToken,
-        developerPayload: data.developerPayload,
-        receipt: data.receipt,
-        signature: data.signature
+        type             : 'android-playstore',
+        id               : data.orderId,
+        purchaseToken    : data.purchaseToken,
+        developerPayload : data.developerPayload,
+        receipt          : data.receipt,
+        signature        : data.signature
     };
 
     // When the product is owned, adjust the state if necessary
@@ -213,7 +213,7 @@ store.when("requested", function(product) {
                 });
             }
             product.set("state", store.VALID);
-        }, product.id);
+        }, product.id, product.developerPayload);
     });
 });
 
