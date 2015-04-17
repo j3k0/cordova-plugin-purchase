@@ -12,6 +12,24 @@ store.when("re-refreshed", function() {
     iabGetPurchases();
 });
 
+// The following table lists all of the server response codes
+// that are sent from Google Play to your application.
+//
+// Google Play sends the response code synchronously as an integer
+// mapped to the RESPONSE_CODE key in the response Bundle.
+// Your application must handle all of these response codes.
+var BILLING_RESPONSE_RESULT = {
+    OK: 0, //   Success
+    USER_CANCELED: 1, // User pressed back or canceled a dialog
+    SERVICE_UNAVAILABLE: 2, // Network connection is down
+    BILLING_UNAVAILABLE: 3, // Billing API version is not supported for the type requested
+    ITEM_UNAVAILABLE: 4, // Requested product is not available for purchase
+    DEVELOPER_ERROR: 5, // Invalid arguments provided to the API. This error can also indicate that the application was not correctly signed or properly set up for In-app Billing in Google Play, or does not have the necessary permissions in its manifest
+    ERROR: 6, // Fatal error during the API action
+    ITEM_ALREADY_OWNED: 7, // Failure to purchase since item is already owned
+    ITEM_NOT_OWNED: 8 // Failure to consume since item is not owned
+};
+
 function init() {
     if (initialized) return;
     initialized = true;
@@ -212,7 +230,12 @@ store.when("requested", function(product) {
                     message: "Purchase failed: " + err
                 });
             }
-            product.set("state", store.VALID);
+            if (code === BILLING_RESPONSE_RESULT.ITEM_ALREADY_OWNED) {
+                product.set("state", store.APPROVED);
+            }
+            else {
+                product.set("state", store.VALID);
+            }
         }, product.id);
     });
 });

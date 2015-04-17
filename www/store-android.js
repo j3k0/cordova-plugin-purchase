@@ -843,6 +843,17 @@ store.verbosity = 0;
     store.when("re-refreshed", function() {
         iabGetPurchases();
     });
+    var BILLING_RESPONSE_RESULT = {
+        OK: 0,
+        USER_CANCELED: 1,
+        SERVICE_UNAVAILABLE: 2,
+        BILLING_UNAVAILABLE: 3,
+        ITEM_UNAVAILABLE: 4,
+        DEVELOPER_ERROR: 5,
+        ERROR: 6,
+        ITEM_ALREADY_OWNED: 7,
+        ITEM_NOT_OWNED: 8
+    };
     function init() {
         if (initialized) return;
         initialized = true;
@@ -966,7 +977,11 @@ store.verbosity = 0;
                         message: "Purchase failed: " + err
                     });
                 }
-                product.set("state", store.VALID);
+                if (code === BILLING_RESPONSE_RESULT.ITEM_ALREADY_OWNED) {
+                    product.set("state", store.APPROVED);
+                } else {
+                    product.set("state", store.VALID);
+                }
             }, product.id);
         });
     });
