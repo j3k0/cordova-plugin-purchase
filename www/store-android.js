@@ -90,7 +90,7 @@ store.verbosity = 0;
         var expiredCb = noop;
         var errorCb = noop;
         var tryValidation = function() {
-            if (that.state !== store.APPROVED) return;
+            if (that.state !== store.VALID) return;
             store._validator(that, function(success, data) {
                 store.log.debug("verify -> " + JSON.stringify(success));
                 if (success) {
