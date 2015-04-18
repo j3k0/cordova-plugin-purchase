@@ -378,8 +378,6 @@ A Promise with the following methods:
 
  - `done(function(product){})`
    - called whether verification failed or succeeded.
- - `expiredCb(function(product){})`
-   - called if the purchase expired.
  - `success(function(product, purchaseData){})`
    - called if the purchase is valid and verified.
    - `purchaseData` is the device dependent transaction details
@@ -789,7 +787,7 @@ Registered products indexed by their alias
 The `queries` object handles the callbacks registered for any given couple
 of [query](#queries) and action.
 
-Internally, the magic is found within the [`triggerWhenProduct`](#triggerWhenProduct)
+Internally, the magic is found verwithin the [`triggerWhenProduct`](#triggerWhenProduct)
 method, which generates for a given product the list of all possible
 queries that describe the product.
 
