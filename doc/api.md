@@ -787,7 +787,7 @@ Registered products indexed by their alias
 The `queries` object handles the callbacks registered for any given couple
 of [query](#queries) and action.
 
-Internally, the magic is found verwithin the [`triggerWhenProduct`](#triggerWhenProduct)
+Internally, the magic is found within the [`triggerWhenProduct`](#triggerWhenProduct)
 method, which generates for a given product the list of all possible
 queries that describe the product.
 
