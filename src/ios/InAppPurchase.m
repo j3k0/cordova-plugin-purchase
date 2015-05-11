@@ -645,7 +645,7 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
     unfinishedTransactions = nil;
 
     [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
-
+    observer = nil;
     [super dispose];
 }
 
