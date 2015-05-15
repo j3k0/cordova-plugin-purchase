@@ -5,3 +5,5 @@
 /www/.store-android.js
 /www/.store-ios.js
 *~
+
+npm-debug.log

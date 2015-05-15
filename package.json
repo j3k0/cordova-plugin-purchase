@@ -1,12 +1,22 @@
 {
-  "name": "cordova-purchase-plugin",
-  "version": "3.10.1",
+  "name": "cc.fovea.cordova.purchase",
+  "version": "3.11.0",
   "description": "Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)",
+  "cordova": {
+    "id": "cc.fovea.cordova.purchase",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git"
+    "url": "https://github.com/j3k0/cordova-plugin-purchase.git"
   },
   "keywords": [
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios",
     "cordova",
     "phonegap",
     "purchase",
@@ -26,6 +36,7 @@
     "url": "https://github.com/j3k0/PhoneGap-InAppPurchase-iOS/issues"
   },
   "homepage": "https://github.com/j3k0/PhoneGap-InAppPurchase-iOS",
+  "author": "Jean-Christophe Hoelt <hoelt@fovea.cc>",
   "devDependencies": {
     "cordova": "^3.6.3-0.2.13",
     "eslint": "^0.9.1",
@@ -33,9 +44,7 @@
     "jshint": "^2.5.6",
     "mocha": "^1.21.4",
     "preprocessor": "^1.4.0",
-    "uglify-js": "^2.4.15"
-  },
-  "dependencies": {
+    "uglify-js": "^2.4.15",
     "coveralls": "^2.11.2"
   }
 }
