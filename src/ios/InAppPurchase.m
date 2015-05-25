@@ -275,6 +275,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 @implementation InAppPurchase
 @synthesize list;
 @synthesize retainer;
+@synthesize observer;
 
 -(void) debug: (CDVInvokedUrlCommand*)command {
     g_debugEnabled = YES;
@@ -297,7 +298,11 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
     self.list = [[NSMutableDictionary alloc] init];
     self.retainer = [[NSMutableDictionary alloc] init];
     unfinishedTransactions = [[NSMutableDictionary alloc] init];
-    [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
+    //make sure we add only one observer
+    if(observer==nil) {
+        [[SKPaymentQueue defaultQueue]  addTransactionObserver:self];
+        observer = self;
+    }
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppPurchase initialized"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
@@ -640,7 +645,7 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
     unfinishedTransactions = nil;
 
     [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
-
+    observer = nil;
     [super dispose];
 }
 

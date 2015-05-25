@@ -21,6 +21,8 @@
 }
 @property (nonatomic,retain) NSMutableDictionary *list;
 @property (nonatomic,retain) NSMutableDictionary *retainer;
+//keep a reference to the transaction observer, to make sure we have only 1 call
+@property (nonatomic,assign) id <SKPaymentTransactionObserver> observer;
 
 - (void) canMakePayments: (CDVInvokedUrlCommand*)command;
 
