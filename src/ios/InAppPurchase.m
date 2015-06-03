@@ -345,8 +345,8 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
     delegate.command = command;
 
 #if ARC_ENABLED
-    self.retainer[@"productsRequest"] = productsRequest;
-    self.retainer[@"productsRequestDelegate"] = delegate;
+    self.retainer[[NSString stringWithFormat:@"productsRequest%@", productIdentifiers]] = productsRequest;
+    self.retainer[[NSString stringWithFormat:@"productsRequestDelegate%@", productIdentifiers]] = delegate;
 #else
     [delegate retain];
 #endif
