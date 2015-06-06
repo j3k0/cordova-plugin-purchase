@@ -378,8 +378,6 @@ A Promise with the following methods:
 
  - `done(function(product){})`
    - called whether verification failed or succeeded.
- - `expiredCb(function(product){})`
-   - called if the purchase expired.
  - `success(function(product, purchaseData){})`
    - called if the purchase is valid and verified.
    - `purchaseData` is the device dependent transaction details

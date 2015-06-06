@@ -1,30 +1,3 @@
-    store.registerProducts([{
-        id: "com.example.app.inappid1",
-        alias: "100 coins",
-        type: store.CONSUMABLE
-    }, {
-        id: "com.example.app.inappid2",
-        alias: "full version",
-        type: store.NON_CONSUMABLE
-    }, {
-        id: "com.example.app.inappid3",
-        type: store.PAID_SUBSCRIPTION
-    }, {
-        id: "com.example.app.inappid3",
-        type: store.FREE_SUBSCRIPTION
-    }]);
-
-    // Request more information about a product
-    store.ask("100 coins")
-        .then(function(data) {
-            console.log('Price: ' + data.price);
-            console.log('Description: ' + data.description);
-        })
-        .error(function(err) {
-            // Invalid product / no connection.
-            console.log('ERROR: ' + err.code);
-            console.log('ERROR: ' + err.message);
-        });
 
     store.when("order").approved(function(order) {
         // Log all approved orders
