@@ -219,7 +219,7 @@ store.Product.prototype.verify = function() {
         ///  - `done(function(product){})`
         ///    - called whether verification failed or succeeded.
         done:    function(cb) { doneCb = cb;    return this; },
-        ///  - `expiredCb(function(product){})`
+        ///  - `expired(function(product){})`
         ///    - called if the purchase expired.
         expired: function(cb) { expiredCb = cb; return this; },
         ///  - `success(function(product, purchaseData){})`
