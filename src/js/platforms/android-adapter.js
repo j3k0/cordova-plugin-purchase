@@ -39,6 +39,7 @@ function init() {
 
     store.android.init(iabReady,
         function(err) {
+            initialized = false;
             store.error({
                 code: store.ERR_SETUP,
                 message: 'Init failed - ' + err

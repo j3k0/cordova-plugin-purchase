@@ -859,6 +859,7 @@ store.verbosity = 0;
         initialized = true;
         for (var i = 0; i < store.products.length; ++i) skus.push(store.products[i].id);
         store.android.init(iabReady, function(err) {
+            initialized = false;
             store.error({
                 code: store.ERR_SETUP,
                 message: "Init failed - " + err
