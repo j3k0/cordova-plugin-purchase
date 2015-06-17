@@ -378,7 +378,7 @@ A Promise with the following methods:
 
  - `done(function(product){})`
    - called whether verification failed or succeeded.
- - `expiredCb(function(product){})`
+ - `expired(function(product){})`
    - called if the purchase expired.
  - `success(function(product, purchaseData){})`
    - called if the purchase is valid and verified.
@@ -644,7 +644,7 @@ As usual, you can unregister the callbacks by using [`store.off()`](#off).
 ## <a name="ready"></a>*store.ready(callback)*
 Register the `callback` to be called when the store is ready to be used.
 
-If the store is already ready, `callback` is executed immediatly.
+If the store is already ready, `callback` is executed immediately.
 
 `store.ready()` without arguments will return the `ready` status.
 
@@ -752,13 +752,13 @@ have a way to do just that.
 
 ## *store.log* object
 ### `store.log.error(message)`
-Logs an error message, only if `store.debug` >= store.ERROR
+Logs an error message, only if `store.verbosity` >= store.ERROR
 ### `store.log.warn(message)`
-Logs a warning message, only if `store.debug` >= store.WARNING
+Logs a warning message, only if `store.verbosity` >= store.WARNING
 ### `store.log.info(message)`
-Logs an info message, only if `store.debug` >= store.INFO
+Logs an info message, only if `store.verbosity` >= store.INFO
 ### `store.log.debug(message)`
-Logs a debug message, only if `store.debug` >= store.DEBUG
+Logs a debug message, only if `store.verbosity` >= store.DEBUG
 
 # internal APIs
 USE AT YOUR OWN RISKS

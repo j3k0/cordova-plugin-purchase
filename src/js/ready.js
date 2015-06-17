@@ -8,7 +8,7 @@ var callbacks = [];
 /// ## <a name="ready"></a>*store.ready(callback)*
 /// Register the `callback` to be called when the store is ready to be used.
 ///
-/// If the store is already ready, `callback` is executed immediatly.
+/// If the store is already ready, `callback` is executed immediately.
 ///
 /// `store.ready()` without arguments will return the `ready` status.
 ///

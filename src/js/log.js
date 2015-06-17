@@ -25,19 +25,19 @@ function log(level, o) {
 store.log = {
 
     /// ### `store.log.error(message)`
-    /// Logs an error message, only if `store.debug` >= store.ERROR
+    /// Logs an error message, only if `store.verbosity` >= store.ERROR
     error: function(o) { log(store.ERROR, o); },
 
     /// ### `store.log.warn(message)`
-    /// Logs a warning message, only if `store.debug` >= store.WARNING
+    /// Logs a warning message, only if `store.verbosity` >= store.WARNING
     warn: function(o) { log(store.WARNING, o); },
 
     /// ### `store.log.info(message)`
-    /// Logs an info message, only if `store.debug` >= store.INFO
+    /// Logs an info message, only if `store.verbosity` >= store.INFO
     info: function(o) { log(store.INFO, o); },
 
     /// ### `store.log.debug(message)`
-    /// Logs a debug message, only if `store.debug` >= store.DEBUG
+    /// Logs a debug message, only if `store.verbosity` >= store.DEBUG
     debug: function(o) { log(store.DEBUG, o); }
 };
 

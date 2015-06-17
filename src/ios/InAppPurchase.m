@@ -275,6 +275,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 @implementation InAppPurchase
 @synthesize list;
 @synthesize retainer;
+@synthesize observer;
 
 -(void) debug: (CDVInvokedUrlCommand*)command {
     g_debugEnabled = YES;
@@ -297,7 +298,11 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
     self.list = [[NSMutableDictionary alloc] init];
     self.retainer = [[NSMutableDictionary alloc] init];
     unfinishedTransactions = [[NSMutableDictionary alloc] init];
-    [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
+    //make sure we add only one observer
+    if(observer==nil) {
+        [[SKPaymentQueue defaultQueue]  addTransactionObserver:self];
+        observer = self;
+    }
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppPurchase initialized"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
@@ -340,8 +345,8 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
     delegate.command = command;
 
 #if ARC_ENABLED
-    self.retainer[@"productsRequest"] = productsRequest;
-    self.retainer[@"productsRequestDelegate"] = delegate;
+    self.retainer[[NSString stringWithFormat:@"productsRequest%@", productIdentifiers]] = productsRequest;
+    self.retainer[[NSString stringWithFormat:@"productsRequestDelegate%@", productIdentifiers]] = delegate;
 #else
     [delegate retain];
 #endif
@@ -412,7 +417,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
             case SKPaymentTransactionStatePurchased:
 				state = @"PaymentTransactionStatePurchased";
 				transactionIdentifier = transaction.transactionIdentifier;
-				transactionReceipt = [[transaction transactionReceipt] base64EncodedString];
+				transactionReceipt = [[transaction transactionReceipt] cdv_base64EncodedString];
 				productId = transaction.payment.productIdentifier;
                 canFinish = YES;
                 break;
@@ -437,7 +442,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 				transactionIdentifier = transaction.transactionIdentifier;
                 if (!transactionIdentifier)
                     transactionIdentifier = transaction.originalTransaction.transactionIdentifier;
-				transactionReceipt = [[transaction transactionReceipt] base64EncodedString];
+				transactionReceipt = [[transaction transactionReceipt] cdv_base64EncodedString];
 				productId = transaction.originalTransaction.payment.productIdentifier;
                 canFinish = YES;
                 break;
@@ -640,7 +645,7 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
     unfinishedTransactions = nil;
 
     [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
-
+    observer = nil;
     [super dispose];
 }
 
