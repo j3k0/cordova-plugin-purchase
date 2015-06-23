@@ -1,6 +1,6 @@
 {
   "name": "cc.fovea.cordova.purchase",
-  "version": "3.11.0",
+  "version": "3.11.1",
   "description": "Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)",
   "cordova": {
     "id": "cc.fovea.cordova.purchase",
@@ -36,7 +36,6 @@
     "url": "https://github.com/j3k0/PhoneGap-InAppPurchase-iOS/issues"
   },
   "homepage": "https://github.com/j3k0/PhoneGap-InAppPurchase-iOS",
-  "author": "Jean-Christophe Hoelt <hoelt@fovea.cc>",
   "devDependencies": {
     "cordova": "^3.6.3-0.2.13",
     "eslint": "^0.9.1",
