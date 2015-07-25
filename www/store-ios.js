@@ -268,6 +268,8 @@ store.verbosity = 0;
             addPromise("verified");
             addPromise("unverified");
             addPromise("expired");
+            addPromise("downloading");
+            addPromise("downloaded");
             return ret;
         } else {
             var action = once;
@@ -1385,7 +1387,7 @@ store.verbosity = 0;
         store.log.info("ios -> is downloading " + productId +"; progress="+progress+"%; timeRemaining="+timeRemaining+"s");
         var p = store.get(productId);
         p.set("state", store.DOWNLOADING);
-        p.trigger("download-active",[progress, timeRemaining]);
+        p.trigger("downloading",[progress, timeRemaining]);
     }
     function storekitDownloadFailed(transactionIdentifier, productId, errorCode, errorText) {
         store.log.error("ios -> download failed: " + productId+"; errorCode="+errorCode+"; errorText="+errorText);
@@ -1404,7 +1406,7 @@ store.verbosity = 0;
         store.log.info("ios -> download completed: "+productId);
         var p = store.get(productId);
         p.set("state", store.DOWNLOADED);
-        p.trigger("download-completed");
+        p.trigger("downloaded");
     }
     store._refreshForValidation = function(callback) {
         storekitRefreshReceipts(callback);
