@@ -497,12 +497,13 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
             [callbackArgs JSONSerialize]];
         // DLog(@"js: %@", js);
         [self.commandDelegate evalJs:js];
-        if (g_autoFinishEnabled && canFinish) {
+        
+        if(downloads){
+            [[SKPaymentQueue defaultQueue] startDownloads:transaction.downloads];
+        }
+        else if (g_autoFinishEnabled && canFinish) {
             [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
             [self transactionFinished:transaction];
-            if(downloads){
-                [[SKPaymentQueue defaultQueue] startDownloads:transaction.downloads];
-            }
         }
         else {
             [unfinishedTransactions setObject:transaction forKey:transactionIdentifier];
@@ -824,6 +825,8 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
         NSString *state = @"";
         NSString *error = @"";
         NSInteger errorCode = 0;
+        NSString *progress_s = 0;
+        NSString *timeRemaining_s = 0;
         
         SKPaymentTransaction *transaction = download.transaction;
         NSString *transactionId = transaction.transactionIdentifier;
@@ -841,26 +844,13 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
                 // Add to current downloads
                 [self.currentDownloads setObject:download forKey:productId];
                 
-                state = @"SKDownloadStateActive";
-                
+                state = @"DownloadStateActive";
                 
                 DLog(@"Progress: %f", download.progress);
                 DLog(@"Time remaining: %f", download.timeRemaining);
                 
-                NSString *progress_s = [NSString stringWithFormat:@"%d", (int) (download.progress*100)];
-                NSString *timeRemaining_s = [NSString stringWithFormat:@"%d", (int) download.timeRemaining];
-                
-                NSArray *callbackArgs = [NSArray arrayWithObjects:
-                                         NILABLE(transactionId),
-                                         NILABLE(productId),
-                                         NILABLE(transactionReceipt),
-                                         NILABLE(progress_s),
-                                         NILABLE(timeRemaining_s),
-                                         nil];
-                
-                js = [NSString
-                      stringWithFormat:@"window.storekit.onDownloadActive.apply(window.storekit, %@)",
-                      [callbackArgs JSONSerialize]];
+                progress_s = [NSString stringWithFormat:@"%d", (int) (download.progress*100)];
+                timeRemaining_s = [NSString stringWithFormat:@"%d", (int) download.timeRemaining];
                 
                 break;
             }
@@ -869,18 +859,9 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
                 // Remove from current downloads
                 [self.currentDownloads removeObjectForKey:productId];
                 
-                state = @"SKDownloadStateCancelled";
+                state = @"DownloadStateCancelled";
                 [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
-                
-                callbackArgs = [NSArray arrayWithObjects:
-                                NILABLE(transactionId),
-                                NILABLE(productId),
-                                NILABLE(transactionReceipt),
-                                nil];
-                
-                js = [NSString
-                      stringWithFormat:@"window.storekit.onDownloadCancelled.apply(window.storekit, %@)",
-                      [callbackArgs JSONSerialize]];
+                [self transactionFinished:download.transaction];
                 
                 break;
             }
@@ -889,23 +870,12 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
                 // Remove from current downloads
                 [self.currentDownloads removeObjectForKey:productId];
                 
-                state = @"SKDownloadStateFailed";
+                state = @"DownloadStateFailed";
                 error = transaction.error.localizedDescription;
                 errorCode = transaction.error.code;
                 DLog(@"Download error %d %@", errorCode, error);
                 [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
-                
-                callbackArgs = [NSArray arrayWithObjects:
-                                NILABLE(transactionId),
-                                NILABLE(productId),
-                                NILABLE(transactionReceipt),
-                                [NSNumber numberWithInt:errorCode],
-                                NILABLE(error),
-                                nil];
-                
-                js = [NSString
-                      stringWithFormat:@"window.storekit.onDownloadFailed.apply(window.storekit, %@)",
-                      [callbackArgs JSONSerialize]];
+                [self transactionFinished:download.transaction];
                 
                 break;
             }
@@ -915,20 +885,11 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
                 // Remove from current downloads
                 [self.currentDownloads removeObjectForKey:productId];
                 
-                state = @"SKDownloadStateFinished";
+                state = @"DownloadStateFinished";
                 [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
+                [self transactionFinished:download.transaction];
                 
                 [self copyDownloadToDocuments:download]; // Copy download content to Documnents folder
-                
-                callbackArgs = [NSArray arrayWithObjects:
-                                NILABLE(transactionId),
-                                NILABLE(productId),
-                                NILABLE(transactionReceipt),
-                                nil];
-                
-                js = [NSString
-                      stringWithFormat:@"window.storekit.onDownloadFinished.apply(window.storekit, %@)",
-                      [callbackArgs JSONSerialize]];
                 
                 break;
             }
@@ -938,16 +899,7 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
                 // Add to current downloads
                 [self.currentDownloads setObject:download forKey:productId];
                 
-                state = @"SKDownloadStatePaused";
-                
-                callbackArgs = [NSArray arrayWithObjects:
-                                NILABLE(transactionId),
-                                NILABLE(productId),
-                                NILABLE(transactionReceipt),
-                                nil];
-                js = [NSString
-                      stringWithFormat:@"window.storekit.onDownloadPaused.apply(window.storekit, %@)",
-                      [callbackArgs JSONSerialize]];
+                state = @"DownloadStatePaused";
                 
                 break;
             }
@@ -956,16 +908,8 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
             {
                 // Add to current downloads
                 [self.currentDownloads setObject:download forKey:productId];
+                state = @"DownloadStateWaiting";
                 
-                state = @"SKDownloadStateWaiting";
-                callbackArgs = [NSArray arrayWithObjects:
-                                NILABLE(transactionId),
-                                NILABLE(productId),
-                                NILABLE(transactionReceipt),
-                                nil];
-                js = [NSString
-                      stringWithFormat:@"window.storekit.onDownloadWaiting.apply(window.storekit, %@)",
-                      [callbackArgs JSONSerialize]];
                 break;
             }
                 
@@ -977,8 +921,22 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
         }
         
         DLog(@"Number of currentDownloads: %d",[self.currentDownloads count]);
-        
         DLog(@"Product %@ in download state: %@", productId, state);
+        
+        
+        NSArray *callbackArgs = [NSArray arrayWithObjects:
+            NILABLE(state),
+            [NSNumber numberWithInt:errorCode],
+            NILABLE(error),
+            NILABLE(transactionId),
+            NILABLE(productId),
+            NILABLE(transactionReceipt),
+            NILABLE(progress_s),
+            NILABLE(timeRemaining_s),
+            nil];
+        NSString *js = [NSString
+            stringWithFormat:@"window.storekit.updatedDownloadCallback.apply(window.storekit, %@)",
+            [callbackArgs JSONSerialize]];
         [self.commandDelegate evalJs:js];
         
     }

@@ -28,12 +28,15 @@ store.verbosity = 0;
     store.ERR_BAD_RESPONSE = ERROR_CODES_BASE + 18;
     store.ERR_REFRESH = ERROR_CODES_BASE + 19;
     store.ERR_PAYMENT_EXPIRED = ERROR_CODES_BASE + 20;
+    store.ERR_DOWNLOAD = ERROR_CODES_BASE + 21;
     store.REGISTERED = "registered";
     store.INVALID = "invalid";
     store.VALID = "valid";
     store.REQUESTED = "requested";
     store.INITIATED = "initiated";
     store.APPROVED = "approved";
+    store.DOWNLOADING = "downloading";
+    store.DOWNLOADED = "downloaded";
     store.FINISHED = "finished";
     store.OWNED = "owned";
     store.QUIET = 0;
@@ -212,7 +215,7 @@ store.verbosity = 0;
             store.products.push(p);
         }
     }
-    var keywords = [ "product", "order", store.REGISTERED, store.VALID, store.INVALID, store.REQUESTED, store.INITIATED, store.APPROVED, store.OWNED, store.FINISHED, "refreshed" ];
+    var keywords = [ "product", "order", store.REGISTERED, store.VALID, store.INVALID, store.REQUESTED, store.INITIATED, store.APPROVED, store.OWNED, store.FINISHED, store.DOWNLOADING, store.DOWNLOADED, "refreshed" ];
     function hasKeyword(string) {
         if (!string) return false;
         var tokens = string.split(" ");
@@ -756,6 +759,9 @@ store.verbosity = 0;
     InAppPurchase.prototype.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
     InAppPurchase.prototype.ERR_UNKNOWN = ERROR_CODES_BASE + 10;
     InAppPurchase.prototype.ERR_REFRESH_RECEIPTS = ERROR_CODES_BASE + 11;
+    InAppPurchase.prototype.ERR_PAUSE_DOWNLOADS = ERROR_CODES_BASE + 12;
+    InAppPurchase.prototype.ERR_RESUME_DOWNLOADS = ERROR_CODES_BASE + 13;
+    InAppPurchase.prototype.ERR_CANCEL_DOWNLOADS = ERROR_CODES_BASE + 14;
     var initialized = false;
     InAppPurchase.prototype.init = function(options, success, error) {
         this.options = {
@@ -768,7 +774,13 @@ store.verbosity = 0;
             restore: options.restore || noop,
             receiptsRefreshed: options.receiptsRefreshed || noop,
             restoreFailed: options.restoreFailed || noop,
-            restoreCompleted: options.restoreCompleted || noop
+            restoreCompleted: options.restoreCompleted || noop,
+            downloadActive:  options.downloadActive || noop,
+            downloadCancelled:  options.downloadCancelled || noop,
+            downloadFailed:  options.downloadFailed || noop,
+            downloadFinished:  options.downloadFinished || noop,
+            downloadPaused:  options.downloadPaused || noop,
+            downloadWaiting:  options.downloadWaiting || noop
         };
         if (options.debug) {
             exec("debug", [], noop, noop);
@@ -828,6 +840,54 @@ store.verbosity = 0;
         this.needRestoreNotification = true;
         exec("restoreCompletedTransactions", []);
     };
+    InAppPurchase.prototype.pause = function() {
+        var ok = function() {
+            log("Paused active downloads");
+            if (typeof options.paused === "function") {
+                protectCall(options.paused, "options.paused");
+            }
+        };
+        var failed = function() {
+            var errmsg = "Pausing active downloads failed";
+            log(errmsg);
+            if (typeof options.error === "function") {
+                protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_PAUSE_DOWNLOADS, errmsg);
+            }
+        };
+        return exec('pause', [], ok, failed);
+    };
+    InAppPurchase.prototype.resume = function() {
+        var ok = function() {
+            log("Resumed active downloads");
+            if (typeof options.resumed === "function") {
+                protectCall(options.resumed, "options.resumed");
+            }
+        };
+        var failed = function() {
+            var errmsg = "Resuming active downloads failed";
+            log(errmsg);
+            if (typeof options.error === "function") {
+                protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_RESUME_DOWNLOADS, errmsg);
+            }
+        };
+        return exec('resume', [], ok, failed);
+    };
+    InAppPurchase.prototype.cancel = function() {
+        var ok = function() {
+            log("Cancelled active downloads");
+            if (typeof options.cancelled === "function") {
+                protectCall(options.cancelled, "options.cancelled");
+            }
+        };
+        var failed = function() {
+            var errmsg = "Cancelling active downloads failed";
+            log(errmsg);
+            if (typeof options.error === "function") {
+                protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_CANCEL_DOWNLOADS, errmsg);
+            }
+        };
+        return exec('cancel', [], ok, failed);
+    };
     InAppPurchase.prototype.load = function(productIds, success, error) {
         var options = this.options;
         if (typeof productIds === "string") {
@@ -866,17 +926,22 @@ store.verbosity = 0;
     InAppPurchase.prototype.finish = function(transactionId) {
         exec("finishTransaction", [ transactionId ], noop, noop);
     };
-    var pendingUpdates = [];
+    var pendingTransactionUpdates = [], pendingDownloadUpdates = [];
     InAppPurchase.prototype.processPendingUpdates = function() {
-        for (var i = 0; i < pendingUpdates.length; ++i) {
-            this.updatedTransactionCallback.apply(this, pendingUpdates[i]);
+        for (var i = 0; i < pendingTransactionUpdates.length; ++i) {
+            this.updatedTransactionCallback.apply(this, pendingTransactionUpdates[i]);
         }
-        pendingUpdates = [];
+        pendingTransactionUpdates = [];
+
+        for (var i = 0; i < pendingDownloadUpdates.length; ++i) {
+            this.updatedDownloadCallback.apply(this, pendingDownloadUpdates[i]);
+        }
+        pendingDownloadUpdates = [];
     };
     InAppPurchase.prototype.updatedTransactionCallback = function(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
         if (!initialized) {
             var args = Array.prototype.slice.call(arguments);
-            pendingUpdates.push(args);
+            pendingTransactionUpdates.push(args);
             return;
         }
         if (transactionReceipt) {
@@ -909,6 +974,38 @@ store.verbosity = 0;
           case "PaymentTransactionStateFinished":
             protectCall(this.options.finish, "options.finish", transactionIdentifier, productId);
             return;
+        }
+    };
+    InAppPurchase.prototype.updatedDownloadCallback = function(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, progress, timeRemaining) {
+        if (!initialized) {
+            var args = Array.prototype.slice.call(arguments);
+            pendingDownloadUpdates.push(args);
+            return;
+        }
+        switch (state) {
+            case "DownloadStateActive":
+                protectCall(this.options.downloadActive, "options.downloadActive", transactionIdentifier, productId, progress, timeRemaining);
+                return;
+
+            case "DownloadStateCancelled":
+                protectCall(this.options.downloadCancelled, "options.downloadCancelled", transactionIdentifier, productId);
+                return;
+
+            case "DownloadStateFailed":
+                protectCall(this.options.onDownloadFailed, "options.onDownloadFailed", transactionIdentifier, productId, errorCode, errorText);
+                return;
+
+            case "DownloadStateFinished":
+                protectCall(this.options.onDownloadFinished, "options.onDownloadFinished", transactionIdentifier, productId);
+                return;
+
+            case "DownloadStatePaused":
+                protectCall(this.options.onDownloadPaused, "options.onDownloadPaused", transactionIdentifier, productId);
+                return;
+
+            case "DownloadStateWaiting":
+                protectCall(this.options.downloadWaiting, "options.downloadWaiting", transactionIdentifier, productId);
+                return;
         }
     };
     InAppPurchase.prototype.restoreCompletedTransactionsFinished = function() {
@@ -1094,7 +1191,10 @@ store.verbosity = 0;
             purchasing: storekitPurchasing,
             restore: storekitRestored,
             restoreCompleted: storekitRestoreCompleted,
-            restoreFailed: storekitRestoreFailed
+            restoreFailed: storekitRestoreFailed,
+            downloadActive:  storekitDownloadActive,
+            downloadFailed:  storekitDownloadFailed,
+            downloadFinished:  storekitDownloadFinished
         }, storekitReady, storekitInitFailed);
     }
     function storekitReady() {
@@ -1269,10 +1369,6 @@ store.verbosity = 0;
         store.log.info("ios -> restored purchase " + productId);
         storekitPurchased(originalTransactionId, productId);
     }
-    function storekitRestoreCompleted() {
-        store.log.info("ios -> restore completed");
-        store.trigger("refresh-completed");
-    }
     function storekitRestoreFailed() {
         store.log.warn("ios -> restore failed");
         store.error({
@@ -1280,6 +1376,35 @@ store.verbosity = 0;
             message: "Failed to restore purchases during refresh"
         });
         store.trigger("refresh-failed");
+    }
+    function storekitRestoreCompleted() {
+        store.log.info("ios -> restore completed");
+        store.trigger("refresh-completed");
+    }
+    function storekitDownloadActive(transactionIdentifier, productId, progress, timeRemaining) {
+        store.log.info("ios -> is downloading " + productId +"; progress="+progress+"%; timeRemaining="+timeRemaining+"s");
+        var p = store.get(productId);
+        p.set("state", store.DOWNLOADING);
+        p.trigger("download-active",[progress, timeRemaining]);
+    }
+    function storekitDownloadFailed(transactionIdentifier, productId, errorCode, errorText) {
+        store.log.error("ios -> download failed: " + productId+"; errorCode="+errorCode+"; errorText="+errorText);
+        var p = store.get(productId);
+        p.trigger("error", [ new store.Error({
+            code: store.ERR_DOWNLOAD,
+            message: errorText
+        }), p ]);
+
+        store.error({
+            code: errorCode,
+            message: errorText
+        });
+    }
+    function storekitDownloadFinished(transactionIdentifier, productId) {
+        store.log.info("ios -> download completed: "+productId);
+        var p = store.get(productId);
+        p.set("state", store.DOWNLOADED);
+        p.trigger("download-completed");
     }
     store._refreshForValidation = function(callback) {
         storekitRefreshReceipts(callback);

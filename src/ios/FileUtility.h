@@ -1,7 +1,7 @@
 #import <UIKit/UIKit.h>
 
 
-@interface Utility : NSObject
+@interface FileUtility : NSObject
 {
     // Static Class
 }
@@ -22,29 +22,6 @@
 +(NSString *) getAppendDocPath:(NSString *)file;
 +(BOOL) createFolder:(NSString *)folder;
 +(BOOL) copyFile:(NSString *)src dst:(NSString *)dst;
-
-#pragma end
-
-
-
-#pragma mark UIAlertView
-
-+(UIAlertView *) showAlert:(NSString *)title
-                   message:(NSString *)message
-                    button:(NSString *)button;
-
-+(UIAlertView *) showAlert:(NSString *)title
-                   message:(NSString *)message
-               cancelTitle:(NSString *)cancelTitle
-                otherTitle:(NSString *)otherTitle
-                  delegate:(id)delegate;
-
-+(UIAlertView *) showAlert:(NSString *)title
-                   message:(NSString *)message
-               cancelTitle:(NSString *)cancelTitle
-                otherTitle:(NSString *)otherTitle
-                  delegate:(id)delegate
-                       tag:(NSUInteger)tag;
 
 #pragma end
 
