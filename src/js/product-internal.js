@@ -25,6 +25,8 @@ store.Product.prototype.stateChanged = function() {
     this.canPurchase = this.state === store.VALID;
     this.loaded      = this.state && this.state !== store.REGISTERED;
     this.owned       = this.owned || this.state === store.OWNED;
+    this.downloading = this.downloading || this.state === store.DOWNLOADING;
+    this.downloaded  = this.downloaded || this.state === store.DOWNLOADED;
 
     // update validity
     this.valid       = this.state !== store.INVALID;
