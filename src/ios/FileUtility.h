@@ -1,6 +1,3 @@
-#import <UIKit/UIKit.h>
-
-
 @interface FileUtility : NSObject
 {
     // Static Class
