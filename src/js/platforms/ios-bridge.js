@@ -56,6 +56,9 @@ InAppPurchase.prototype.ERR_PAYMENT_INVALID     = ERROR_CODES_BASE + 7;
 InAppPurchase.prototype.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
 InAppPurchase.prototype.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
 InAppPurchase.prototype.ERR_REFRESH_RECEIPTS    = ERROR_CODES_BASE + 11;
+InAppPurchase.prototype.ERR_PAUSE_DOWNLOADS     = ERROR_CODES_BASE + 12;
+InAppPurchase.prototype.ERR_RESUME_DOWNLOADS    = ERROR_CODES_BASE + 13;
+InAppPurchase.prototype.ERR_CANCEL_DOWNLOADS    = ERROR_CODES_BASE + 14;
 
 var initialized = false;
 
@@ -70,7 +73,13 @@ InAppPurchase.prototype.init = function (options, success, error) {
         restore:  options.restore  || noop,
         receiptsRefreshed: options.receiptsRefreshed || noop,
         restoreFailed:     options.restoreFailed    || noop,
-        restoreCompleted:  options.restoreCompleted || noop
+        restoreCompleted:  options.restoreCompleted || noop,
+        downloadActive:  options.downloadActive || noop,
+        downloadCancelled:  options.downloadCancelled || noop,
+        downloadFailed:  options.downloadFailed || noop,
+        downloadFinished:  options.downloadFinished || noop,
+        downloadPaused:  options.downloadPaused || noop,
+        downloadWaiting:  options.downloadWaiting || noop
     };
 
     if (options.debug) {
@@ -159,6 +168,66 @@ InAppPurchase.prototype.canMakePayments = function(success, error){
 InAppPurchase.prototype.restore = function() {
     this.needRestoreNotification = true;
     exec('restoreCompletedTransactions', []);
+};
+
+/*
+ * Requests all active downloads be paused
+ */
+InAppPurchase.prototype.pause = function() {
+    var ok = function() {
+        log("Paused active downloads");
+        if (typeof options.paused === "function") {
+            protectCall(options.paused, "options.paused");
+        }
+    };
+    var failed = function() {
+        var errmsg = "Pausing active downloads failed";
+        log(errmsg);
+        if (typeof options.error === "function") {
+            protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_PAUSE_DOWNLOADS, errmsg);
+        }
+    };
+    return exec('pause', [], ok, failed);
+};
+
+/*
+ * Requests all paused active downloads be resumed
+ */
+InAppPurchase.prototype.resume = function() {
+    var ok = function() {
+        log("Resumed active downloads");
+        if (typeof options.resumed === "function") {
+            protectCall(options.resumed, "options.resumed");
+        }
+    };
+    var failed = function() {
+        var errmsg = "Resuming active downloads failed";
+        log(errmsg);
+        if (typeof options.error === "function") {
+            protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_RESUME_DOWNLOADS, errmsg);
+        }
+    };
+    return exec('resume', [], ok, failed);
+};
+
+/*
+ * Requests all active downloads be cancelled
+ */
+InAppPurchase.prototype.cancel = function() {
+    var ok = function() {
+        log("Cancelled active downloads");
+        if (typeof options.cancelled === "function") {
+            protectCall(options.cancelled, "options.cancelled");
+        }
+    };
+    var failed = function() {
+        var errmsg = "Cancelling active downloads failed";
+        log(errmsg);
+        if (typeof options.error === "function") {
+            protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_CANCEL_DOWNLOADS, errmsg);
+        }
+    };
+    return exec('cancel', [], ok, failed);
 };
 
 /**
@@ -286,6 +355,39 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
             protectCall(this.options.finish, 'options.finish', transactionIdentifier, productId);
 			return;
 	}
+};
+
+InAppPurchase.prototype.updatedDownloadCallback = function(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, progress, timeRemaining) {
+    if (!initialized) {
+        var args = Array.prototype.slice.call(arguments);
+        pendingDownloadUpdates.push(args);
+        return;
+    }
+    switch (state) {
+        case "DownloadStateActive":
+            protectCall(this.options.downloadActive, "options.downloadActive", transactionIdentifier, productId, progress, timeRemaining);
+            return;
+
+        case "DownloadStateCancelled":
+            protectCall(this.options.downloadCancelled, "options.downloadCancelled", transactionIdentifier, productId);
+            return;
+
+        case "DownloadStateFailed":
+            protectCall(this.options.onDownloadFailed, "options.onDownloadFailed", transactionIdentifier, productId, errorCode, errorText);
+            return;
+
+        case "DownloadStateFinished":
+            protectCall(this.options.onDownloadFinished, "options.onDownloadFinished", transactionIdentifier, productId);
+            return;
+
+        case "DownloadStatePaused":
+            protectCall(this.options.onDownloadPaused, "options.onDownloadPaused", transactionIdentifier, productId);
+            return;
+
+        case "DownloadStateWaiting":
+            protectCall(this.options.downloadWaiting, "options.downloadWaiting", transactionIdentifier, productId);
+            return;
+    }
 };
 
 InAppPurchase.prototype.restoreCompletedTransactionsFinished = function () {

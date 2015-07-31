@@ -132,7 +132,10 @@ function storekitInit() {
         purchasing: storekitPurchasing,
         restore:    storekitRestored,
         restoreCompleted: storekitRestoreCompleted,
-        restoreFailed:    storekitRestoreFailed
+        restoreFailed:    storekitRestoreFailed,
+        downloadActive:  storekitDownloadActive,
+        downloadFailed:  storekitDownloadFailed,
+        downloadFinished:  storekitDownloadFinished
     }, storekitReady, storekitInitFailed);
 }
 
@@ -408,6 +411,32 @@ function storekitRestoreFailed(/*errorCode*/) {
         message: "Failed to restore purchases during refresh"
     });
     store.trigger('refresh-failed');
+}
+
+function storekitDownloadActive(transactionIdentifier, productId, progress, timeRemaining) {
+    store.log.info("ios -> is downloading " + productId +"; progress="+progress+"%; timeRemaining="+timeRemaining+"s");
+    var p = store.get(productId);
+    p.set("state", store.DOWNLOADING);
+    p.trigger("downloading",[progress, timeRemaining]);
+}
+function storekitDownloadFailed(transactionIdentifier, productId, errorCode, errorText) {
+    store.log.error("ios -> download failed: " + productId+"; errorCode="+errorCode+"; errorText="+errorText);
+    var p = store.get(productId);
+    p.trigger("error", [ new store.Error({
+        code: store.ERR_DOWNLOAD,
+        message: errorText
+    }), p ]);
+
+    store.error({
+        code: errorCode,
+        message: errorText
+    });
+}
+function storekitDownloadFinished(transactionIdentifier, productId) {
+    store.log.info("ios -> download completed: "+productId);
+    var p = store.get(productId);
+    p.set("state", store.DOWNLOADED);
+    p.trigger("downloaded");
 }
 
 store._refreshForValidation = function(callback) {

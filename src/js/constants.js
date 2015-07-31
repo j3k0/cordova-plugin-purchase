@@ -40,6 +40,7 @@ var ERROR_CODES_BASE = 6777000;
 /*///*/     store.ERR_BAD_RESPONSE        = ERROR_CODES_BASE + 18; // Verification of store data failed.
 /*///*/     store.ERR_REFRESH             = ERROR_CODES_BASE + 19; // Failed to refresh the store.
 /*///*/     store.ERR_PAYMENT_EXPIRED     = ERROR_CODES_BASE + 20;
+/*///*/     store.ERR_DOWNLOAD            = ERROR_CODES_BASE + 21;
 
 ///
 /// ### product states
@@ -52,6 +53,8 @@ var ERROR_CODES_BASE = 6777000;
 /*///*/     store.APPROVED   = 'approved';
 /*///*/     store.FINISHED   = 'finished';
 /*///*/     store.OWNED      = 'owned';
+/*///*/     store.DOWNLOADING = 'downloading';
+/*///*/     store.DOWNLOADED = 'downloaded';
 
 ///
 /// ### logging levels
