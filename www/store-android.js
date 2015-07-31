@@ -28,6 +28,7 @@ store.verbosity = 0;
     store.ERR_BAD_RESPONSE = ERROR_CODES_BASE + 18;
     store.ERR_REFRESH = ERROR_CODES_BASE + 19;
     store.ERR_PAYMENT_EXPIRED = ERROR_CODES_BASE + 20;
+    store.ERR_DOWNLOAD = ERROR_CODES_BASE + 21;
     store.REGISTERED = "registered";
     store.INVALID = "invalid";
     store.VALID = "valid";
@@ -36,6 +37,8 @@ store.verbosity = 0;
     store.APPROVED = "approved";
     store.FINISHED = "finished";
     store.OWNED = "owned";
+    store.DOWNLOADING = "downloading";
+    store.DOWNLOADED = "downloaded";
     store.QUIET = 0;
     store.ERROR = 1;
     store.WARNING = 2;
@@ -212,7 +215,7 @@ store.verbosity = 0;
             store.products.push(p);
         }
     }
-    var keywords = [ "product", "order", store.REGISTERED, store.VALID, store.INVALID, store.REQUESTED, store.INITIATED, store.APPROVED, store.OWNED, store.FINISHED, "refreshed" ];
+    var keywords = [ "product", "order", store.REGISTERED, store.VALID, store.INVALID, store.REQUESTED, store.INITIATED, store.APPROVED, store.OWNED, store.FINISHED, store.DOWNLOADING, store.DOWNLOADED, "refreshed" ];
     function hasKeyword(string) {
         if (!string) return false;
         var tokens = string.split(" ");
@@ -265,6 +268,8 @@ store.verbosity = 0;
             addPromise("verified");
             addPromise("unverified");
             addPromise("expired");
+            addPromise("downloading");
+            addPromise("downloaded");
             return ret;
         } else {
             var action = once;
