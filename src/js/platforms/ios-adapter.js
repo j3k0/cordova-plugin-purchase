@@ -434,8 +434,12 @@ function storekitRestoreFailed(/*errorCode*/) {
 function storekitDownloadActive(transactionIdentifier, productId, progress, timeRemaining) {
     store.log.info("ios -> is downloading " + productId + "; progress=" + progress + "%; timeRemaining=" + timeRemaining + "s");
     var p = store.get(productId);
-    p.set("state", store.DOWNLOADING);
-    p.trigger("downloading",[progress, timeRemaining]);
+    p.set({
+        progress: progress,
+        timeRemaining: timeRemaining,
+        state: store.DOWNLOADING
+    });
+    p.stateChanged();
 }
 function storekitDownloadFailed(transactionIdentifier, productId, errorCode, errorText) {
     store.log.error("ios -> download failed: " + productId + "; errorCode=" + errorCode + "; errorText=" + errorText);
@@ -454,7 +458,6 @@ function storekitDownloadFinished(transactionIdentifier, productId) {
     store.log.info("ios -> download completed: " + productId);
     var p = store.get(productId);
     p.set("state", store.DOWNLOADED);
-    p.trigger("downloaded");
 }
 
 store._refreshForValidation = function(callback) {
