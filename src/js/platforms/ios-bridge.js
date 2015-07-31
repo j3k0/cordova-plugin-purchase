@@ -378,15 +378,15 @@ InAppPurchase.prototype.updatedDownloadCallback = function(state, errorCode, err
             return;
 
         case "DownloadStateFailed":
-            protectCall(this.options.onDownloadFailed, "options.onDownloadFailed", transactionIdentifier, productId, errorCode, errorText);
+            protectCall(this.options.downloadFailed, "options.downloadFailed", transactionIdentifier, productId, errorCode, errorText);
             return;
 
         case "DownloadStateFinished":
-            protectCall(this.options.onDownloadFinished, "options.onDownloadFinished", transactionIdentifier, productId);
+            protectCall(this.options.downloadFinished, "options.downloadFinished", transactionIdentifier, productId);
             return;
 
         case "DownloadStatePaused":
-            protectCall(this.options.onDownloadPaused, "options.onDownloadPaused", transactionIdentifier, productId);
+            protectCall(this.options.downloadPaused, "options.downloadPaused", transactionIdentifier, productId);
             return;
 
         case "DownloadStateWaiting":
