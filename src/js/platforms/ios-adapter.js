@@ -414,13 +414,13 @@ function storekitRestoreFailed(/*errorCode*/) {
 }
 
 function storekitDownloadActive(transactionIdentifier, productId, progress, timeRemaining) {
-    store.log.info("ios -> is downloading " + productId +"; progress="+progress+"%; timeRemaining="+timeRemaining+"s");
+    store.log.info("ios -> is downloading " + productId + "; progress=" + progress + "%; timeRemaining=" + timeRemaining + "s");
     var p = store.get(productId);
     p.set("state", store.DOWNLOADING);
     p.trigger("downloading",[progress, timeRemaining]);
 }
 function storekitDownloadFailed(transactionIdentifier, productId, errorCode, errorText) {
-    store.log.error("ios -> download failed: " + productId+"; errorCode="+errorCode+"; errorText="+errorText);
+    store.log.error("ios -> download failed: " + productId + "; errorCode=" + errorCode + "; errorText=" + errorText);
     var p = store.get(productId);
     p.trigger("error", [ new store.Error({
         code: store.ERR_DOWNLOAD,
@@ -433,7 +433,7 @@ function storekitDownloadFailed(transactionIdentifier, productId, errorCode, err
     });
 }
 function storekitDownloadFinished(transactionIdentifier, productId) {
-    store.log.info("ios -> download completed: "+productId);
+    store.log.info("ios -> download completed: " + productId);
     var p = store.get(productId);
     p.set("state", store.DOWNLOADED);
     p.trigger("downloaded");

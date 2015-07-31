@@ -176,15 +176,15 @@ InAppPurchase.prototype.restore = function() {
 InAppPurchase.prototype.pause = function() {
     var ok = function() {
         log("Paused active downloads");
-        if (typeof options.paused === "function") {
-            protectCall(options.paused, "options.paused");
+        if (typeof this.options.paused === "function") {
+            protectCall(this.options.paused, "options.paused");
         }
     };
     var failed = function() {
         var errmsg = "Pausing active downloads failed";
         log(errmsg);
-        if (typeof options.error === "function") {
-            protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_PAUSE_DOWNLOADS, errmsg);
+        if (typeof this.options.error === "function") {
+            protectCall(this.options.error, "options.error", InAppPurchase.prototype.ERR_PAUSE_DOWNLOADS, errmsg);
         }
     };
     return exec('pause', [], ok, failed);
@@ -196,15 +196,15 @@ InAppPurchase.prototype.pause = function() {
 InAppPurchase.prototype.resume = function() {
     var ok = function() {
         log("Resumed active downloads");
-        if (typeof options.resumed === "function") {
-            protectCall(options.resumed, "options.resumed");
+        if (typeof this.options.resumed === "function") {
+            protectCall(this.options.resumed, "options.resumed");
         }
     };
     var failed = function() {
         var errmsg = "Resuming active downloads failed";
         log(errmsg);
-        if (typeof options.error === "function") {
-            protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_RESUME_DOWNLOADS, errmsg);
+        if (typeof this.options.error === "function") {
+            protectCall(this.options.error, "options.error", InAppPurchase.prototype.ERR_RESUME_DOWNLOADS, errmsg);
         }
     };
     return exec('resume', [], ok, failed);
@@ -216,15 +216,15 @@ InAppPurchase.prototype.resume = function() {
 InAppPurchase.prototype.cancel = function() {
     var ok = function() {
         log("Cancelled active downloads");
-        if (typeof options.cancelled === "function") {
-            protectCall(options.cancelled, "options.cancelled");
+        if (typeof this.options.cancelled === "function") {
+            protectCall(this.options.cancelled, "options.cancelled");
         }
     };
     var failed = function() {
         var errmsg = "Cancelling active downloads failed";
         log(errmsg);
-        if (typeof options.error === "function") {
-            protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_CANCEL_DOWNLOADS, errmsg);
+        if (typeof this.options.error === "function") {
+            protectCall(this.options.error, "options.error", InAppPurchase.prototype.ERR_CANCEL_DOWNLOADS, errmsg);
         }
     };
     return exec('cancel', [], ok, failed);
@@ -308,12 +308,17 @@ InAppPurchase.prototype.finish = function (transactionId) {
     exec('finishTransaction', [transactionId], noop, noop);
 };
 
-var pendingUpdates = [];
+var pendingUpdates = [], pendingDownloadUpdates = [];
 InAppPurchase.prototype.processPendingUpdates = function() {
     for (var i = 0; i < pendingUpdates.length; ++i) {
         this.updatedTransactionCallback.apply(this, pendingUpdates[i]);
     }
     pendingUpdates = [];
+
+    for (var j = 0; j < pendingDownloadUpdates.length; ++j) {
+        this.updatedDownloadCallback.apply(this, pendingDownloadUpdates[j]);
+    }
+    pendingDownloadUpdates = [];
 };
 
 // This is called from native.
