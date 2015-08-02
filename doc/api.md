@@ -292,6 +292,7 @@ See the [logging levels](#logging-levels) constants.
     store.ERR_BAD_RESPONSE        = ERROR_CODES_BASE + 18; // Verification of store data failed.
     store.ERR_REFRESH             = ERROR_CODES_BASE + 19; // Failed to refresh the store.
     store.ERR_PAYMENT_EXPIRED     = ERROR_CODES_BASE + 20;
+    store.ERR_DOWNLOAD            = ERROR_CODES_BASE + 21;
 
 ### product states
 
@@ -303,6 +304,8 @@ See the [logging levels](#logging-levels) constants.
     store.APPROVED   = 'approved';
     store.FINISHED   = 'finished';
     store.OWNED      = 'owned';
+    store.DOWNLOADING = 'downloading';
+    store.DOWNLOADED = 'downloaded';
 
 ### logging levels
 
@@ -503,6 +506,8 @@ Some reserved keywords can't be used in the product `id` and `alias`:
  - `approved`
  - `owned`
  - `finished`
+ - `downloading`
+ - `downloaded`
  - `refreshed`
 
 ## <a name="get"></a>*store.get(id)*
@@ -549,6 +554,10 @@ product events defined below.
    - Called when receipt verification failed
  - `expired(product)`
    - Called when validation find a subscription to be expired
+ - `downloading(product, progress, time_remaining)`
+   - Called when content download is started
+ - `downloaded(product)`
+   - Called when content download has successfully completed
 
 ### alternative usage
 

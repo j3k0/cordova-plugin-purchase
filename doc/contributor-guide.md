@@ -49,6 +49,13 @@ A non-consumable product, once `OWNED` always will be.
 
 http://stackoverflow.com/questions/6429186/can-we-check-if-a-users-in-app-purchase-has-been-refunded-by-apple
 
+#### persist downloaded status
+
+`storekit` doesn't provide a way to know which products have been downloaded.
+That is why we have to handle that ourselves, by storing the `DOWNLOADED` status of a product.
+
+A non-consumable product, once `OWNED` can always be re-downloaded for free.
+
 
 ## Initialization
 
@@ -113,6 +120,14 @@ return true iff the product with given ID has been purchased and finished
 during this or a previous execution of the application.
 #### *setOwned(productId, value)*
 store the boolean OWNED status of a given product.
+
+## Persistance of the *DOWNLOADED* status
+
+#### *isDownloaded(productId)*
+return true if the product with given ID has been purchased and finished downloading
+during this or a previous execution of the application.
+#### *setDownloaded(productId, value)*
+store the boolean DOWNLOADED status of a given product.
 
 ## Retry failed requests
 When setup and/or load failed, the plugin will retry over and over till it can connect
