@@ -508,6 +508,8 @@ store.verbosity = 0;
         this.canPurchase = this.state === store.VALID;
         this.loaded = this.state && this.state !== store.REGISTERED;
         this.owned = this.owned || this.state === store.OWNED;
+        this.downloading = this.downloading || this.state === store.DOWNLOADING;
+        this.downloaded = this.downloaded || this.state === store.DOWNLOADED;
         this.valid = this.state !== store.INVALID;
         if (!this.state || this.state === store.REGISTERED) delete this.valid;
         if (this.state) this.trigger(this.state);
@@ -993,15 +995,15 @@ store.verbosity = 0;
             return;
 
           case "DownloadStateFailed":
-            protectCall(this.options.onDownloadFailed, "options.onDownloadFailed", transactionIdentifier, productId, errorCode, errorText);
+            protectCall(this.options.downloadFailed, "options.downloadFailed", transactionIdentifier, productId, errorCode, errorText);
             return;
 
           case "DownloadStateFinished":
-            protectCall(this.options.onDownloadFinished, "options.onDownloadFinished", transactionIdentifier, productId);
+            protectCall(this.options.downloadFinished, "options.downloadFinished", transactionIdentifier, productId);
             return;
 
           case "DownloadStatePaused":
-            protectCall(this.options.onDownloadPaused, "options.onDownloadPaused", transactionIdentifier, productId);
+            protectCall(this.options.downloadPaused, "options.downloadPaused", transactionIdentifier, productId);
             return;
 
           case "DownloadStateWaiting":
@@ -1166,15 +1168,21 @@ store.verbosity = 0;
     store.when("owned", function(product) {
         if (!isOwned(product.id)) setOwned(product.id, true);
     });
+    store.when("downloaded", function(product) {
+        if (!isDownloaded(product.id)) setDownloaded(product.id, true);
+    });
     store.when("registered", function(product) {
         var owned = isOwned(product.id);
         product.owned = product.owned || owned;
-        store.log.debug("ios -> product " + product.id + " registered" + (owned ? " and owned" : ""));
+        var downloaded = isDownloaded(product.id);
+        product.downloaded = product.downloaded || downloaded;
+        store.log.debug("ios -> product " + product.id + " registered" + (owned ? " and owned" : "") + (downloaded ? " and downloaded" : ""));
     });
     store.when("expired", function(product) {
         store.log.debug("ios -> product " + product.id + " expired");
         product.owned = false;
         setOwned(product.id, false);
+        setDownloaded(product.id, false);
         storekitFinish(product);
         if (product.state === store.OWNED || product.state === store.APPROVED) product.set("state", store.VALID);
     });
@@ -1385,8 +1393,12 @@ store.verbosity = 0;
     function storekitDownloadActive(transactionIdentifier, productId, progress, timeRemaining) {
         store.log.info("ios -> is downloading " + productId + "; progress=" + progress + "%; timeRemaining=" + timeRemaining + "s");
         var p = store.get(productId);
-        p.set("state", store.DOWNLOADING);
-        p.trigger("downloading", [ progress, timeRemaining ]);
+        p.set({
+            progress: progress,
+            timeRemaining: timeRemaining,
+            state: store.DOWNLOADING
+        });
+        p.stateChanged();
     }
     function storekitDownloadFailed(transactionIdentifier, productId, errorCode, errorText) {
         store.log.error("ios -> download failed: " + productId + "; errorCode=" + errorCode + "; errorText=" + errorText);
@@ -1404,7 +1416,6 @@ store.verbosity = 0;
         store.log.info("ios -> download completed: " + productId);
         var p = store.get(productId);
         p.set("state", store.DOWNLOADED);
-        p.trigger("downloaded");
     }
     store._refreshForValidation = function(callback) {
         storekitRefreshReceipts(callback);
@@ -1440,6 +1451,12 @@ store.verbosity = 0;
     }
     function setOwned(productId, value) {
         localStorage["__cc_fovea_store_ios_owned_ " + productId] = value ? "1" : "0";
+    }
+    function isDownloaded(productId) {
+        return localStorage["__cc_fovea_store_ios_downloaded_ " + productId] === "1";
+    }
+    function setDownloaded(productId, value) {
+        localStorage["__cc_fovea_store_ios_downloaded_ " + productId] = value ? "1" : "0";
     }
     var retryTimeout = 5e3;
     var retries = [];

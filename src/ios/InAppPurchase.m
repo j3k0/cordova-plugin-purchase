@@ -426,12 +426,13 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 //
 - (void)paymentQueue:(SKPaymentQueue*)queue updatedTransactions:(NSArray*)transactions
 {
-    NSString *state, *error, *transactionIdentifier, *transactionReceipt, *productId, *downloads;
+    NSString *state, *error, *transactionIdentifier, *transactionReceipt, *productId;
+    NSArray *downloads;
     NSInteger errorCode;
 
     for (SKPaymentTransaction *transaction in transactions)
     {
-        error = state = transactionIdentifier = transactionReceipt = productId = downloads = @"";
+        error = state = transactionIdentifier = transactionReceipt = productId = @"";
         errorCode = 0;
         DLog(@"Transaction updated: %@", transaction.payment.productIdentifier);
         BOOL canFinish = NO;
@@ -685,6 +686,186 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
     [super dispose];
 }
 
+/****************************************************************************************************************
+ * Downloads
+ ****************************************************************************************************************/
+// Download Queue
+- (void) paymentQueue:(SKPaymentQueue *)queue updatedDownloads:(NSArray *)downloads
+{
+    
+    for (SKDownload *download in downloads)
+    {
+        NSString *state = @"";
+        NSString *error = @"";
+        NSInteger errorCode = 0;
+        NSString *progress_s = 0;
+        NSString *timeRemaining_s = 0;
+        
+        SKPaymentTransaction *transaction = download.transaction;
+        NSString *transactionId = transaction.transactionIdentifier;
+        NSString *transactionReceipt = [[transaction transactionReceipt] cdv_base64EncodedString];
+        SKPayment *payment = transaction.payment;
+        NSString *productId = payment.productIdentifier;
+        
+        NSArray *callbackArgs;
+        NSString *js;
+        
+        switch (download.downloadState)
+        {
+            case SKDownloadStateActive:
+            {
+                // Add to current downloads
+                [self.currentDownloads setObject:download forKey:productId];
+                
+                state = @"DownloadStateActive";
+                
+                DLog(@"Progress: %f", download.progress);
+                DLog(@"Time remaining: %f", download.timeRemaining);
+                
+                progress_s = [NSString stringWithFormat:@"%d", (int) (download.progress*100)];
+                timeRemaining_s = [NSString stringWithFormat:@"%d", (int) download.timeRemaining];
+                
+                break;
+            }
+                
+            case SKDownloadStateCancelled: {
+                // Remove from current downloads
+                [self.currentDownloads removeObjectForKey:productId];
+                
+                state = @"DownloadStateCancelled";
+                [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
+                [self transactionFinished:download.transaction];
+                
+                break;
+            }
+            case SKDownloadStateFailed:
+            {
+                // Remove from current downloads
+                [self.currentDownloads removeObjectForKey:productId];
+                
+                state = @"DownloadStateFailed";
+                error = transaction.error.localizedDescription;
+                errorCode = transaction.error.code;
+                DLog(@"Download error %d %@", errorCode, error);
+                [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
+                [self transactionFinished:download.transaction];
+                
+                break;
+            }
+                
+            case SKDownloadStateFinished:
+            {
+                // Remove from current downloads
+                [self.currentDownloads removeObjectForKey:productId];
+                
+                state = @"DownloadStateFinished";
+                [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
+                [self transactionFinished:download.transaction];
+                
+                [self copyDownloadToDocuments:download]; // Copy download content to Documnents folder
+                
+                break;
+            }
+                
+            case SKDownloadStatePaused:
+            {
+                // Add to current downloads
+                [self.currentDownloads setObject:download forKey:productId];
+                
+                state = @"DownloadStatePaused";
+                
+                break;
+            }
+                
+            case SKDownloadStateWaiting:
+            {
+                // Add to current downloads
+                [self.currentDownloads setObject:download forKey:productId];
+                state = @"DownloadStateWaiting";
+                
+                break;
+            }
+                
+            default:
+            {
+                DLog(@"Invalid Download State");
+                return;
+            }
+        }
+        
+        DLog(@"Number of currentDownloads: %d",[self.currentDownloads count]);
+        DLog(@"Product %@ in download state: %@", productId, state);
+        
+        
+        callbackArgs = [NSArray arrayWithObjects:
+                                 NILABLE(state),
+                                 [NSNumber numberWithInt:errorCode],
+                                 NILABLE(error),
+                                 NILABLE(transactionId),
+                                 NILABLE(productId),
+                                 NILABLE(transactionReceipt),
+                                 NILABLE(progress_s),
+                                 NILABLE(timeRemaining_s),
+                                 nil];
+        js = [NSString
+                        stringWithFormat:@"window.storekit.updatedDownloadCallback.apply(window.storekit, %@)",
+                        [callbackArgs JSONSerialize]];
+        [self.commandDelegate evalJs:js];
+        
+    }
+}
+
+
+/*
+ * Download handlers
+ */
+
+- (void)copyDownloadToDocuments:(SKDownload *)download {
+    DLog(@"Copying downloaded content to Documents...");
+    
+    NSString *source = [download.contentURL relativePath];
+    NSDictionary *dict = [[NSMutableDictionary alloc] initWithContentsOfFile:[source stringByAppendingPathComponent:@"ContentInfo.plist"]];
+    NSString *targetFolder = [FileUtility getDocumentPath];
+    NSString *content = [source stringByAppendingPathComponent:@"Contents"];
+    NSArray *files;
+    
+    // Use folder if specified in .plist
+    if([dict objectForKey:@"Folder"]){
+        targetFolder = [targetFolder stringByAppendingPathComponent:[dict objectForKey:@"Folder"]];
+        if(![FileUtility isFolderExist:targetFolder]){
+            DLog(@"Creating Documents subfolder: %@", targetFolder);
+            NSAssert([FileUtility createFolder:targetFolder], @"Failed to create Documents subfolder: %@", targetFolder);
+        }
+    }
+    
+    if ([dict objectForKey:@"Files"]){
+        DLog(@"Found Files key in .plist");
+        files =  [dict objectForKey:@"Files"];
+    }else{
+        DLog(@"No Files key found in .plist - copy all files in Content folder");
+        files = [FileUtility listFiles:content extension:nil];
+    }
+    
+    for (NSString *file in files)
+    {
+        NSString *fcontent = [content stringByAppendingPathComponent:file];
+        NSString *targetFile = [targetFolder stringByAppendingPathComponent:[file lastPathComponent]];
+        
+        DLog(@"Content path: %@", fcontent);
+        
+        NSAssert([FileUtility isFileExist:fcontent], @"Content path MUST be valid");
+        
+        // Copy the content to the documents folder
+        NSAssert([FileUtility copyFile:fcontent dst:targetFile], @"Failed to copy the content");
+        DLog(@"Copied %@ to %@", fcontent, targetFile);
+        
+        // Set flag so we don't backup on iCloud
+        NSURL* url = [NSURL fileURLWithPath:targetFile];
+        [url setResourceValue: [NSNumber numberWithBool: YES] forKey: NSURLIsExcludedFromBackupKey error: Nil];
+    }
+    
+}
+
 @end
 /**
  * Receive refreshed app receipt
@@ -813,184 +994,3 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
 
 @end
 
-/****************************************************************************************************************
- * Downloads
- ****************************************************************************************************************/
-// Download Queue
-- (void) paymentQueue:(SKPaymentQueue *)queue updatedDownloads:(NSArray *)downloads
-{
-    
-    for (SKDownload *download in downloads)
-    {
-        NSString *state = @"";
-        NSString *error = @"";
-        NSInteger errorCode = 0;
-        NSString *progress_s = 0;
-        NSString *timeRemaining_s = 0;
-        
-        SKPaymentTransaction *transaction = download.transaction;
-        NSString *transactionId = transaction.transactionIdentifier;
-        NSString *transactionReceipt = [[transaction transactionReceipt] cdv_base64EncodedString];
-        SKPayment *payment = transaction.payment;
-        NSString *productId = payment.productIdentifier;
-        
-        NSArray *callbackArgs;
-        NSString *js;
-        
-        switch (download.downloadState)
-        {
-            case SKDownloadStateActive:
-            {
-                // Add to current downloads
-                [self.currentDownloads setObject:download forKey:productId];
-                
-                state = @"DownloadStateActive";
-                
-                DLog(@"Progress: %f", download.progress);
-                DLog(@"Time remaining: %f", download.timeRemaining);
-                
-                progress_s = [NSString stringWithFormat:@"%d", (int) (download.progress*100)];
-                timeRemaining_s = [NSString stringWithFormat:@"%d", (int) download.timeRemaining];
-                
-                break;
-            }
-                
-            case SKDownloadStateCancelled: {
-                // Remove from current downloads
-                [self.currentDownloads removeObjectForKey:productId];
-                
-                state = @"DownloadStateCancelled";
-                [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
-                [self transactionFinished:download.transaction];
-                
-                break;
-            }
-            case SKDownloadStateFailed:
-            {
-                // Remove from current downloads
-                [self.currentDownloads removeObjectForKey:productId];
-                
-                state = @"DownloadStateFailed";
-                error = transaction.error.localizedDescription;
-                errorCode = transaction.error.code;
-                DLog(@"Download error %d %@", errorCode, error);
-                [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
-                [self transactionFinished:download.transaction];
-                
-                break;
-            }
-                
-            case SKDownloadStateFinished:
-            {
-                // Remove from current downloads
-                [self.currentDownloads removeObjectForKey:productId];
-                
-                state = @"DownloadStateFinished";
-                [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
-                [self transactionFinished:download.transaction];
-                
-                [self copyDownloadToDocuments:download]; // Copy download content to Documnents folder
-                
-                break;
-            }
-                
-            case SKDownloadStatePaused:
-            {
-                // Add to current downloads
-                [self.currentDownloads setObject:download forKey:productId];
-                
-                state = @"DownloadStatePaused";
-                
-                break;
-            }
-                
-            case SKDownloadStateWaiting:
-            {
-                // Add to current downloads
-                [self.currentDownloads setObject:download forKey:productId];
-                state = @"DownloadStateWaiting";
-                
-                break;
-            }
-                
-            default:
-            {
-                DLog(@"Invalid Download State");
-                return;
-            }
-        }
-        
-        DLog(@"Number of currentDownloads: %d",[self.currentDownloads count]);
-        DLog(@"Product %@ in download state: %@", productId, state);
-        
-        
-        NSArray *callbackArgs = [NSArray arrayWithObjects:
-            NILABLE(state),
-            [NSNumber numberWithInt:errorCode],
-            NILABLE(error),
-            NILABLE(transactionId),
-            NILABLE(productId),
-            NILABLE(transactionReceipt),
-            NILABLE(progress_s),
-            NILABLE(timeRemaining_s),
-            nil];
-        NSString *js = [NSString
-            stringWithFormat:@"window.storekit.updatedDownloadCallback.apply(window.storekit, %@)",
-            [callbackArgs JSONSerialize]];
-        [self.commandDelegate evalJs:js];
-        
-    }
-}
-
-
-/*
- * Download handlers
- */
-
-- (void)copyDownloadToDocuments:(SKDownload *)download {
-    DLog(@"Copying downloaded content to Documents...");
-    
-    NSString *source = [download.contentURL relativePath];
-    NSDictionary *dict = [[NSMutableDictionary alloc] initWithContentsOfFile:[source stringByAppendingPathComponent:@"ContentInfo.plist"]];
-    NSString *targetFolder = [FileUtility getDocumentPath];
-    NSString *content = [source stringByAppendingPathComponent:@"Contents"];
-    NSArray *files;
-    
-    // Use folder if specified in .plist
-    if([dict objectForKey:@"Folder"]){
-        targetFolder = [targetFolder stringByAppendingPathComponent:[dict objectForKey:@"Folder"]];
-        if(![FileUtility isFolderExist:targetFolder]){
-            DLog(@"Creating Documents subfolder: %@", targetFolder);
-            NSAssert([FileUtility createFolder:targetFolder], @"Failed to create Documents subfolder: %@", targetFolder);
-        }
-    }
-    
-    if ([dict objectForKey:@"Files"]){
-        DLog(@"Found Files key in .plist");
-        files =  [dict objectForKey:@"Files"];
-    }else{
-        DLog(@"No Files key found in .plist - copy all files in Content folder");
-        files = [FileUtility listFiles:content extension:nil];
-    }
-    
-    for (NSString *file in files)
-    {
-        NSString *fcontent = [content stringByAppendingPathComponent:file];
-        NSString *targetFile = [targetFolder stringByAppendingPathComponent:[file lastPathComponent]];
-        
-        DLog(@"Content path: %@", fcontent);
-        
-        NSAssert([FileUtility isFileExist:fcontent], @"Content path MUST be valid");
-        
-        // Copy the content to the documents folder
-        NSAssert([FileUtility copyFile:fcontent dst:targetFile], @"Failed to copy the content");
-        DLog(@"Copied %@ to %@", fcontent, targetFile);
-        
-        // Set flag so we don't backup on iCloud
-        NSURL* url = [NSURL fileURLWithPath:targetFile];
-        [url setResourceValue: [NSNumber numberWithBool: YES] forKey: NSURLIsExcludedFromBackupKey error: Nil];
-    }
-    
-}
-
-@end

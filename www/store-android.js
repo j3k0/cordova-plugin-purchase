@@ -508,6 +508,8 @@ store.verbosity = 0;
         this.canPurchase = this.state === store.VALID;
         this.loaded = this.state && this.state !== store.REGISTERED;
         this.owned = this.owned || this.state === store.OWNED;
+        this.downloading = this.downloading || this.state === store.DOWNLOADING;
+        this.downloaded = this.downloaded || this.state === store.DOWNLOADED;
         this.valid = this.state !== store.INVALID;
         if (!this.state || this.state === store.REGISTERED) delete this.valid;
         if (this.state) this.trigger(this.state);

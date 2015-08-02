@@ -13,6 +13,7 @@
 #import <Cordova/NSData+Base64.h>
 
 #import "SKProduct+LocalizedPrice.h"
+#import "FileUtility.h"
 
 @interface InAppPurchase : CDVPlugin <SKPaymentTransactionObserver> {
     NSMutableDictionary *list;
