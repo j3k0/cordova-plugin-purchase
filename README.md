@@ -101,6 +101,7 @@ You're all good? Time to read some more documentation. Hooray!
  * Guillaume Charhon (initial Android code)
  * Matt Kane (initial iOS code)
  * Mohammad Naghavi (original unification attempt)
+ * Dave Alden [@dpa99c](https://github.com/dpa99c)(Apple-hosted IAPs for iOS)
 
 ## Sponsors
 Big thanks to:
