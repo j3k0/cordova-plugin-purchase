@@ -14,6 +14,7 @@ be notified of changes to one or a set of products using a [`query`](#queries) m
     store.when("product").updated(refreshScreen);
     store.when("full version").owned(unlockApp);
     store.when("subscription").approved(serverCheck);
+    store.when("downloadable content").downloaded(showContent);
     etc.
 ```
 
@@ -340,6 +341,8 @@ Products object have the following fields and methods.
  - `product.valid` - Product has been loaded and is a valid product
  - `product.canPurchase` - Product is in a state where it can be purchased
  - `product.owned` - Product is owned
+ - `product.downloading` - Product is downloading non-consumable content
+ - `product.downloaded` - Non-consumable content has been successfully downloaded for this product
  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
 
 ### *store.Product* public methods
@@ -406,9 +409,11 @@ Find below a diagram of the different states a product can pass by.
                                                           |
                     ^      +------------------------------+
                     |      |
-                    |      +--> APPROVED +--> FINISHED +--> OWNED
-                    |                                  |
-                    +----------------------------------+
+                    |      |             +--> DOWNLOADING +--> DOWNLOADED +
+                    |      |             |                                |
+                    |      +--> APPROVED +--------------------------------+--> FINISHED +--> OWNED
+                    |                                                             |
+                    +-------------------------------------------------------------+
 
 #### states definitions
 
@@ -420,6 +425,8 @@ Find below a diagram of the different states a product can pass by.
  - `APPROVED`: purchase approved by server
  - `FINISHED`: purchase delivered by the app (see [Finish a Purchase](#finish-a-purchase))
  - `OWNED`: purchase is owned (only for non-consumable and subscriptions)
+ - `DOWNLOADING` purchased content is downloading (only for non-consumable)
+ - `DOWNLOADED` purchased content is downloaded (only for non-consumable)
 
 #### Notes
 
