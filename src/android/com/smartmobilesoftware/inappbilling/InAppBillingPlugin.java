@@ -173,7 +173,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
                     try{
                         mHelper.queryInventoryAsync(true, skus, mGotInventoryListener);
                     }catch(IllegalStateException ex){
-                        Log.d("Catch IllegalStateException", ex.getMessage())
+                        Log.d("Catch IllegalStateException", ex.getMessage());
                     }
 				}
             }
