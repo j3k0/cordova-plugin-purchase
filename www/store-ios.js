@@ -28,6 +28,7 @@ store.verbosity = 0;
     store.ERR_BAD_RESPONSE = ERROR_CODES_BASE + 18;
     store.ERR_REFRESH = ERROR_CODES_BASE + 19;
     store.ERR_PAYMENT_EXPIRED = ERROR_CODES_BASE + 20;
+    store.ERR_DOWNLOAD = ERROR_CODES_BASE + 21;
     store.REGISTERED = "registered";
     store.INVALID = "invalid";
     store.VALID = "valid";
@@ -36,6 +37,8 @@ store.verbosity = 0;
     store.APPROVED = "approved";
     store.FINISHED = "finished";
     store.OWNED = "owned";
+    store.DOWNLOADING = "downloading";
+    store.DOWNLOADED = "downloaded";
     store.QUIET = 0;
     store.ERROR = 1;
     store.WARNING = 2;
@@ -212,7 +215,7 @@ store.verbosity = 0;
             store.products.push(p);
         }
     }
-    var keywords = [ "product", "order", store.REGISTERED, store.VALID, store.INVALID, store.REQUESTED, store.INITIATED, store.APPROVED, store.OWNED, store.FINISHED, "refreshed" ];
+    var keywords = [ "product", "order", store.REGISTERED, store.VALID, store.INVALID, store.REQUESTED, store.INITIATED, store.APPROVED, store.OWNED, store.FINISHED, store.DOWNLOADING, store.DOWNLOADED, "refreshed" ];
     function hasKeyword(string) {
         if (!string) return false;
         var tokens = string.split(" ");
@@ -265,6 +268,8 @@ store.verbosity = 0;
             addPromise("verified");
             addPromise("unverified");
             addPromise("expired");
+            addPromise("downloading");
+            addPromise("downloaded");
             return ret;
         } else {
             var action = once;
@@ -503,6 +508,8 @@ store.verbosity = 0;
         this.canPurchase = this.state === store.VALID;
         this.loaded = this.state && this.state !== store.REGISTERED;
         this.owned = this.owned || this.state === store.OWNED;
+        this.downloading = this.downloading || this.state === store.DOWNLOADING;
+        this.downloaded = this.downloaded || this.state === store.DOWNLOADED;
         this.valid = this.state !== store.INVALID;
         if (!this.state || this.state === store.REGISTERED) delete this.valid;
         if (this.state) this.trigger(this.state);
@@ -756,6 +763,9 @@ store.verbosity = 0;
     InAppPurchase.prototype.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
     InAppPurchase.prototype.ERR_UNKNOWN = ERROR_CODES_BASE + 10;
     InAppPurchase.prototype.ERR_REFRESH_RECEIPTS = ERROR_CODES_BASE + 11;
+    InAppPurchase.prototype.ERR_PAUSE_DOWNLOADS = ERROR_CODES_BASE + 12;
+    InAppPurchase.prototype.ERR_RESUME_DOWNLOADS = ERROR_CODES_BASE + 13;
+    InAppPurchase.prototype.ERR_CANCEL_DOWNLOADS = ERROR_CODES_BASE + 14;
     var initialized = false;
     InAppPurchase.prototype.init = function(options, success, error) {
         this.options = {
@@ -768,7 +778,13 @@ store.verbosity = 0;
             restore: options.restore || noop,
             receiptsRefreshed: options.receiptsRefreshed || noop,
             restoreFailed: options.restoreFailed || noop,
-            restoreCompleted: options.restoreCompleted || noop
+            restoreCompleted: options.restoreCompleted || noop,
+            downloadActive: options.downloadActive || noop,
+            downloadCancelled: options.downloadCancelled || noop,
+            downloadFailed: options.downloadFailed || noop,
+            downloadFinished: options.downloadFinished || noop,
+            downloadPaused: options.downloadPaused || noop,
+            downloadWaiting: options.downloadWaiting || noop
         };
         if (options.debug) {
             exec("debug", [], noop, noop);
@@ -828,6 +844,54 @@ store.verbosity = 0;
         this.needRestoreNotification = true;
         exec("restoreCompletedTransactions", []);
     };
+    InAppPurchase.prototype.pause = function() {
+        var ok = function() {
+            log("Paused active downloads");
+            if (typeof this.options.paused === "function") {
+                protectCall(this.options.paused, "options.paused");
+            }
+        };
+        var failed = function() {
+            var errmsg = "Pausing active downloads failed";
+            log(errmsg);
+            if (typeof this.options.error === "function") {
+                protectCall(this.options.error, "options.error", InAppPurchase.prototype.ERR_PAUSE_DOWNLOADS, errmsg);
+            }
+        };
+        return exec("pause", [], ok, failed);
+    };
+    InAppPurchase.prototype.resume = function() {
+        var ok = function() {
+            log("Resumed active downloads");
+            if (typeof this.options.resumed === "function") {
+                protectCall(this.options.resumed, "options.resumed");
+            }
+        };
+        var failed = function() {
+            var errmsg = "Resuming active downloads failed";
+            log(errmsg);
+            if (typeof this.options.error === "function") {
+                protectCall(this.options.error, "options.error", InAppPurchase.prototype.ERR_RESUME_DOWNLOADS, errmsg);
+            }
+        };
+        return exec("resume", [], ok, failed);
+    };
+    InAppPurchase.prototype.cancel = function() {
+        var ok = function() {
+            log("Cancelled active downloads");
+            if (typeof this.options.cancelled === "function") {
+                protectCall(this.options.cancelled, "options.cancelled");
+            }
+        };
+        var failed = function() {
+            var errmsg = "Cancelling active downloads failed";
+            log(errmsg);
+            if (typeof this.options.error === "function") {
+                protectCall(this.options.error, "options.error", InAppPurchase.prototype.ERR_CANCEL_DOWNLOADS, errmsg);
+            }
+        };
+        return exec("cancel", [], ok, failed);
+    };
     InAppPurchase.prototype.load = function(productIds, success, error) {
         var options = this.options;
         if (typeof productIds === "string") {
@@ -866,12 +930,16 @@ store.verbosity = 0;
     InAppPurchase.prototype.finish = function(transactionId) {
         exec("finishTransaction", [ transactionId ], noop, noop);
     };
-    var pendingUpdates = [];
+    var pendingUpdates = [], pendingDownloadUpdates = [];
     InAppPurchase.prototype.processPendingUpdates = function() {
         for (var i = 0; i < pendingUpdates.length; ++i) {
             this.updatedTransactionCallback.apply(this, pendingUpdates[i]);
         }
         pendingUpdates = [];
+        for (var j = 0; j < pendingDownloadUpdates.length; ++j) {
+            this.updatedDownloadCallback.apply(this, pendingDownloadUpdates[j]);
+        }
+        pendingDownloadUpdates = [];
     };
     InAppPurchase.prototype.updatedTransactionCallback = function(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
         if (!initialized) {
@@ -908,6 +976,38 @@ store.verbosity = 0;
 
           case "PaymentTransactionStateFinished":
             protectCall(this.options.finish, "options.finish", transactionIdentifier, productId);
+            return;
+        }
+    };
+    InAppPurchase.prototype.updatedDownloadCallback = function(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, progress, timeRemaining) {
+        if (!initialized) {
+            var args = Array.prototype.slice.call(arguments);
+            pendingDownloadUpdates.push(args);
+            return;
+        }
+        switch (state) {
+          case "DownloadStateActive":
+            protectCall(this.options.downloadActive, "options.downloadActive", transactionIdentifier, productId, progress, timeRemaining);
+            return;
+
+          case "DownloadStateCancelled":
+            protectCall(this.options.downloadCancelled, "options.downloadCancelled", transactionIdentifier, productId);
+            return;
+
+          case "DownloadStateFailed":
+            protectCall(this.options.downloadFailed, "options.downloadFailed", transactionIdentifier, productId, errorCode, errorText);
+            return;
+
+          case "DownloadStateFinished":
+            protectCall(this.options.downloadFinished, "options.downloadFinished", transactionIdentifier, productId);
+            return;
+
+          case "DownloadStatePaused":
+            protectCall(this.options.downloadPaused, "options.downloadPaused", transactionIdentifier, productId);
+            return;
+
+          case "DownloadStateWaiting":
+            protectCall(this.options.downloadWaiting, "options.downloadWaiting", transactionIdentifier, productId);
             return;
         }
     };
@@ -1068,15 +1168,21 @@ store.verbosity = 0;
     store.when("owned", function(product) {
         if (!isOwned(product.id)) setOwned(product.id, true);
     });
+    store.when("downloaded", function(product) {
+        if (!isDownloaded(product.id)) setDownloaded(product.id, true);
+    });
     store.when("registered", function(product) {
         var owned = isOwned(product.id);
         product.owned = product.owned || owned;
-        store.log.debug("ios -> product " + product.id + " registered" + (owned ? " and owned" : ""));
+        var downloaded = isDownloaded(product.id);
+        product.downloaded = product.downloaded || downloaded;
+        store.log.debug("ios -> product " + product.id + " registered" + (owned ? " and owned" : "") + (downloaded ? " and downloaded" : ""));
     });
     store.when("expired", function(product) {
         store.log.debug("ios -> product " + product.id + " expired");
         product.owned = false;
         setOwned(product.id, false);
+        setDownloaded(product.id, false);
         storekitFinish(product);
         if (product.state === store.OWNED || product.state === store.APPROVED) product.set("state", store.VALID);
     });
@@ -1094,7 +1200,10 @@ store.verbosity = 0;
             purchasing: storekitPurchasing,
             restore: storekitRestored,
             restoreCompleted: storekitRestoreCompleted,
-            restoreFailed: storekitRestoreFailed
+            restoreFailed: storekitRestoreFailed,
+            downloadActive: storekitDownloadActive,
+            downloadFailed: storekitDownloadFailed,
+            downloadFinished: storekitDownloadFinished
         }, storekitReady, storekitInitFailed);
     }
     function storekitReady() {
@@ -1281,6 +1390,33 @@ store.verbosity = 0;
         });
         store.trigger("refresh-failed");
     }
+    function storekitDownloadActive(transactionIdentifier, productId, progress, timeRemaining) {
+        store.log.info("ios -> is downloading " + productId + "; progress=" + progress + "%; timeRemaining=" + timeRemaining + "s");
+        var p = store.get(productId);
+        p.set({
+            progress: progress,
+            timeRemaining: timeRemaining,
+            state: store.DOWNLOADING
+        });
+        p.stateChanged();
+    }
+    function storekitDownloadFailed(transactionIdentifier, productId, errorCode, errorText) {
+        store.log.error("ios -> download failed: " + productId + "; errorCode=" + errorCode + "; errorText=" + errorText);
+        var p = store.get(productId);
+        p.trigger("error", [ new store.Error({
+            code: store.ERR_DOWNLOAD,
+            message: errorText
+        }), p ]);
+        store.error({
+            code: errorCode,
+            message: errorText
+        });
+    }
+    function storekitDownloadFinished(transactionIdentifier, productId) {
+        store.log.info("ios -> download completed: " + productId);
+        var p = store.get(productId);
+        p.set("state", store.DOWNLOADED);
+    }
     store._refreshForValidation = function(callback) {
         storekitRefreshReceipts(callback);
     };
@@ -1315,6 +1451,12 @@ store.verbosity = 0;
     }
     function setOwned(productId, value) {
         localStorage["__cc_fovea_store_ios_owned_ " + productId] = value ? "1" : "0";
+    }
+    function isDownloaded(productId) {
+        return localStorage["__cc_fovea_store_ios_downloaded_ " + productId] === "1";
+    }
+    function setDownloaded(productId, value) {
+        localStorage["__cc_fovea_store_ios_downloaded_ " + productId] = value ? "1" : "0";
     }
     var retryTimeout = 5e3;
     var retries = [];

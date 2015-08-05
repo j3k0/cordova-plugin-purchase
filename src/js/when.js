@@ -88,6 +88,14 @@ store.when = function(query, once, callback) {
         ///    - Called when validation find a subscription to be expired
         addPromise('expired');
 
+        ///  - `downloading(product, progress, time_remaining)`
+        ///    - Called when content download is started
+        addPromise("downloading");
+
+        ///  - `downloaded(product)`
+        ///    - Called when content download has successfully completed
+        addPromise("downloaded");
+
         return ret;
     }
     else {

@@ -10,6 +10,7 @@
 ///     store.when("product").updated(refreshScreen);
 ///     store.when("full version").owned(unlockApp);
 ///     store.when("subscription").approved(serverCheck);
+///     store.when("downloadable content").downloaded(showContent);
 ///     etc.
 /// ```
 ///

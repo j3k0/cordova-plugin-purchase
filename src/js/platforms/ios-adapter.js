@@ -85,16 +85,34 @@ store.when("owned", function(product) {
         setOwned(product.id, true);
 });
 
+
+//! #### persist downloaded status
+//!
+//! `storekit` doesn't provide a way to know which products have been downloaded.
+//! That is why we have to handle that ourselves, by storing the `DOWNLOADED` status of a product.
+//!
+//! A non-consumable product, once `OWNED` can always be re-downloaded for free.
+//!
+store.when("downloaded", function(product) {
+    if (!isDownloaded(product.id))
+        setDownloaded(product.id, true);
+});
+
 store.when("registered", function(product) {
     var owned = isOwned(product.id);
     product.owned = product.owned || owned;
-    store.log.debug("ios -> product " + product.id + " registered" + (owned ? " and owned" : ""));
+
+    var downloaded = isDownloaded(product.id);
+    product.downloaded = product.downloaded || downloaded;
+
+    store.log.debug("ios -> product " + product.id + " registered" + (owned ? " and owned" : "") + (downloaded ? " and downloaded" : ""));
 });
 
 store.when("expired", function(product) {
     store.log.debug("ios -> product " + product.id + " expired");
     product.owned = false;
     setOwned(product.id, false);
+    setDownloaded(product.id, false);
     storekitFinish(product);
     if (product.state === store.OWNED || product.state === store.APPROVED)
         product.set("state", store.VALID);
@@ -132,7 +150,10 @@ function storekitInit() {
         purchasing: storekitPurchasing,
         restore:    storekitRestored,
         restoreCompleted: storekitRestoreCompleted,
-        restoreFailed:    storekitRestoreFailed
+        restoreFailed:    storekitRestoreFailed,
+        downloadActive:  storekitDownloadActive,
+        downloadFailed:  storekitDownloadFailed,
+        downloadFinished:  storekitDownloadFinished
     }, storekitReady, storekitInitFailed);
 }
 
@@ -410,6 +431,35 @@ function storekitRestoreFailed(/*errorCode*/) {
     store.trigger('refresh-failed');
 }
 
+function storekitDownloadActive(transactionIdentifier, productId, progress, timeRemaining) {
+    store.log.info("ios -> is downloading " + productId + "; progress=" + progress + "%; timeRemaining=" + timeRemaining + "s");
+    var p = store.get(productId);
+    p.set({
+        progress: progress,
+        timeRemaining: timeRemaining,
+        state: store.DOWNLOADING
+    });
+    p.stateChanged();
+}
+function storekitDownloadFailed(transactionIdentifier, productId, errorCode, errorText) {
+    store.log.error("ios -> download failed: " + productId + "; errorCode=" + errorCode + "; errorText=" + errorText);
+    var p = store.get(productId);
+    p.trigger("error", [ new store.Error({
+        code: store.ERR_DOWNLOAD,
+        message: errorText
+    }), p ]);
+
+    store.error({
+        code: errorCode,
+        message: errorText
+    });
+}
+function storekitDownloadFinished(transactionIdentifier, productId) {
+    store.log.info("ios -> download completed: " + productId);
+    var p = store.get(productId);
+    p.set("state", store.DOWNLOADED);
+}
+
 store._refreshForValidation = function(callback) {
     storekitRefreshReceipts(callback);
 };
@@ -460,6 +510,24 @@ function isOwned(productId) {
 function setOwned(productId, value) {
     localStorage["__cc_fovea_store_ios_owned_ " + productId] = value ? '1' : '0';
 }
+
+
+//!
+//! ## Persistance of the *DOWNLOADED* status
+//!
+
+//! #### *isDownloaded(productId)*
+//! return true if the product with given ID has been purchased and finished downloading
+//! during this or a previous execution of the application.
+    function isDownloaded(productId) {
+        return localStorage["__cc_fovea_store_ios_downloaded_ " + productId] === '1';
+    }
+
+//! #### *setDownloaded(productId, value)*
+//! store the boolean DOWNLOADED status of a given product.
+    function setDownloaded(productId, value) {
+        localStorage["__cc_fovea_store_ios_downloaded_ " + productId] = value ? '1' : '0';
+    }
 
 //!
 //! ## Retry failed requests

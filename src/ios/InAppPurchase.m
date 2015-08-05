@@ -13,7 +13,7 @@
 // Help create NSNull objects for nil items (since neither NSArray nor NSDictionary can store nil values).
 #define NILABLE(obj) ((obj) != nil ? (NSObject *)(obj) : (NSObject *)[NSNull null])
 
-static BOOL g_debugEnabled = NO;
+static BOOL g_debugEnabled = YES;
 static BOOL g_autoFinishEnabled = YES;
 
 #define DLog(fmt, ...) { \
@@ -276,6 +276,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 @synthesize list;
 @synthesize retainer;
 @synthesize observer;
+@synthesize currentDownloads;
 
 -(void) debug: (CDVInvokedUrlCommand*)command {
     g_debugEnabled = YES;
@@ -297,6 +298,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 
     self.list = [[NSMutableDictionary alloc] init];
     self.retainer = [[NSMutableDictionary alloc] init];
+    self.currentDownloads = [[NSMutableDictionary alloc] init];
     unfinishedTransactions = [[NSMutableDictionary alloc] init];
     //make sure we add only one observer
     if(observer==nil) {
@@ -313,7 +315,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
  */
 - (void) load: (CDVInvokedUrlCommand*)command
 {
-	DLog(@"Getting products data");
+    DLog(@"Getting products data");
 
     NSArray *inArray = [command.arguments objectAtIndex:0];
 
@@ -358,7 +360,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 
 - (void) purchase: (CDVInvokedUrlCommand*)command
 {
-	DLog(@"About to do IAP");
+    DLog(@"About to do IAP");
     id identifier = [command.arguments objectAtIndex:0];
     id quantity =   [command.arguments objectAtIndex:1];
 
@@ -366,7 +368,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
     if ([quantity respondsToSelector:@selector(integerValue)]) {
         payment.quantity = [quantity integerValue];
     }
-	[[SKPaymentQueue defaultQueue] addPayment:payment];
+    [[SKPaymentQueue defaultQueue] addPayment:payment];
 }
 
 //Check if user/device is allowed to make in-app purchases
@@ -391,67 +393,98 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
     [[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
 }
 
+- (void) pause: (CDVInvokedUrlCommand*)command
+{
+    NSArray *dls = [self.currentDownloads allValues];
+    DLog(@"Pausing %d active downloads...",[dls count]);
+    
+    [[SKPaymentQueue defaultQueue] pauseDownloads:dls];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void) resume: (CDVInvokedUrlCommand*)command
+{
+    NSArray *dls = [self.currentDownloads allValues];
+    DLog(@"Resuming %d active downloads...",[dls count]);
+    [[SKPaymentQueue defaultQueue] resumeDownloads:[self.currentDownloads allValues]];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void) cancel: (CDVInvokedUrlCommand*)command
+{
+    NSArray *dls = [self.currentDownloads allValues];
+    DLog(@"Cancelling %d active downloads...",[dls count]);
+    [[SKPaymentQueue defaultQueue] cancelDownloads:[self.currentDownloads allValues]];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
 // SKPaymentTransactionObserver methods
 // called when the transaction status is updated
 //
 - (void)paymentQueue:(SKPaymentQueue*)queue updatedTransactions:(NSArray*)transactions
 {
-	NSString *state, *error, *transactionIdentifier, *transactionReceipt, *productId;
-	NSInteger errorCode;
+    NSString *state, *error, *transactionIdentifier, *transactionReceipt, *productId;
+    NSArray *downloads;
+    NSInteger errorCode;
 
     for (SKPaymentTransaction *transaction in transactions)
     {
-		error = state = transactionIdentifier = transactionReceipt = productId = @"";
-		errorCode = 0;
+        error = state = transactionIdentifier = transactionReceipt = productId = @"";
+        errorCode = 0;
         DLog(@"Transaction updated: %@", transaction.payment.productIdentifier);
         BOOL canFinish = NO;
 
         switch (transaction.transactionState)
         {
-			case SKPaymentTransactionStatePurchasing:
-				DLog(@"Purchasing...");
-				state = @"PaymentTransactionStatePurchasing";
-				productId = transaction.payment.productIdentifier;
-				break;
+            case SKPaymentTransactionStatePurchasing:
+                DLog(@"Purchasing...");
+                state = @"PaymentTransactionStatePurchasing";
+                productId = transaction.payment.productIdentifier;
+                break;
 
             case SKPaymentTransactionStatePurchased:
-				state = @"PaymentTransactionStatePurchased";
-				transactionIdentifier = transaction.transactionIdentifier;
-				transactionReceipt = [[transaction transactionReceipt] cdv_base64EncodedString];
-				productId = transaction.payment.productIdentifier;
+                state = @"PaymentTransactionStatePurchased";
+                transactionIdentifier = transaction.transactionIdentifier;
+                transactionReceipt = [[transaction transactionReceipt] cdv_base64EncodedString];
+                productId = transaction.payment.productIdentifier;
+                downloads = transaction.downloads;
                 canFinish = YES;
                 break;
 
-			case SKPaymentTransactionStateFailed:
-				state = @"PaymentTransactionStateFailed";
-				error = transaction.error.localizedDescription;
-				errorCode = jsErrorCode(transaction.error.code);
-				productId = transaction.payment.productIdentifier;
+            case SKPaymentTransactionStateFailed:
+                state = @"PaymentTransactionStateFailed";
+                error = transaction.error.localizedDescription;
+                errorCode = jsErrorCode(transaction.error.code);
+                productId = transaction.payment.productIdentifier;
                 canFinish = YES;
-				DLog(@"Error %@ - %@", jsErrorCodeAsString(errorCode), error);
+                DLog(@"Error %@ - %@", jsErrorCodeAsString(errorCode), error);
 
-				// Finish failed transactions, when autoFinish is off
-				if (!g_autoFinishEnabled) {
-					[[SKPaymentQueue defaultQueue] finishTransaction:transaction];
-					[self transactionFinished:transaction];
-				}
+                // Finish failed transactions, when autoFinish is off
+                if (!g_autoFinishEnabled) {
+                    [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+                    [self transactionFinished:transaction];
+                }
                 break;
 
-			case SKPaymentTransactionStateRestored:
-				state = @"PaymentTransactionStateRestored";
-				transactionIdentifier = transaction.transactionIdentifier;
+            case SKPaymentTransactionStateRestored:
+                state = @"PaymentTransactionStateRestored";
+                transactionIdentifier = transaction.transactionIdentifier;
                 if (!transactionIdentifier)
                     transactionIdentifier = transaction.originalTransaction.transactionIdentifier;
-				transactionReceipt = [[transaction transactionReceipt] cdv_base64EncodedString];
-				productId = transaction.originalTransaction.payment.productIdentifier;
+                transactionReceipt = [[transaction transactionReceipt] cdv_base64EncodedString];
+                productId = transaction.originalTransaction.payment.productIdentifier;
+                downloads = transaction.downloads;
                 canFinish = YES;
                 break;
 
             default:
-				DLog(@"Invalid state");
+                DLog(@"Invalid state");
                 continue;
         }
-		DLog(@"State: %@", state);
+        DLog(@"State: %@", state);
         NSArray *callbackArgs = [NSArray arrayWithObjects:
                                  NILABLE(state),
                                  [NSNumber numberWithInteger:errorCode],
@@ -460,12 +493,16 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
                                  NILABLE(productId),
                                  NILABLE(transactionReceipt),
                                  nil];
-		NSString *js = [NSString
+        NSString *js = [NSString
             stringWithFormat:@"window.storekit.updatedTransactionCallback.apply(window.storekit, %@)",
             [callbackArgs JSONSerialize]];
-		// DLog(@"js: %@", js);
+        // DLog(@"js: %@", js);
         [self.commandDelegate evalJs:js];
-        if (g_autoFinishEnabled && canFinish) {
+        
+        if(downloads){
+            [[SKPaymentQueue defaultQueue] startDownloads:transaction.downloads];
+        }
+        else if (g_autoFinishEnabled && canFinish) {
             [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
             [self transactionFinished:transaction];
         }
@@ -517,7 +554,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 
 - (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error
 {
-	NSString *js = [NSString stringWithFormat:
+    NSString *js = [NSString stringWithFormat:
       @"window.storekit.restoreCompletedTransactionsFailed(%li)", (unsigned long)jsErrorCode(error.code)];
     [self.commandDelegate evalJs: js];
 }
@@ -649,6 +686,186 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
     [super dispose];
 }
 
+/****************************************************************************************************************
+ * Downloads
+ ****************************************************************************************************************/
+// Download Queue
+- (void) paymentQueue:(SKPaymentQueue *)queue updatedDownloads:(NSArray *)downloads
+{
+    
+    for (SKDownload *download in downloads)
+    {
+        NSString *state = @"";
+        NSString *error = @"";
+        NSInteger errorCode = 0;
+        NSString *progress_s = 0;
+        NSString *timeRemaining_s = 0;
+        
+        SKPaymentTransaction *transaction = download.transaction;
+        NSString *transactionId = transaction.transactionIdentifier;
+        NSString *transactionReceipt = [[transaction transactionReceipt] cdv_base64EncodedString];
+        SKPayment *payment = transaction.payment;
+        NSString *productId = payment.productIdentifier;
+        
+        NSArray *callbackArgs;
+        NSString *js;
+        
+        switch (download.downloadState)
+        {
+            case SKDownloadStateActive:
+            {
+                // Add to current downloads
+                [self.currentDownloads setObject:download forKey:productId];
+                
+                state = @"DownloadStateActive";
+                
+                DLog(@"Progress: %f", download.progress);
+                DLog(@"Time remaining: %f", download.timeRemaining);
+                
+                progress_s = [NSString stringWithFormat:@"%d", (int) (download.progress*100)];
+                timeRemaining_s = [NSString stringWithFormat:@"%d", (int) download.timeRemaining];
+                
+                break;
+            }
+                
+            case SKDownloadStateCancelled: {
+                // Remove from current downloads
+                [self.currentDownloads removeObjectForKey:productId];
+                
+                state = @"DownloadStateCancelled";
+                [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
+                [self transactionFinished:download.transaction];
+                
+                break;
+            }
+            case SKDownloadStateFailed:
+            {
+                // Remove from current downloads
+                [self.currentDownloads removeObjectForKey:productId];
+                
+                state = @"DownloadStateFailed";
+                error = transaction.error.localizedDescription;
+                errorCode = transaction.error.code;
+                DLog(@"Download error %d %@", errorCode, error);
+                [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
+                [self transactionFinished:download.transaction];
+                
+                break;
+            }
+                
+            case SKDownloadStateFinished:
+            {
+                // Remove from current downloads
+                [self.currentDownloads removeObjectForKey:productId];
+                
+                state = @"DownloadStateFinished";
+                [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
+                [self transactionFinished:download.transaction];
+                
+                [self copyDownloadToDocuments:download]; // Copy download content to Documnents folder
+                
+                break;
+            }
+                
+            case SKDownloadStatePaused:
+            {
+                // Add to current downloads
+                [self.currentDownloads setObject:download forKey:productId];
+                
+                state = @"DownloadStatePaused";
+                
+                break;
+            }
+                
+            case SKDownloadStateWaiting:
+            {
+                // Add to current downloads
+                [self.currentDownloads setObject:download forKey:productId];
+                state = @"DownloadStateWaiting";
+                
+                break;
+            }
+                
+            default:
+            {
+                DLog(@"Invalid Download State");
+                return;
+            }
+        }
+        
+        DLog(@"Number of currentDownloads: %d",[self.currentDownloads count]);
+        DLog(@"Product %@ in download state: %@", productId, state);
+        
+        
+        callbackArgs = [NSArray arrayWithObjects:
+                                 NILABLE(state),
+                                 [NSNumber numberWithInt:errorCode],
+                                 NILABLE(error),
+                                 NILABLE(transactionId),
+                                 NILABLE(productId),
+                                 NILABLE(transactionReceipt),
+                                 NILABLE(progress_s),
+                                 NILABLE(timeRemaining_s),
+                                 nil];
+        js = [NSString
+                        stringWithFormat:@"window.storekit.updatedDownloadCallback.apply(window.storekit, %@)",
+                        [callbackArgs JSONSerialize]];
+        [self.commandDelegate evalJs:js];
+        
+    }
+}
+
+
+/*
+ * Download handlers
+ */
+
+- (void)copyDownloadToDocuments:(SKDownload *)download {
+    DLog(@"Copying downloaded content to Documents...");
+    
+    NSString *source = [download.contentURL relativePath];
+    NSDictionary *dict = [[NSMutableDictionary alloc] initWithContentsOfFile:[source stringByAppendingPathComponent:@"ContentInfo.plist"]];
+    NSString *targetFolder = [FileUtility getDocumentPath];
+    NSString *content = [source stringByAppendingPathComponent:@"Contents"];
+    NSArray *files;
+    
+    // Use folder if specified in .plist
+    if([dict objectForKey:@"Folder"]){
+        targetFolder = [targetFolder stringByAppendingPathComponent:[dict objectForKey:@"Folder"]];
+        if(![FileUtility isFolderExist:targetFolder]){
+            DLog(@"Creating Documents subfolder: %@", targetFolder);
+            NSAssert([FileUtility createFolder:targetFolder], @"Failed to create Documents subfolder: %@", targetFolder);
+        }
+    }
+    
+    if ([dict objectForKey:@"Files"]){
+        DLog(@"Found Files key in .plist");
+        files =  [dict objectForKey:@"Files"];
+    }else{
+        DLog(@"No Files key found in .plist - copy all files in Content folder");
+        files = [FileUtility listFiles:content extension:nil];
+    }
+    
+    for (NSString *file in files)
+    {
+        NSString *fcontent = [content stringByAppendingPathComponent:file];
+        NSString *targetFile = [targetFolder stringByAppendingPathComponent:[file lastPathComponent]];
+        
+        DLog(@"Content path: %@", fcontent);
+        
+        NSAssert([FileUtility isFileExist:fcontent], @"Content path MUST be valid");
+        
+        // Copy the content to the documents folder
+        NSAssert([FileUtility copyFile:fcontent dst:targetFile], @"Failed to copy the content");
+        DLog(@"Copied %@ to %@", fcontent, targetFile);
+        
+        // Set flag so we don't backup on iCloud
+        NSURL* url = [NSURL fileURLWithPath:targetFile];
+        [url setResourceValue: [NSNumber numberWithBool: YES] forKey: NSURLIsExcludedFromBackupKey error: Nil];
+    }
+    
+}
+
 @end
 /**
  * Receive refreshed app receipt
@@ -719,7 +936,7 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
     DLog(@"productsRequest: didReceiveResponse:");
     NSMutableArray *validProducts = [NSMutableArray array];
     DLog(@"Has %li validProducts", (unsigned long)[response.products count]);
-	for (SKProduct *product in response.products) {
+    for (SKProduct *product in response.products) {
         DLog(@" - %@: %@", product.productIdentifier, product.localizedTitle);
         [validProducts addObject:
          [NSDictionary dictionaryWithObjectsAndKeys:
@@ -749,8 +966,8 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
     // [self.plugin.retainer removeObjectForKey:@"productsRequest"];
     // [self.plugin.retainer removeObjectForKey:@"productsRequestDelegate"];
 #else
-	[request release];
-	[self    release];
+    [request release];
+    [self    release];
 #endif
 }
 
@@ -769,10 +986,11 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
 
 #if ARC_DISABLED
 - (void) dealloc {
-	[plugin  release];
-	[command release];
-	[super   dealloc];
+    [plugin  release];
+    [command release];
+    [super   dealloc];
 }
 #endif
 
 @end
+

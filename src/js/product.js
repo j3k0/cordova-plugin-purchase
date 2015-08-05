@@ -70,6 +70,12 @@ store.Product = function(options) {
     ///  - `product.owned` - Product is owned
     this.owned = options.owned;
 
+    ///  - `product.downloading` - Product is downloading non-consumable content
+    this.downloading = options.downloading;
+
+    ///  - `product.downloaded` - Non-consumable content has been successfully downloaded for this product
+    this.downloaded = options.downloaded;
+
     ///  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
     this.transaction = null;
 
@@ -252,9 +258,11 @@ store.Product.prototype.verify = function() {
 ///                                                           |
 ///                     ^      +------------------------------+
 ///                     |      |
-///                     |      +--> APPROVED +--> FINISHED +--> OWNED
-///                     |                                  |
-///                     +----------------------------------+
+///                     |      |             +--> DOWNLOADING +--> DOWNLOADED +
+///                     |      |             |                                |
+///                     |      +--> APPROVED +--------------------------------+--> FINISHED +--> OWNED
+///                     |                                                             |
+///                     +-------------------------------------------------------------+
 ///
 /// #### states definitions
 ///
@@ -266,6 +274,8 @@ store.Product.prototype.verify = function() {
 ///  - `APPROVED`: purchase approved by server
 ///  - `FINISHED`: purchase delivered by the app (see [Finish a Purchase](#finish-a-purchase))
 ///  - `OWNED`: purchase is owned (only for non-consumable and subscriptions)
+///  - `DOWNLOADING` purchased content is downloading (only for non-consumable)
+///  - `DOWNLOADED` purchased content is downloaded (only for non-consumable)
 ///
 /// #### Notes
 ///
