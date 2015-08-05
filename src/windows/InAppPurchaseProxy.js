@@ -44,8 +44,11 @@ module.exports = {
     getLicenses: function (win, fail, args) {
         var licenses = [];
         // now get a specific licenses.
-        for (var productId in this.productLicenses) if (this.productLicenses.hasOwnProperty(productId)) {
-            licenses.push(this.productLicenses.lookup(productId));
+        for (var productId in this.productLicenses){
+            if (this.productLicenses.hasOwnProperty(productId)) {
+                //TODO - Need to send these objects back the same way as android
+                licenses.push(this.productLicenses.lookup(productId));
+            }
         }
         console.log("licenses", licenses);
         win(licenses);
@@ -202,4 +205,4 @@ module.exports = {
 
 };
 
-require("cordova/exec/proxy").add("InAppPurchase", module.exports);
+require("cordova/exec/proxy").add("InAppBillingPlugin", module.exports);
