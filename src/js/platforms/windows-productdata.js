@@ -1,6 +1,6 @@
 (function () {
     "use strict";
-    
+
 	/*
      *  Pruduct Listing
      *
@@ -31,7 +31,7 @@
         IsConsumable    Read-only	Indicates if the in-app product is consumable. A consumable product is a product that can be purchased, used, and purchased again.
         ProductId       Read-only	Gets the ID of an in-app product. This ID is used by the app to get info about the product or feature that is enabled when the customer buys it through an in-app purchase.
      */
-     
+
 	store.setProductData = function(product, data) {
 
 		var transaction = data.transaction;
@@ -41,19 +41,29 @@
         store.log.debug(transaction);
         store.log.debug(license);
 
-        product.license = {
-            type: 'windows-store-license',
-            expirationDate: license.expirationDate,
-            isConsumable: license.isConsumable,
-            isActive: license.isActive
-        };
+        if (license) {
+            product.license = {
+                type: 'windows-store-license',
+                expirationDate: license.expirationDate,
+                isConsumable: license.isConsumable,
+                isActive: license.isActive
+            };
+        }
+        else {
+            license = {};
+        }
 
-        product.transaction = {
-            type: 'windows-store-transaction',
-            id: transaction.transactionId,
-            offerId: transaction.offerId,
-            receipt: transaction.receiptXml
-        };
+        if (transaction) {
+            product.transaction = {
+                type: 'windows-store-transaction',
+                id: transaction.transactionId,
+                offerId: transaction.offerId,
+                receipt: transaction.receiptXml
+            };
+        }
+        else {
+            transaction = {};
+        }
 
         // When the product is owned, adjust the state if necessary
         if (product.state !== store.OWNED && product.state !== store.FINISHED &&
