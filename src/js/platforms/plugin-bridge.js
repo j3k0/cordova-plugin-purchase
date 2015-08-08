@@ -139,7 +139,9 @@ function errorCb(fail) {
 window.inappbilling = new InAppBilling();
 
 // That's for compatibility with the unified IAP plugin.
-try { store.android = window.inappbilling; }
+try {
+	store.plugin = window.inappbilling;
+}
 catch (e) {}
 
 })();

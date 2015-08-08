@@ -41,13 +41,12 @@ module.exports = {
         return;
     },
 
-    getLicenses: function (win, fail, args) {
+    getPurchases: function (win, fail, args) {
         var licenses = [];
         // now get a specific licenses.
         for (var productId in this.productLicenses){
             if (this.productLicenses.hasOwnProperty(productId)) {
-                //TODO - Need to send these objects back the same way as android
-                licenses.push(this.productLicenses.lookup(productId));
+                licenses.push({ license: this.productLicenses.lookup(productId) });
             }
         }
         console.log("licenses", licenses);
@@ -102,7 +101,7 @@ module.exports = {
         var productId = args[0];
         this.currentApp.requestProductPurchaseAsync(productId).done(
             function (purchaseResults) {
-                win(purchaseResults);
+                win({ transaction: purchaseResults });
             },
             function (err) {
                 fail(err);
@@ -113,7 +112,7 @@ module.exports = {
     subscribe: function (win, fail, args) {
         var productId = args[0];
         if (this.productLicenses.lookup(productId).isActive) {
-
+            //TODO - Subscriptions?
         } else {
             this.buy(win, fail, args);
         }
