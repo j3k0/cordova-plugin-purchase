@@ -67,7 +67,7 @@ SOFTWARE.
     <platform name="android">
         <!--<preference name="BILLING_KEY" />-->
 
-        <js-module src="www/store-androidwindows.js" name="InAppBillingPlugin">
+        <js-module src="www/store-android.js" name="InAppBillingPlugin">
             <clobbers target="store" />
         </js-module>
 
@@ -107,7 +107,7 @@ SOFTWARE.
     
     <!-- windows -->
 	<platform name="windows">
-		<js-module src="www/store-androidwindows.js" name="InAppPurchase">
+		<js-module src="www/store-windows.js" name="InAppPurchase">
 			<clobbers target="store" />
 		</js-module>
 		<js-module src="src/windows/InAppPurchaseProxy.js" name="InAppPurchaseProxy">
