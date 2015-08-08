@@ -83,6 +83,6 @@
                 product.set("state", store.VALID);
             }
         }
-    }
+    };
 	
 })();
