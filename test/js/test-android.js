@@ -11,7 +11,7 @@ global.document = {
 };
 global.localStorage = {};
 
-require("../tmp/android-adapter");
+require("../tmp/plugin-adapter");
 
 describe('Android', function(){
     "use strict";
