@@ -8,7 +8,7 @@ Doing this will route purchases through the simulator which will allow the user 
 store.plugin.setTestMode(true); //Don't call this in production
 ```
 
-Sample simmilator xml file:
+Sample simmilator xml file (put this inside the `www` folder in your cordova app)
 ```
 <?xml version="1.0" encoding="utf-16" ?>
 <CurrentApp>
