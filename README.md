@@ -6,9 +6,9 @@
 
 ## Summary
 
-This plugin allows **In-App Purchases** to be made from **Cordova and PhoneGap** applications.
+This plugin allows **In-App Purchases** to be made from **Cordova and PhoneGap** applications, on **Android**, **iOS** and **Windows** (Store/Phone 8.1)
 
-It lets you handle both platforms with a single codebase.
+It lets you handle all platforms with a single codebase.
 
 ## Installation
 
@@ -51,12 +51,14 @@ See [Setup iOS Applications](HOWTO#setup-ios-applications) and [Setup Android Ap
  - paid and free subscriptions
  - receipts validation
  - restoring of purchases made on other devices
+ - downloadable content (iOS)
 
 ### Supported platforms
 
  - **iOS** version 6.0 or higher.
  - **Android** version 2.2 (API level 8) or higher
    - with Google Play client version 3.9.16 or higher
+ - **Windows** Store/Phone 8.1
 
 ## Getting Started
 
@@ -81,6 +83,7 @@ You're all good? Time to read some more documentation. Hooray!
  - [API Documentation](doc/api.md)
  - [Documentation for iOS](doc/ios.md)
  - [Documentation for Android](doc/android.md)
+ - [Documentation for Windows](doc/android.md)
 
 ## Resources
 
