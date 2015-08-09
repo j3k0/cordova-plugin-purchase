@@ -27,7 +27,7 @@
         // When the product is owned, adjust the state if necessary
         if (product.state !== store.OWNED && product.state !== store.FINISHED &&
             product.state !== store.APPROVED) {
-    
+
             if (data.purchaseState === 0) {
                 product.set("state", store.APPROVED);
             }
