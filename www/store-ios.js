@@ -72,6 +72,8 @@ store.verbosity = 0;
         this.valid = options.valid;
         this.canPurchase = options.canPurchase;
         this.owned = options.owned;
+        this.downloading = options.downloading;
+        this.downloaded = options.downloaded;
         this.transaction = null;
         this.stateChanged();
     };
