@@ -7,6 +7,7 @@
 // For some reasons, module exports failed on android...
 if (window) {
     window.store = store;
+    store.android = store.inappbilling;
 }
 
 module.exports = store;

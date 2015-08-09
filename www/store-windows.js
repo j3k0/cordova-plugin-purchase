@@ -844,7 +844,7 @@ store.verbosity = 0;
     }
     window.inappbilling = new InAppBilling();
     try {
-        store.plugin = window.inappbilling;
+        store.inappbilling = window.inappbilling;
     } catch (e) {}
 })();
 
