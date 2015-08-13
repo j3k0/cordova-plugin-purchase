@@ -37,7 +37,7 @@ function init() {
     for (var i = 0; i < store.products.length; ++i)
         skus.push(store.products[i].id);
 
-    store.plugin.init(iabReady,
+    store.inappbilling.init(iabReady,
         function(err) {
             initialized = false;
             store.error({
@@ -53,7 +53,7 @@ function init() {
 
 function iabReady() {
     store.log.debug("plugin -> ready");
-    store.plugin.getAvailableProducts(iabLoaded, function(err) {
+    store.inappbilling.getAvailableProducts(iabLoaded, function(err) {
         store.error({
             code: store.ERR_LOAD,
             message: 'Loading product info failed - ' + err
@@ -94,7 +94,7 @@ function iabLoaded(validProducts) {
 }
 
 function iabGetPurchases() {
-    store.plugin.getPurchases(
+    store.inappbilling.getPurchases(
         function(purchases) { // success
             // example purchases data:
             //
@@ -155,7 +155,7 @@ store.when("requested", function(product) {
             method = 'subscribe';
         }
 
-        store.plugin[method](function(data) {
+        store.inappbilling[method](function(data) {
             // Success callabck.
             //
             // example data:
@@ -202,7 +202,7 @@ store.when("product", "finished", function(product) {
     store.log.debug("plugin -> consumable finished");
     if (product.type === store.CONSUMABLE) {
         product.transaction = null;
-        store.plugin.consumePurchase(
+        store.inappbilling.consumePurchase(
             function() { // success
                 store.log.debug("plugin -> consumable consumed");
                 product.set('state', store.VALID);
