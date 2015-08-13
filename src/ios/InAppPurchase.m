@@ -13,7 +13,7 @@
 // Help create NSNull objects for nil items (since neither NSArray nor NSDictionary can store nil values).
 #define NILABLE(obj) ((obj) != nil ? (NSObject *)(obj) : (NSObject *)[NSNull null])
 
-static BOOL g_debugEnabled = YES;
+static BOOL g_debugEnabled = NO;
 static BOOL g_autoFinishEnabled = YES;
 
 #define DLog(fmt, ...) { \
