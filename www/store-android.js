@@ -873,7 +873,7 @@ store.verbosity = 0;
         if (initialized) return;
         initialized = true;
         for (var i = 0; i < store.products.length; ++i) skus.push(store.products[i].id);
-        store.plugin.init(iabReady, function(err) {
+        store.inappbilling.init(iabReady, function(err) {
             initialized = false;
             store.error({
                 code: store.ERR_SETUP,
@@ -885,7 +885,7 @@ store.verbosity = 0;
     }
     function iabReady() {
         store.log.debug("plugin -> ready");
-        store.plugin.getAvailableProducts(iabLoaded, function(err) {
+        store.inappbilling.getAvailableProducts(iabLoaded, function(err) {
             store.error({
                 code: store.ERR_LOAD,
                 message: "Loading product info failed - " + err
@@ -918,7 +918,7 @@ store.verbosity = 0;
         iabGetPurchases();
     }
     function iabGetPurchases() {
-        store.plugin.getPurchases(function(purchases) {
+        store.inappbilling.getPurchases(function(purchases) {
             if (purchases && purchases.length) {
                 for (var i = 0; i < purchases.length; ++i) {
                     var purchase = purchases[i];
@@ -954,7 +954,7 @@ store.verbosity = 0;
             if (product.type !== store.NON_CONSUMABLE && product.type !== store.CONSUMABLE) {
                 method = "subscribe";
             }
-            store.plugin[method](function(data) {
+            store.inappbilling[method](function(data) {
                 store.setProductData(product, data);
             }, function(err, code) {
                 store.log.info("plugin -> " + method + " error " + code);
@@ -979,7 +979,7 @@ store.verbosity = 0;
         store.log.debug("plugin -> consumable finished");
         if (product.type === store.CONSUMABLE) {
             product.transaction = null;
-            store.plugin.consumePurchase(function() {
+            store.inappbilling.consumePurchase(function() {
                 store.log.debug("plugin -> consumable consumed");
                 product.set("state", store.VALID);
             }, function(err, code) {
