@@ -42,7 +42,7 @@ For Android:
 
 ### Setup your Application
 
-See [Setup iOS Applications](doc/ios.md) and [Setup Android Applications](doc/android.md).
+See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-ios-applications) and [Setup Android Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-android-applications).
 
 ### Features
 
