@@ -42,7 +42,7 @@ For Android:
 
 ### Setup your Application
 
-See [Setup iOS Applications](HOWTO#setup-ios-applications) and [Setup Android Applications](HOWTO#setup-android-applications).
+See [Setup iOS Applications](doc/ios.md) and [Setup Android Applications](doc/android.md).
 
 ### Features
 
