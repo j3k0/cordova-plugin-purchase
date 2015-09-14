@@ -73,8 +73,8 @@ function iabLoaded(validProducts) {
 
         if (p) {
             p.set({
-                title: validProducts[i].title,
-                price: validProducts[i].price,
+                title: validProducts[i].title || validProducts[i].name,
+                price: validProducts[i].price || validProducts[i].formattedPrice,
                 description: validProducts[i].description,
                 currency: validProducts[i].price_currency_code ? validProducts[i].price_currency_code : "",
                 state: store.VALID
