@@ -899,8 +899,8 @@ store.verbosity = 0;
             if (validProducts[i].productId) p = store.products.byId[validProducts[i].productId]; else p = null;
             if (p) {
                 p.set({
-                    title: validProducts[i].title,
-                    price: validProducts[i].price,
+                    title: validProducts[i].title || validProducts[i].name,
+                    price: validProducts[i].price || validProducts[i].formattedPrice,
                     description: validProducts[i].description,
                     currency: validProducts[i].price_currency_code ? validProducts[i].price_currency_code : "",
                     state: store.VALID
@@ -1028,6 +1028,12 @@ store.verbosity = 0;
             }
             if (transaction.status === 1 || license.isActive) {
                 product.set("state", store.OWNED);
+            }
+        }
+        if (product.state === store.INITIATED) {
+            if (transaction.status === 3) {
+                product.trigger("cancelled");
+                product.set("state", store.VALID);
             }
         }
         if (product.state === store.OWNED || product.state === store.FINISHED || product.state === store.APPROVED) {

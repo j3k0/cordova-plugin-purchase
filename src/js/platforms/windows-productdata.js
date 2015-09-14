@@ -78,6 +78,13 @@
             }
         }
 
+        if (product.state === store.INITIATED) {
+            if (transaction.status === 3) {
+                product.trigger("cancelled");
+                product.set("state", store.VALID);
+            }
+        }
+
         // When the product is cancelled or refunded, adjust the state if necessary
         if (product.state === store.OWNED || product.state === store.FINISHED ||
             product.state === store.APPROVED) {
