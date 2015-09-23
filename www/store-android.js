@@ -428,9 +428,11 @@ store.verbosity = 0;
 
 (function() {
     "use strict";
+    var initialRefresh = true;
     store.refresh = function() {
         store.trigger("refreshed");
-        if (!store.ready()) {
+        if (initialRefresh) {
+            initialRefresh = false;
             return;
         }
         store.log.debug("refresh -> checking products state (" + store.products.length + " products)");
