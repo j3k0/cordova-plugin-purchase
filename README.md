@@ -29,13 +29,13 @@ Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#add-andr
 ### Install the plugin (PhoneGap Build)
 
 ```xml
-<gap:plugin name="cc.fovea.cordova.purchase" source="npm" version="3.11.0" />
+<gap:plugin name="cc.fovea.cordova.purchase" source="npm" version="4.0.0" />
 ```
 
 For Android:
 
 ```xml
-<gap:plugin name="cc.fovea.cordova.purchase" source="npm" version="3.11.0">
+<gap:plugin name="cc.fovea.cordova.purchase" source="npm" version="4.0.0">
    <param name="BILLING_KEY" value="MIIB...."/>
 </gap:plugin>
 ```
