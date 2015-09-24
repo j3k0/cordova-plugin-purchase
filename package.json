@@ -1,6 +1,6 @@
 {
   "name": "cc.fovea.cordova.purchase",
-  "version": "3.11.1",
+  "version": "4.0.0",
   "description": "Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)",
   "cordova": {
     "id": "cc.fovea.cordova.purchase",

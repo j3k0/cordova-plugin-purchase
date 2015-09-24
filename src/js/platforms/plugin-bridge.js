@@ -111,6 +111,12 @@ InAppBilling.prototype.getProductDetails = function (success, fail, skus) {
 		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getProductDetails", [skus]);
     }
 };
+InAppBilling.prototype.setTestMode = function (testMode) {
+	if (this.options.showLog) {
+		log('setTestMode called!');
+	}
+	return cordova.exec(null, null, "InAppBillingPlugin", "setTestMode", [testMode]);
+};
 
 // Generates a `fail` function that accepts an optional error code
 // in the first part of the error string.
@@ -139,7 +145,9 @@ function errorCb(fail) {
 window.inappbilling = new InAppBilling();
 
 // That's for compatibility with the unified IAP plugin.
-try { store.android = window.inappbilling; }
+try {
+    store.inappbilling = window.inappbilling;
+}
 catch (e) {}
 
 })();

@@ -37,7 +37,7 @@ function init() {
     for (var i = 0; i < store.products.length; ++i)
         skus.push(store.products[i].id);
 
-    store.android.init(iabReady,
+    store.inappbilling.init(iabReady,
         function(err) {
             initialized = false;
             store.error({
@@ -52,8 +52,8 @@ function init() {
 }
 
 function iabReady() {
-    store.log.debug("android -> ready");
-    store.android.getAvailableProducts(iabLoaded, function(err) {
+    store.log.debug("plugin -> ready");
+    store.inappbilling.getAvailableProducts(iabLoaded, function(err) {
         store.error({
             code: store.ERR_LOAD,
             message: 'Loading product info failed - ' + err
@@ -62,7 +62,7 @@ function iabReady() {
 }
 
 function iabLoaded(validProducts) {
-    store.log.debug("android -> loaded - " + JSON.stringify(validProducts));
+    store.log.debug("plugin -> loaded - " + JSON.stringify(validProducts));
     var p, i;
     for (i = 0; i < validProducts.length; ++i) {
 
@@ -73,10 +73,10 @@ function iabLoaded(validProducts) {
 
         if (p) {
             p.set({
-                title: validProducts[i].title,
-                price: validProducts[i].price,
+                title: validProducts[i].title || validProducts[i].name,
+                price: validProducts[i].price || validProducts[i].formattedPrice,
                 description: validProducts[i].description,
-                currency: validProducts[i].price_currency_code,
+                currency: validProducts[i].price_currency_code ? validProducts[i].price_currency_code : "",
                 state: store.VALID
             });
             p.trigger("loaded");
@@ -94,7 +94,7 @@ function iabLoaded(validProducts) {
 }
 
 function iabGetPurchases() {
-    store.android.getPurchases(
+    store.inappbilling.getPurchases(
         function(purchases) { // success
             // example purchases data:
             //
@@ -115,10 +115,10 @@ function iabGetPurchases() {
                     var purchase = purchases[i];
                     var p = store.get(purchase.productId);
                     if (!p) {
-                        store.log.warn("android -> user owns a non-registered product");
+                        store.log.warn("plugin -> user owns a non-registered product");
                         continue;
                     }
-                    setProductData(p, purchase);
+                    store.setProductData(p, purchase);
                 }
             }
             store.ready(true);
@@ -129,52 +129,6 @@ function iabGetPurchases() {
     );
 }
 
-//   {
-//     "purchaseToken":"tokenabc",
-//     "developerPayload":"mypayload1",
-//     "packageName":"com.example.MyPackage",
-//     "purchaseState":0, [0=purchased, 1=canceled, 2=refunded]
-//     "orderId":"12345.6789",
-//     "purchaseTime":1382517909216,
-//     "productId":"example_subscription"
-//   }
-function setProductData(product, data) {
-
-    store.log.debug("android -> product data for " + product.id);
-    store.log.debug(data);
-
-    product.transaction = {
-        type: 'android-playstore',
-        id: data.orderId,
-        purchaseToken: data.purchaseToken,
-        developerPayload: data.developerPayload,
-        receipt: data.receipt,
-        signature: data.signature
-    };
-
-    // When the product is owned, adjust the state if necessary
-    if (product.state !== store.OWNED && product.state !== store.FINISHED &&
-        product.state !== store.APPROVED) {
-
-        if (data.purchaseState === 0) {
-            product.set("state", store.APPROVED);
-        }
-    }
-
-    // When the product is cancelled or refunded, adjust the state if necessary
-    if (product.state === store.OWNED || product.state === store.FINISHED ||
-        product.state === store.APPROVED) {
-
-        if (data.purchaseState === 1) {
-            product.trigger("cancelled");
-            product.set("state", store.VALID);
-        }
-        else if (data.purchaseState === 2) {
-            product.trigger("refunded");
-            product.set("state", store.VALID);
-        }
-    }
-}
 
 store.when("requested", function(product) {
     store.ready(function() {
@@ -196,12 +150,12 @@ store.when("requested", function(product) {
         // Initiate the purchase
         product.set("state", store.INITIATED);
 
-        var method = 'subscribe';
-        if (product.type === store.NON_CONSUMABLE || product.type === store.CONSUMABLE) {
-            method = 'buy';
+        var method = 'buy';
+        if (product.type !== store.NON_CONSUMABLE && product.type !== store.CONSUMABLE) {
+            method = 'subscribe';
         }
 
-        store.android[method](function(data) {
+        store.inappbilling[method](function(data) {
             // Success callabck.
             //
             // example data:
@@ -215,10 +169,10 @@ store.when("requested", function(product) {
             //     "receipt":        "{...}",
             //     "signature":      "qs54SGHgjGSJHSKJHIU"
             // }
-            setProductData(product, data);
+            store.setProductData(product, data);
         },
         function(err, code) {
-            store.log.info("android -> " + method + " error " + code);
+            store.log.info("plugin -> " + method + " error " + code);
             if (code === store.ERR_PAYMENT_CANCELLED) {
                 // This isn't an error,
                 // just trigger the cancelled event.
@@ -245,12 +199,12 @@ store.when("requested", function(product) {
 /// When a consumable product enters the store.FINISHED state,
 /// `consume()` the product.
 store.when("product", "finished", function(product) {
-    store.log.debug("android -> consumable finished");
+    store.log.debug("plugin -> consumable finished");
     if (product.type === store.CONSUMABLE) {
         product.transaction = null;
-        store.android.consumePurchase(
+        store.inappbilling.consumePurchase(
             function() { // success
-                store.log.debug("android -> consumable consumed");
+                store.log.debug("plugin -> consumable consumed");
                 product.set('state', store.VALID);
             },
             function(err, code) { // error
