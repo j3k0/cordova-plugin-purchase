@@ -1400,7 +1400,6 @@ store.verbosity = 0;
             timeRemaining: timeRemaining,
             state: store.DOWNLOADING
         });
-        p.stateChanged();
     }
     function storekitDownloadFailed(transactionIdentifier, productId, errorCode, errorText) {
         store.log.error("ios -> download failed: " + productId + "; errorCode=" + errorCode + "; errorText=" + errorText);
