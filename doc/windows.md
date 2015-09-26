@@ -5,10 +5,11 @@ To enable the IAP similator you will need to call the testmode function on the p
 Doing this will route purchases through the simulator which will allow the user to select the outcome of the purchase (selecting success or failure types).
 
 ```
-store.inappbilling.setTestMode(true); //Don't call this in production
+store.inappbilling.setTestMode(); //Don't call this in production
 ```
 
-Sample simmilator xml file (put this inside the `www` folder in your cordova app)
+####Sample simmilator xml file.
+Put this inside the `www` folder in your cordova app or in `merges\windows` for only windows platform.
 ```
 <?xml version="1.0" encoding="utf-16" ?>
 <CurrentApp>
