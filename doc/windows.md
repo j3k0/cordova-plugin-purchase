@@ -1,7 +1,7 @@
 # Windows (Store/Phone 8.1) Configuration
 
 ## Test setup
-To enable the IAP similator you will need to call the testmode function on the plugin and add the store simulator xml file with your items.
+To enable the IAP simulator you will need to call the testmode function on the plugin and add the store simulator xml file with your items.
 Doing this will route purchases through the simulator which will allow the user to select the outcome of the purchase (selecting success or failure types).
 
 ```
@@ -16,7 +16,7 @@ store.inappbilling.setTestMode(function() {
   });
 ```
 
-####Sample simmilator xml file.
+####Sample simulator xml file.
 Put this inside the `www` folder in your cordova app or in `merges\windows` for only windows platform.
 ```
 <?xml version="1.0" encoding="utf-16" ?>
