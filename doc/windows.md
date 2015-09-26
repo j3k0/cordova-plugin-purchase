@@ -6,6 +6,14 @@ Doing this will route purchases through the simulator which will allow the user 
 
 ```
 store.inappbilling.setTestMode(); //Don't call this in production
+
+//Optionally add callbacks
+store.inappbilling.setTestMode(function() {
+    //successfully loaded test data
+  },
+  function() {
+    //failed to load test data
+  });
 ```
 
 ####Sample simmilator xml file.
@@ -51,5 +59,8 @@ I could not get the `make build` script working on windows but to build the `sto
 ```
 npm install
 node_modules\.bin\preprocess src\js\store-windows.js src\js > www\store-windows.js
+node_modules\.bin\uglifyjs www\store-windows.js -b -o www\store-windows.js
+
 node_modules\.bin\preprocess src\js\store-android.js src\js > www\store-android.js
+node_modules\.bin\uglifyjs www\store-android.js -b -o www\store-android.js
 ```

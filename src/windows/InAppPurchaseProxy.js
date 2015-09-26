@@ -16,14 +16,16 @@ module.exports = {
                                 this.productLicenses = this.currentApp.licenseInformation.productLicenses;
                                 if (this.currentApp && this.productLicenses) {
                                     console.log("loaded xml file");
+                                    win();
                                 } else {
                                     console.log("failed xml file");
+                                    fail();
                                 }
                             }.bind(this),
                             function (err) {
                                 console.log("This is still not working!!");
                                 console.log(err);
-
+                                fail();
                             }
                         );
                     }.bind(this));

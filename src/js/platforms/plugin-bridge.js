@@ -111,11 +111,11 @@ InAppBilling.prototype.getProductDetails = function (success, fail, skus) {
 		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getProductDetails", [skus]);
     }
 };
-InAppBilling.prototype.setTestMode = function (testMode) {
+InAppBilling.prototype.setTestMode = function (success, fail) {
 	if (this.options.showLog) {
 		log('setTestMode called!');
 	}
-	return cordova.exec(null, null, "InAppBillingPlugin", "setTestMode", [testMode]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "setTestMode", [""]);
 };
 
 // Generates a `fail` function that accepts an optional error code
