@@ -1,40 +1,36 @@
 ﻿var cordova = require('cordova');
 
 module.exports = {
-    setTestMode: function(args){
+    setTestMode: function(win, fail, args){
         //switch between live and similator mode for IAP testing
-        var testMode = args[0];
-        if (testMode){
-            this.currentApp = Windows.ApplicationModel.Store.CurrentAppSimulator;
-            
-            Windows.ApplicationModel.Package.current.installedLocation.getFolderAsync("www").done(
-                function (folder) {
-                    folder.getFileAsync("in-app-purchase.xml").done(
-                        function (file) {
-                            console.log("got the xml file for currentAppSimulator", file);
-                            this.currentApp.reloadSimulatorAsync(file).done(
-                                function () {
-                                    // Get the license info
-                                    this.productLicenses = this.currentApp.licenseInformation.productLicenses;
-                                    if (this.currentApp && this.productLicenses) {
-                                        console.log("loaded xml file");
-                                    } else {
-                                        console.log("failed xml file");
-                                    }
-                                }.bind(this),
-                                function (err) {
-                                    console.log("This is still not working!!");
-                                    console.log(err);
-    
+        this.currentApp = Windows.ApplicationModel.Store.CurrentAppSimulator;
+        
+        Windows.ApplicationModel.Package.current.installedLocation.getFolderAsync("www").done(
+            function (folder) {
+                folder.getFileAsync("in-app-purchase.xml").done(
+                    function (file) {
+                        console.log("got the xml file for currentAppSimulator", file);
+                        this.currentApp.reloadSimulatorAsync(file).done(
+                            function () {
+                                // Get the license info
+                                this.productLicenses = this.currentApp.licenseInformation.productLicenses;
+                                if (this.currentApp && this.productLicenses) {
+                                    console.log("loaded xml file");
+                                    win();
+                                } else {
+                                    console.log("failed xml file");
+                                    fail();
                                 }
-                            );
-                        }.bind(this));
-                }.bind(this)
-            );
-        }
-        else {
-            this.currentApp = Windows.ApplicationModel.Store.CurrentApp;
-        }
+                            }.bind(this),
+                            function (err) {
+                                console.log("This is still not working!!");
+                                console.log(err);
+                                fail();
+                            }
+                        );
+                    }.bind(this));
+            }.bind(this)
+        );
     },    
     init: function (win, fail, args) {
         if (!this.currentApp){

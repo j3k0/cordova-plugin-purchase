@@ -1,14 +1,23 @@
 # Windows (Store/Phone 8.1) Configuration
 
 ## Test setup
-To enable the IAP similator you will need to call the testmode function on the plugin and add the store simulator xml file with your items.
+To enable the IAP simulator you will need to call the testmode function on the plugin and add the store simulator xml file with your items.
 Doing this will route purchases through the simulator which will allow the user to select the outcome of the purchase (selecting success or failure types).
 
 ```
-store.inappbilling.setTestMode(true); //Don't call this in production
+store.inappbilling.setTestMode(); //Don't call this in production
+
+//Optionally add callbacks
+store.inappbilling.setTestMode(function() {
+    //successfully loaded test data
+  },
+  function() {
+    //failed to load test data
+  });
 ```
 
-Sample simmilator xml file (put this inside the `www` folder in your cordova app)
+####Sample simulator xml file.
+Put this inside the `www` folder in your cordova app or in `merges\windows` for only windows platform.
 ```
 <?xml version="1.0" encoding="utf-16" ?>
 <CurrentApp>
@@ -50,5 +59,8 @@ I could not get the `make build` script working on windows but to build the `sto
 ```
 npm install
 node_modules\.bin\preprocess src\js\store-windows.js src\js > www\store-windows.js
+node_modules\.bin\uglifyjs www\store-windows.js -b -o www\store-windows.js
+
 node_modules\.bin\preprocess src\js\store-android.js src\js > www\store-android.js
+node_modules\.bin\uglifyjs www\store-android.js -b -o www\store-android.js
 ```

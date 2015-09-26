@@ -83,7 +83,7 @@ You're all good? Time to read some more documentation. Hooray!
  - [API Documentation](doc/api.md)
  - [Documentation for iOS](doc/ios.md)
  - [Documentation for Android](doc/android.md)
- - [Documentation for Windows](doc/android.md)
+ - [Documentation for Windows](doc/windows.md)
 
 ## Resources
 
