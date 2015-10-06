@@ -1,4 +1,4 @@
-﻿var cordova = require('cordova');
+var cordova = require('cordova');
 
 module.exports = {
     setTestMode: function(win, fail, args){
@@ -40,7 +40,7 @@ module.exports = {
         win(true);
     },
 
-    getPurchases: function (win, fail, args) {
+ /*   getPurchases: function (win, fail, args) {
         var licenses = [];
         // now get a specific licenses.
         for (var productId in this.productLicenses){
@@ -51,12 +51,10 @@ module.exports = {
         console.log("licenses", licenses);
         win(licenses);
     },
-
-    getAvailableProducts: function (win, fail, args) {
+     getAvailableProducts: function (win, fail, args) {
         // get the listing information for the products this app supports
         this.currentApp.loadListingInformationAsync().then(
             function (listing) {
-
                 console.log("listing", listing);
                 var productListings = listing.productListings;
                 var products = [];
@@ -72,7 +70,8 @@ module.exports = {
             },
             fail
         );
-    },
+    }, */
+
 
     getProductDetails: function (win, fail, args) {
         // get the listing information for the products this app supports
