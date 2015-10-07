@@ -100,7 +100,7 @@
             }
         }
     };
-    
+
     store.iabGetPurchases = function() {
         store.inappbilling.getPurchases(function(purchases) {
             if (purchases && purchases.length) {

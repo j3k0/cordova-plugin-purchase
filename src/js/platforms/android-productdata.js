@@ -47,7 +47,6 @@
             }
         }
     };
-    
 
     store.iabGetPurchases = function() {
         store.inappbilling.getPurchases(
