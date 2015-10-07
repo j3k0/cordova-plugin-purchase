@@ -990,7 +990,6 @@ store.verbosity = 0;
             product.license = {
                 type: "windows-store-license",
                 expirationDate: license.expirationDate,
-                isConsumable: license.isConsumable,
                 isActive: license.isActive
             };
         } else {

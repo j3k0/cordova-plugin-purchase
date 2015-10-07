@@ -10,6 +10,7 @@ store.inappbilling.setTestMode(); //Don't call this in production
 //Optionally add callbacks
 store.inappbilling.setTestMode(function() {
     //successfully loaded test data
+    store.refresh();
   },
   function() {
     //failed to load test data
@@ -43,12 +44,32 @@ Put this inside the `www` folder in your cordova app or in `merges\windows` for 
         <CurrencyCode>USD</CurrencyCode>
       </MarketData>
     </Product>
+    <Product ProductId="durable1" ProductType="Durable">
+      <MarketData xml:lang="en-us">
+        <Name>Durable test (purchased)</Name>
+        <Price>9.99</Price>
+        <CurrencySymbol>$</CurrencySymbol>
+        <CurrencyCode>USD</CurrencyCode>
+      </MarketData>
+    </Product>
+    <Product ProductId="durable2" ProductType="Durable">
+      <MarketData xml:lang="en-us">
+        <Name>Durable test (not purchased)</Name>
+        <Price>9.99</Price>
+        <CurrencySymbol>$</CurrencySymbol>
+        <CurrencyCode>USD</CurrencyCode>
+      </MarketData>
+    </Product>
   </ListingInformation>
   <LicenseInformation>
     <App>
       <IsActive>true</IsActive>
       <IsTrial>false</IsTrial>
     </App>
+    <!-- Setting a prepurchased durable -->
+    <Product ProductId="durable1">
+      <IsActive>true</IsActive>
+    </Product>
   </LicenseInformation>
 </CurrentApp>
 ```

@@ -45,7 +45,6 @@
             product.license = {
                 type: 'windows-store-license',
                 expirationDate: license.expirationDate,
-                isConsumable: license.isConsumable,
                 isActive: license.isActive
             };
         }
