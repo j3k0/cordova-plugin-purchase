@@ -856,7 +856,7 @@ store.verbosity = 0;
         if (!initialized) init();
     });
     store.when("re-refreshed", function() {
-        iabGetPurchases();
+        store.iabGetPurchases();
     });
     var BILLING_RESPONSE_RESULT = {
         OK: 0,
@@ -915,23 +915,7 @@ store.verbosity = 0;
                 p.trigger("loaded");
             }
         }
-        iabGetPurchases();
-    }
-    function iabGetPurchases() {
-        store.inappbilling.getPurchases(function(purchases) {
-            if (purchases && purchases.length) {
-                for (var i = 0; i < purchases.length; ++i) {
-                    var purchase = purchases[i];
-                    var p = store.get(purchase.productId);
-                    if (!p) {
-                        store.log.warn("plugin -> user owns a non-registered product");
-                        continue;
-                    }
-                    store.setProductData(p, purchase);
-                }
-            }
-            store.ready(true);
-        }, function() {});
+        store.iabGetPurchases();
     }
     store.when("requested", function(product) {
         store.ready(function() {
@@ -1045,6 +1029,22 @@ store.verbosity = 0;
                 product.set("state", store.VALID);
             }
         }
+    };
+    store.iabGetPurchases = function() {
+        store.inappbilling.getPurchases(function(purchases) {
+            if (purchases && purchases.length) {
+                for (var i = 0; i < purchases.length; ++i) {
+                    var purchase = purchases[i];
+                    var p = store.get(purchase.license.productId);
+                    if (!p) {
+                        store.log.warn("plugin -> user owns a non-registered product");
+                        continue;
+                    }
+                    store.setProductData(p, purchase);
+                }
+            }
+            store.ready(true);
+        }, function() {});
     };
 })();
 
