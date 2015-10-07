@@ -498,9 +498,9 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
             [callbackArgs JSONSerialize]];
         // DLog(@"js: %@", js);
         [self.commandDelegate evalJs:js];
-        
-        if(downloads){
-            [[SKPaymentQueue defaultQueue] startDownloads:transaction.downloads];
+
+        if (downloads && downloads.count) {
+            [[SKPaymentQueue defaultQueue] startDownloads:downloads];
         }
         else if (g_autoFinishEnabled && canFinish) {
             [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
