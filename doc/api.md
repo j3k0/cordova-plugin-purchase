@@ -706,8 +706,8 @@ store.validator = function(product, callback) {
 
     // OR
     callback(false, {
+        code: store.PURCHASE_EXPIRED,
         error: {
-            code: store.PURCHASE_EXPIRED,
             message: "XYZ"
         }
     });
