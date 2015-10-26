@@ -499,7 +499,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
         // DLog(@"js: %@", js);
         [self.commandDelegate evalJs:js];
 
-        if (downloads && downloads.count) {
+        if (downloads && [downloads count] > 0) {
             [[SKPaymentQueue defaultQueue] startDownloads:downloads];
         }
         else if (g_autoFinishEnabled && canFinish) {
