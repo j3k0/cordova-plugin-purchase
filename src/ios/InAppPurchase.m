@@ -499,7 +499,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
         // DLog(@"js: %@", js);
         [self.commandDelegate evalJs:js];
 
-        if (downloads && downloads.count) {
+        if (downloads && [downloads count] > 0) {
             [[SKPaymentQueue defaultQueue] startDownloads:downloads];
         }
         else if (g_autoFinishEnabled && canFinish) {
@@ -937,6 +937,13 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
     NSMutableArray *validProducts = [NSMutableArray array];
     DLog(@"Has %li validProducts", (unsigned long)[response.products count]);
     for (SKProduct *product in response.products) {
+        // Get the currency code from the NSLocale object
+        NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
+        [numberFormatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
+        [numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
+        [numberFormatter setLocale:product.priceLocale];
+        NSString *currencyCode = [numberFormatter currencyCode];
+        
         DLog(@" - %@: %@", product.productIdentifier, product.localizedTitle);
         [validProducts addObject:
          [NSDictionary dictionaryWithObjectsAndKeys:
@@ -944,6 +951,7 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
           NILABLE(product.localizedTitle),       @"title",
           NILABLE(product.localizedDescription), @"description",
           NILABLE(product.localizedPrice),       @"price",
+          NILABLE(currencyCode),                 @"currency",
           nil]];
         [self.plugin.list setObject:product forKey:[NSString stringWithFormat:@"%@", product.productIdentifier]];
     }
