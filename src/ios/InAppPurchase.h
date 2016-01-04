@@ -10,7 +10,6 @@
 #import <StoreKit/StoreKit.h>
 
 #import <Cordova/CDVPlugin.h>
-#import <Cordova/NSData+Base64.h>
 
 #import "SKProduct+LocalizedPrice.h"
 #import "FileUtility.h"
