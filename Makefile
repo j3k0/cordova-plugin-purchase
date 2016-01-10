@@ -22,9 +22,12 @@ all: build doc
 
 build: sync-android test-js
 	@echo "- Preprocess"
-	@node_modules/.bin/preprocess src/js/store-ios.js src/js | node_modules/.bin/uglifyjs -b > www/store-ios.js
-	@node_modules/.bin/preprocess src/js/store-android.js src/js | node_modules/.bin/uglifyjs -b > www/store-android.js
-	@node_modules/.bin/preprocess src/js/store-windows.js src/js | node_modules/.bin/uglifyjs -b > www/store-windows.js
+	@node_modules/.bin/preprocess src/js/store-ios.js src/js > src/tmp/store-ios.js
+	@node_modules/.bin/uglifyjs src/tmp/store-ios.js -b > www/store-ios.js
+	@node_modules/.bin/preprocess src/js/store-android.js src/js > src/tmp/store-android.js
+	@node_modules/.bin/uglifyjs src/tmp/store-android.js -b > www/store-android.js
+	@node_modules/.bin/preprocess src/js/store-windows.js src/js > src/tmp/store-windows.js
+	@node_modules/.bin/uglifyjs src/tmp/store-windows.js -b > www/store-windows.js
 	@echo "- Done"
 	@echo ""
 
