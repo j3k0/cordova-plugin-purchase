@@ -2,8 +2,10 @@
 /node_modules/
 /coverage/
 /test/tmp/
-/www/.store-android.js
-/www/.store-ios.js
+/src/tmp/
+/www/store-android.js
+/www/store-ios.js
+/www/store-windows.js
 *~
 
 npm-debug.log
