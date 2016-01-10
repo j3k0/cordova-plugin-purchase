@@ -820,6 +820,9 @@ store.verbosity = 0;
         this.loadAppStoreReceipt();
         exec("setup", [], setupOk, setupFailed);
     };
+    InAppPurchase.prototype.setApplicationUsername = function(username) {
+        this.applicationUsername = username;
+    };
     InAppPurchase.prototype.purchase = function(productId, quantity) {
         quantity = quantity | 0 || 1;
         var options = this.options;
@@ -844,7 +847,11 @@ store.verbosity = 0;
                 protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_PURCHASE, errmsg, productId, quantity);
             }
         };
-        exec("purchase", [ productId, quantity ], purchaseOk, purchaseFailed);
+        if (this.applicationUsername) {
+            exec("purchase2", [ productId, quantity, this.applicationUsername ], purchaseOk, purchaseFailed);
+        } else {
+            exec("purchase", [ productId, quantity ], purchaseOk, purchaseFailed);
+        }
     };
     InAppPurchase.prototype.canMakePayments = function(success, error) {
         return exec("canMakePayments", [], success, error);
