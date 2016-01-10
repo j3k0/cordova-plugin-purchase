@@ -8,10 +8,11 @@ describe('Order', function(){
 
     describe('#setApplicationUsername()', function(){
 
-        store.setApplicationUsername("username@gmail.com");
-
         it('should exist and define application username', function() {
-            assert.equal(store.applicationUsername, "username@gmail.com");
+            store.ready(function() {
+                store.setApplicationUsername("username@gmail.com");
+                assert.equal(store.getApplicationUsername(), "username@gmail.com");
+            });
         });
 
         // TODO more tests
