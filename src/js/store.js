@@ -285,6 +285,7 @@ store.verbosity = 0;
 // #include "product.js"
 // #include "error.js"
 
+// #include "custom.js"
 // #include "register.js"
 // #include "get.js"
 // #include "when.js"

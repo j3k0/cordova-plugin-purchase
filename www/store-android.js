@@ -202,6 +202,13 @@ store.verbosity = 0;
 
 (function() {
     "use strict";
+    store.setApplicationUsername = function(username) {
+        store.applicationUsername = username;
+    };
+})();
+
+(function() {
+    "use strict";
     store.register = function(product) {
         if (!product) return;
         if (!product.length) store.register([ product ]); else registerProducts(product);
@@ -823,11 +830,11 @@ store.verbosity = 0;
             cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getProductDetails", [ skus ]);
         }
     };
-    InAppBilling.prototype.setTestMode = function(testMode) {
+    InAppBilling.prototype.setTestMode = function(success, fail) {
         if (this.options.showLog) {
             log("setTestMode called!");
         }
-        return cordova.exec(null, null, "InAppBillingPlugin", "setTestMode", [ testMode ]);
+        return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "setTestMode", [ "" ]);
     };
     function errorCb(fail) {
         return function(error) {

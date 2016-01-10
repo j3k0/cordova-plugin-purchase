@@ -202,6 +202,13 @@ store.verbosity = 0;
 
 (function() {
     "use strict";
+    store.setApplicationUsername = function(username) {
+        store.applicationUsername = username;
+    };
+})();
+
+(function() {
+    "use strict";
     store.register = function(product) {
         if (!product) return;
         if (!product.length) store.register([ product ]); else registerProducts(product);
