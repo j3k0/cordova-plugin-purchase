@@ -386,10 +386,14 @@ function storekitError(errorCode, errorText, options) {
 }
 
 // Restore purchases.
-// store.restore = function() {
-// };
+store.restore = function() {
+     storekit.restore();
+};
+
 store.when("re-refreshed", function() {
-    storekit.restore();
+    if (store.isAutoRestore()) {
+        storekit.restore();
+    }
     storekit.refreshReceipts(function(data) {
         if (data) {
             var p = data.bundleIdentifier ? store.get(data.bundleIdentifier) : null;

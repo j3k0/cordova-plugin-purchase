@@ -10,4 +10,12 @@
         return window.storekit.applicationUsername;
     };
 
+    store.setAutoRestore = function(value) {
+        store.autoRestore = value;
+    };
+
+    store.isAutoRestore = function() {
+        return store.autoRestore;
+    };
+
 })();

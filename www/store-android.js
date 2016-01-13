@@ -209,6 +209,12 @@ store.verbosity = 0;
     store.getApplicationUsername = function() {
         return window.storekit.applicationUsername;
     };
+    store.setAutoRestore = function(value) {
+        store.autoRestore = value;
+    };
+    store.isAutoRestore = function() {
+        return store.autoRestore;
+    };
 })();
 
 (function() {

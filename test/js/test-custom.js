@@ -17,4 +17,17 @@ describe('Order', function(){
 
         // TODO more tests
     });
+
+
+    describe('#setAutoRestore()', function(){
+
+        it('should exist and define auto restore', function() {
+            store.ready(function() {
+                store.setAutoRestore(true);
+                assert.equal(store.isAutoRestore(), true);
+            });
+        });
+
+        // TODO more tests
+    });
 });

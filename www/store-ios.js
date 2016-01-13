@@ -209,6 +209,12 @@ store.verbosity = 0;
     store.getApplicationUsername = function() {
         return window.storekit.applicationUsername;
     };
+    store.setAutoRestore = function(value) {
+        store.autoRestore = value;
+    };
+    store.isAutoRestore = function() {
+        return store.autoRestore;
+    };
 })();
 
 (function() {
@@ -1371,8 +1377,13 @@ store.verbosity = 0;
             message: errorText
         });
     }
-    store.when("re-refreshed", function() {
+    store.restore = function() {
         storekit.restore();
+    };
+    store.when("re-refreshed", function() {
+        if (store.isAutoRestore()) {
+            storekit.restore();
+        }
         storekit.refreshReceipts(function(data) {
             if (data) {
                 var p = data.bundleIdentifier ? store.get(data.bundleIdentifier) : null;
