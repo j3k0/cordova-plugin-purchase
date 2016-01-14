@@ -57,7 +57,7 @@ store.when("finished", function(product) {
 
 function storekitFinish(product) {
     if (product.type === store.CONSUMABLE) {
-        if (product.transaction.id)
+        if (product.transaction && product.transaction.id)
             storekit.finish(product.transaction.id);
     }
     else if (product.transactions) {
