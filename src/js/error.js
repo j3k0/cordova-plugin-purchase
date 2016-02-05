@@ -39,14 +39,12 @@ store.error = function(cb, altCb) {
 
     var ret = cb;
 
-    if (cb instanceof store.Error)
+    if (cb instanceof store.Error) {
         store.error.callbacks.trigger(cb);
-
-    else if (cb.code && cb.message)
-        store.error.callbacks.trigger(new store.Error(cb));
-
-    else if (typeof cb === "function")
+    }
+    else if (typeof cb === "function") {
         store.error.callbacks.push(cb);
+    }
 
     /// ### alternative usage
     ///
@@ -59,6 +57,13 @@ store.error = function(cb, altCb) {
                 altCb();
         };
         store.error(ret);
+    }
+    else if (cb.code && cb.message) {
+        store.error.callbacks.trigger(new store.Error(cb));
+    }
+    else if (cb.code) {
+        // error message is null(unknown error)
+        store.error.callbacks.trigger(new store.Error(cb));
     }
     ///
 
