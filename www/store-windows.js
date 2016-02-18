@@ -1,6 +1,7 @@
 var store = {};
 
 store.verbosity = 0;
+store.winstoretestmode = false;
 
 (function() {
     "use strict";
@@ -766,9 +767,9 @@ store.verbosity = 0;
             }
         }
         if (hasSKUs) {
-            cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", [ skus ]);
+            cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", [ store.winstoretestmode, skus ]);
         } else {
-            cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", []);
+            cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", [ store.winstoretestmode ]);
         }
     };
     InAppBilling.prototype.getPurchases = function(success, fail) {
@@ -922,7 +923,7 @@ store.verbosity = 0;
             if (purchases && purchases.length) {
                 for (var i = 0; i < purchases.length; ++i) {
                     var purchase = purchases[i];
-                    var p = store.get(purchase.productId);
+                    var p = store.get(purchase.license.productId);
                     if (!p) {
                         store.log.warn("plugin -> user owns a non-registered product");
                         continue;
