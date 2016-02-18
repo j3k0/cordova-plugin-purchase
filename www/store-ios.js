@@ -1038,7 +1038,7 @@ store.verbosity = 0;
                 bundleNumericVersion: bundleNumericVersion,
                 bundleSignature: bundleSignature
             });
-            protectCall(successCb, "refreshReceipts.success", base64);
+            protectCall(successCb, "refreshReceipts.success", args);
         };
         var error = function(errMessage) {
             log("refresh receipt failed: " + errMessage);
