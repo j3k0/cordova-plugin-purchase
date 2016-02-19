@@ -2,6 +2,8 @@ var store = {};
 
 store.verbosity = 0;
 
+store.sandbox = false;
+
 (function() {
     "use strict";
     store.FREE_SUBSCRIPTION = "free subscription";
