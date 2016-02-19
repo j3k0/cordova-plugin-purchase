@@ -5,16 +5,8 @@ To enable the IAP simulator you will need to call the testmode function on the p
 Doing this will route purchases through the simulator which will allow the user to select the outcome of the purchase (selecting success or failure types).
 
 ```
-store.inappbilling.setTestMode(); //Don't call this in production
-
-//Optionally add callbacks
-store.inappbilling.setTestMode(function() {
-    //successfully loaded test data
-    store.refresh();
-  },
-  function() {
-    //failed to load test data
-  });
+//call this before store.refresh
+store.sandbox = true; //Don't call this in production
 ```
 
 ####Sample simulator xml file.
