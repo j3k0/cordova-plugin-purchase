@@ -29,7 +29,7 @@ SOFTWARE.
     version="4.0.0">
 
     <name>Purchase</name>
-	<description>Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)</description>
+	<description>Cordova Purchase plugin for iOS (AppStore), Android (PlayStore) and Windows</description>
     <engines>
         <engine name="cordova" version=">=2.4.0" />
     </engines>
@@ -37,7 +37,7 @@ SOFTWARE.
     <issue>https://github.com/j3k0/cordova-plugin-purchase/issues</issue>
 
 	<license>MIT</license>
-    <keywords>cordova,phonegap,purchase,storekit,ios,android,play,appstore</keywords>
+    <keywords>cordova,phonegap,purchase,storekit,ios,android,play,appstore,windows</keywords>
 
     <!-- ios -->
     <platform name="ios">

@@ -45,7 +45,6 @@
             product.license = {
                 type: 'windows-store-license',
                 expirationDate: license.expirationDate,
-                isConsumable: license.isConsumable,
                 isActive: license.isActive
             };
         }
@@ -100,6 +99,23 @@
                 product.set("state", store.VALID);
             }
         }
+    };
+
+    store.iabGetPurchases = function() {
+        store.inappbilling.getPurchases(function(purchases) {
+            if (purchases && purchases.length) {
+                for (var i = 0; i < purchases.length; ++i) {
+                    var purchase = purchases[i];
+                    var p = store.get(purchase.license.productId);
+                    if (!p) {
+                        store.log.warn("plugin -> user owns a non-registered product");
+                        continue;
+                    }
+                    store.setProductData(p, purchase);
+                }
+            }
+            store.ready(true);
+        }, function() {});
     };
 
 })();

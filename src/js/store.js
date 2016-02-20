@@ -281,6 +281,15 @@ var store = {};
 /// See the [logging levels](#logging-levels) constants.
 store.verbosity = 0;
 
+/// ## <a name="sandbox"></a>*store.sandbox*
+///
+/// The `sandbox` property defines if you want to invoke the platform purchase sandbox
+///
+/// - Windows will use the IAP simulator if true (see Windows docs)
+/// - Android: NOT IN USE
+/// - iOS: NOT IN USE
+store.sandbox = false;
+
 // #include "constants.js"
 // #include "product.js"
 // #include "error.js"

@@ -48,4 +48,40 @@
         }
     };
 
+    store.iabGetPurchases = function() {
+        store.inappbilling.getPurchases(
+            function(purchases) { // success
+                // example purchases data:
+                //
+                // [
+                //   {
+                //     "purchaseToken":"tokenabc",
+                //     "developerPayload":"mypayload1",
+                //     "packageName":"com.example.MyPackage",
+                //     "purchaseState":0,
+                //     "orderId":"12345.6789",
+                //     "purchaseTime":1382517909216,
+                //     "productId":"example_subscription"
+                //   },
+                //   { ... }
+                // ]
+                if (purchases && purchases.length) {
+                    for (var i = 0; i < purchases.length; ++i) {
+                        var purchase = purchases[i];
+                        var p = store.get(purchase.productId);
+                        if (!p) {
+                            store.log.warn("plugin -> user owns a non-registered product");
+                            continue;
+                        }
+                        store.setProductData(p, purchase);
+                    }
+                }
+                store.ready(true);
+            },
+            function() { // error
+                // TODO
+            }
+        );
+    };
+
 })();
