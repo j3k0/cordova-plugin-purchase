@@ -215,9 +215,11 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 
 // To avoid compilation warning, declare JSONKit and SBJson's
 // category methods without including their header files.
+// 25-Feb-16: Modified JSONString -> cdv JSONString due to change in Cordova iOS 4.0
+// See: https://issues.apache.org/jira/browse/CB-8270
 @interface NSArray (StubsForSerializers)
-- (NSString *)JSONString;
-- (NSString *)JSONRepresentation;
+- (NSString *)cdv_JSONString;
+- (NSString *)cdv_JSONRepresentation;
 @end
 
 // Helper category method to choose which JSON serializer to use.
@@ -227,7 +229,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 
 @implementation NSArray (JSONSerialize)
 - (NSString *)JSONSerialize {
-    return [self respondsToSelector:@selector(JSONString)] ? [self JSONString] : [self JSONRepresentation];
+    return [self respondsToSelector:@selector(cdv_JSONString)] ? [self cdv_JSONString] : [self cdv_JSONRepresentation];
 }
 @end
 
