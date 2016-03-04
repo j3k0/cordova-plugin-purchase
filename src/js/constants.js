@@ -8,10 +8,11 @@
 ///
 /// ### product types
 ///
-/*///*/     store.FREE_SUBSCRIPTION = "free subscription";
-/*///*/     store.PAID_SUBSCRIPTION = "paid subscription";
-/*///*/     store.CONSUMABLE        = "consumable";
-/*///*/     store.NON_CONSUMABLE    = "non consumable";
+/*///*/     store.FREE_SUBSCRIPTION         = "free subscription";
+/*///*/     store.PAID_SUBSCRIPTION         = "paid subscription";
+/*///*/     store.NON_RENEWING_SUBSCRIPTION = "non renewing subscription";
+/*///*/     store.CONSUMABLE                = "consumable";
+/*///*/     store.NON_CONSUMABLE            = "non consumable";
 
 ///
 /// ### error codes

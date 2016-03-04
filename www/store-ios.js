@@ -2,10 +2,13 @@ var store = {};
 
 store.verbosity = 0;
 
+store.sandbox = false;
+
 (function() {
     "use strict";
     store.FREE_SUBSCRIPTION = "free subscription";
     store.PAID_SUBSCRIPTION = "paid subscription";
+    store.NON_RENEWING_SUBSCRIPTION = "non renewing subscription";
     store.CONSUMABLE = "consumable";
     store.NON_CONSUMABLE = "non consumable";
     var ERROR_CODES_BASE = 6777e3;
@@ -62,7 +65,7 @@ store.verbosity = 0;
         this.id = options.id || null;
         this.alias = options.alias || options.id || null;
         var type = this.type = options.type || null;
-        if (type !== store.CONSUMABLE && type !== store.NON_CONSUMABLE && type !== store.PAID_SUBSCRIPTION && type !== store.FREE_SUBSCRIPTION) throw new TypeError("Invalid product type");
+        if (type !== store.CONSUMABLE && type !== store.NON_CONSUMABLE && type !== store.PAID_SUBSCRIPTION && type !== store.FREE_SUBSCRIPTION && type !== store.NON_RENEWING_SUBSCRIPTION) throw new TypeError("Invalid product type");
         this.state = options.state || "";
         this.title = options.title || options.localizedTitle || null;
         this.description = options.description || options.localizedDescription || null;
@@ -187,11 +190,19 @@ store.verbosity = 0;
     };
     store.error = function(cb, altCb) {
         var ret = cb;
-        if (cb instanceof store.Error) store.error.callbacks.trigger(cb); else if (cb.code && cb.message) store.error.callbacks.trigger(new store.Error(cb)); else if (typeof cb === "function") store.error.callbacks.push(cb); else if (typeof altCb === "function") {
+        if (cb instanceof store.Error) {
+            store.error.callbacks.trigger(cb);
+        } else if (typeof cb === "function") {
+            store.error.callbacks.push(cb);
+        } else if (typeof altCb === "function") {
             ret = function(err) {
                 if (err.code === cb) altCb();
             };
             store.error(ret);
+        } else if (cb.code && cb.message) {
+            store.error.callbacks.trigger(new store.Error(cb));
+        } else if (cb.code) {
+            store.error.callbacks.trigger(new store.Error(cb));
         }
         return ret;
     };
@@ -1157,7 +1168,7 @@ store.verbosity = 0;
     });
     function storekitFinish(product) {
         if (product.type === store.CONSUMABLE) {
-            if (product.transaction.id) storekit.finish(product.transaction.id);
+            if (product.transaction && product.transaction.id) storekit.finish(product.transaction.id);
         } else if (product.transactions) {
             store.log.debug("ios -> finishing all " + product.transactions.length + " transactions for " + product.id);
             for (var i = 0; i < product.transactions.length; ++i) {
