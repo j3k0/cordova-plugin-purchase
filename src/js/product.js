@@ -31,7 +31,7 @@ store.Product = function(options) {
 
     ///  - `product.type` - Family of product, should be one of the defined [product types](#product-types).
     var type = this.type = options.type || null;
-    if (type !== store.CONSUMABLE && type !== store.NON_CONSUMABLE && type !== store.PAID_SUBSCRIPTION && type !== store.FREE_SUBSCRIPTION)
+    if (type !== store.CONSUMABLE && type !== store.NON_CONSUMABLE && type !== store.PAID_SUBSCRIPTION && type !== store.FREE_SUBSCRIPTION && type !== store.NON_RENEWING_SUBSCRIPTION)
         throw new TypeError("Invalid product type");
 
     ///  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
