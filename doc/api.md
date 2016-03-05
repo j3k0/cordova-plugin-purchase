@@ -765,6 +765,23 @@ have a way to do just that.
    // then and only then, call refresh.
    store.refresh();
 ```
+##### restore purchases example usage
+The "Refresh Purchases" button
+
+```html
+    <button onclick="restorePurchases()">Restore Purchases</button>
+```
+
+The "Refresh Purchases" call
+```js
+   function restorePurchases(){            
+        store.refresh();
+        store.when(“the.product.id”).approved(function (product) {
+            product.finish();                
+        });            
+    }
+```
+
 
 ## *store.log* object
 ### `store.log.error(message)`
