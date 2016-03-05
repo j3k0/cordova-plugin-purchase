@@ -30,6 +30,16 @@
 ///    store.refresh();
 /// ```
 ///
+/// ##### restore purchases example usage
+///
+/// Add a "Refresh Purchases" button to call the `store.refresh()` method, like:
+///
+/// `<button onclick="store.refresh()">Restore Purchases</button>`
+///
+/// To make the restore purchases work as expected, please make sure that
+/// the "approved" event listener had be registered properly,
+/// and in the callback `product.finish()` should be called.
+///
 
 var initialRefresh = true;
 

@@ -261,16 +261,24 @@ The `verbosity` property defines how much you want `store.js` to write on the co
  - `store.DEBUG` or `4` to enable internal debugging messages.
 
 See the [logging levels](#logging-levels) constants.
+## <a name="sandbox"></a>*store.sandbox*
+
+The `sandbox` property defines if you want to invoke the platform purchase sandbox
+
+- Windows will use the IAP simulator if true (see Windows docs)
+- Android: NOT IN USE
+- iOS: NOT IN USE
 
 ## Constants
 
 
 ### product types
 
-    store.FREE_SUBSCRIPTION = "free subscription";
-    store.PAID_SUBSCRIPTION = "paid subscription";
-    store.CONSUMABLE        = "consumable";
-    store.NON_CONSUMABLE    = "non consumable";
+    store.FREE_SUBSCRIPTION         = "free subscription";
+    store.PAID_SUBSCRIPTION         = "paid subscription";
+    store.NON_RENEWING_SUBSCRIPTION = "non renewing subscription";
+    store.CONSUMABLE                = "consumable";
+    store.NON_CONSUMABLE            = "non consumable";
 
 ### error codes
 
@@ -765,6 +773,16 @@ have a way to do just that.
    // then and only then, call refresh.
    store.refresh();
 ```
+
+##### restore purchases example usage
+
+Add a "Refresh Purchases" button to call the `store.refresh()` method, like:
+
+`<button onclick="store.refresh()">Restore Purchases</button>`
+
+To make the restore purchases work as expected, please make sure that
+the "approved" event listener had be registered properly,
+and in the callback `product.finish()` should be called.
 
 ## *store.log* object
 ### `store.log.error(message)`
