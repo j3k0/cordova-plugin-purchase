@@ -267,10 +267,11 @@ See the [logging levels](#logging-levels) constants.
 
 ### product types
 
-    store.FREE_SUBSCRIPTION = "free subscription";
-    store.PAID_SUBSCRIPTION = "paid subscription";
-    store.CONSUMABLE        = "consumable";
-    store.NON_CONSUMABLE    = "non consumable";
+    store.FREE_SUBSCRIPTION         = "free subscription";
+    store.PAID_SUBSCRIPTION         = "paid subscription";
+    store.NON_RENEWING_SUBSCRIPTION = "non renewing subscription";
+    store.CONSUMABLE                = "consumable";
+    store.NON_CONSUMABLE            = "non consumable";
 
 ### error codes
 
@@ -433,6 +434,7 @@ Find below a diagram of the different states a product can pass by.
  - When finished, a consumable product will get back to the `VALID` state, while other will enter the `OWNED` state.
  - Any error in the purchase process will bring a product back to the `VALID` state.
  - During application startup, products may go instantly from `REGISTERED` to `APPROVED` or `OWNED`, for example if they are purchased non-consumables or non-expired subscriptions.
+ - Non-Renewing Subscriptions are iOS products only. Handle these like consumables in your implementation. Please see Apple documentation for information.
 
 #### state changes
 
