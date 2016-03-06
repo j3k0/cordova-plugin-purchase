@@ -282,7 +282,7 @@ store.Product.prototype.verify = function() {
 ///  - When finished, a consumable product will get back to the `VALID` state, while other will enter the `OWNED` state.
 ///  - Any error in the purchase process will bring a product back to the `VALID` state.
 ///  - During application startup, products may go instantly from `REGISTERED` to `APPROVED` or `OWNED`, for example if they are purchased non-consumables or non-expired subscriptions.
-///  - Non-Renewing Subscriptions are iOS products only. Handle these like consumables in your implementation. Please see Apple documentation for information.
+///  - Non-Renewing Subscriptions are iOS products only. Please see the [iOS Non Renewing Subscriptions documentation](#non-renewing) for a detailed explanation.
 ///
 /// #### state changes
 ///

@@ -261,6 +261,13 @@ The `verbosity` property defines how much you want `store.js` to write on the co
  - `store.DEBUG` or `4` to enable internal debugging messages.
 
 See the [logging levels](#logging-levels) constants.
+## <a name="sandbox"></a>*store.sandbox*
+
+The `sandbox` property defines if you want to invoke the platform purchase sandbox
+
+- Windows will use the IAP simulator if true (see Windows docs)
+- Android: NOT IN USE
+- iOS: NOT IN USE
 
 ## Constants
 
@@ -434,7 +441,7 @@ Find below a diagram of the different states a product can pass by.
  - When finished, a consumable product will get back to the `VALID` state, while other will enter the `OWNED` state.
  - Any error in the purchase process will bring a product back to the `VALID` state.
  - During application startup, products may go instantly from `REGISTERED` to `APPROVED` or `OWNED`, for example if they are purchased non-consumables or non-expired subscriptions.
- - Non-Renewing Subscriptions are iOS products only. Handle these like consumables in your implementation. Please see Apple documentation for information.
+ - Non-Renewing Subscriptions are iOS products only. Please see the [iOS Non Renewing Subscriptions documentation](#non-renewing) for a detailed explanation.
 
 #### state changes
 
