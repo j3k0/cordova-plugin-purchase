@@ -1167,8 +1167,12 @@ store.sandbox = false;
         if (product.type === store.CONSUMABLE) product.set("state", store.VALID); else product.set("state", store.OWNED);
     });
     function storekitFinish(product) {
-        if (product.type === store.CONSUMABLE) {
-            if (product.transaction && product.transaction.id) storekit.finish(product.transaction.id);
+        if (product.type === store.CONSUMABLE || product.type === store.NON_RENEWING_SUBSCRIPTION) {
+            if (product.transaction && product.transaction.id) {
+                storekit.finish(product.transaction.id);
+            } else {
+                store.log.debug("ios -> error: unable to find transaction for " + product.id);
+            }
         } else if (product.transactions) {
             store.log.debug("ios -> finishing all " + product.transactions.length + " transactions for " + product.id);
             for (var i = 0; i < product.transactions.length; ++i) {
