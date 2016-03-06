@@ -91,7 +91,7 @@ This is made more difficult because non-renewing subscriptions always receive a 
 
 This full body of code, which registers all necessary handlers and refreshes the `store`, must be executed every time the app starts.
 
-```
+```javascript
 // Register the non-renewing subscription product with the store. You must
 // create this in iTunes Connect.
 store.register({
