@@ -213,21 +213,10 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 }
 */
 
-// To avoid compilation warning, declare JSONKit and SBJson's
-// category methods without including their header files.
-@interface NSArray (StubsForSerializers)
-- (NSString *)JSONString;
-- (NSString *)JSONRepresentation;
-@end
-
-// Helper category method to choose which JSON serializer to use.
-@interface NSArray (JSONSerialize)
-- (NSString *)JSONSerialize;
-@end
-
 @implementation NSArray (JSONSerialize)
 - (NSString *)JSONSerialize {
-    return [self respondsToSelector:@selector(JSONString)] ? [self JSONString] : [self JSONRepresentation];
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:self options:0 error:nil];
+    return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
 }
 @end
 
