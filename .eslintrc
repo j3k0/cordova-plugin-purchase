@@ -4,7 +4,7 @@
         "browser" : true
     },
     "rules" : {
-        "strict": 1,
+        "strict": [1, "function"],
         "quotes": 0,
         "no-underscore-dangle": 0,
         "no-multi-spaces": 0,
