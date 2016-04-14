@@ -1,12 +1,13 @@
 {
   "name": "cc.fovea.cordova.purchase",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)",
   "cordova": {
     "id": "cc.fovea.cordova.purchase",
     "platforms": [
       "android",
-      "ios"
+      "ios",
+      "wp8"
     ]
   },
   "repository": {
@@ -17,6 +18,7 @@
     "ecosystem:cordova",
     "cordova-android",
     "cordova-ios",
+    "cordova-windows",
     "cordova",
     "phonegap",
     "purchase",
