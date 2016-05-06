@@ -115,6 +115,10 @@ InAppPurchase.prototype.init = function (options, success, error) {
     exec('setup', [], setupOk, setupFailed);
 };
 
+InAppPurchase.prototype.setApplicationUsername = function(username) {
+    this.applicationUsername = username;
+};
+
 /**
  * Makes an in-app purchase.
  *
@@ -150,7 +154,12 @@ InAppPurchase.prototype.purchase = function (productId, quantity) {
             protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_PURCHASE, errmsg, productId, quantity);
         }
     };
-    exec('purchase', [productId, quantity], purchaseOk, purchaseFailed);
+
+    if (this.applicationUsername) {
+        exec('purchase2', [productId, quantity, this.applicationUsername], purchaseOk, purchaseFailed);
+    } else {
+        exec('purchase', [productId, quantity], purchaseOk, purchaseFailed);
+    }
 };
 
 /**

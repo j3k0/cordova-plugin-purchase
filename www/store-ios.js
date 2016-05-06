@@ -213,6 +213,23 @@ store.sandbox = false;
 
 (function() {
     "use strict";
+    store.setApplicationUsername = function(username) {
+        store.log.info("application username - " + username);
+        window.storekit.applicationUsername = username;
+    };
+    store.getApplicationUsername = function() {
+        return window.storekit.applicationUsername;
+    };
+    store.setAutoRestore = function(value) {
+        store.autoRestore = value;
+    };
+    store.isAutoRestore = function() {
+        return store.autoRestore;
+    };
+})();
+
+(function() {
+    "use strict";
     store.register = function(product) {
         if (!product) return;
         if (!product.length) store.register([ product ]); else registerProducts(product);
@@ -824,6 +841,9 @@ store.sandbox = false;
         this.loadAppStoreReceipt();
         exec("setup", [], setupOk, setupFailed);
     };
+    InAppPurchase.prototype.setApplicationUsername = function(username) {
+        this.applicationUsername = username;
+    };
     InAppPurchase.prototype.purchase = function(productId, quantity) {
         quantity = quantity | 0 || 1;
         var options = this.options;
@@ -848,7 +868,11 @@ store.sandbox = false;
                 protectCall(options.error, "options.error", InAppPurchase.prototype.ERR_PURCHASE, errmsg, productId, quantity);
             }
         };
-        exec("purchase", [ productId, quantity ], purchaseOk, purchaseFailed);
+        if (this.applicationUsername) {
+            exec("purchase2", [ productId, quantity, this.applicationUsername ], purchaseOk, purchaseFailed);
+        } else {
+            exec("purchase", [ productId, quantity ], purchaseOk, purchaseFailed);
+        }
     };
     InAppPurchase.prototype.canMakePayments = function(success, error) {
         return exec("canMakePayments", [], success, error);
@@ -1368,8 +1392,13 @@ store.sandbox = false;
             message: errorText
         });
     }
-    store.when("re-refreshed", function() {
+    store.restore = function() {
         storekit.restore();
+    };
+    store.when("re-refreshed", function() {
+        if (store.isAutoRestore()) {
+            storekit.restore();
+        }
         storekit.refreshReceipts(function(data) {
             if (data) {
                 var p = data.bundleIdentifier ? store.get(data.bundleIdentifier) : null;

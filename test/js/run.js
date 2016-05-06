@@ -20,6 +20,7 @@
     mocha.addFile('test/js/test-utils.js');
     mocha.addFile('test/js/test-ios.js');
     mocha.addFile('test/js/test-android.js');
+    mocha.addFile('test/js/test-custom.js');
 
     mocha.run(function(){
         console.log('done');

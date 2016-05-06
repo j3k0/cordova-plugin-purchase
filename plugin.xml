@@ -57,6 +57,8 @@ SOFTWARE.
 
         <header-file src="src/ios/InAppPurchase.h" />
         <source-file src="src/ios/InAppPurchase.m" />
+        <header-file src="src/ios/InAppPurchase+PurchaseWithApplicationUsername.h" />
+        <source-file src="src/ios/InAppPurchase+PurchaseWithApplicationUsername.m" />
         <header-file src="src/ios/SKProduct+LocalizedPrice.h" />
         <source-file src="src/ios/SKProduct+LocalizedPrice.m" />
         <header-file src="src/ios/FileUtility.h" />
