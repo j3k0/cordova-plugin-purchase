@@ -310,7 +310,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 
     if ((unsigned long)[inArray count] == 0) {
         DLog(@"Empty array");
-        NSArray *callbackArgs = [NSArray arrayWithObjects: nil, nil, nil];
+        NSArray *callbackArgs = [NSArray arrayWithObjects: [NSNull null], [NSNull null], nil];
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:callbackArgs];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         return;
