@@ -33,10 +33,13 @@ var InAppPurchase = function () {
 
     this.receiptForTransaction = {};
     this.receiptForProduct = {};
+    this.transactionForProduct = {};
     if (window.localStorage && window.localStorage.sk_receiptForTransaction)
         this.receiptForTransaction = JSON.parse(window.localStorage.sk_receiptForTransaction);
     if (window.localStorage && window.localStorage.sk_receiptForProduct)
         this.receiptForProduct = JSON.parse(window.localStorage.sk_receiptForProduct);
+    if (window.localStorage && window.localStorage.sk_transactionForProduct)
+        this.transactionForProduct = JSON.parse(window.localStorage.sk_transactionForProduct);
 };
 
 var noop = function () {};
@@ -331,6 +334,11 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
         var args = Array.prototype.slice.call(arguments);
         pendingUpdates.push(args);
         return;
+    }
+
+    if (productId && transactionIdentifier) {
+        log("product " + productId + "had a pending transaction: " + transactionIdentifier);
+        this.transactionForProduct[productId] = transactionIdentifier;
     }
 
     if (transactionReceipt) {
