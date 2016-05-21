@@ -47,18 +47,24 @@ store.when("requested", function(product) {
 //! When a product enters the store.FINISHED state, `finish()` the storekit transaction.
 //!
 store.when("finished", function(product) {
-    store.log.debug("ios -> finishing " + product.id);
+    store.log.debug("ios -> finishing " + product.id + " (a " + product.type + ")");
     storekitFinish(product);
-    if (product.type === store.CONSUMABLE)
+    if (product.type === store.CONSUMABLE || product.type === store.NON_RENEWING_SUBSCRIPTION) {
         product.set("state", store.VALID);
-    else
+        setOwned(product.id, false);
+    }
+    else {
         product.set("state", store.OWNED);
+    }
 });
 
 function storekitFinish(product) {
     if (product.type === store.CONSUMABLE || product.type === store.NON_RENEWING_SUBSCRIPTION) {
         if (product.transaction && product.transaction.id) {
             storekit.finish(product.transaction.id);
+        }
+        else if (storekit.transactionForProduct[product.id]) {
+            storekit.finish(storekit.transactionForProduct[product.id]);
         }
         else {
             store.log.debug("ios -> error: unable to find transaction for " + product.id);
@@ -314,7 +320,7 @@ function storekitPurchased(transactionId, productId) {
         if (!product) {
             store.error({
                 code: store.ERR_PURCHASE,
-                message: "Unknown product purchased"
+                message: "The purchase queue contains unknown product " + productId
             });
             return;
         }
@@ -395,6 +401,9 @@ function storekitError(errorCode, errorText, options) {
 store.when("re-refreshed", function() {
     storekit.restore();
     storekit.refreshReceipts(function(data) {
+        // What the point of this?
+        // Why create a product whose ID equals the application bundle ID (?)
+        // Is it just to trigger force a validation of the appStoreReceipt?
         if (data) {
             var p = data.bundleIdentifier ? store.get(data.bundleIdentifier) : null;
             if (!p) {
@@ -512,6 +521,7 @@ function isOwned(productId) {
 //! #### *setOwned(productId, value)*
 //! store the boolean OWNED status of a given product.
 function setOwned(productId, value) {
+    store.log.debug("ios -> product " + productId + " owned=" + (value ? "true" : "false"));
     localStorage["__cc_fovea_store_ios_owned_ " + productId] = value ? '1' : '0';
 }
 
