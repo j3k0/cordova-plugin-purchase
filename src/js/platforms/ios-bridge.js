@@ -422,14 +422,15 @@ InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
         var bundleSignature = args[4];
         log('infoPlist: ' + bundleIdentifier + "," + bundleShortVersion + "," + bundleNumericVersion  + "," + bundleSignature);
         that.setAppStoreReceipt(base64);
-        protectCall(that.options.receiptsRefreshed, 'options.receiptsRefreshed', {
+        var data = {
             appStoreReceipt: base64,
             bundleIdentifier: bundleIdentifier,
             bundleShortVersion: bundleShortVersion,
             bundleNumericVersion: bundleNumericVersion,
             bundleSignature: bundleSignature
-        });
-        protectCall(successCb, "refreshReceipts.success", base64);
+        };
+        protectCall(that.options.receiptsRefreshed, 'options.receiptsRefreshed', data);
+        protectCall(successCb, "refreshReceipts.success", data);
     };
 
     var error = function(errMessage) {
