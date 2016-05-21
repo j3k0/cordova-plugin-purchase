@@ -2251,7 +2251,7 @@ store.when("requested", function(product) {
         product.set("state", store.INITIATED);
 
         var method = 'buy';
-        if (product.type !== store.NON_CONSUMABLE && product.type !== store.CONSUMABLE) {
+        if (product.type === store.FREE_SUBSCRIPTION || product.type === store.PAID_SUBSCRIPTION) {
             method = 'subscribe';
         }
 
@@ -2300,7 +2300,7 @@ store.when("requested", function(product) {
 /// `consume()` the product.
 store.when("product", "finished", function(product) {
     store.log.debug("plugin -> consumable finished");
-    if (product.type === store.CONSUMABLE) {
+    if (product.type === store.CONSUMABLE || product.type === store.NON_RENEWING_SUBSCRIPTION) {
         product.transaction = null;
         store.inappbilling.consumePurchase(
             function() { // success
