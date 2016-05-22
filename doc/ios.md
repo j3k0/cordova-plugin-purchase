@@ -85,6 +85,8 @@ Key things to remember are:
 
 Please read the [Apple Documentation](https://developer.apple.com/library/ios/documentation/LanguagesUtilities/Conceptual/iTunesConnectInAppPurchase_Guide/Chapters/CreatingInAppPurchaseProducts.html) for official information.
 
+The easiest solution for most simple cases is to use the [Non-Renewing Subscriptions Extension](https://github.com/j3k0/cordova-non-renewing-subscription). It has a more high-level API that will take care of everything for you.
+
 What follows is an example of how to implement non-renewing subscriptions in your JavaScript code. Remember, this is iOS only. When registering your product, use `store.NON_RENEWING_SUBSCRIPTION`.
 
 This is made more difficult because non-renewing subscriptions always receive a series of lifecycle events everytime the app is started, which requires you to implement more code to handle various edge cases. Necessary helper functions you need to write are explained in the example below, called on a hypothetical `my_app_utils` class which contains a persistent state that lasts even if the app is killed, such as with HTML5 Local Storage.
@@ -115,28 +117,38 @@ store.when("my_product_id").cancelled(function(p) {
     my_app_utils.setIsProductPurchaseInitiated("my_product_id", false);
 });
 
-// Purchase has been executed successfully. Must call finish to charge the user
-// and put the product into the owned state.
-store.when("my_product_id").approved(function(p) {
-    p.finish();
-});
-
 // Called when the product purchase is finished. This gets called every time
 // the app starts after the product has been purchased, so we use a helper
 // function to determine if we actually need to purchase the non-renewing
 // subscription on our own server.
-store.when("my_product_id").owned(function(p) {
-            
-    if (my_app_utils.getIsProductPurchaseInitiated("my_product_id")) {
-        // Prevent another upgrade from happening
+store.when("my_product_id").approved(function(p) {
+
+    my_product_id.purchaseNonRenewingSubscription(p.id, function success() {
+
+        // Purchase has been executed successfully.
+        // Must call finish to charge the user and allow the purchase to be
+        // made again.
+
+        p.finish();
+
+        // Update the UI to allow another purchase
         my_app_utils.setIsProductPurchaseInitiated("my_product_id", false);
-        // All necessary logic to purchase the product, such as talking
-        // to your server, changing the UI, etc.
-        my_app_utils.purchaseNonRenewingSubscription('my_product_id');
-    }
-    else {
-        console.log("my_product_id purchase NOT initiated, NOT upgrading!");
-    }
+
+    }, function error(err));
+
+        // Failed to deliver the subscription (link issue with server?).
+        // Report to user, do not finish the transaction (so it pops up
+        // next time the user starts the app).
+
+        my_app_utils.alertUserAboutServerError({
+            title: 'Subscription Purchase Error',
+            template: 'We could not store your new subscription status on our server. ' +
+                    'No worries, you have not been charged. Please ensure you are ' +
+                    'connected to the Internet and try again.'
+        });
+
+        my_app_utils.setIsProductPurchaseInitiated("my_product_id", false);
+    });
 });
 
 // Errors communicating with the iTunes server happen quite often,

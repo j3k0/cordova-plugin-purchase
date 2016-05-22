@@ -60,6 +60,11 @@ See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wik
    - with Google Play client version 3.9.16 or higher
  - **Windows** Store/Phone 8.1
 
+## Extensions
+
+ * [Simple Non-Renewing Subscriptions](https://github.com/j3k0/cordova-non-renewing-subscription)
+   * The easiest way to integrate purchase into an app that only needs a non-renewing subscription.
+
 ## Getting Started
 
 If you don't know much about In-App Purchases, you'll find a good introduction
