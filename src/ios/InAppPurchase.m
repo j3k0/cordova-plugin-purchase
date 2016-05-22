@@ -13,12 +13,15 @@
 // Help create NSNull objects for nil items (since neither NSArray nor NSDictionary can store nil values).
 #define NILABLE(obj) ((obj) != nil ? (NSObject *)(obj) : (NSObject *)[NSNull null])
 
+static BOOL g_initialized = NO;
 static BOOL g_debugEnabled = NO;
 static BOOL g_autoFinishEnabled = YES;
 
 #define DLog(fmt, ...) { \
     if (g_debugEnabled) \
         NSLog((@"InAppPurchase[objc]: " fmt), ##__VA_ARGS__); \
+    else if (!g_initialized) \
+        NSLog((@"InAppPurchase[objc] (before init): " fmt), ##__VA_ARGS__); \
 }
 
 #define ERROR_CODES_BASE 6777000
@@ -277,6 +280,7 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
 
 -(void) setup: (CDVInvokedUrlCommand*)command {
     CDVPluginResult* pluginResult = nil;
+    g_initialized = YES;
 
     if (![SKPaymentQueue canMakePayments]) {
         DLog(@"Cant make payments, plugin disabled.");

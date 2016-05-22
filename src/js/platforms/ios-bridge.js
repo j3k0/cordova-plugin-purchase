@@ -337,7 +337,7 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
     }
 
     if (productId && transactionIdentifier) {
-        log("product " + productId + "had a pending transaction: " + transactionIdentifier);
+        log("product " + productId + " has a transaction in progress: " + transactionIdentifier);
         this.transactionForProduct[productId] = transactionIdentifier;
     }
 
