@@ -67,7 +67,6 @@ InAppBilling.prototype.buy = function (success, fail, productId) {
 	if (this.options.showLog) {
 		log('buy called!');
 	}
-	console.log("InAppBilling Buy: ", productId);
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId]);
 };
 InAppBilling.prototype.subscribe = function (success, fail, productId) {
