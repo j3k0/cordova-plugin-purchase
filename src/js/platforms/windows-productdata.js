@@ -33,11 +33,10 @@
      */
 
 	store.setProductData = function(product, data) {
-
 		var transaction = data.transaction;
 		var license = data.license;
 
-        store.log.debug("windows -> product data for " + product.id);
+		store.log.debug("windows -> product data for " + product.id);
         store.log.debug(transaction);
         store.log.debug(license);
 
