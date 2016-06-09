@@ -40,6 +40,8 @@ module.exports = {
         }
         if (!this.currentApp){
             this.currentApp = Windows.ApplicationModel.Store.CurrentApp;
+            // Load the product licenses
+            this.productLicenses = this.currentApp.licenseInformation.productLicenses;
         }
         //Don't need to init anything else here
         win(true);
@@ -105,7 +107,16 @@ module.exports = {
         var productId = args[0];
         this.currentApp.requestProductPurchaseAsync(productId).done(
             function (purchaseResults) {
-                win({ transaction: purchaseResults });
+                // Create the transaction json from the PurchaseResults object that Windows returns
+                var transaction_results = {
+                    transaction: {
+                        offerId: purchaseResults.offerId,
+                        receiptXml: purchaseResults.receiptXml,
+                        status: purchaseResults.status,
+                        transactionId: purchaseResults.transactionId
+                    }
+                };
+                win(transaction_results);
             },
             function (err) {
                 fail(err);
@@ -118,7 +129,7 @@ module.exports = {
         if (this.productLicenses.lookup(productId).isActive) {
             //TODO - Subscriptions?
         } else {
-            this.buy(win, fail, args);
+            this.inappbilling.buy(win, fail, productId);
         }
     },
 

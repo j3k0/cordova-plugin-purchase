@@ -117,7 +117,6 @@ store.when("requested", function(product) {
         if (product.type === store.FREE_SUBSCRIPTION || product.type === store.PAID_SUBSCRIPTION) {
             method = 'subscribe';
         }
-
         store.inappbilling[method](function(data) {
             // Success callabck.
             //
@@ -164,6 +163,7 @@ store.when("requested", function(product) {
 store.when("product", "finished", function(product) {
     store.log.debug("plugin -> consumable finished");
     if (product.type === store.CONSUMABLE || product.type === store.NON_RENEWING_SUBSCRIPTION) {
+        var transaction = product.transaction;
         product.transaction = null;
         store.inappbilling.consumePurchase(
             function() { // success
@@ -177,7 +177,9 @@ store.when("product", "finished", function(product) {
                     message: err
                 });
             },
-            product.id);
+            product.id,
+            transaction.id
+        );
     }
     else {
         product.set('state', store.OWNED);
