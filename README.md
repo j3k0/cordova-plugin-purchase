@@ -6,7 +6,7 @@
 
 ## Summary
 
-This plugin allows **In-App Purchases** to be made from **Cordova and PhoneGap** applications, on **Android**, **iOS** and **Windows** (Store/Phone 8.1)
+This plugin allows **In-App Purchases** to be made from **Cordova and PhoneGap** applications, on **Android**, **iOS** and **Windows** (Store/Phone)
 
 It lets you handle all platforms with a single codebase.
 
@@ -58,7 +58,7 @@ See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wik
  - **iOS** version 6.0 or higher.
  - **Android** version 2.2 (API level 8) or higher
    - with Google Play client version 3.9.16 or higher
- - **Windows** Store/Phone 8.1
+ - **Windows** Store/Phone 8.1 or higher
 
 ## Extensions
 
