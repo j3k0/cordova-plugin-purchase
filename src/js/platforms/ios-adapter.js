@@ -389,6 +389,23 @@ function storekitError(errorCode, errorText, options) {
         return;
     }
 
+    // TH 08/03/2016: Treat errors like cancellations:
+    // - trigger the "error" event on the associated product
+    // - set the product back to the VALID state
+    // This makes it possible to know which product raised an error (previously, errors only fired on the global error listener, which obscures product id).
+    // It also seems more consistent with the documented API. See https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#events and https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#notes
+    p = store.get(options.productId);
+    if (p) {
+        p.trigger("error", [new store.Error({
+            code:    errorCode,
+            message: errorText
+        }), p]);
+        p.set({
+            transaction: null,
+            state: store.VALID
+        });
+    }
+
     store.error({
         code:    errorCode,
         message: errorText
