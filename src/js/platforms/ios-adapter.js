@@ -60,11 +60,17 @@ store.when("finished", function(product) {
 
 function storekitFinish(product) {
     if (product.type === store.CONSUMABLE || product.type === store.NON_RENEWING_SUBSCRIPTION) {
-        if (product.transaction && product.transaction.id) {
-            storekit.finish(product.transaction.id);
-        }
-        else if (storekit.transactionForProduct[product.id]) {
-            storekit.finish(storekit.transactionForProduct[product.id]);
+        var transactionId = (product.transaction && product.transaction.id) || storekit.transactionForProduct[product.id];
+        if (transactionId) {
+            storekit.finish(transactionId);
+            // TH 08/03/2016: Remove the finished transaction from product.transactions.
+            // Previously didn't clear transactions for these product types on finish.
+            // storekitPurchased suppresses approved events for transactions in product.transactions,
+            // so this prevented the approved event from firing when re-purchasing a product for which finish failed.
+            if (product.transactions) {
+                var idx = product.transactions.indexOf(transactionId);
+                if (idx >= 0) product.transactions.splice(idx, 1);
+            }
         }
         else {
             store.log.debug("ios -> error: unable to find transaction for " + product.id);
