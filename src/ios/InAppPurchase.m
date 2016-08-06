@@ -468,7 +468,12 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
                 if (!transactionIdentifier)
                     transactionIdentifier = transaction.originalTransaction.transactionIdentifier;
                 transactionReceipt = [[transaction transactionReceipt] base64EncodedStringWithOptions:0];
-                productId = transaction.originalTransaction.payment.productIdentifier;
+                // TH 08/03/2016: default to transaction.payment.productIdentifier and use transaction.originalTransaction.payment.productIdentifier as a fallback.
+                // Previously only used transaction.originalTransaction.payment.productIdentifier.
+                // When restoring transactions when there are unfinished transactions, I encountered transactions for which originalTransaction is nil, leading to a nil productId.
+                productId = transaction.payment.productIdentifier;
+                if (!productId)
+                    productId = transaction.originalTransaction.payment.productIdentifier;
                 downloads = transaction.downloads;
                 canFinish = YES;
                 break;
