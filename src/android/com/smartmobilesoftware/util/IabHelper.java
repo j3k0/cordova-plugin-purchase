@@ -594,6 +594,9 @@ public class IabHelper {
         catch (JSONException e) {
             throw new IabException(ERR_BAD_RESPONSE, "Error parsing JSON response while refreshing inventory.", e);
         }
+        catch (NullPointerException e) {
+            throw new IabException(ERR_UNKNOWN, "NullPointer while refreshing inventory.", e);
+        }
     }
 
     /**
@@ -825,7 +828,7 @@ public class IabHelper {
     }
 
 
-    int queryPurchases(Inventory inv, String itemType) throws JSONException, RemoteException {
+    int queryPurchases(Inventory inv, String itemType) throws JSONException, RemoteException, NullPointerException {
         // Query purchases
         logDebug("Querying owned items, item type: " + itemType);
         logDebug("Package name: " + mContext.getPackageName());
