@@ -1054,7 +1054,7 @@ store.when.unregister = function(cb) {
 ///
 ///  - `"valid"` - all products in the VALID state.
 ///  - `"invalid"` - all products in the INVALID state.
-///  - `"owned"` - all products in the INVALID state.
+///  - `"owned"` - all products in the OWNED state.
 ///  - etc. (see [here](#product-states) for all product states).
 ///
 /// Filter individual products:
