@@ -370,6 +370,7 @@ var ERROR_CODES_BASE = 6777000;
 /*///*/     store.ERR_REFRESH             = ERROR_CODES_BASE + 19; // Failed to refresh the store.
 /*///*/     store.ERR_PAYMENT_EXPIRED     = ERROR_CODES_BASE + 20;
 /*///*/     store.ERR_DOWNLOAD            = ERROR_CODES_BASE + 21;
+    /*///*/     store.ERR_SUBSCRIPTION_UPDATE_NOT_AVAILABLE = ERROR_CODES_BASE + 22;
 
 ///
 /// ### product states
@@ -482,6 +483,9 @@ store.Product = function(options) {
 
     ///  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
     this.transaction = null;
+
+    ///  - `product.additionalData` - additional data possibly required for passing info in event based behavior.
+    this.additionalData = null;
 
     this.stateChanged();
 };
@@ -1114,7 +1118,7 @@ var callbacks = {};
 var callbackId = 0;
 
 ///
-/// ## <a name="order"></a>*store.order(product)*
+/// ## <a name="order"></a>*store.order(product, additionalData)*
 ///
 /// Initiate the purchase of a product.
 ///
@@ -1124,10 +1128,14 @@ var callbackId = 0;
 ///  - the product `id`
 ///  - the product `alias`
 ///
+/// The `additionalData` argument can be either:
+///  - null
+///  - object with attribute `oldPurchasedSkus`, a string array with the old subscription to upgrade/downgrade on Android. See: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
+///
 /// See the ["Purchasing section"](#purchasing) to learn more about
 /// the purchase process.
 ///
-store.order = function(pid) {
+store.order = function(pid, additionalData) {
 
     var p = pid;
 
@@ -1137,7 +1145,8 @@ store.order = function(pid) {
             p = new store.Product({
                 id: pid,
                 loaded: true,
-                valid: false
+                valid: false,
+                additionalData: additionalData
             });
         }
     }

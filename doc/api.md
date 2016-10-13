@@ -302,6 +302,7 @@ The `sandbox` property defines if you want to invoke the platform purchase sandb
     store.ERR_REFRESH             = ERROR_CODES_BASE + 19; // Failed to refresh the store.
     store.ERR_PAYMENT_EXPIRED     = ERROR_CODES_BASE + 20;
     store.ERR_DOWNLOAD            = ERROR_CODES_BASE + 21;
+    store.ERR_SUBSCRIPTION_UPDATE_NOT_AVAILABLE = ERROR_CODES_BASE + 22;
 
 ### product states
 
@@ -352,6 +353,7 @@ Products object have the following fields and methods.
  - `product.downloading` - Product is downloading non-consumable content
  - `product.downloaded` - Non-consumable content has been successfully downloaded for this product
  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
+ - `product.additionalData` - additional data possibly required for passing info in event based behavior.
 
 ### *store.Product* public methods
 
@@ -612,7 +614,7 @@ Filter by product state:
 
  - `"valid"` - all products in the VALID state.
  - `"invalid"` - all products in the INVALID state.
- - `"owned"` - all products in the INVALID state.
+ - `"owned"` - all products in the OWNED state.
  - etc. (see [here](#product-states) for all product states).
 
 Filter individual products:
@@ -655,7 +657,8 @@ The `product` argument can be either:
 
 The `additionalData` argument can be either:
  - null
- - object with attribute `oldPurchasedSkus`, a string array with the old subscription to upgrade/downgrade. see: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
+ - object with attribute `oldPurchasedSkus`, a string array with the old subscription to upgrade/downgrade on Android. See: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
+
 See the ["Purchasing section"](#purchasing) to learn more about
 the purchase process.
 

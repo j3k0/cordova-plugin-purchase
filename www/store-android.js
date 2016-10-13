@@ -349,7 +349,7 @@ var ERROR_CODES_BASE = 6777000;
 /*///*/     store.ERR_REFRESH             = ERROR_CODES_BASE + 19; // Failed to refresh the store.
 /*///*/     store.ERR_PAYMENT_EXPIRED     = ERROR_CODES_BASE + 20;
 /*///*/     store.ERR_DOWNLOAD            = ERROR_CODES_BASE + 21;
-/*///*/     store.ERR_SUBSCRIPTION_UPDATE_NOT_AVAILABLE = ERROR_CODES_BASE + 22;
+    /*///*/     store.ERR_SUBSCRIPTION_UPDATE_NOT_AVAILABLE = ERROR_CODES_BASE + 22;
 
 ///
 /// ### product states
@@ -460,11 +460,11 @@ store.Product = function(options) {
     ///  - `product.downloaded` - Non-consumable content has been successfully downloaded for this product
     this.downloaded = options.downloaded;
 
-    ///  - `product.additionalData` - additional data possibly required for product purchase
-    this.additionalData = options.additionalData;
-
     ///  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
     this.transaction = null;
+
+    ///  - `product.additionalData` - additional data possibly required for passing info in event based behavior.
+    this.additionalData = null;
 
     this.stateChanged();
 };
@@ -1037,7 +1037,7 @@ store.when.unregister = function(cb) {
 ///
 ///  - `"valid"` - all products in the VALID state.
 ///  - `"invalid"` - all products in the INVALID state.
-///  - `"owned"` - all products in the INVALID state.
+///  - `"owned"` - all products in the OWNED state.
 ///  - etc. (see [here](#product-states) for all product states).
 ///
 /// Filter individual products:
@@ -1097,7 +1097,7 @@ var callbacks = {};
 var callbackId = 0;
 
 ///
-/// ## <a name="order"></a>*store.order(product)*
+/// ## <a name="order"></a>*store.order(product, additionalData)*
 ///
 /// Initiate the purchase of a product.
 ///
@@ -1106,6 +1106,10 @@ var callbackId = 0;
 ///  - the `store.Product` object
 ///  - the product `id`
 ///  - the product `alias`
+///
+/// The `additionalData` argument can be either:
+///  - null
+///  - object with attribute `oldPurchasedSkus`, a string array with the old subscription to upgrade/downgrade on Android. See: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
 ///
 /// See the ["Purchasing section"](#purchasing) to learn more about
 /// the purchase process.
@@ -1123,8 +1127,6 @@ store.order = function(pid, additionalData) {
                 valid: false,
                 additionalData: additionalData
             });
-        } else{
-            p.additionalData = additionalData;
         }
     }
 
@@ -2060,30 +2062,11 @@ InAppBilling.prototype.buy = function (success, fail, productId) {
 	}
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId]);
 };
-InAppBilling.prototype.subscribe = function (success, fail, productId, oldPurchasedSkus) {
+InAppBilling.prototype.subscribe = function (success, fail, productId) {
 	if (this.options.showLog) {
 		log('subscribe called!');
 	}
-
-    if (typeof oldPurchasedSkus === "string") {
-        oldPurchasedSkus = [oldPurchasedSkus];
-    }
-    if (!oldPurchasedSkus || !(oldPurchasedSkus.length > 0)) {
-        log('subsribing with no old SKUS!');
-        // Empty array, subscribe with array as null.
-        return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId, null]);
-    }else {
-        log('subsribing with existing old SKUS!');
-        if (typeof oldPurchasedSkus[0] !== 'string') {
-            var msg = 'invalid subscription productIds: ' + JSON.stringify(oldPurchasedSkus);
-            log(msg);
-            fail(msg, store.ERR_INVALID_PRODUCT_ID);
-            return;
-        }
-        if (this.options.showLog) {
-            log('load ' + JSON.stringify(oldPurchasedSkus));
-        }
-        return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId, oldPurchasedSkus]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId]);
 };
 InAppBilling.prototype.consumePurchase = function (success, fail, productId, transactionId) {
 	if (this.options.showLog) {
@@ -2277,13 +2260,9 @@ store.when("requested", function(product) {
         product.set("state", store.INITIATED);
 
         var method = 'buy';
-        var additionalData = null;
         if (product.type === store.FREE_SUBSCRIPTION || product.type === store.PAID_SUBSCRIPTION) {
             method = 'subscribe';
-            additionalData = (product && product.additionalData && product.additionalData.oldPurchasedSkus)?
-                product.additionalData.oldPurchasedSkus:null;
         }
-
         store.inappbilling[method](function(data) {
             // Success callabck.
             //
@@ -2320,7 +2299,7 @@ store.when("requested", function(product) {
             else {
                 product.set("state", store.VALID);
             }
-        }, product.id, additionalData);
+        }, product.id);
     });
 });
 

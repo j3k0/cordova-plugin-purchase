@@ -8,7 +8,7 @@ var callbacks = {};
 var callbackId = 0;
 
 ///
-/// ## <a name="order"></a>*store.order(product)*
+/// ## <a name="order"></a>*store.order(product, additionalData)*
 ///
 /// Initiate the purchase of a product.
 ///
@@ -17,6 +17,10 @@ var callbackId = 0;
 ///  - the `store.Product` object
 ///  - the product `id`
 ///  - the product `alias`
+///
+/// The `additionalData` argument can be either:
+///  - null
+///  - object with attribute `oldPurchasedSkus`, a string array with the old subscription to upgrade/downgrade on Android. See: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
 ///
 /// See the ["Purchasing section"](#purchasing) to learn more about
 /// the purchase process.
