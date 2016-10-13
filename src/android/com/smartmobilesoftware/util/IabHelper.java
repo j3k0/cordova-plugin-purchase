@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender.SendIntentException;
 import android.content.ServiceConnection;
+import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -83,6 +84,9 @@ public class IabHelper {
     // Are subscriptions supported?
     boolean mSubscriptionsSupported = false;
 
+    // Is subscription update supported?
+    boolean mSubscriptionUpdateSupported = false;
+
     // Is an asynchronous operation in progress?
     // (only one at a time can be in progress)
     boolean mAsyncInProgress = false;
@@ -110,6 +114,7 @@ public class IabHelper {
     // Billing API response codes
     public static final int BILLING_RESPONSE_RESULT_OK = 0;
     public static final int BILLING_RESPONSE_RESULT_USER_CANCELED = 1;
+    public static final int BILLING_RESPONSE_RESULT_SERVICE_UNAVAILABLE = 2;
     public static final int BILLING_RESPONSE_RESULT_BILLING_UNAVAILABLE = 3;
     public static final int BILLING_RESPONSE_RESULT_ITEM_UNAVAILABLE = 4;
     public static final int BILLING_RESPONSE_RESULT_DEVELOPER_ERROR = 5;
@@ -136,6 +141,7 @@ public class IabHelper {
     public static final int ERR_VERIFICATION_FAILED = ERROR_CODES_BASE + 17;
     public static final int ERR_BAD_RESPONSE = ERROR_CODES_BASE + 18;
     public static final int ERR_REFRESH = ERROR_CODES_BASE + 19;
+    public static final int ERR_SUBSCRIPTION_UPDATE_NOT_AVAILABLE = ERROR_CODES_BASE + 22;
 
     // Keys for the responses from InAppBillingService
     public static final String RESPONSE_CODE = "RESPONSE_CODE";
@@ -238,18 +244,36 @@ public class IabHelper {
 
                         // if in-app purchases aren't supported, neither are subscriptions.
                         mSubscriptionsSupported = false;
+                        mSubscriptionUpdateSupported = false;
                         return;
+                    } else {
+                        logDebug("In-app billing version 3 supported for " + packageName);
                     }
-                    logDebug("In-app billing version 3 supported for " + packageName);
 
-                    // check for v3 subscriptions support
-                    response = mService.isBillingSupported(3, packageName, ITEM_TYPE_SUBS);
+                    // Check for v5 subscriptions support. This is needed for
+                    // getBuyIntentToReplaceSku which allows for subscription update
+                    response = mService.isBillingSupported(5, packageName, ITEM_TYPE_SUBS);
                     if (response == BILLING_RESPONSE_RESULT_OK) {
-                        logDebug("Subscriptions AVAILABLE.");
-                        mSubscriptionsSupported = true;
+                        logDebug("Subscription re-signup AVAILABLE.");
+                        mSubscriptionUpdateSupported = true;
+                    } else {
+                        logDebug("Subscription re-signup not available.");
+                        mSubscriptionUpdateSupported = false;
                     }
-                    else {
-                        logDebug("Subscriptions NOT AVAILABLE. Response: " + response);
+
+                    if (mSubscriptionUpdateSupported) {
+                        mSubscriptionsSupported = true;
+                    } else {
+                        // check for v3 subscriptions support
+                        response = mService.isBillingSupported(3, packageName, ITEM_TYPE_SUBS);
+                        if (response == BILLING_RESPONSE_RESULT_OK) {
+                            logDebug("Subscriptions AVAILABLE.");
+                            mSubscriptionsSupported = true;
+                        } else {
+                            logDebug("Subscriptions NOT AVAILABLE. Response: " + response);
+                            mSubscriptionsSupported = false;
+                            mSubscriptionUpdateSupported = false;
+                        }
                     }
 
                     mSetupDone = true;
@@ -353,7 +377,7 @@ public class IabHelper {
 
     public void launchPurchaseFlow(Activity act, String sku, int requestCode,
             OnIabPurchaseFinishedListener listener, String extraData) {
-        launchPurchaseFlow(act, sku, ITEM_TYPE_INAPP, requestCode, listener, extraData);
+        launchPurchaseFlow(act, sku, ITEM_TYPE_INAPP, null, requestCode, listener, extraData);
     }
 
     public void launchSubscriptionPurchaseFlow(Activity act, String sku, int requestCode,
@@ -363,7 +387,7 @@ public class IabHelper {
 
     public void launchSubscriptionPurchaseFlow(Activity act, String sku, int requestCode,
             OnIabPurchaseFinishedListener listener, String extraData) {
-        launchPurchaseFlow(act, sku, ITEM_TYPE_SUBS, requestCode, listener, extraData);
+        launchPurchaseFlow(act, sku, ITEM_TYPE_SUBS, null, requestCode, listener, extraData);
     }
 
     /**
@@ -377,6 +401,8 @@ public class IabHelper {
      * @param act The calling activity.
      * @param sku The sku of the item to purchase.
      * @param itemType indicates if it's a product or a subscription (ITEM_TYPE_INAPP or ITEM_TYPE_SUBS)
+     *      ITEM_TYPE_SUBS)
+     * @param oldPurchasedSkus A list of SKUs which the new SKU is replacing or null if there are none
      * @param requestCode A request code (to differentiate from other responses --
      *     as in {@link android.app.Activity#startActivityForResult}).
      * @param listener The listener to notify when the purchase process finishes
@@ -384,8 +410,8 @@ public class IabHelper {
      *     when the purchase completes. This extra data will be permanently bound to that purchase
      *     and will always be returned when the purchase is queried.
      */
-    public void launchPurchaseFlow(Activity act, String sku, String itemType, int requestCode,
-                        OnIabPurchaseFinishedListener listener, String extraData) {
+    public void launchPurchaseFlow(Activity act, String sku, String itemType, List<String> oldPurchasedSkus,
+            int requestCode, OnIabPurchaseFinishedListener listener, String extraData) {
         checkNotDisposed();
         checkSetupDone("launchPurchaseFlow");
         flagStartAsync("launchPurchaseFlow");
@@ -401,7 +427,23 @@ public class IabHelper {
 
         try {
             logDebug("Constructing buy intent for " + sku + ", item type: " + itemType);
-            Bundle buyIntentBundle = mService.getBuyIntent(3, mContext.getPackageName(), sku, itemType, extraData);
+            Bundle buyIntentBundle;
+            if (oldPurchasedSkus == null || oldPurchasedSkus.isEmpty()) {
+                // Purchasing a new item or subscription re-signup
+                buyIntentBundle = mService.getBuyIntent(3, mContext.getPackageName(), sku, itemType,
+                        extraData);
+            } else {
+                // Subscription upgrade/downgrade
+                if (!mSubscriptionUpdateSupported) {
+                    IabResult r = new IabResult(ERR_SUBSCRIPTION_UPDATE_NOT_AVAILABLE,
+                            "Subscription updates are not available.");
+                    flagEndAsync();
+                    if (listener != null) listener.onIabPurchaseFinished(r, null);
+                    return;
+                }
+                buyIntentBundle = mService.getBuyIntentToReplaceSkus(5, mContext.getPackageName(),
+                        oldPurchasedSkus, sku, itemType, extraData);
+            }
             int response = getResponseCodeFromBundle(buyIntentBundle);
             if (response != BILLING_RESPONSE_RESULT_OK) {
                 logError("Unable to buy item, Error response: " + getResponseDesc(response));
