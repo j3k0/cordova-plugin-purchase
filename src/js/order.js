@@ -21,7 +21,7 @@ var callbackId = 0;
 /// See the ["Purchasing section"](#purchasing) to learn more about
 /// the purchase process.
 ///
-store.order = function(pid) {
+store.order = function(pid, additionalData) {
 
     var p = pid;
 
@@ -31,7 +31,8 @@ store.order = function(pid) {
             p = new store.Product({
                 id: pid,
                 loaded: true,
-                valid: false
+                valid: false,
+                additionalData: additionalData
             });
         }
     }

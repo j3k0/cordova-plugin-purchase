@@ -612,7 +612,7 @@ Filter by product state:
 
  - `"valid"` - all products in the VALID state.
  - `"invalid"` - all products in the INVALID state.
- - `"owned"` - all products in the OWNED state.
+ - `"owned"` - all products in the INVALID state.
  - etc. (see [here](#product-states) for all product states).
 
 Filter individual products:
@@ -643,7 +643,7 @@ After being called, the callback will be unregistered.
    - Same remarks as `store.when(query, action, callback)`
 
 
-## <a name="order"></a>*store.order(product)*
+## <a name="order"></a>*store.order(product, additionalData)*
 
 Initiate the purchase of a product.
 
@@ -653,6 +653,9 @@ The `product` argument can be either:
  - the product `id`
  - the product `alias`
 
+The `additionalData` argument can be either:
+ - null
+ - object with attribute `oldPurchasedSkus`, a string array with the old subscription to upgrade/downgrade. see: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
 See the ["Purchasing section"](#purchasing) to learn more about
 the purchase process.
 

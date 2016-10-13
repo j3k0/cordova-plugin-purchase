@@ -79,6 +79,9 @@ store.Product = function(options) {
     ///  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
     this.transaction = null;
 
+    ///  - `product.additionalData` - additional data possibly required for passing info in event based behavior.
+    this.additionalData = null;
+
     this.stateChanged();
 };
 

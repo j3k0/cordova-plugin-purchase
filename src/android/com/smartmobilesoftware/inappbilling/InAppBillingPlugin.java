@@ -80,7 +80,19 @@ public class InAppBillingPlugin extends CordovaPlugin {
 				// Subscribe to an item
 				// Get Product Id
 				final String sku = data.getString(0);
-				subscribe(sku);
+				final List<String> oldPurchasedSkus = new ArrayList<String>();
+				String oldSkuList = data.getString(1);
+				oldSkuList = (oldSkuList == "null")?null:oldSkuList;
+                if (oldSkuList != null){
+					JSONArray jsonOldSkuList = new JSONArray(oldSkuList);
+					int len = jsonOldSkuList.length();
+					Log.d(TAG, "Num old SKUs Found: "+len);
+					for (int i=0;i<len;i++){
+						oldPurchasedSkus.add(jsonOldSkuList.get(i).toString());
+						Log.d(TAG, "Subscription SKU Added: "+jsonOldSkuList.get(i).toString());
+					}
+                }
+           		subscribe(sku, oldPurchasedSkus);
 			} else if ("consumePurchase".equals(action)) {
 				consumePurchase(data);
 			} else if ("getAvailableProducts".equals(action)) {
@@ -200,7 +212,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
 	}
 
 	// Buy an item
-	private void subscribe(final String sku){
+	private void subscribe(final String sku, final List<String> oldPurchasedSkus){
 		if (mHelper == null){
 			callbackContext.error(IabHelper.ERR_PURCHASE + "|Billing plugin was not initialized");
 			return;
@@ -220,7 +232,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
 		this.cordova.setActivityResultCallback(this);
         Log.d(TAG, "Launching purchase flow for subscription.");
 
-		mHelper.launchPurchaseFlow(cordova.getActivity(), sku, IabHelper.ITEM_TYPE_SUBS, RC_REQUEST, mPurchaseFinishedListener, payload);
+		mHelper.launchPurchaseFlow(cordova.getActivity(), sku, IabHelper.ITEM_TYPE_SUBS, oldPurchasedSkus, RC_REQUEST, mPurchaseFinishedListener, payload);
 	}
 
 
