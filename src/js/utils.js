@@ -65,6 +65,9 @@ store.utils = {
     ajax: function(options) {
         var doneCb = function(){};
         var xhr = new XMLHttpRequest();
+        if (options.auth) {
+            xhr.setRequestHeader("Authorization", options.auth);
+        }
         xhr.open(options.method || 'POST', options.url, true);
         xhr.onreadystatechange = function(/*event*/) {
             try {

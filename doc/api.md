@@ -705,7 +705,7 @@ Example use:
 Set this attribute to either:
 
  - the URL of your purchase validation service
-    - Fovea's [reeceipt](http://reeceipt.fovea.cc) or your own service.
+    - Fovea's [billing service](https://billing.fovea.cc) or your own service.
  - a custom validation callback method
 
 #### example usage
@@ -736,6 +736,14 @@ store.validator = function(product, callback) {
 });
 ```
 Validation error codes are [documented here](#validation-error-codes).
+## <a name="setValidator"></a> *store.validator(url, username, password)*
+Set the validator url with (optional) authentication.
+
+#### example usage
+
+```js
+store.setValidator("https://reeceipt-validator.fovea.cc/v1/validate", "cc.fovea.babygoo", "my-public-key");
+```
 
 ## transactions
 

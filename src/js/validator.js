@@ -5,7 +5,7 @@
 /// Set this attribute to either:
 ///
 ///  - the URL of your purchase validation service
-///     - Fovea's [reeceipt](http://reeceipt.fovea.cc) or your own service.
+///     - Fovea's [billing service](https://billing.fovea.cc) or your own service.
 ///  - a custom validation callback method
 ///
 /// #### example usage
@@ -38,6 +38,20 @@
 /// Validation error codes are [documented here](#validation-error-codes).
 store.validator = null;
 
+/// ## <a name="setValidator"></a> *store.validator(url, username, password)*
+/// Set the validator url with (optional) authentication.
+///
+/// #### example usage
+///
+/// ```js
+/// store.setValidator("https://reeceipt-validator.fovea.cc/v1/validate", "cc.fovea.babygoo", "my-public-key");
+/// ```
+store.setValidator = function(url, username, password) {
+    store.validator = url;
+    if (username && password)
+        store.validator.auth = "Basic " + btoa(username + ":" + password);
+};
+
 //
 // ## store._validator
 //
@@ -59,6 +73,7 @@ store._validator = function(product, callback, isPrepared) {
 
     if (typeof store.validator === 'string') {
         store.utils.ajax({
+            auth: store.validator.auth,
             url: store.validator,
             method: 'POST',
             data: product,
