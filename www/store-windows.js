@@ -1128,6 +1128,9 @@ store.order = function(pid, additionalData) {
                 additionalData: additionalData
             });
         }
+        else if (additionalData) {
+            p.additionalData = additionalData;
+        }
     }
 
     var localCallbackId = callbackId++;
