@@ -2398,6 +2398,7 @@ store.when("product", "finished", function(product) {
         product.transaction = {
             type: 'android-playstore', //TODO - does this need to be here?
             id: data.orderId,
+            versionName: window.android && window.android.getVersionName ? window.android.getVersionName() : null,
             purchaseToken: data.purchaseToken,
             developerPayload: data.developerPayload,
             receipt: data.receipt,
