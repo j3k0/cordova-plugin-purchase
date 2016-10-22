@@ -2077,14 +2077,20 @@ InAppBilling.prototype.subscribe = function (success, fail, productId, oldPurcha
 		oldPurchasedSkus = [oldPurchasedSkus];
 	}
 	if (!oldPurchasedSkus || !(oldPurchasedSkus.length > 0)) {
-		log('subsribing with no old SKUS!');
+		if (this.options.showLog) {
+			log('subsribing with no old SKUS!');
+		}
 		// Empty array, subscribe with array as null.
 		return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId, null]);
 	} else {
-		log('subsribing with existing old SKUS!');
+		if (this.options.showLog) {
+			log('subsribing with existing old SKUS!');
+		}
 		if (typeof oldPurchasedSkus[0] !== 'string') {
 			var msg = 'invalid subscription productIds: ' + JSON.stringify(oldPurchasedSkus);
-			log(msg);
+			if (this.options.showLog) {
+				log(msg);
+			}
 			fail(msg, store.ERR_INVALID_PRODUCT_ID);
 			return;
 		}
