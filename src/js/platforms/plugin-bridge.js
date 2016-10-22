@@ -69,11 +69,31 @@ InAppBilling.prototype.buy = function (success, fail, productId) {
 	}
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId]);
 };
-InAppBilling.prototype.subscribe = function (success, fail, productId) {
+InAppBilling.prototype.subscribe = function (success, fail, productId, oldPurchasedSkus) {
 	if (this.options.showLog) {
 		log('subscribe called!');
 	}
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId]);
+
+	if (typeof oldPurchasedSkus === "string") {
+		oldPurchasedSkus = [oldPurchasedSkus];
+	}
+	if (!oldPurchasedSkus || !(oldPurchasedSkus.length > 0)) {
+		log('subsribing with no old SKUS!');
+		// Empty array, subscribe with array as null.
+		return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId, null]);
+	} else {
+		log('subsribing with existing old SKUS!');
+		if (typeof oldPurchasedSkus[0] !== 'string') {
+			var msg = 'invalid subscription productIds: ' + JSON.stringify(oldPurchasedSkus);
+			log(msg);
+			fail(msg, store.ERR_INVALID_PRODUCT_ID);
+			return;
+		}
+		if (this.options.showLog) {
+			log('load ' + JSON.stringify(oldPurchasedSkus));
+		}
+		return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId, oldPurchasedSkus]);
+	}
 };
 InAppBilling.prototype.consumePurchase = function (success, fail, productId, transactionId) {
 	if (this.options.showLog) {

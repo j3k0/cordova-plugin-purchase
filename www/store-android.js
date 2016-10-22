@@ -460,6 +460,9 @@ store.Product = function(options) {
     ///  - `product.downloaded` - Non-consumable content has been successfully downloaded for this product
     this.downloaded = options.downloaded;
 
+    ///  - `product.additionalData` - additional data possibly required for product purchase
+    this.additionalData = options.additionalData;
+
     ///  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
     this.transaction = null;
 
@@ -2065,11 +2068,31 @@ InAppBilling.prototype.buy = function (success, fail, productId) {
 	}
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId]);
 };
-InAppBilling.prototype.subscribe = function (success, fail, productId) {
+InAppBilling.prototype.subscribe = function (success, fail, productId, oldPurchasedSkus) {
 	if (this.options.showLog) {
 		log('subscribe called!');
 	}
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId]);
+
+	if (typeof oldPurchasedSkus === "string") {
+		oldPurchasedSkus = [oldPurchasedSkus];
+	}
+	if (!oldPurchasedSkus || !(oldPurchasedSkus.length > 0)) {
+		log('subsribing with no old SKUS!');
+		// Empty array, subscribe with array as null.
+		return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId, null]);
+	} else {
+		log('subsribing with existing old SKUS!');
+		if (typeof oldPurchasedSkus[0] !== 'string') {
+			var msg = 'invalid subscription productIds: ' + JSON.stringify(oldPurchasedSkus);
+			log(msg);
+			fail(msg, store.ERR_INVALID_PRODUCT_ID);
+			return;
+		}
+		if (this.options.showLog) {
+			log('load ' + JSON.stringify(oldPurchasedSkus));
+		}
+		return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId, oldPurchasedSkus]);
+	}
 };
 InAppBilling.prototype.consumePurchase = function (success, fail, productId, transactionId) {
 	if (this.options.showLog) {
@@ -2263,9 +2286,13 @@ store.when("requested", function(product) {
         product.set("state", store.INITIATED);
 
         var method = 'buy';
+        var additionalData = null;
         if (product.type === store.FREE_SUBSCRIPTION || product.type === store.PAID_SUBSCRIPTION) {
             method = 'subscribe';
+            additionalData = (product && product.additionalData && product.additionalData.oldPurchasedSkus)?
+                product.additionalData.oldPurchasedSkus:null;
         }
+
         store.inappbilling[method](function(data) {
             // Success callabck.
             //
@@ -2302,7 +2329,7 @@ store.when("requested", function(product) {
             else {
                 product.set("state", store.VALID);
             }
-        }, product.id);
+        }, product.id, additionalData);
     });
 });
 
