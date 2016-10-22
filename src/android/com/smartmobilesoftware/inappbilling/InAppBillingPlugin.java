@@ -75,24 +75,40 @@ public class InAppBillingPlugin extends CordovaPlugin {
 				// Buy an item
 				// Get Product Id
 				final String sku = data.getString(0);
-				buy(sku);
+				final JSONObject additionalData = data.getJSONObject(1);
+
+				// Get the developer payload
+				String developerPayload = "";
+				if(additionalData.has("developerPayload")) {
+					developerPayload = additionalData.getString("developerPayload");
+				}
+				buy(sku, developerPayload);
 			} else if ("subscribe".equals(action)) {
 				// Subscribe to an item
 				// Get Product Id
 				final String sku = data.getString(0);
+				final JSONObject additionalData = data.getJSONObject(1);
+
+				// Get the developer payload
+				String developerPayload = "";
+				if(additionalData.has("developerPayload")) {
+					developerPayload = additionalData.getString("developerPayload");
+				}
+
+				// Get the subscriptions SKUs to upgrade
 				final List<String> oldPurchasedSkus = new ArrayList<String>();
-				String oldSkuList = data.getString(1);
-				oldSkuList = (oldSkuList == "null")?null:oldSkuList;
-                if (oldSkuList != null){
+				if(additionalData.has("oldPurchasedSkus")) {
+					String oldSkuList = additionalData.getString("oldPurchasedSkus");
 					JSONArray jsonOldSkuList = new JSONArray(oldSkuList);
+
 					int len = jsonOldSkuList.length();
 					Log.d(TAG, "Num old SKUs Found: "+len);
 					for (int i=0;i<len;i++){
 						oldPurchasedSkus.add(jsonOldSkuList.get(i).toString());
 						Log.d(TAG, "Subscription SKU Added: "+jsonOldSkuList.get(i).toString());
 					}
-                }
-           		subscribe(sku, oldPurchasedSkus);
+				}
+				subscribe(sku, developerPayload, oldPurchasedSkus);
 			} else if ("consumePurchase".equals(action)) {
 				consumePurchase(data);
 			} else if ("getAvailableProducts".equals(action)) {
@@ -193,7 +209,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
     }
 
 	// Buy an item
-	private void buy(final String sku){
+	private void buy(final String sku, final String developerPayload){
 		/* TODO: for security, generate your payload here for verification. See the comments on
          *        verifyDeveloperPayload() for more info. Since this is a sample, we just use
          *        an empty string, but on a production app you should generate this. */
@@ -207,12 +223,12 @@ public class InAppBillingPlugin extends CordovaPlugin {
 		this.cordova.setActivityResultCallback(this);
 
 		mHelper.launchPurchaseFlow(cordova.getActivity(), sku, RC_REQUEST,
-                mPurchaseFinishedListener, payload);
+                mPurchaseFinishedListener, developerPayload);
 
 	}
 
 	// Buy an item
-	private void subscribe(final String sku, final List<String> oldPurchasedSkus){
+	private void subscribe(final String sku, final String developerPayload, final List<String> oldPurchasedSkus){
 		if (mHelper == null){
 			callbackContext.error(IabHelper.ERR_PURCHASE + "|Billing plugin was not initialized");
 			return;
@@ -232,7 +248,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
 		this.cordova.setActivityResultCallback(this);
         Log.d(TAG, "Launching purchase flow for subscription.");
 
-		mHelper.launchPurchaseFlow(cordova.getActivity(), sku, IabHelper.ITEM_TYPE_SUBS, oldPurchasedSkus, RC_REQUEST, mPurchaseFinishedListener, payload);
+		mHelper.launchPurchaseFlow(cordova.getActivity(), sku, IabHelper.ITEM_TYPE_SUBS, oldPurchasedSkus, RC_REQUEST, mPurchaseFinishedListener, developerPayload);
 	}
 
 
