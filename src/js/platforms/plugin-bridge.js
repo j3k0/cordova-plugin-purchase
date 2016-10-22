@@ -57,6 +57,12 @@ InAppBilling.prototype.init = function (success, fail, options, skus) {
 		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", []);
     }
 };
+InAppBilling.prototype.loadProducts = function(success, fail, options, skus) {
+    if (this.options.showLog) {
+        log("loadProducts called!");
+    }
+    cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "loadProducts", [skus]);
+};
 InAppBilling.prototype.getPurchases = function (success, fail) {
 	if (this.options.showLog) {
 		log('getPurchases called!');
