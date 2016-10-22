@@ -63,17 +63,22 @@ InAppBilling.prototype.getPurchases = function (success, fail) {
 	}
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getPurchases", ["null"]);
 };
-InAppBilling.prototype.buy = function (success, fail, productId) {
+InAppBilling.prototype.buy = function (success, fail, productId, additionalData) {
 	if (this.options.showLog) {
 		log('buy called!');
 	}
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId]);
+	additionalData = (!!additionalData) && (additionalData.constructor === Object) ? additionalData : {};
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId, additionalData]);
 };
-InAppBilling.prototype.subscribe = function (success, fail, productId) {
+InAppBilling.prototype.subscribe = function (success, fail, productId, additionalData) {
 	if (this.options.showLog) {
 		log('subscribe called!');
 	}
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId]);
+	additionalData = (!!additionalData) && (additionalData.constructor === Object) ? additionalData : {};
+	if (additionalData.oldPurchasedSkus && this.options.showLog) {
+    	log('subscribe called with upgrading of old SKUs!');
+    }
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId, additionalData || {}]);
 };
 InAppBilling.prototype.consumePurchase = function (success, fail, productId, transactionId) {
 	if (this.options.showLog) {

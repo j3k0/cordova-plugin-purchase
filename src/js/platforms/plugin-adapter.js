@@ -117,6 +117,7 @@ store.when("requested", function(product) {
         if (product.type === store.FREE_SUBSCRIPTION || product.type === store.PAID_SUBSCRIPTION) {
             method = 'subscribe';
         }
+
         store.inappbilling[method](function(data) {
             // Success callabck.
             //
@@ -153,7 +154,7 @@ store.when("requested", function(product) {
             else {
                 product.set("state", store.VALID);
             }
-        }, product.id);
+        }, product.id, product.additionalData);
     });
 });
 

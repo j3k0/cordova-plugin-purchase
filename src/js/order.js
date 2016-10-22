@@ -21,6 +21,7 @@ var callbackId = 0;
 /// The `additionalData` argument can be either:
 ///  - null
 ///  - object with attribute `oldPurchasedSkus`, a string array with the old subscription to upgrade/downgrade on Android. See: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
+///  - object with attribute `developerPayload`, string representing the developer payload as described in [billing best practices](https://developer.android.com/google/play/billing/billing_best_practices.html)
 ///
 /// See the ["Purchasing section"](#purchasing) to learn more about
 /// the purchase process.
@@ -35,13 +36,12 @@ store.order = function(pid, additionalData) {
             p = new store.Product({
                 id: pid,
                 loaded: true,
-                valid: false,
-                additionalData: additionalData
+                valid: false
             });
         }
-        else if (additionalData) {
-            p.additionalData = additionalData;
-        }
+    }
+    if (additionalData) {
+     	p.additionalData = additionalData;
     }
 
     var localCallbackId = callbackId++;
