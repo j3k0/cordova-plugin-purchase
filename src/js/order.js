@@ -41,7 +41,7 @@ store.order = function(pid, additionalData) {
         }
     }
     if (additionalData) {
-     	p.additionalData = additionalData;
+        p.additionalData = additionalData;
     }
 
     var localCallbackId = callbackId++;
