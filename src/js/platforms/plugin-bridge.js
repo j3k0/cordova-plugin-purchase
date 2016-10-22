@@ -76,7 +76,7 @@ InAppBilling.prototype.subscribe = function (success, fail, productId, additiona
 	}
 	additionalData = (!!additionalData) && (additionalData.constructor === Object) ? additionalData : {};
 	if (additionalData.oldPurchasedSkus && this.options.showLog) {
-    	log('subscribe called with upgrading of old SKUs!');
+        log('subscribe called with upgrading of old SKUs!');
     }
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId, additionalData || {}]);
 };

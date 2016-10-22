@@ -349,7 +349,7 @@ var ERROR_CODES_BASE = 6777000;
 /*///*/     store.ERR_REFRESH             = ERROR_CODES_BASE + 19; // Failed to refresh the store.
 /*///*/     store.ERR_PAYMENT_EXPIRED     = ERROR_CODES_BASE + 20;
 /*///*/     store.ERR_DOWNLOAD            = ERROR_CODES_BASE + 21;
-    /*///*/     store.ERR_SUBSCRIPTION_UPDATE_NOT_AVAILABLE = ERROR_CODES_BASE + 22;
+/*///*/     store.ERR_SUBSCRIPTION_UPDATE_NOT_AVAILABLE = ERROR_CODES_BASE + 22;
 
 ///
 /// ### product states
@@ -460,11 +460,11 @@ store.Product = function(options) {
     ///  - `product.downloaded` - Non-consumable content has been successfully downloaded for this product
     this.downloaded = options.downloaded;
 
+    ///  - `product.additionalData` - additional data possibly required for product purchase
+    this.additionalData = options.additionalData || null;
+
     ///  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
     this.transaction = null;
-
-    ///  - `product.additionalData` - additional data possibly required for passing info in event based behavior.
-    this.additionalData = null;
 
     this.stateChanged();
 };
@@ -1110,6 +1110,7 @@ var callbackId = 0;
 /// The `additionalData` argument can be either:
 ///  - null
 ///  - object with attribute `oldPurchasedSkus`, a string array with the old subscription to upgrade/downgrade on Android. See: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
+///  - object with attribute `developerPayload`, string representing the developer payload as described in [billing best practices](https://developer.android.com/google/play/billing/billing_best_practices.html)
 ///
 /// See the ["Purchasing section"](#purchasing) to learn more about
 /// the purchase process.
@@ -1124,13 +1125,12 @@ store.order = function(pid, additionalData) {
             p = new store.Product({
                 id: pid,
                 loaded: true,
-                valid: false,
-                additionalData: additionalData
+                valid: false
             });
         }
-        else if (additionalData) {
-            p.additionalData = additionalData;
-        }
+    }
+    if (additionalData) {
+        p.additionalData = additionalData;
     }
 
     var localCallbackId = callbackId++;
@@ -2059,17 +2059,22 @@ InAppBilling.prototype.getPurchases = function (success, fail) {
 	}
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getPurchases", ["null"]);
 };
-InAppBilling.prototype.buy = function (success, fail, productId) {
+InAppBilling.prototype.buy = function (success, fail, productId, additionalData) {
 	if (this.options.showLog) {
 		log('buy called!');
 	}
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId]);
+	additionalData = (!!additionalData) && (additionalData.constructor === Object) ? additionalData : {};
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId, additionalData]);
 };
-InAppBilling.prototype.subscribe = function (success, fail, productId) {
+InAppBilling.prototype.subscribe = function (success, fail, productId, additionalData) {
 	if (this.options.showLog) {
 		log('subscribe called!');
 	}
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId]);
+	additionalData = (!!additionalData) && (additionalData.constructor === Object) ? additionalData : {};
+	if (additionalData.oldPurchasedSkus && this.options.showLog) {
+        log('subscribe called with upgrading of old SKUs!');
+    }
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId, additionalData || {}]);
 };
 InAppBilling.prototype.consumePurchase = function (success, fail, productId, transactionId) {
 	if (this.options.showLog) {
@@ -2266,6 +2271,7 @@ store.when("requested", function(product) {
         if (product.type === store.FREE_SUBSCRIPTION || product.type === store.PAID_SUBSCRIPTION) {
             method = 'subscribe';
         }
+
         store.inappbilling[method](function(data) {
             // Success callabck.
             //
@@ -2302,7 +2308,7 @@ store.when("requested", function(product) {
             else {
                 product.set("state", store.VALID);
             }
-        }, product.id);
+        }, product.id, product.additionalData);
     });
 });
 
