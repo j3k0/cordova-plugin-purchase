@@ -35,17 +35,17 @@
   "author": "Jean-Christophe Hoelt <hoelt@fovea.cc>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/j3k0/PhoneGap-InAppPurchase-iOS/issues"
+    "url": "https://github.com/j3k0/cordova-plugin-purchase/issues"
   },
-  "homepage": "https://github.com/j3k0/PhoneGap-InAppPurchase-iOS",
+  "homepage": "https://github.com/j3k0/cordova-plugin-purchase",
   "devDependencies": {
-    "cordova": "^3.6.3-0.2.13",
-    "eslint": "^0.9.1",
-    "istanbul": "^0.3.2",
-    "jshint": "^2.5.6",
-    "mocha": "^1.21.4",
+    "cordova": "^6.3.1",
+    "eslint": "^3.8.1",
+    "istanbul": "^0.4.5",
+    "jshint": "^2.9.4",
+    "mocha": "^3.1.2",
     "preprocessor": "^1.4.0",
-    "uglify-js": "^2.4.15",
-    "coveralls": "^2.11.2"
+    "uglify-js": "^2.7.4",
+    "coveralls": "^2.11.14"
   }
 }
