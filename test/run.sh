@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Set variables: PLUGIN_DIR, TEST_DIR, BUILD_DIR
 cd `dirname $0`/..
@@ -69,12 +69,6 @@ cp "$ROOT_DIR"/www/*.js plugins/cc.fovea.cordova.purchase/www/
 # Add console debug
 cordova plugin add https://git-wip-us.apache.org/repos/asf/cordova-plugin-console.git || exit 1
 
-# Compile for iOS
-cordova build ios || exit 1
-
-# Compile for Android
-cordova build android || exit 1
-
 # Check existance of the plugins files
 function hasFile() {
     if test -e "$1"; then
@@ -85,24 +79,32 @@ function hasFile() {
     fi
 }
 
-echo
-echo Check iOS installation
-IOS_PLUGIN_DIR="$BUILD_DIR/platforms/ios/Test/Plugins/cc.fovea.cordova.purchase"
-IOS_WWW_DIR="$BUILD_DIR/platforms/ios/www/plugins/cc.fovea.cordova.purchase/www"
-IOS_PROJ="$BUILD_DIR/platforms/ios/Test.xcodeproj/project.pbxproj"
+case "$OSTYPE" in darwin*)
+    # Compile for iOS
+    cordova build ios || exit 1
 
-hasFile "$IOS_PLUGIN_DIR/InAppPurchase.m"
-hasFile "$IOS_PLUGIN_DIR/InAppPurchase.h"
-hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.h"
-hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.m"
-hasFile "$IOS_WWW_DIR/store-ios.js"
+    echo
+    echo Check iOS installation
+    IOS_PLUGIN_DIR="$BUILD_DIR/platforms/ios/Test/Plugins/cc.fovea.cordova.purchase"
+    IOS_WWW_DIR="$BUILD_DIR/platforms/ios/www/plugins/cc.fovea.cordova.purchase/www"
+    IOS_PROJ="$BUILD_DIR/platforms/ios/Test.xcodeproj/project.pbxproj"
 
-if grep StoreKit.framework "$IOS_PROJ" > /dev/null; then
-    echo "StoreKit framework added."
-else
-    echo "ERROR: StoreKit framework missing."
-    EXIT=1
-fi
+    hasFile "$IOS_PLUGIN_DIR/InAppPurchase.m"
+    hasFile "$IOS_PLUGIN_DIR/InAppPurchase.h"
+    hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.h"
+    hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.m"
+    hasFile "$IOS_WWW_DIR/store-ios.js"
+
+    if grep StoreKit.framework "$IOS_PROJ" > /dev/null; then
+        echo "StoreKit framework added."
+    else
+        echo "ERROR: StoreKit framework missing."
+        EXIT=1
+    fi
+;; esac
+
+# Compile for Android
+cordova build android || exit 1
 
 echo Check Android installation
 ANDROID_CLASSES_DIR="$BUILD_DIR/platforms/android/build/intermediates/classes/debug"
