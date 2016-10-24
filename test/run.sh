@@ -18,6 +18,10 @@ IAP_ID="$2"
 #PLUGIN_URL="git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git#unified"
 PLUGIN_URL="$ROOT_DIR"
 
+if [ "_$BILLING_KEY" = _ ]; then
+    BILLING_KEY="0123456789abcdef"
+fi
+
 if [ "x$IAP_ID" = "x" ] || [ "x$1" = "x--help" ]; then
     echo
     echo "usage: $0 <bundle_id> <iap_id>"
@@ -55,7 +59,7 @@ cordova platform add ios || exit 1
 cordova platform add android || exit 1
 
 echo Add Purchase plugin
-cordova plugin add "$PLUGIN_URL" || exit 1
+cordova plugin add "$PLUGIN_URL" --variable BILLING_KEY="$BILLING_KEY" || exit 1
 
 echo Copy non commited files
 rsync -r "$ROOT_DIR"/src/android/ plugins/cc.fovea.cordova.purchase/src/android
@@ -91,7 +95,7 @@ hasFile "$IOS_PLUGIN_DIR/InAppPurchase.m"
 hasFile "$IOS_PLUGIN_DIR/InAppPurchase.h"
 hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.h"
 hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.m"
-hasFile "$IOS_WWW_DIR/purchase-ios.js"
+hasFile "$IOS_WWW_DIR/store-ios.js"
 
 if grep StoreKit.framework "$IOS_PROJ" > /dev/null; then
     echo "StoreKit framework added."
@@ -101,11 +105,10 @@ else
 fi
 
 echo Check Android installation
-ANDROID_CLASSES_DIR="$BUILD_DIR/platforms/android/ant-build/classes"
-ANDROID_MANIFEST="$BUILD_DIR/platforms/android/ant-build/AndroidManifest.cordova.xml"
+ANDROID_CLASSES_DIR="$BUILD_DIR/platforms/android/build/intermediates/classes/debug"
+ANDROID_MANIFEST="$BUILD_DIR/platforms/android/AndroidManifest.xml"
 
-hasFile "$ANDROID_CLASSES_DIR/com/mohamnag/inappbilling/InAppBillingPlugin.class"
-hasFile "$BUILD_DIR/platforms/android/src/com/mohamnag/inappbilling/InAppBillingPlugin.java"
+hasFile "$ANDROID_CLASSES_DIR/com/smartmobilesoftware/inappbilling/InAppBillingPlugin.class"
 
 if grep "com.android.vending.BILLING" "$ANDROID_MANIFEST" > /dev/null; then
     echo "BILLING permission added."
