@@ -79,8 +79,8 @@ function hasFile() {
     fi
 }
 
+# Compile for iOS
 case "$OSTYPE" in darwin*)
-    # Compile for iOS
     cordova build ios || exit 1
 
     echo
@@ -104,19 +104,21 @@ case "$OSTYPE" in darwin*)
 ;; esac
 
 # Compile for Android
-cordova build android || exit 1
+if [ "_$ANDROID_HOME" != "_" ]; then
+    cordova build android || exit 1
 
-echo Check Android installation
-ANDROID_CLASSES_DIR="$BUILD_DIR/platforms/android/build/intermediates/classes/debug"
-ANDROID_MANIFEST="$BUILD_DIR/platforms/android/AndroidManifest.xml"
+    echo Check Android installation
+    ANDROID_CLASSES_DIR="$BUILD_DIR/platforms/android/build/intermediates/classes/debug"
+    ANDROID_MANIFEST="$BUILD_DIR/platforms/android/AndroidManifest.xml"
 
-hasFile "$ANDROID_CLASSES_DIR/com/smartmobilesoftware/inappbilling/InAppBillingPlugin.class"
+    hasFile "$ANDROID_CLASSES_DIR/com/smartmobilesoftware/inappbilling/InAppBillingPlugin.class"
 
-if grep "com.android.vending.BILLING" "$ANDROID_MANIFEST" > /dev/null; then
-    echo "BILLING permission added."
-else
-    echo "ERROR: Not BILLING permission."
-    EXIT=1
+    if grep "com.android.vending.BILLING" "$ANDROID_MANIFEST" > /dev/null; then
+        echo "BILLING permission added."
+    else
+        echo "ERROR: Not BILLING permission."
+        EXIT=1
+    fi
 fi
 
 if [ "x$EXIT" != "x1" ]; then echo "Great! Everything looks good."; fi
