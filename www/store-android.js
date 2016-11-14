@@ -430,6 +430,9 @@ store.Product = function(options) {
     ///  - `product.price` - Localized price, with currency symbol
     this.price = options.price || null;
 
+    /// - `product.priceMicros` - Localized price, in micro-units. Available only on Android
+    this.priceMicros = options.priceMicros || null;
+
     ///  - `product.currency` - Currency code (optionaly)
     this.currency = options.currency || null;
 
@@ -2229,6 +2232,7 @@ function iabLoaded(validProducts) {
             p.set({
                 title: validProducts[i].title || validProducts[i].name,
                 price: validProducts[i].price || validProducts[i].formattedPrice,
+                priceMicros: validProducts[i].price_amount_micros,
                 description: validProducts[i].description,
                 currency: validProducts[i].price_currency_code ? validProducts[i].price_currency_code : "",
                 state: store.VALID
