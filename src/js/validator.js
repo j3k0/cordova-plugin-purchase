@@ -21,8 +21,8 @@
 ///
 ///     // OR
 ///     callback(false, {
+///         code: store.PURCHASE_EXPIRED,
 ///         error: {
-///             code: store.PURCHASE_EXPIRED,
 ///             message: "XYZ"
 ///         }
 ///     });
