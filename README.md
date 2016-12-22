@@ -15,13 +15,13 @@ It lets you handle all platforms with a single codebase.
 ### Install the plugin (cordova)
 
 ```sh
-cordova plugin add cc.fovea.cordova.purchase
+cordova plugins add cc.fovea.cordova.purchase
 ```
 
 Need android too?
 
 ```sh
-cordova plugin add cc.fovea.cordova.purchase  --variable BILLING_KEY="<BILLING_KEY>"
+cordova plugins add cc.fovea.cordova.purchase  --variable BILLING_KEY="<BILLING_KEY>"
 ```
 
 Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#add-android-billing-key) for details on how to retrieve the billing key (or public key).
