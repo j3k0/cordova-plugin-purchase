@@ -344,6 +344,7 @@ Products object have the following fields and methods.
  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
  - `product.title` - Localized name or short description
  - `product.description` - Localized longer description
+ - `product.priceMicros` - Localized price, in micro-units. Available only on Android
  - `product.price` - Localized price, with currency symbol
  - `product.currency` - Currency code (optionaly)
  - `product.loaded` - Product has been loaded from server, however it can still be either `valid` or not
@@ -722,8 +723,8 @@ store.validator = function(product, callback) {
 
     // OR
     callback(false, {
+        code: store.PURCHASE_EXPIRED,
         error: {
-            code: store.PURCHASE_EXPIRED,
             message: "XYZ"
         }
     });

@@ -43,7 +43,7 @@ store.Product = function(options) {
     ///  - `product.description` - Localized longer description
     this.description = options.description || options.localizedDescription || null;
 
-    /// - `product.priceMicros` - Localized price, in micro-units. Available only on Android
+    ///  - `product.priceMicros` - Localized price, in micro-units. Available only on Android
     this.priceMicros = options.priceMicros || null;
 
     ///  - `product.price` - Localized price, with currency symbol
