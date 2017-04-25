@@ -168,7 +168,7 @@ store.when("product", "finished", function(product) {
         var transaction = product.transaction;
         product.transaction = null;
         var id;
-        if(transaction == null)
+        if(transaction === null)
             id = "";
         else
             id = transaction.id;
