@@ -79,7 +79,7 @@ your project and check that it works. You'll find a [Minimal Example Here](doc/m
 
 Find a more [Complete Example Here](https://github.com/Fovea/cordova-plugin-purchase-demo).
 
-If you can't get things to work, go through the [Troubleshooting Checklist](doc/troubleshooting.md). *(coming soon)*
+If you can't get things to work, go through the [Troubleshooting Checklist](doc/troubleshooting.md).
 
 You're all good? Time to read some more documentation. Hooray!
 
