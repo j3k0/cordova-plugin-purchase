@@ -3075,6 +3075,7 @@ store._refreshForValidation = function(callback) {
 store._prepareForValidation = function(product, callback) {
     var nRetry = 0;
     function loadReceipts() {
+        storekit.setAppStoreReceipt(null);
         storekit.loadReceipts(function(r) {
             if (!product.transaction) {
                 product.transaction = {
