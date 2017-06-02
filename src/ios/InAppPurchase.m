@@ -670,7 +670,12 @@ static NSString *rootAppleCA = @"MIIEuzCCA6OgAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMQs
 #endif
 
     DLog(@"Starting receipt refresh request...");
-    [recreq start];
+    NSURL *receiptURL = [[NSBundle mainBundle] appStoreReceiptURL];
+    NSData *receipt = [NSData dataWithContentsOfURL:receiptURL];
+    if(!receipt)
+    {
+        [recreq start];
+    }
     DLog(@"Receipt refresh request started");
 }
 
