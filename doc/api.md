@@ -826,7 +826,7 @@ Registered products indexed by their alias
 #### example
 
     store.products.byAlias["full version"]```
-### aliases to `store` methods, added for conveniance.
+### aliases to `store` methods, added for convenience.
 
 ## *store._queries* object
 The `queries` object handles the callbacks registered for any given couple
