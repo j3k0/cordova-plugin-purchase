@@ -300,6 +300,11 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
     }
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppPurchase initialized"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    
+    for (SKPaymentTransaction *transaction in [[SKPaymentQueue defaultQueue] transactions]) {
+      NSLog(@"Finish transactions pending since last load...");
+      [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+    }
 }
 
 /**
