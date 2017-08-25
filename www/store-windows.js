@@ -1516,6 +1516,9 @@ store.log = {
 
 })();
 
+/// # Random Tips
+///
+/// - Sometimes during development, the queue of pending transactions fills up on your devices. Before doing anything else you can set `store.autoFinishTransactions` to `true` to clean up the queue. Beware: **this is not meant for production**.
 ///
 /// # internal APIs
 /// USE AT YOUR OWN RISKS

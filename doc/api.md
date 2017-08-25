@@ -802,6 +802,9 @@ Logs a warning message, only if `store.verbosity` >= store.WARNING
 Logs an info message, only if `store.verbosity` >= store.INFO
 ### `store.log.debug(message)`
 Logs a debug message, only if `store.verbosity` >= store.DEBUG
+# Random Tips
+
+- Sometimes during development, the queue of pending transactions fills up on your devices. Before doing anything else you can set `store.autoFinishTransactions` to `true` to clean up the queue. Beware: **this is not meant for production**.
 
 # internal APIs
 USE AT YOUR OWN RISKS
