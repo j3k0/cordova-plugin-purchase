@@ -1,5 +1,14 @@
+os:
+    - osx
+    - linux
+osx_image: xcode8
+
 language: node_js
 node_js:
-    - "0.10"
+    - "6.7"
 git:
     submodules: false
+
+script:
+    - make all
+    - ./test/run.sh cc.fovea.babygoo babygooinapp1

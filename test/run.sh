@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Set variables: PLUGIN_DIR, TEST_DIR, BUILD_DIR
 cd `dirname $0`/..
@@ -17,6 +17,10 @@ IAP_ID="$2"
 
 #PLUGIN_URL="git://github.com/j3k0/PhoneGap-InAppPurchase-iOS.git#unified"
 PLUGIN_URL="$ROOT_DIR"
+
+if [ "_$BILLING_KEY" = _ ]; then
+    BILLING_KEY="0123456789abcdef"
+fi
 
 if [ "x$IAP_ID" = "x" ] || [ "x$1" = "x--help" ]; then
     echo
@@ -55,7 +59,7 @@ cordova platform add ios || exit 1
 cordova platform add android || exit 1
 
 echo Add Purchase plugin
-cordova plugin add "$PLUGIN_URL" || exit 1
+cordova plugin add "$PLUGIN_URL" --variable BILLING_KEY="$BILLING_KEY" || exit 1
 
 echo Copy non commited files
 rsync -r "$ROOT_DIR"/src/android/ plugins/cc.fovea.cordova.purchase/src/android
@@ -64,12 +68,6 @@ cp "$ROOT_DIR"/www/*.js plugins/cc.fovea.cordova.purchase/www/
 
 # Add console debug
 cordova plugin add https://git-wip-us.apache.org/repos/asf/cordova-plugin-console.git || exit 1
-
-# Compile for iOS
-cordova build ios || exit 1
-
-# Compile for Android
-cordova build android || exit 1
 
 # Check existance of the plugins files
 function hasFile() {
@@ -81,37 +79,46 @@ function hasFile() {
     fi
 }
 
-echo
-echo Check iOS installation
-IOS_PLUGIN_DIR="$BUILD_DIR/platforms/ios/Test/Plugins/cc.fovea.cordova.purchase"
-IOS_WWW_DIR="$BUILD_DIR/platforms/ios/www/plugins/cc.fovea.cordova.purchase/www"
-IOS_PROJ="$BUILD_DIR/platforms/ios/Test.xcodeproj/project.pbxproj"
+# Compile for iOS
+case "$OSTYPE" in darwin*)
+    cordova build ios || exit 1
 
-hasFile "$IOS_PLUGIN_DIR/InAppPurchase.m"
-hasFile "$IOS_PLUGIN_DIR/InAppPurchase.h"
-hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.h"
-hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.m"
-hasFile "$IOS_WWW_DIR/purchase-ios.js"
+    echo
+    echo Check iOS installation
+    IOS_PLUGIN_DIR="$BUILD_DIR/platforms/ios/Test/Plugins/cc.fovea.cordova.purchase"
+    IOS_WWW_DIR="$BUILD_DIR/platforms/ios/www/plugins/cc.fovea.cordova.purchase/www"
+    IOS_PROJ="$BUILD_DIR/platforms/ios/Test.xcodeproj/project.pbxproj"
 
-if grep StoreKit.framework "$IOS_PROJ" > /dev/null; then
-    echo "StoreKit framework added."
-else
-    echo "ERROR: StoreKit framework missing."
-    EXIT=1
-fi
+    hasFile "$IOS_PLUGIN_DIR/InAppPurchase.m"
+    hasFile "$IOS_PLUGIN_DIR/InAppPurchase.h"
+    hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.h"
+    hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.m"
+    hasFile "$IOS_WWW_DIR/store-ios.js"
 
-echo Check Android installation
-ANDROID_CLASSES_DIR="$BUILD_DIR/platforms/android/ant-build/classes"
-ANDROID_MANIFEST="$BUILD_DIR/platforms/android/ant-build/AndroidManifest.cordova.xml"
+    if grep StoreKit.framework "$IOS_PROJ" > /dev/null; then
+        echo "StoreKit framework added."
+    else
+        echo "ERROR: StoreKit framework missing."
+        EXIT=1
+    fi
+;; esac
 
-hasFile "$ANDROID_CLASSES_DIR/com/mohamnag/inappbilling/InAppBillingPlugin.class"
-hasFile "$BUILD_DIR/platforms/android/src/com/mohamnag/inappbilling/InAppBillingPlugin.java"
+# Compile for Android
+if [ "_$ANDROID_HOME" != "_" ]; then
+    cordova build android || exit 1
 
-if grep "com.android.vending.BILLING" "$ANDROID_MANIFEST" > /dev/null; then
-    echo "BILLING permission added."
-else
-    echo "ERROR: Not BILLING permission."
-    EXIT=1
+    echo Check Android installation
+    ANDROID_CLASSES_DIR="$BUILD_DIR/platforms/android/build/intermediates/classes/debug"
+    ANDROID_MANIFEST="$BUILD_DIR/platforms/android/AndroidManifest.xml"
+
+    hasFile "$ANDROID_CLASSES_DIR/com/smartmobilesoftware/inappbilling/InAppBillingPlugin.class"
+
+    if grep "com.android.vending.BILLING" "$ANDROID_MANIFEST" > /dev/null; then
+        echo "BILLING permission added."
+    else
+        echo "ERROR: Not BILLING permission."
+        EXIT=1
+    fi
 fi
 
 if [ "x$EXIT" != "x1" ]; then echo "Great! Everything looks good."; fi

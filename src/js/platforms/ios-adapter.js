@@ -160,7 +160,7 @@ function storekitInit() {
     store.log.debug("ios -> initializing storekit");
     storekit.init({
         debug:    store.verbosity >= store.DEBUG ? true : false,
-        noAutoFinish: true,
+        noAutoFinish: !store.autoFinishTransactions,
         error:    storekitError,
         purchase: storekitPurchased,
         purchasing: storekitPurchasing,
@@ -504,6 +504,7 @@ store._refreshForValidation = function(callback) {
 store._prepareForValidation = function(product, callback) {
     var nRetry = 0;
     function loadReceipts() {
+        storekit.setAppStoreReceipt(null);
         storekit.loadReceipts(function(r) {
             if (!product.transaction) {
                 product.transaction = {

@@ -85,6 +85,7 @@ store.utils = {
             if (xhr.readyState === 4)
                 store.utils.callExternal('ajax.done', doneCb);
         };
+        xhr.setRequestHeader("Accept", "application/json");
         store.log.debug('ajax -> send request to ' + options.url);
         if (options.data) {
             xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");

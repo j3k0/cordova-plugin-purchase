@@ -21,8 +21,8 @@
 ///
 ///     // OR
 ///     callback(false, {
+///         code: store.PURCHASE_EXPIRED,
 ///         error: {
-///             code: store.PURCHASE_EXPIRED,
 ///             message: "XYZ"
 ///         }
 ///     });
@@ -63,10 +63,14 @@ store._validator = function(product, callback, isPrepared) {
             method: 'POST',
             data: product,
             success: function(data) {
+                store.log.debug("validator success, response: " + JSON.stringify(data));
                 callback(data && data.ok, data.data);
             },
-            error: function(status, message) {
-                callback(false, "Error " + status + ": " + message);
+            error: function(status, message, data) {
+                var fullMessage = "Error " + status + ": " + message;
+                store.log.debug("validator failed, response: " + JSON.stringify(fullMessage));
+                store.log.debug("body => " + JSON.stringify(data));
+                callback(false, fullMessage);
             }
         });
     }

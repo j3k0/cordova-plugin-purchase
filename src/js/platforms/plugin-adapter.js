@@ -185,6 +185,11 @@ store.when("product", "finished", function(product) {
     if (product.type === store.CONSUMABLE || product.type === store.NON_RENEWING_SUBSCRIPTION) {
         var transaction = product.transaction;
         product.transaction = null;
+        var id;
+        if(transaction === null)
+            id = "";
+        else
+            id = transaction.id;
         store.inappbilling.consumePurchase(
             function() { // success
                 store.log.debug("plugin -> consumable consumed");
@@ -198,7 +203,7 @@ store.when("product", "finished", function(product) {
                 });
             },
             product.id,
-            transaction.id
+            id
         );
     }
     else {

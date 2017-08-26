@@ -43,7 +43,7 @@ store.Product = function(options) {
     ///  - `product.description` - Localized longer description
     this.description = options.description || options.localizedDescription || null;
 
-    /// - `product.priceMicros` - Localized price, in micro-units
+    ///  - `product.priceMicros` - Localized price, in micro-units. Available only on Android
     this.priceMicros = options.priceMicros || null;
 
     ///  - `product.price` - Localized price, with currency symbol
@@ -165,6 +165,7 @@ store.Product.prototype.verify = function() {
             }
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));
+                if (!data) data = {};
                 var msg = (data && data.error && data.error.message ? data.error.message : '');
                 var err = new store.Error({
                     code: store.ERR_VERIFICATION_FAILED,
