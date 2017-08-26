@@ -39,6 +39,9 @@ public class InAppBillingPlugin extends CordovaPlugin {
     // A quite up to date inventory of available items and purchase items
     Inventory myInventory;
 
+	// Boolean, when true, the inventory will be updated with new items, not replaced
+	boolean addToInventory = false;
+
     CallbackContext callbackContext;
 
 	@Override
@@ -65,6 +68,19 @@ public class InAppBillingPlugin extends CordovaPlugin {
 				}
 				// Initialize
 				init(sku);
+			} else if ("loadProducts".equals(action)) {
+				final List<String> sku = new ArrayList<String>();
+				if (data.length() > 0) {
+					JSONArray jsonSkuList = new JSONArray(data.getString(0));
+					int len = jsonSkuList.length();
+					Log.d(TAG, "Num SKUs to load: " + len);
+					for (int i = 0; i < len; i++) {
+						sku.add(jsonSkuList.get(i).toString());
+						Log.d(TAG, "Product SKU Added: " + jsonSkuList.get(i).toString());
+					}
+				}
+
+				loadProducts(sku);
 			} else if ("getPurchases".equals(action)) {
 				// Get the list of purchases
 				JSONArray jsonSkuList = new JSONArray();
@@ -190,6 +206,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
                 // Have we been disposed of in the meantime? If so, quit.
                 if (mHelper == null) {
                 	callbackContext.error(IabHelper.ERR_SETUP + "|The billing helper has been disposed");
+                	return;
                 }
 
                 // Hooray, IAB is fully set up. Now, let's get an inventory of stuff we own.
@@ -297,6 +314,19 @@ public class InAppBillingPlugin extends CordovaPlugin {
 		return jsonSkuList;
 	}
 
+	//Load products
+	private void loadProducts(final List<String> skus) {
+		if (mHelper == null || myInventory == null) {
+			callbackContext.error(IabHelper.ERR_LOAD + "|Billing plugin was not initialized");
+			return;
+		}
+
+		Log.d(TAG, "Beginning Sku(s) Loading!");
+
+		this.addToInventory = true;
+		mHelper.queryInventoryAsync(true, skus, mGotDetailsListener);
+	}
+
 	//Get SkuDetails for skus
 	private void getProductDetails(final List<String> skus){
 		if (mHelper == null){
@@ -376,7 +406,17 @@ public class InAppBillingPlugin extends CordovaPlugin {
         }
 
         // Update the inventory
-        myInventory = inventory;
+		// If addToInventory is true, don't replace the inventory, instead append the new skus
+		// to the existing inventory
+		if(this.addToInventory) {
+			List<SkuDetails> skuList = inventory.getAllProducts();
+			for (SkuDetails sku : skuList) {
+				myInventory.addSkuDetails(sku);
+			}
+			this.addToInventory = false;
+		} else {
+        	myInventory = inventory;
+		}
 
         return false;
     }

@@ -12,6 +12,10 @@ store.when("re-refreshed", function() {
     store.iabGetPurchases();
 });
 
+store.when("load", function() {
+    loadProducts();
+});
+
 // The following table lists all of the server response codes
 // that are sent from Google Play to your application.
 //
@@ -49,6 +53,20 @@ function init() {
             showLog: store.verbosity >= store.DEBUG ? true : false
         },
         skus);
+}
+
+function loadProducts() {
+    if (!initialized) return;
+    var skusToLoad = [];
+    for (var i = 0; i < store.products.length; ++i) if(!store.products[i].loaded) skusToLoad.push(store.products[i].id);
+    store.inappbilling.loadProducts(iabLoaded, function(err) {
+        store.error({
+            code: store.ERR_SETUP,
+            message: "Add failed - " + err
+        });
+    }, {
+        showLog: store.verbosity >= store.DEBUG ? true : false
+    }, skusToLoad);
 }
 
 function iabReady() {

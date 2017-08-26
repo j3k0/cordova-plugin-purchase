@@ -433,6 +433,9 @@ store.Product = function(options) {
     ///  - `product.price` - Localized price, with currency symbol
     this.price = options.price || null;
 
+    /// - `product.priceMicros` - Localized price, in micro-units
+    this.priceMicros = options.priceMicros || null;
+
     ///  - `product.currency` - Currency code (optionaly)
     this.currency = options.currency || null;
 
@@ -1468,6 +1471,11 @@ store.refresh = function() {
     store.trigger("re-refreshed");
 };
 
+store.load = function() {
+    if (initialRefresh) return;
+    store.log.debug("load products");
+    store.trigger("load");
+};
 
 })();
 
@@ -1697,8 +1705,15 @@ store._queries = {
             var keep = function(o) {
                 return o.cb !== cb;
             };
-            for (var i in this.byQuery)
-                this.byQuery[i] = this.byQuery[i].filter(keep);
+            for (var i in this.byQuery) {
+            	if(typeof cb == 'string') {
+            		if(i.indexOf(cb) >= 0) {
+            			delete this.byQuery[i];
+            		}
+            	} else {
+                	this.byQuery[i] = this.byQuery[i].filter(keep);
+                }
+            }
         }
     },
 
@@ -2065,6 +2080,12 @@ InAppBilling.prototype.init = function (success, fail, options, skus) {
 		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", []);
     }
 };
+InAppBilling.prototype.loadProducts = function(success, fail, options, skus) {
+    if (this.options.showLog) {
+        log("loadProducts called!");
+    }
+    cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "loadProducts", [skus]);
+};
 InAppBilling.prototype.getPurchases = function (success, fail) {
 	if (this.options.showLog) {
 		log('getPurchases called!');
@@ -2178,6 +2199,10 @@ store.when("re-refreshed", function() {
     store.iabGetPurchases();
 });
 
+store.when("load", function() {
+    loadProducts();
+});
+
 // The following table lists all of the server response codes
 // that are sent from Google Play to your application.
 //
@@ -2215,6 +2240,20 @@ function init() {
             showLog: store.verbosity >= store.DEBUG ? true : false
         },
         skus);
+}
+
+function loadProducts() {
+    if (!initialized) return;
+    var skusToLoad = [];
+    for (var i = 0; i < store.products.length; ++i) if(!store.products[i].loaded) skusToLoad.push(store.products[i].id);
+    store.inappbilling.loadProducts(iabLoaded, function(err) {
+        store.error({
+            code: store.ERR_SETUP,
+            message: "Add failed - " + err
+        });
+    }, {
+        showLog: store.verbosity >= store.DEBUG ? true : false
+    }, skusToLoad);
 }
 
 function iabReady() {
@@ -2380,6 +2419,7 @@ store.when("product", "finished", function(product) {
         product.transaction = {
             type: 'android-playstore', //TODO - does this need to be here?
             id: data.orderId,
+            versionName: window.android && window.android.getVersionName ? window.android.getVersionName() : null,
             purchaseToken: data.purchaseToken,
             developerPayload: data.developerPayload,
             receipt: data.receipt,

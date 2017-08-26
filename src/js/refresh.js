@@ -73,5 +73,10 @@ store.refresh = function() {
     store.trigger("re-refreshed");
 };
 
+store.load = function() {
+    if (initialRefresh) return;
+    store.log.debug("load products");
+    store.trigger("load");
+};
 
 })();
