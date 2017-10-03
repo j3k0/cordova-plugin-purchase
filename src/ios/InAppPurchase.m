@@ -15,7 +15,7 @@
 
 static BOOL g_initialized = NO;
 static BOOL g_debugEnabled = NO;
-static BOOL g_autoFinishEnabled = YES;
+static BOOL g_autoFinishEnabled = NO;
 
 #define DLog(fmt, ...) { \
     if (g_debugEnabled) \
@@ -274,8 +274,8 @@ unsigned char* unbase64( const char* ascii, int len, int *flen )
     g_debugEnabled = YES;
 }
 
--(void) noAutoFinish: (CDVInvokedUrlCommand*)command {
-    g_autoFinishEnabled = NO;
+-(void) autoFinish: (CDVInvokedUrlCommand*)command {
+    g_autoFinishEnabled = YES;
 }
 
 -(void) setup: (CDVInvokedUrlCommand*)command {

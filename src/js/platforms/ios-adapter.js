@@ -160,7 +160,7 @@ function storekitInit() {
     store.log.debug("ios -> initializing storekit");
     storekit.init({
         debug:    store.verbosity >= store.DEBUG ? true : false,
-        noAutoFinish: !store.autoFinishTransactions,
+        autoFinish: store.autoFinishTransactions,
         error:    storekitError,
         purchase: storekitPurchased,
         purchasing: storekitPurchasing,

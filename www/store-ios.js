@@ -2124,8 +2124,8 @@ InAppPurchase.prototype.init = function (options, success, error) {
         };
     }
 
-    if (options.noAutoFinish) {
-        exec('noAutoFinish', [], noop, noop);
+    if (options.autoFinish) {
+        exec('autoFinish', [], noop, noop);
     }
 
     var that = this;
@@ -2337,7 +2337,7 @@ InAppPurchase.prototype.load = function (productIds, success, error) {
  * @param {String} transactionId
  *    Identifier of the transaction to finish.
  *
- * You have to call this method manually when using the noAutoFinish option.
+ * You have to call this method manually except when using the autoFinish option.
  */
 InAppPurchase.prototype.finish = function (transactionId) {
     exec('finishTransaction', [transactionId], noop, noop);
@@ -2743,7 +2743,7 @@ function storekitInit() {
     store.log.debug("ios -> initializing storekit");
     storekit.init({
         debug:    store.verbosity >= store.DEBUG ? true : false,
-        noAutoFinish: !store.autoFinishTransactions,
+        autoFinish: store.autoFinishTransactions,
         error:    storekitError,
         purchase: storekitPurchased,
         purchasing: storekitPurchasing,
