@@ -169,6 +169,9 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         return;
     }
+    else {
+        DLog(@"setup: OK");
+    }
 
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppPurchase initialized"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -376,14 +379,18 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     }
 }
 
--(void) processPendingTransactionUpdates {
+- (void) processPendingTransactionUpdates {
+
+    DLog(@"processPendingTransactionUpdates");
     for (NSArray *ta in pendingTransactionUpdates) {
         [self processTransactionUpdate:ta[0] withArgs:ta[1]];
     }
     [pendingTransactionUpdates removeAllObjects];
 }
 
--(void) processTransactionUpdate:(SKPaymentTransaction*)transaction withArgs:(NSArray*)callbackArgs {
+- (void) processTransactionUpdate:(SKPaymentTransaction*)transaction withArgs:(NSArray*)callbackArgs {
+
+    DLog(@"processTransactionUpdate:withArgs: transactionIdentifier=%@", callbackArgs[PT_INDEX_TRANSACTION_IDENTIFIER]);
     NSString *js = [NSString
         stringWithFormat:@"window.storekit.updatedTransactionCallback.apply(window.storekit, %@)",
         [callbackArgs JSONSerialize]];
@@ -453,7 +460,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
-- (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error {
+- (void) paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error {
 
     DLog(@"paymentQueue:restoreCompletedTransactionsFailedWithError:");
     NSString *js = [NSString stringWithFormat:
@@ -461,7 +468,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     [self.commandDelegate evalJs: js];
 }
 
-- (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue {
+- (void) paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue {
 
     DLog(@"paymentQueueRestoreCompletedTransactionsFinished:");
     NSString *js = @"window.storekit.restoreCompletedTransactionsFinished.apply(window.storekit)";
