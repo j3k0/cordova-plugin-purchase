@@ -1,6 +1,4 @@
 //
-//  InAppPurchase.m
-//
 //  Created by Matt Kane on 20/02/2011.
 //  Copyright (c) Matt Kane 2011. All rights reserved.
 //  Copyright (c) Jean-Christophe Hoelt 2013
@@ -129,32 +127,29 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 
 @synthesize products;
 @synthesize retainer;
-@synthesize observer;
 @synthesize currentDownloads;
+@synthesize unfinishedTransactions;
+@synthesize pendingTransactionUpdates;
 
 // Initialize the plugin state
 -(void) pluginInitialize {
     self.retainer = [[NSMutableDictionary alloc] init];
+    self.products = [[NSMutableDictionary alloc] init];
+    self.currentDownloads = [[NSMutableDictionary alloc] init];
+    self.pendingTransactionUpdates = [[NSMutableArray alloc] init];
+    self.unfinishedTransactions = [[NSMutableDictionary alloc] init];
+    if ([SKPaymentQueue canMakePayments]) {
+        [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
+        NSLog(@"InAppPurchase[objc] Initialized.");
+    }
+    else {
+        NSLog(@"InAppPurchase[objc] Initialization failed: payments are disabled.");
+    }
 }
 
 // Reset the plugin state
 -(void) onReset {
   DLog(@"WARNING: Your app should be single page to use in-app-purchases. onReset is not supported.");
-  [self doReset];
-}
-
--(void) doReset {
-  g_initialized = NO;
-  g_debugEnabled = NO;
-  g_autoFinishEnabled = NO;
-  self.products = nil;
-  self.currentDownloads = nil;
-  [self cancel:nil];
-  unfinishedTransactions = nil;
-  if (observer != nil) {
-      [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
-      self.observer = nil;
-  }
 }
 
 -(void) debug: (CDVInvokedUrlCommand*)command {
@@ -168,11 +163,6 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 -(void) setup: (CDVInvokedUrlCommand*)command {
     CDVPluginResult* pluginResult = nil;
 
-    self.products = [[NSMutableDictionary alloc] init];
-    self.currentDownloads = [[NSMutableDictionary alloc] init];
-    unfinishedTransactions = [[NSMutableDictionary alloc] init];
-    g_initialized = YES;
-
     if (![SKPaymentQueue canMakePayments]) {
         DLog(@"setup: Cant make payments, plugin disabled.");
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Can't make payments"];
@@ -180,11 +170,6 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         return;
     }
 
-    // Make sure we add only one observer
-    if (observer == nil) {
-        [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
-        observer = self;
-    }
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"InAppPurchase initialized"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
@@ -196,13 +181,6 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 - (void) load: (CDVInvokedUrlCommand*)command {
 
     DLog(@"load: Getting products data");
-    if (!g_initialized) {
-        DLog(@"load: Called before initializtion");
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid arguments"];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-        return;
-    }
-
     NSArray *inArray = [command.arguments objectAtIndex:0];
 
     if ((unsigned long)[inArray count] == 0) {
@@ -317,7 +295,6 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 - (void) paymentQueue:(SKPaymentQueue*)queue updatedTransactions:(NSArray*)transactions {
 
     NSString *state, *error, *transactionIdentifier, *transactionReceipt, *productId;
-    NSArray *downloads;
     NSInteger errorCode;
 
     for (SKPaymentTransaction *transaction in transactions) {
@@ -325,7 +302,6 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         error = state = transactionIdentifier = transactionReceipt = productId = @"";
         errorCode = 0;
         DLog(@"paymentQueue:updatedTransactions: %@", transaction.payment.productIdentifier);
-        BOOL canFinish = NO;
 
         switch (transaction.transactionState) {
 
@@ -340,8 +316,6 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
                 transactionIdentifier = transaction.transactionIdentifier;
                 transactionReceipt = [[transaction transactionReceipt] base64EncodedStringWithOptions:0];
                 productId = transaction.payment.productIdentifier;
-                downloads = transaction.downloads;
-                canFinish = YES;
                 break;
 
             case SKPaymentTransactionStateFailed:
@@ -349,7 +323,6 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
                 error = transaction.error.localizedDescription;
                 errorCode = jsErrorCode(transaction.error.code);
                 productId = transaction.payment.productIdentifier;
-                canFinish = YES;
                 DLog(@"paymentQueue:updatedTransactions: Error %@ - %@", jsErrorCodeAsString(errorCode), error);
 
                 // Finish failed transactions, when autoFinish is off
@@ -371,15 +344,20 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
                 productId = transaction.payment.productIdentifier;
                 if (!productId)
                     productId = transaction.originalTransaction.payment.productIdentifier;
-                downloads = transaction.downloads;
-                canFinish = YES;
                 break;
 
             default:
                 DLog(@"paymentQueue:updatedTransactions: Invalid state");
                 continue;
         }
+
         DLog(@"paymentQueue:updatedTransactions: State: %@", state);
+#define PT_INDEX_STATE 0
+#define PT_INDEX_ERROR_CODE 1
+#define PT_INDEX_ERROR 2
+#define PT_INDEX_TRANSACTION_IDENTIFIER 3
+#define PT_INDEX_PRODUCT_IDENTIFIER 4
+#define PT_INDEX_TRANSACTION_RECEIPT 5
         NSArray *callbackArgs = [NSArray arrayWithObjects:
             NILABLE(state),
             [NSNumber numberWithInteger:errorCode],
@@ -388,22 +366,48 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
             NILABLE(productId),
             NILABLE(transactionReceipt),
             nil];
-        NSString *js = [NSString
-            stringWithFormat:@"window.storekit.updatedTransactionCallback.apply(window.storekit, %@)",
-            [callbackArgs JSONSerialize]];
-        // DLog(@"js: %@", js);
-        [self.commandDelegate evalJs:js];
 
-        if (downloads && [downloads count] > 0) {
-            [[SKPaymentQueue defaultQueue] startDownloads:downloads];
-        }
-        else if (g_autoFinishEnabled && canFinish) {
-            [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
-            [self transactionFinished:transaction];
+        if (g_initialized) {
+            [self processTransactionUpdate:transaction withArgs:callbackArgs];
         }
         else {
-            [unfinishedTransactions setObject:transaction forKey:transactionIdentifier];
+            [pendingTransactionUpdates addObject:@[transaction,callbackArgs]];
         }
+    }
+}
+
+-(void) processPendingTransactionUpdates {
+    for (NSArray *ta in pendingTransactionUpdates) {
+        [self processTransactionUpdate:ta[0] withArgs:ta[1]];
+    }
+    [pendingTransactionUpdates removeAllObjects];
+}
+
+-(void) processTransactionUpdate:(SKPaymentTransaction*)transaction withArgs:(NSArray*)callbackArgs {
+    NSString *js = [NSString
+        stringWithFormat:@"window.storekit.updatedTransactionCallback.apply(window.storekit, %@)",
+        [callbackArgs JSONSerialize]];
+    [self.commandDelegate evalJs:js];
+
+    NSArray *downloads = nil;
+    SKPaymentTransactionState state = transaction.transactionState;
+    if (state == SKPaymentTransactionStateRestored || state == SKPaymentTransactionStatePurchased) {
+        downloads = transaction.downloads;
+    }
+
+    BOOL canFinish = state == SKPaymentTransactionStateRestored
+        || state == SKPaymentTransactionStateFailed
+        || state == SKPaymentTransactionStatePurchased;
+
+    if (downloads && [downloads count] > 0) {
+        [[SKPaymentQueue defaultQueue] startDownloads:downloads];
+    }
+    else if (g_autoFinishEnabled && canFinish) {
+        [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+        [self transactionFinished:transaction];
+    }
+    else {
+        [self.unfinishedTransactions setObject:transaction forKey:callbackArgs[PT_INDEX_TRANSACTION_IDENTIFIER]];
     }
 }
 
@@ -431,14 +435,14 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     SKPaymentTransaction *transaction = nil;
 
     if (identifier) {
-        transaction = (SKPaymentTransaction*)[unfinishedTransactions objectForKey:identifier];
+        transaction = (SKPaymentTransaction*)[self.unfinishedTransactions objectForKey:identifier];
     }
 
     CDVPluginResult* pluginResult;
     if (transaction) {
         DLog(@"finishTransaction: Transaction %@ finished.", identifier);
         [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
-        [unfinishedTransactions removeObjectForKey:identifier];
+        [self.unfinishedTransactions removeObjectForKey:identifier];
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         [self transactionFinished:transaction];
     }
@@ -523,7 +527,15 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 }
 
 - (void) dispose {
-    [self reset];
+    g_initialized = NO;
+    g_debugEnabled = NO;
+    g_autoFinishEnabled = NO;
+    [self cancel:nil];
+    self.products = nil;
+    self.currentDownloads = nil;
+    self.unfinishedTransactions = nil;
+    self.pendingTransactionUpdates = nil;
+    [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
     self.retainer = nil;
     [super dispose];
 }
@@ -801,6 +813,10 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:callbackArgs];
     DLog(@"BatchProductsRequestDelegate.productsRequest:didReceiveResponse: sendPluginResult: %@", callbackArgs);
     [self.plugin.commandDelegate sendPluginResult:pluginResult callbackId:self.command.callbackId];
+
+    // Now that we have loaded product informations, we can safely process pending transactions.
+    g_initialized = YES;
+    [self.plugin processPendingTransactionUpdates];
 
 #if ARC_ENABLED
     // For some reason, the system needs to send more messages to the productsRequestDelegate after this.
