@@ -68,7 +68,7 @@ See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wik
 ## Getting Started
 
 If you don't know much about In-App Purchases, you'll find a good introduction
-on the subject here: [In-App Purchase Guidelines](https://developer.apple.com/in-app-purchase/In-App-Purchase-Guidelines.pdf).
+on the subject here: [In-App Purchase Guidelines](https://developer.apple.com/in-app-purchase/).
 It's from Apple, but the exact same concepts apply to Android.
 
 You probably want to start by installing the plugin into your project.
@@ -94,7 +94,7 @@ You're all good? Time to read some more documentation. Hooray!
 
 ### for iOS
 
- - [Getting Started with In-App Purchase on iOS](https://developer.apple.com/in-app-purchase/In-App-Purchase-Guidelines.pdf)
+ - [Getting Started with In-App Purchase on iOS](https://developer.apple.com/in-app-purchase/)
    - Read about the business models supported by In-App Purchase and the types of items you can sell in your app.
  - [In-App Purchase Configuration Guide for iTunes Connect](https://developer.apple.com/library/ios/documentation/LanguagesUtilities/Conceptual/iTunesConnectInAppPurchase_Guide/Chapters/Introduction.html)
    - Learn how to set up and manage In-App Purchases with iTunes Connect.
