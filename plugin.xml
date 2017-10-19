@@ -51,7 +51,8 @@ SOFTWARE.
         <!-- Cordova 2.5+ -->
         <config-file target="config.xml" parent="/*">
             <feature name="InAppPurchase">
-                <param name="ios-package" value="InAppPurchase"/>
+                <param name="ios-package" value="InAppPurchase" />
+                <param name="onload" value="true" />
             </feature>
         </config-file>
 

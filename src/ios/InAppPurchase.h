@@ -19,16 +19,17 @@
 #import "FileUtility.h"
 
 @interface InAppPurchase : CDVPlugin <SKPaymentTransactionObserver> {
-    NSMutableDictionary *list;
+    NSMutableDictionary *products;
     NSMutableDictionary *retainer;
     NSMutableDictionary *unfinishedTransactions;
     NSMutableDictionary *currentDownloads;
+    NSMutableArray *pendingTransactionUpdates;
 }
-@property (nonatomic,retain) NSMutableDictionary *list;
+@property (nonatomic,retain) NSMutableDictionary *products;
 @property (nonatomic,retain) NSMutableDictionary *retainer;
 @property (nonatomic, retain) NSMutableDictionary *currentDownloads;
-//keep a reference to the transaction observer, to make sure we have only 1 call
-@property (nonatomic,assign) id <SKPaymentTransactionObserver> observer;
+@property (nonatomic, retain) NSMutableDictionary *unfinishedTransactions;
+@property (nonatomic, retain) NSMutableArray *pendingTransactionUpdates;
 
 - (void) canMakePayments: (CDVInvokedUrlCommand*)command;
 
@@ -48,14 +49,17 @@
 - (void) paymentQueue:(SKPaymentQueue *)queue updatedDownloads:(NSArray *)downloads;
 
 - (void) debug: (CDVInvokedUrlCommand*)command;
-- (void) noAutoFinish: (CDVInvokedUrlCommand*)command;
+- (void) autoFinish: (CDVInvokedUrlCommand*)command;
 - (void) finishTransaction: (CDVInvokedUrlCommand*)command;
 
+- (void) onReset;
+- (void) processPendingTransactionUpdates;
+- (void) processTransactionUpdate:(SKPaymentTransaction*)transaction withArgs:(NSArray*)callbackArgs;
 @end
 
 @interface BatchProductsRequestDelegate : NSObject <SKProductsRequestDelegate> {
-	InAppPurchase*        plugin;
-    CDVInvokedUrlCommand* command;
+    InAppPurchase        *plugin;
+    CDVInvokedUrlCommand *command;
 }
 
 @property (nonatomic,retain) InAppPurchase* plugin;
@@ -63,8 +67,8 @@
 @end;
 
 @interface RefreshReceiptDelegate : NSObject <SKRequestDelegate> {
-    InAppPurchase*        plugin;
-    CDVInvokedUrlCommand* command;
+    InAppPurchase        *plugin;
+    CDVInvokedUrlCommand *command;
 }
 
 @property (nonatomic,retain) InAppPurchase* plugin;
