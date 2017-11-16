@@ -67,7 +67,7 @@ cp "$ROOT_DIR"/src/ios/*.[hm] plugins/cc.fovea.cordova.purchase/src/ios/
 cp "$ROOT_DIR"/www/*.js plugins/cc.fovea.cordova.purchase/www/
 
 # Add console debug
-cordova plugin add https://git-wip-us.apache.org/repos/asf/cordova-plugin-console.git || exit 1
+cordova plugin add https://github.com/apache/cordova-plugin-console.git || exit 1
 
 # Check existance of the plugins files
 function hasFile() {
