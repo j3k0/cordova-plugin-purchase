@@ -721,6 +721,48 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     
 }
 
+//
+// paymentQueue:shouldAddStorePayment:forProduct:
+// ----------------------------------------------
+// Tells the observer that a user initiated an in-app purchase from the App Store.
+//
+// Return true to continue the transaction in your app.
+// Return false to defer or cancel the transaction.
+//        If you return false, you can continue the transaction later by manually adding the SKPayment
+//        payment to the SKPaymentQueue queue.
+//
+// Discussion:
+// -----------
+// This delegate method is called when the user starts an in-app purchase in the App Store, and the
+// transaction continues in your app. Specifically, if your app is already installed, the method is
+// called automatically.
+// If your app is not yet installed when the user starts the in-app purchase in the App Store, the
+// user gets a notification when the app installation is complete. This method is called when the
+// user taps the notification. Otherwise, if the user opens the app manually, this method is called
+// only if the app is opened soon after the purchase was started.
+//
+- (BOOL)paymentQueue:(SKPaymentQueue *)queue shouldAddStorePayment:(SKPayment *)payment forProduct:(SKProduct *)product {
+
+    // Here, I though I have to check for the existance of the product in the list of known products
+    // and only do the processing if it is known.
+    // The problem is: this call will most likely always happen before products have been loaded.
+    // Since the "fix/ios-early-observer" change, transaction update events are queued for processing
+    // till JS is ready to process them, so initiating the payment in all cases shouldn't be an issue.
+    //
+    // Only thing is: the developper needs to be sure to handle all types of IAP defines on the AppStore.
+    // Which should be OK...
+    //
+    
+    // Let's check if we already loaded this product informations.
+    // Since it's provided to us generously, let's store them here.
+    NSString *productId = payment.productIdentifier;
+    if (self.products && product && ![self.products objectForKey:productId]) {
+        [self.products setObject:product forKey:[NSString stringWithFormat:@"%@", productId]];
+    }
+
+    return YES;
+}
+
 @end
 /**
  * Receive refreshed app receipt
