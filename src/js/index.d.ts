@@ -32,11 +32,34 @@ declare namespace store {
   }
 
   export interface IStore {
-    NON_CONSUMABLE: StoreProductType;
+    FREE_SUBSCRIPTION: StoreProductType;
     PAID_SUBSCRIPTION: StoreProductType;
+    NON_RENEWING_SUBSCRIPTION: StoreProductType;
+    CONSUMABLE: StoreProductType;
+    NON_CONSUMABLE: StoreProductType;
+
+    REGISTERED: StoreProductState;
+    INVALID: StoreProductState;
+    VALID: StoreProductState;
+    REQUESTED: StoreProductState;
+    INITIATED: StoreProductState;
+    APPROVED: StoreProductState;
+    FINISHED: StoreProductState;
+    OWNED: StoreProductState;
+    DOWNLOADING: StoreProductState;
+    DOWNLOADED: StoreProductState;
+
+    QUIET: number;
+    ERROR: number;
+    WARNING: number;
+    INFO: number;
     DEBUG: number;
 
+    ERR_SETUP: number;
+    ERR_LOAD: number;
     ERR_PURCHASE: number;
+    ERR_LOAD_RECEIPTS: number;
+    ERR_CLIENT_INVALID: number;
 
     verbosity: number | boolean;
     validator: string | IValidator;
