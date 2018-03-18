@@ -86,14 +86,17 @@ SOFTWARE.
 			</feature>
         </config-file>
 
-        <source-file src="src/android/billing_key_param.xml" target-dir="res/values/" />
+        <resource-file src="src/android/billing_key_param.xml" target="res/values/billing_key_param.xml" />
         <config-file target="res/values/billing_key_param.xml" parent="/*">
+            <string name="billing_key_param">$BILLING_KEY</string>
+        </config-file>
+        <config-file target="app/src/main/res/values/billing_key_param.xml" parent="/*">
             <string name="billing_key_param">$BILLING_KEY</string>
         </config-file>
 
         <!-- In-app Billing Library -->
-	<source-file src="src/android/com/android/vending/billing/IInAppBillingService.aidl" target-dir="src/com/android/vending/billing" />
-	<source-file src="src/android/com/android/vending/billing/IInAppBillingService.aidl" target-dir="app/src/main/aidl/com/android/vending/billing" />
+        <source-file src="src/android/com/android/vending/billing/IInAppBillingService.aidl" target-dir="src/com/android/vending/billing" />
+        <source-file src="src/android/com/android/vending/billing/IInAppBillingService.aidl" target-dir="app/src/main/aidl/com/android/vending/billing" />
 
         <!-- cordova plugin src files -->
         <source-file src="src/android/com/smartmobilesoftware/inappbilling/InAppBillingPlugin.java" target-dir="src/com/smartmobilesoftware/inappbilling" />
