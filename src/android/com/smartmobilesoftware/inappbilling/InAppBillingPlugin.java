@@ -190,6 +190,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
                 // Have we been disposed of in the meantime? If so, quit.
                 if (mHelper == null) {
                 	callbackContext.error(IabHelper.ERR_SETUP + "|The billing helper has been disposed");
+			return;
                 }
 
                 // Hooray, IAB is fully set up. Now, let's get an inventory of stuff we own.
@@ -357,6 +358,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
                 }
             } catch (JSONException e) {
                 callbackContext.error(IabHelper.ERR_LOAD + "|" + e.getMessage());
+		return;
             }
             callbackContext.success(jsonSkuList);
         }
