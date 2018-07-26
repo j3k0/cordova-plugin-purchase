@@ -1,8 +1,16 @@
 # Cordova Purchase Plugin
 
-[![Build Status](https://travis-ci.org/j3k0/cordova-plugin-purchase.svg)](https://travis-ci.org/j3k0/cordova-plugin-purchase) [![Coverage Status](https://img.shields.io/coveralls/j3k0/cordova-plugin-purchase.svg)](https://coveralls.io/r/j3k0/cordova-plugin-purchase)
+[![Build Status](https://travis-ci.org/j3k0/cordova-plugin-purchase.svg)](https://travis-ci.org/j3k0/cordova-plugin-purchase)
 
 **Author**: Jean-Christophe Hoelt - <hoelt@fovea.cc>
+
+**Active Contributors**:
+
+ * [Josef Fröhle](https://github.com/Dexus)
+
+---
+
+Need professional help and support? [mailto:contact@fovea.cc](Contact us)!
 
 ## Summary
 
@@ -90,7 +98,7 @@ You're all good? Time to read some more documentation. Hooray!
  - [Documentation for Android](doc/android.md)
  - [Documentation for Windows](doc/windows.md)
 
-## Resources
+## Extra Resources
 
 ### for iOS
 
@@ -110,6 +118,7 @@ You're all good? Time to read some more documentation. Hooray!
  * Matt Kane (initial iOS code)
  * Mohammad Naghavi (original unification attempt)
  * Dave Alden [@dpa99c](https://github.com/dpa99c)(Apple-hosted IAPs for iOS)
+ * Josef Fröhle
 
 ## Sponsors
 Big thanks to:
