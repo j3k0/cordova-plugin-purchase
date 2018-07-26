@@ -10,7 +10,7 @@
 
 ---
 
-Need professional help and support? [mailto:contact@fovea.cc](Contact us)!
+Need professional help and support? [Contact us](mailto:contact@fovea.cc)!
 
 ## Summary
 
