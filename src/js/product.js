@@ -43,7 +43,7 @@ store.Product = function(options) {
     ///  - `product.description` - Localized longer description
     this.description = options.description || options.localizedDescription || null;
 
-    ///  - `product.priceMicros` - Localized price, in micro-units. Available only on Android
+    ///  - `product.priceMicros` - Localized price, in micro-units (divide by 1000000 to get numeric price)
     this.priceMicros = options.priceMicros || null;
 
     ///  - `product.price` - Localized price, with currency symbol
@@ -51,6 +51,9 @@ store.Product = function(options) {
 
     ///  - `product.currency` - Currency code (optionaly)
     this.currency = options.currency || null;
+
+    ///  - `product.countryCode` - Country code. Available only on iOS
+    this.countryCode = options.countryCode || null;
 
     //  - `product.localizedTitle` - Localized name or short description ready for display
     // this.localizedTitle = options.localizedTitle || options.title || null;

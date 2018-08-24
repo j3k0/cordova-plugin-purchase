@@ -344,9 +344,10 @@ Products object have the following fields and methods.
  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
  - `product.title` - Localized name or short description
  - `product.description` - Localized longer description
- - `product.priceMicros` - Localized price, in micro-units. Available only on Android
+ - `product.priceMicros` - Localized price, in micro-units (divide by 1000000 to get numeric price)
  - `product.price` - Localized price, with currency symbol
  - `product.currency` - Currency code (optionaly)
+ - `product.countryCode` - Country code. Available only on iOS
  - `product.loaded` - Product has been loaded from server, however it can still be either `valid` or not
  - `product.valid` - Product has been loaded and is a valid product
  - `product.canPurchase` - Product is in a state where it can be purchased
