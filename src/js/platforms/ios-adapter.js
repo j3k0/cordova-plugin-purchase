@@ -228,8 +228,10 @@ function storekitLoaded(validProducts, invalidProductIds) {
         p.set({
             title: validProducts[i].title,
             price: validProducts[i].price,
+            priceMicros: validProducts[i].priceMicros,
             description: validProducts[i].description,
             currency: validProducts[i].currency,
+            countryCode: validProducts[i].countryCode,
             state: store.VALID
         });
         p.trigger("loaded");
