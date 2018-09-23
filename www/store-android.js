@@ -1477,6 +1477,20 @@ store.refresh = function() {
 
 })();
 
+///
+/// ## <a name="refresh"></a>*store.manageSubscriptions()*
+///
+/// (iOS only)
+///
+/// Opens the Manage Subscription page in iTunes.
+///
+/// ##### example usage
+///
+/// ```js
+///    store.manageSubscriptions();
+/// ```
+///
+
 (function(){
 "use strict";
 

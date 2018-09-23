@@ -1498,6 +1498,20 @@ store.refresh = function() {
 
 })();
 
+///
+/// ## <a name="refresh"></a>*store.manageSubscriptions()*
+///
+/// (iOS only)
+///
+/// Opens the Manage Subscription page in iTunes.
+///
+/// ##### example usage
+///
+/// ```js
+///    store.manageSubscriptions();
+/// ```
+///
+
 (function(){
 "use strict";
 
@@ -2206,6 +2220,10 @@ InAppPurchase.prototype.canMakePayments = function(success, error){
 InAppPurchase.prototype.restore = function() {
     this.needRestoreNotification = true;
     exec('restoreCompletedTransactions', []);
+};
+
+InAppPurchase.prototype.manageSubscriptions = function () {
+    exec('manageSubscriptions', []);
 };
 
 /*
@@ -3005,6 +3023,10 @@ function storekitError(errorCode, errorText, options) {
         message: errorText
     });
 }
+
+store.manageSubscriptions = function() {
+    storekit.manageSubscriptions();
+};
 
 // Restore purchases.
 // store.restore = function() {
