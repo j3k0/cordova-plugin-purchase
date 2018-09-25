@@ -420,6 +420,10 @@ function storekitError(errorCode, errorText, options) {
     });
 }
 
+store.manageSubscriptions = function() {
+    storekit.manageSubscriptions();
+};
+
 // Restore purchases.
 // store.restore = function() {
 // };

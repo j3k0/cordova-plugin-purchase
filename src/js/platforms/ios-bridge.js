@@ -173,6 +173,10 @@ InAppPurchase.prototype.restore = function() {
     exec('restoreCompletedTransactions', []);
 };
 
+InAppPurchase.prototype.manageSubscriptions = function () {
+    exec('manageSubscriptions', []);
+};
+
 /*
  * Requests all active downloads be paused
  */

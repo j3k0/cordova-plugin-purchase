@@ -794,6 +794,19 @@ To make the restore purchases work as expected, please make sure that
 the "approved" event listener had be registered properly,
 and in the callback `product.finish()` should be called.
 
+
+## <a name="refresh"></a>*store.manageSubscriptions()*
+
+(iOS only)
+
+Opens the Manage Subscription page in iTunes.
+
+##### example usage
+
+```js
+   store.manageSubscriptions();
+```
+
 ## *store.log* object
 ### `store.log.error(message)`
 Logs an error message, only if `store.verbosity` >= store.ERROR

@@ -177,6 +177,13 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+-(void) manageSubscriptions: (CDVInvokedUrlCommand*)command {
+    NSURL *URL = [NSURL URLWithString:@"https://buy.itunes.apple.com/WebObjects/MZFinance.woa/wa/manageSubscriptions"];
+    [[UIApplication sharedApplication] openURL:URL options:@{} completionHandler:nil];
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"manageSubscriptions"];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
 /**
  * Request product data for the given productIds.
  * See js for further documentation.
