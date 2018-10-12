@@ -36,11 +36,11 @@ matrix:
       components:
       - tools
       - extra-android-m2repository
-      - build-tools-26.0.2
+      - build-tools-22.0.1
   - env: PLATFORM=android-6.0
     os: linux
     language: android
-    jdk: oraclejdk9
+    jdk: oraclejdk8
     android:
       components:
       - tools
@@ -49,7 +49,7 @@ matrix:
   - env: PLATFORM=android-7.0
     os: linux
     language: android
-    jdk: openjdk10
+    jdk: openjdk8
     android:
       components:
       - tools
