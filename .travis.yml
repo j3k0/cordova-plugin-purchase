@@ -1,28 +1,28 @@
 sudo: false
 env:
   global:
-  - TRAVIS_NODE_VERSION="4.2"
+  - TRAVIS_NODE_VERSION="6"
 matrix:
   include:
   - env: PLATFORM=ios-9.3
     os: osx
-    osx_image:
-      - xcode8
+    osx_image: xcode8
     language: node_js
-    node_js: "4.2"
+    node_js: "4"
   - env: PLATFORM=ios-10.0
     os: osx
-    osx_image:
-      - xcode8
-      - xcode9
-      - xcode10
+    osx_image: xcode9
     language: node_js
-    node_js: "4.2"
+    node_js: "6"
+  - env: PLATFORM=ios-11.0
+    os: osx
+    osx_image: xcode10
+    language: node_js
+    node_js: "8"
   - env: PLATFORM=android-4.4
     os: linux
     language: android
-    jdk:
-     - oraclejdk8
+    jdk: oraclejdk8
     android:
       components:
       - tools
@@ -31,9 +31,7 @@ matrix:
   - env: PLATFORM=android-5.1
     os: linux
     language: android
-    jdk:
-     - oraclejdk8
-     - openjdk8
+    jdk: openjdk8
     android:
       components:
       - tools
@@ -42,9 +40,7 @@ matrix:
   - env: PLATFORM=android-6.0
     os: linux
     language: android
-    jdk:
-     - oraclejdk9
-     - openjdk8
+    jdk: oraclejdk9
     android:
       components:
       - tools
@@ -53,13 +49,7 @@ matrix:
   - env: PLATFORM=android-7.0
     os: linux
     language: android
-    jdk:
-     - oraclejdk8
-     - oraclejdk9
-     - openjdk8
-     - oraclejdk10
-     - openjdk10
-     - openjdk11
+    jdk: openjdk10
     android:
       components:
       - tools
