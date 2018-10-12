@@ -31,7 +31,8 @@ SOFTWARE.
     <name>Purchase</name>
 	<description>Cordova Purchase plugin for iOS (AppStore), Android (PlayStore) and Windows</description>
     <engines>
-        <engine name="cordova" version=">=2.4.0" />
+        <engine name="cordova" version=">=6.0.0" />
+        <engine name="cordova-android" version=">=4.0.0" />
     </engines>
     <repo>https://github.com/j3k0/cordova-plugin-purchase.git</repo>
     <issue>https://github.com/j3k0/cordova-plugin-purchase/issues</issue>
@@ -74,24 +75,35 @@ SOFTWARE.
             <clobbers target="store" />
         </js-module>
 
-        <config-file target="AndroidManifest.xml" parent="/manifest">
+        <config-file target="*/AndroidManifest.xml" parent="/manifest">
             <!-- In-App Billing Permission -->
             <uses-permission android:name="com.android.vending.BILLING" />
+        </config-file>
+
+        <!-- Different version of cordova-android have their resources in different places.
+             Let's try to have them all setup.
+             First we need to make sure the required directories exists. This is what the
+             pre-install hook does -->
+        <hook type="before_plugin_install" src="scripts/androidBeforeInstall.js" />
+        <!-- edit-config
+            file="*/billing_key_param.xml"
+            target="/resources"
+            mode="overwrite"
+        >
+            <string name="billing_key_param">$BILLING_KEY</string>
+        </edit-config -->
+        <config-file target="*/billing_key_param.xml" parent="/*">
+            <string name="billing_key_param">$BILLING_KEY</string>
         </config-file>
 
         <!-- Cordova >= 3.0.0 -->
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="InAppBillingPlugin">
-				<param name="android-package" value="com.smartmobilesoftware.inappbilling.InAppBillingPlugin"/>
+				<param
+                    name="android-package"
+                    value="com.smartmobilesoftware.inappbilling.InAppBillingPlugin"
+                />
 			</feature>
-        </config-file>
-
-        <resource-file src="src/android/billing_key_param.xml" target="res/values/billing_key_param.xml" />
-        <config-file target="res/values/billing_key_param.xml" parent="/*">
-            <string name="billing_key_param">$BILLING_KEY</string>
-        </config-file>
-        <config-file target="app/src/main/res/values/billing_key_param.xml" parent="/*">
-            <string name="billing_key_param">$BILLING_KEY</string>
         </config-file>
 
         <!-- In-app Billing Library -->
