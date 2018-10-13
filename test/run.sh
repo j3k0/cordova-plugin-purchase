@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Set variables: PLUGIN_DIR, TEST_DIR, BUILD_DIR
-cd `dirname $0`/..
-ROOT_DIR=`pwd`
+cd "$(dirname $0)/.."
+ROOT_DIR="$(pwd)"
 TEST_DIR="$ROOT_DIR/test"
 
 BUILD_DIR="/tmp/build-$RANDOM"
@@ -75,6 +75,10 @@ function hasFile() {
        echo "File $1 installed."
     else
        echo "ERROR: File $1 is missing."
+       echo 
+       echo " => it can be found at the following locations:"
+       find "$BUILD_DIR" -name "$(basename "$1")"
+       echo
        EXIT=1
     fi
 }
@@ -108,16 +112,38 @@ if [ "_$ANDROID_HOME" != "_" ]; then
     cordova build android || exit 1
 
     echo Check Android installation
-    ANDROID_CLASSES_DIR="$BUILD_DIR/platforms/android/build/intermediates/classes/debug"
-    ANDROID_MANIFEST="$BUILD_DIR/platforms/android/AndroidManifest.xml"
 
+    # Plugin class has been built
+    ANDROID_CLASSES_DIR="$BUILD_DIR/platforms/android/build/intermediates/classes/debug"
+    if test ! -e "$ANDROID_CLASSES_DIR"; then
+      ANDROID_CLASSES_DIR="$BUILD_DIR/platforms/android/app/build/intermediates/classes/debug"
+    fi
     hasFile "$ANDROID_CLASSES_DIR/com/smartmobilesoftware/inappbilling/InAppBillingPlugin.class"
 
+    # Manifest has been patched
+    ANDROID_MANIFEST="$BUILD_DIR/platforms/android/AndroidManifest.xml"
+    if test ! -e "$ANDROID_MANIFEST"; then
+      ANDROID_MANIFEST="$BUILD_DIR/platforms/android/app/src/main/AndroidManifest.xml"
+    fi
+    hasFile "$ANDROID_MANIFEST"
     if grep "com.android.vending.BILLING" "$ANDROID_MANIFEST" > /dev/null; then
         echo "BILLING permission added."
     else
-        echo "ERROR: Not BILLING permission."
+        echo "ERROR: BILLING permission not added."
         EXIT=1
+    fi
+
+    # Billing key has been installed
+    BILLING_KEY_FILE="$BUILD_DIR/platforms/android/res/values/billing_key_param.xml"
+    if test ! -e "$BILLING_KEY_FILE"; then
+      BILLING_KEY_FILE="$BUILD_DIR/platforms/android/app/src/main/res/values/billing_key_param.xml"
+    fi
+    hasFile "$BILLING_KEY_FILE"
+    if grep "$BILLING_KEY" "$BILLING_KEY_FILE" > /dev/null; then
+      echo "BILLING_KEY has been setup."
+    else
+      echo "ERROR: BILLING_KEY hasn't been setup."
+      EXIT=1
     fi
 fi
 
