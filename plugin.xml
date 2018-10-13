@@ -85,13 +85,6 @@ SOFTWARE.
              First we need to make sure the required directories exists. This is what the
              pre-install hook does -->
         <hook type="before_plugin_install" src="scripts/androidBeforeInstall.js" />
-        <!-- edit-config
-            file="*/billing_key_param.xml"
-            target="/resources"
-            mode="overwrite"
-        >
-            <string name="billing_key_param">$BILLING_KEY</string>
-        </edit-config -->
         <config-file target="*/billing_key_param.xml" parent="/*">
             <string name="billing_key_param">$BILLING_KEY</string>
         </config-file>
