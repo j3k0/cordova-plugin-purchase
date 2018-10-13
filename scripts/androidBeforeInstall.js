@@ -6,34 +6,35 @@
 //
 // This is necessary so patching of the billing_key_param.xml won't fail.
 //
-const xmlContent = `<?xml version='1.0' encoding='utf-8'?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-</resources>`;
+
+var xmlContent = "<?xml version='1.0' encoding='utf-8'?>\n"
+  + '<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">\n'
+  + '</resources>\n';
 
 module.exports = function (ctx) {
-  const fs = ctx.requireCordovaModule('fs');
-  const path = ctx.requireCordovaModule('path');
-  const platformRoot = path.join(ctx.opts.projectRoot, 'platforms/android');
+  var fs = ctx.requireCordovaModule('fs');
+  var path = ctx.requireCordovaModule('path');
+  var platformRoot = path.join(ctx.opts.projectRoot, 'platforms/android');
+  var resDir = path.join(['res', 'values']);
 
-  if (fs.existsSync(path.join(platformRoot, 'res'))) {
-		// Eclipse or similar
-		mkdirByPathSync(path.join(platformRoot, 'res/value'));
-    fs.writeFileSync(path.join(platformRoot, 'res/value/billing_key_param.xml'), xmlContent);
+  // Android Studio or similar
+  var baseDir = '';
+  if (!fs.existsSync(path.join(platformRoot, 'res'))) {
+    baseDir = path.join([ 'app', 'src', 'main']);
 	}
-	else {
-		// Android Studio or similar
-		mkdirByPathSync(path.join(platformRoot, 'app/src/main/res/values'));
-    fs.writeFileSync(path.join(platformRoot, 'app/src/main/res/values/billing_key_param.xml'), xmlContent);
-	}
+
+  var xmlDir = path.join(platformRoot, baseDir, resDir);
+  mkdirByPathSync(xmlDir);
+
+  var xmlFile = path.join([xmlDir, 'billing_key_param.xml']);
+  fs.writeFileSync(xmlFile, xmlContent);
 
 	// Source: https://stackoverflow.com/questions/31645738/how-to-create-full-path-with-nodes-fs-mkdirsync
-	function mkdirByPathSync(targetDir, { isRelativeToScript = false } = {}) {
-		const sep = path.sep;
-		const initDir = path.isAbsolute(targetDir) ? sep : '';
-		const baseDir = isRelativeToScript ? __dirname : '.';
+	function mkdirByPathSync(targetDir) {
+		var initDir = path.isAbsolute(targetDir) ? path.sep : '';
 
-		return targetDir.split(sep).reduce((parentDir, childDir) => {
-			const curDir = path.resolve(baseDir, parentDir, childDir);
+		return targetDir.split(path.sep).reduce(function (parentDir, childDir) {
+			var curDir = path.resolve(parentDir, childDir);
 			try {
 				fs.mkdirSync(curDir);
 			} catch (err) {
@@ -46,7 +47,7 @@ module.exports = function (ctx) {
 					throw new Error(`EACCES: permission denied, mkdir '${parentDir}'`);
 				}
 
-				const caughtErr = ['EACCES', 'EPERM', 'EISDIR'].indexOf(err.code) > -1;
+				var caughtErr = ['EACCES', 'EPERM', 'EISDIR'].indexOf(err.code) > -1;
 				if (!caughtErr || caughtErr && targetDir === curDir) {
 					throw err; // Throw if it's just the last created dir.
 				}
