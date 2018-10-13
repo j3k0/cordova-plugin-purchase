@@ -75,7 +75,7 @@ SOFTWARE.
             <clobbers target="store" />
         </js-module>
 
-        <config-file target="*/AndroidManifest.xml" parent="/manifest">
+        <config-file target="AndroidManifest.xml" parent="/*">
             <!-- In-App Billing Permission -->
             <uses-permission android:name="com.android.vending.BILLING" />
         </config-file>
