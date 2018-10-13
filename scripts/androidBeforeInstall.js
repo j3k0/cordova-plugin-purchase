@@ -15,18 +15,18 @@ module.exports = function (ctx) {
   var fs = ctx.requireCordovaModule('fs');
   var path = ctx.requireCordovaModule('path');
   var platformRoot = path.join(ctx.opts.projectRoot, 'platforms/android');
-  var resDir = path.join(['res', 'values']);
+  var resDir = path.join('res', 'values');
 
   // Android Studio or similar
   var baseDir = '';
   if (!fs.existsSync(path.join(platformRoot, 'res'))) {
-    baseDir = path.join([ 'app', 'src', 'main']);
+    baseDir = path.join('app', 'src', 'main');
 	}
 
   var xmlDir = path.join(platformRoot, baseDir, resDir);
   mkdirByPathSync(xmlDir);
 
-  var xmlFile = path.join([xmlDir, 'billing_key_param.xml']);
+  var xmlFile = path.join(xmlDir, 'billing_key_param.xml');
   fs.writeFileSync(xmlFile, xmlContent);
 
 	// Source: https://stackoverflow.com/questions/31645738/how-to-create-full-path-with-nodes-fs-mkdirsync
