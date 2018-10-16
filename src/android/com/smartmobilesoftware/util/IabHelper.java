@@ -953,6 +953,11 @@ public class IabHelper {
             return BILLING_RESPONSE_RESULT_OK;
         }
 
+        // NullPointer crash reported through PlayStore forums
+        if (mService == null) {
+          return ERR_UNKNOWN;
+        }
+
         // Split the SKUs into slices of maximum 20 entries before querying them to prevent 
         // "Input Error: skusBundle array associated with key ITEM_ID_LIST cannot contain more than 20 items."
         while (skuList.size() > 0) {
