@@ -967,28 +967,43 @@ public class IabHelper {
 
             Bundle querySkus = new Bundle();
             querySkus.putStringArrayList(GET_SKU_DETAILS_ITEM_LIST, skuSubList);
-            Bundle skuDetails = mService.getSkuDetails(3,
-                    mContext.getPackageName(), itemType, querySkus);
 
-            if (!skuDetails.containsKey(RESPONSE_GET_SKU_DETAILS_LIST)) {
-                int response = getResponseCodeFromBundle(skuDetails);
-                if (response != BILLING_RESPONSE_RESULT_OK) {
-                    logDebug("getSkuDetails() failed: "
-                            + getResponseDesc(response));
-                    return response;
-                } else {
-                    logError("getSkuDetails() returned a bundle with neither an error nor a detail list.");
-                    return ERR_BAD_RESPONSE;
+            // Enclosed in a try/catch block to prevent a crash due to a bug on
+            // some devices with android versions 4.4.2 and 5.1:
+            // java.lang.SecurityException Requires READ_PHONE_STATE
+            //
+            // For details, see https://stackoverflow.com/a/38626623
+            // and https://github.com/googlesamples/android-play-billing/issues/26
+            try {
+                Bundle skuDetails = mService.getSkuDetails(3,
+                        mContext.getPackageName(), itemType, querySkus);
+
+                if (!skuDetails.containsKey(RESPONSE_GET_SKU_DETAILS_LIST)) {
+                    int response = getResponseCodeFromBundle(skuDetails);
+                    if (response != BILLING_RESPONSE_RESULT_OK) {
+                        logDebug("getSkuDetails() failed: "
+                                + getResponseDesc(response));
+                        return response;
+                    } else {
+                        logError("getSkuDetails() returned a bundle with "
+                                + "neither an error nor a detail list.");
+                        return ERR_BAD_RESPONSE;
+                    }
+                }
+
+                ArrayList<String> responseList = skuDetails
+                        .getStringArrayList(RESPONSE_GET_SKU_DETAILS_LIST);
+
+                for (String thisResponse : responseList) {
+                    SkuDetails d = new SkuDetails(itemType, thisResponse);
+                    logDebug("Got sku details: " + d);
+                    inv.addSkuDetails(d);
                 }
             }
-
-            ArrayList<String> responseList = skuDetails
-                    .getStringArrayList(RESPONSE_GET_SKU_DETAILS_LIST);
-
-            for (String thisResponse : responseList) {
-                SkuDetails d = new SkuDetails(itemType, thisResponse);
-                logDebug("Got sku details: " + d);
-                inv.addSkuDetails(d);
+            // Security Exception due to missing permissions reported through
+            // PlayStore forums.
+            catch (SecurityException e) {
+                return ERR_UNKNOWN;
             }
         }
         return BILLING_RESPONSE_RESULT_OK;
