@@ -69,7 +69,10 @@ store.Product = function(options) {
     this.introPriceSubscriptionPeriod = options.introPriceSubscriptionPeriod || null;
 
     ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial"). Available only on iOS
-    this.introPricePaymentMode = options.introPricePaymentMode;
+    this.introPricePaymentMode = options.introPricePaymentMode || null;
+
+    ///  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
+    this.ineligibleForIntroPrice = options.ineligibleForIntroPrice || null;
 
 
     //  - `product.localizedTitle` - Localized name or short description ready for display
@@ -184,6 +187,17 @@ store.Product.prototype.verify = function() {
                 store.utils.callExternal('verify.success', successCb, that, data);
                 store.utils.callExternal('verify.done', doneCb, that);
                 that.trigger("verified");
+
+                // Process the list of products that are ineligible
+                // for introductory prices.
+                if (data && data.ineligible_for_intro_price &&
+                         data.ineligible_for_intro_price.forEach) {
+                    data.ineligible_for_intro_price.forEach(function(pid) {
+                        var p = store.get(pid);
+                        if (p)
+                            p.set('ineligibleForIntroPrice', true);
+                    });
+                }
             }
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));
