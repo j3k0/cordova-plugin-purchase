@@ -856,10 +856,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         NSNumber *introPriceNumberOfPeriods = nil;
         NSString *introPriceSubscriptionPeriod  = nil;
         // Introductory price are supported from iOS 11.2
-        // We need compile-time check (making sure the XCode version supports it)
-        // And a runtime check (making sure the device supports it)
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_2
-        if ([[[UIDevice currentDevice] systemVersion] compare:@"11.2.0" options:NSNumericSearch] != NSOrderedAscending) {
+        if (@available(iOS 11.2, *)) {
             SKProductDiscount *introPrice = product.introductoryPrice;
             if (introPrice != nil) {
                 introPriceMicros = [introPrice.price  decimalNumberByMultiplyingByPowerOf10:6];
@@ -881,7 +878,6 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
                     introPriceSubscriptionPeriod = @"Year";
             }
         }
-#endif  // __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_2
         
         DLog(@"BatchProductsRequestDelegate.productsRequest:didReceiveResponse:  - %@: %@", product.productIdentifier, product.localizedTitle);
         [validProducts addObject:

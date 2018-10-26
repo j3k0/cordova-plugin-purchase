@@ -18,11 +18,7 @@
 - (NSString *)localizedIntroPrice
 {
     // Introductory price are supported from iOS 11.2
-    // We need compile-time check (making sure the XCode version supports it)
-    // And a runtime check (making sure the device supports it)
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_2
-    if ([[[UIDevice currentDevice] systemVersion] compare:@"11.2.0" options:NSNumericSearch] != NSOrderedAscending) {
-        // Running on iOS 11.2.0 or higher
+    if (@available(iOS 11.2, *)) {
         SKProductDiscount *intro = self.introductoryPrice;
         if (intro != nil) {
             NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
@@ -36,7 +32,6 @@
             return formattedString;
         }
     }
-#endif  // __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_2
     return nil;
 }
 

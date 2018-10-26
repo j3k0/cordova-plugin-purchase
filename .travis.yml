@@ -6,7 +6,7 @@ matrix:
   include:
   - env: PLATFORM=ios-9.3
     os: osx
-    osx_image: xcode8
+    osx_image: xcode9
     language: node_js
     node_js: "4"
   - env: PLATFORM=ios-10.0
