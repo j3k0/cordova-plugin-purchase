@@ -851,30 +851,37 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         NSDecimalNumber *priceMicros = [product.price decimalNumberByMultiplyingByPowerOf10:6];
 
         // Introductory price fields
-        SKProductDiscount *introPrice = product.introductoryPrice;
         NSDecimalNumber *introPriceMicros = nil;
         NSString *introPricePaymentMode = nil;
         NSNumber *introPriceNumberOfPeriods = nil;
         NSString *introPriceSubscriptionPeriod  = nil;
-        if (introPrice != nil) {
-            introPriceMicros = [introPrice.price  decimalNumberByMultiplyingByPowerOf10:6];
-            // https://developer.apple.com/documentation/storekit/skproductdiscountpaymentmode?language=objc
-            if (introPrice.paymentMode == SKProductDiscountPaymentModePayAsYouGo)
-                introPricePaymentMode = @"PayAsYouGo";
-            if (introPrice.paymentMode == SKProductDiscountPaymentModePayUpFront)
-                introPricePaymentMode = @"UpFront";
-            if (introPrice.paymentMode == SKProductDiscountPaymentModeFreeTrial)
-                introPricePaymentMode = @"FreeTrial";
-            introPriceNumberOfPeriods = [NSNumber numberWithUnsignedInt:introPrice.numberOfPeriods];
-            if (introPrice.subscriptionPeriod == SKProductPeriodUnitDay)
-                introPriceSubscriptionPeriod = @"Day";
-            if (introPrice.subscriptionPeriod == SKProductPeriodUnitMonth)
-                introPriceSubscriptionPeriod = @"Month";
-            if (introPrice.subscriptionPeriod == SKProductPeriodUnitWeek)
-                introPriceSubscriptionPeriod = @"Week";
-            if (introPrice.subscriptionPeriod == SKProductPeriodUnitYear)
-                introPriceSubscriptionPeriod = @"Year";
+        // Introductory price are supported from iOS 11.2
+        // We need compile-time check (making sure the XCode version supports it)
+        // And a runtime check (making sure the device supports it)
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_2
+        if ([[[UIDevice currentDevice] systemVersion] compare:@"11.2.0" options:NSNumericSearch] != NSOrderedAscending) {
+            SKProductDiscount *introPrice = product.introductoryPrice;
+            if (introPrice != nil) {
+                introPriceMicros = [introPrice.price  decimalNumberByMultiplyingByPowerOf10:6];
+                // https://developer.apple.com/documentation/storekit/skproductdiscountpaymentmode?language=objc
+                if (introPrice.paymentMode == SKProductDiscountPaymentModePayAsYouGo)
+                    introPricePaymentMode = @"PayAsYouGo";
+                if (introPrice.paymentMode == SKProductDiscountPaymentModePayUpFront)
+                    introPricePaymentMode = @"UpFront";
+                if (introPrice.paymentMode == SKProductDiscountPaymentModeFreeTrial)
+                    introPricePaymentMode = @"FreeTrial";
+                introPriceNumberOfPeriods = [NSNumber numberWithUnsignedInt:introPrice.numberOfPeriods];
+                if (introPrice.subscriptionPeriod == SKProductPeriodUnitDay)
+                    introPriceSubscriptionPeriod = @"Day";
+                if (introPrice.subscriptionPeriod == SKProductPeriodUnitMonth)
+                    introPriceSubscriptionPeriod = @"Month";
+                if (introPrice.subscriptionPeriod == SKProductPeriodUnitWeek)
+                    introPriceSubscriptionPeriod = @"Week";
+                if (introPrice.subscriptionPeriod == SKProductPeriodUnitYear)
+                    introPriceSubscriptionPeriod = @"Year";
+            }
         }
+#endif  // __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_2
         
         DLog(@"BatchProductsRequestDelegate.productsRequest:didReceiveResponse:  - %@: %@", product.productIdentifier, product.localizedTitle);
         [validProducts addObject:
