@@ -225,13 +225,19 @@ function storekitLoaded(validProducts, invalidProductIds) {
         p = store.products.byId[validProducts[i].id];
         store.log.debug("ios -> product " + p.id + " is valid (" + p.alias + ")");
         store.log.debug("ios -> owned? " + p.owned);
+        var v = validProducts[i];
         p.set({
-            title: validProducts[i].title,
-            price: validProducts[i].price,
-            priceMicros: validProducts[i].priceMicros,
-            description: validProducts[i].description,
-            currency: validProducts[i].currency,
-            countryCode: validProducts[i].countryCode,
+            title: v.title,
+            description: v.description,
+            price: v.price,
+            priceMicros: v.priceMicros,
+            currency: v.currency,
+            countryCode: v.countryCode,
+            introPrice: v.introPrice,
+            introPriceMicros: v.introPriceMicros,
+            introPriceNumberOfPeriods: v.introPriceNumberOfPeriods,
+            introPriceSubscriptionPeriod: v.introPriceSubscriptionPeriod,
+            introPricePaymentMode: v.introPricePaymentMode,
             state: store.VALID
         });
         p.trigger("loaded");
