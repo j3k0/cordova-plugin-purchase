@@ -427,7 +427,7 @@ store.Product = function(options) {
     ///  - `product.description` - Localized longer description
     this.description = options.description || options.localizedDescription || null;
 
-    ///  - `product.priceMicros` - Localized price, in micro-units (divide by 1000000 to get numeric price)
+    ///  - `product.priceMicros` - Price in micro-units (divide by 1000000 to get numeric price)
     this.priceMicros = options.priceMicros || null;
 
     ///  - `product.price` - Localized price, with currency symbol
@@ -438,6 +438,23 @@ store.Product = function(options) {
 
     ///  - `product.countryCode` - Country code. Available only on iOS
     this.countryCode = options.countryCode || null;
+
+
+    ///  - `product.introPrice` - Localized introductory price, with currency symbol. Available only on iOS
+    this.introPrice = options.introPrice || null;
+
+    ///  - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price). Available only on iOS
+    this.introPriceMicros = options.introPriceMicros || null;
+
+    ///  - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available. Available only on iOS
+    this.introPriceNumberOfPeriods = options.introPriceNumberOfPeriods || null;
+
+    ///  - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year"). Available only on iOS
+    this.introPriceSubscriptionPeriod = options.introPriceSubscriptionPeriod || null;
+
+    ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial"). Available only on iOS
+    this.introPricePaymentMode = options.introPricePaymentMode;
+
 
     //  - `product.localizedTitle` - Localized name or short description ready for display
     // this.localizedTitle = options.localizedTitle || options.title || null;
