@@ -38,6 +38,12 @@
 /// Validation error codes are [documented here](#validation-error-codes).
 store.validator = null;
 
+// In order not to send big batch of identical requests, we'll
+// add verification requests to this list, then process them a little
+// moment later.
+store._validatorPendingCallbacks = {};
+store._validatorTimer = null;
+
 //
 // ## store._validator
 //
@@ -47,35 +53,77 @@ store.validator = null;
 // Also makes sure to refresh the receipts.
 //
 store._validator = function(product, callback, isPrepared) {
-    if (!store.validator)
-        callback(true, product);
 
-    if (store._prepareForValidation && isPrepared !== true) {
-        store._prepareForValidation(product, function() {
-            store._validator(product, callback, true);
-        });
-        return;
-    }
+    // Add the callback to the list of pending ones for this product
+    if (!store._validatorPendingCallbacks[product.id])
+        store._validatorPendingCallbacks[product.id] = [];
+    store._validatorPendingCallbacks[product.id].push(callback);
+    // (Re)set a timeout to call the actual validation in 500ms
+    // for all products at once
+    if (store._validatorTimer) clearTimeout(store._validatorTimer);
+    store._validatorTimer = setTimeout(go.bind(store, false, null), 500);
 
-    if (typeof store.validator === 'string') {
-        store.utils.ajax({
-            url: store.validator,
-            method: 'POST',
-            data: product,
-            success: function(data) {
-                store.log.debug("validator success, response: " + JSON.stringify(data));
-                callback(data && data.ok, data.data);
-            },
-            error: function(status, message, data) {
-                var fullMessage = "Error " + status + ": " + message;
-                store.log.debug("validator failed, response: " + JSON.stringify(fullMessage));
-                store.log.debug("body => " + JSON.stringify(data));
-                callback(false, fullMessage);
+    // Start the validation process
+    function go(isPrepared, pendingCallbacks) {
+
+        // Clear the timer and retrieve the list ofpending callbacks
+        if (!isPrepared) {
+            store._validatorTimer = null;
+            pendingCallbacks = store._validatorPendingCallbacks;
+            store._validatorPendingCallbacks = {};
+
+            if (store._refreshForValidation) {
+                store._refreshForValidation(
+                    go.bind(store, true, pendingCallbacks));
+                return;
             }
-        });
+        }
+
+        // Process all products in series (synchronously)
+        var productId = Object.keys(pendingCallbacks)[0];
+        if (productId) {
+            if (store._prepareForValidation)
+                store._prepareForValidation(store.get(productId), callValidate);
+            else
+                callValidate();
+        }
+
+        function callValidate() {
+            validate(store.get(productId), function(success, data) {
+                // done validating, process the next product
+                pendingCallbacks[productId].forEach(function(callback) {
+                    callback(success, data);
+                });
+                delete pendingCallbacks[productId];
+                go(true, pendingCallbacks);
+            });
+        }
     }
-    else {
-        store.validator(product, callback);
+
+    function validate(product, callback) {
+        if (!store.validator)
+            callback(true, product);
+
+        if (typeof store.validator === 'string') {
+            store.utils.ajax({
+                url: store.validator,
+                method: 'POST',
+                data: product,
+                success: function(data) {
+                    store.log.debug("validator success, response: " + JSON.stringify(data));
+                    callback(data && data.ok, data.data);
+                },
+                error: function(status, message, data) {
+                    var fullMessage = "Error " + status + ": " + message;
+                    store.log.debug("validator failed, response: " + JSON.stringify(fullMessage));
+                    store.log.debug("body => " + JSON.stringify(data));
+                    callback(false, fullMessage);
+                }
+            });
+        }
+        else {
+            store.validator(product, callback);
+        }
     }
 };
 

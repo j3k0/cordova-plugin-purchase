@@ -508,33 +508,15 @@ store._refreshForValidation = function(callback) {
 
 // Load receipts required by server-side validation of purchases.
 store._prepareForValidation = function(product, callback) {
-    var nRetry = 0;
-    function loadReceipts() {
-        storekit.setAppStoreReceipt(null);
-        storekit.loadReceipts(function(r) {
-            if (!product.transaction) {
-                product.transaction = {
-                    type: 'ios-appstore'
-                };
-            }
-            product.transaction.appStoreReceipt = r.appStoreReceipt;
-            if (product.transaction.id)
-                product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
-            if (!product.transaction.appStoreReceipt && !product.transaction.transactionReceipt) {
-                nRetry ++;
-                if (nRetry < 2) {
-                    setTimeout(loadReceipts, 500);
-                    return;
-                }
-                else if (nRetry === 2) {
-                    storekit.refreshReceipts(loadReceipts);
-                    return;
-                }
-            }
-            callback();
-        });
-    }
-    loadReceipts();
+    storekit.loadReceipts(function(r) {
+        if (!product.transaction) {
+            product.transaction = {
+                type: 'ios-appstore'
+            };
+        }
+        product.transaction.appStoreReceipt = r.appStoreReceipt;
+    });
+    callback();
 };
 
 //!
