@@ -20,7 +20,7 @@
     // Introductory price are supported from iOS 11.2
     if (@available(iOS 11.2, *)) {
         SKProductDiscount *intro = self.introductoryPrice;
-        if (intro != nil) {
+        if (intro != nil && intro.priceLocale != nil) {
             NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
             [numberFormatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
             [numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
