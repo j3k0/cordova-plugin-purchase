@@ -846,7 +846,10 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         [numberFormatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
         [numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
         [numberFormatter setLocale:product.priceLocale];
-        NSString *currencyCode = [numberFormatter currencyCode];
+        NSString *currencyCode = nil;
+        if (@available(iOS 10.0, *)) {
+          currencyCode = [numberFormatter currencyCode];
+        }
         NSString *countryCode = [product.priceLocale objectForKey: NSLocaleCountryCode];
         NSDecimalNumber *priceMicros = [product.price decimalNumberByMultiplyingByPowerOf10:6];
 
