@@ -75,7 +75,7 @@ describe('Verify', function() {
                     assert.equal(1, successCalled, "success should be called");
                     assert.equal(1, doneCalled,    "done should be called");
                     done();
-                }, 3000);
+                }, 5000);
             };
 
             step1();

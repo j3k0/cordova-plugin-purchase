@@ -71,12 +71,6 @@ store._validator = function(product, callback, isPrepared) {
             store._validatorTimer = null;
             pendingCallbacks = store._validatorPendingCallbacks;
             store._validatorPendingCallbacks = {};
-
-            if (store._refreshForValidation) {
-                store._refreshForValidation(
-                    go.bind(store, true, pendingCallbacks));
-                return;
-            }
         }
 
         // Process all products in series (synchronously)
@@ -89,7 +83,8 @@ store._validator = function(product, callback, isPrepared) {
         }
 
         function callValidate() {
-            validate(store.get(productId), function(success, data) {
+            var product = store.get(productId);
+            validate(product, function(success, data) {
                 // done validating, process the next product
                 pendingCallbacks[productId].forEach(function(callback) {
                     callback(success, data);

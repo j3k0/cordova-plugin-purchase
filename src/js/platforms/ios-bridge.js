@@ -498,11 +498,16 @@ InAppPurchase.prototype.setAppStoreReceipt = function(base64) {
     this.appStoreReceipt = base64;
     if (window.localStorage && base64) {
         window.localStorage.sk_appStoreReceipt = base64;
+        window.localStorage.sk_appStoreReceiptDate = (+new Date());
     }
 };
 InAppPurchase.prototype.loadAppStoreReceipt = function() {
     if (window.localStorage && window.localStorage.sk_appStoreReceipt) {
         this.appStoreReceipt = window.localStorage.sk_appStoreReceipt;
+        var t = window.localStorage.sk_appStoreReceiptDate | 0;
+        // reset "appStoreReceipt" every week
+        if (Math.abs(t - new Date()) > 7 * 24 * 3600000)
+            this.appStoreReceipt = null;
     }
     if (this.appStoreReceipt === 'null')
         this.appStoreReceipt = null;

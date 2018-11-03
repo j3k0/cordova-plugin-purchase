@@ -585,6 +585,11 @@ store.Product.prototype.verify = function() {
 
         store._validator(that, function(success, data) {
             store.log.debug("verify -> " + JSON.stringify(success));
+
+            // Update the appStoreReceipt
+            if (data && data.latest_receipt)
+                store._latest_receipt = data.latest_receipt;
+
             if (success) {
                 if (that.expired)
                     that.set("expired", false);
@@ -1392,6 +1397,12 @@ store.off = function(callback) {
 /// Validation error codes are [documented here](#validation-error-codes).
 store.validator = null;
 
+// In order not to send big batch of identical requests, we'll
+// add verification requests to this list, then process them a little
+// moment later.
+store._validatorPendingCallbacks = {};
+store._validatorTimer = null;
+
 //
 // ## store._validator
 //
@@ -1401,35 +1412,72 @@ store.validator = null;
 // Also makes sure to refresh the receipts.
 //
 store._validator = function(product, callback, isPrepared) {
-    if (!store.validator)
-        callback(true, product);
 
-    if (store._prepareForValidation && isPrepared !== true) {
-        store._prepareForValidation(product, function() {
-            store._validator(product, callback, true);
-        });
-        return;
+    // Add the callback to the list of pending ones for this product
+    if (!store._validatorPendingCallbacks[product.id])
+        store._validatorPendingCallbacks[product.id] = [];
+    store._validatorPendingCallbacks[product.id].push(callback);
+    // (Re)set a timeout to call the actual validation in 500ms
+    // for all products at once
+    if (store._validatorTimer) clearTimeout(store._validatorTimer);
+    store._validatorTimer = setTimeout(go.bind(store, false, null), 500);
+
+    // Start the validation process
+    function go(isPrepared, pendingCallbacks) {
+
+        // Clear the timer and retrieve the list ofpending callbacks
+        if (!isPrepared) {
+            store._validatorTimer = null;
+            pendingCallbacks = store._validatorPendingCallbacks;
+            store._validatorPendingCallbacks = {};
+        }
+
+        // Process all products in series (synchronously)
+        var productId = Object.keys(pendingCallbacks)[0];
+        if (productId) {
+            if (store._prepareForValidation)
+                store._prepareForValidation(store.get(productId), callValidate);
+            else
+                callValidate();
+        }
+
+        function callValidate() {
+            var product = store.get(productId);
+            validate(product, function(success, data) {
+                // done validating, process the next product
+                pendingCallbacks[productId].forEach(function(callback) {
+                    callback(success, data);
+                });
+                delete pendingCallbacks[productId];
+                go(true, pendingCallbacks);
+            });
+        }
     }
 
-    if (typeof store.validator === 'string') {
-        store.utils.ajax({
-            url: store.validator,
-            method: 'POST',
-            data: product,
-            success: function(data) {
-                store.log.debug("validator success, response: " + JSON.stringify(data));
-                callback(data && data.ok, data.data);
-            },
-            error: function(status, message, data) {
-                var fullMessage = "Error " + status + ": " + message;
-                store.log.debug("validator failed, response: " + JSON.stringify(fullMessage));
-                store.log.debug("body => " + JSON.stringify(data));
-                callback(false, fullMessage);
-            }
-        });
-    }
-    else {
-        store.validator(product, callback);
+    function validate(product, callback) {
+        if (!store.validator)
+            callback(true, product);
+
+        if (typeof store.validator === 'string') {
+            store.utils.ajax({
+                url: store.validator,
+                method: 'POST',
+                data: product,
+                success: function(data) {
+                    store.log.debug("validator success, response: " + JSON.stringify(data));
+                    callback(data && data.ok, data.data);
+                },
+                error: function(status, message, data) {
+                    var fullMessage = "Error " + status + ": " + message;
+                    store.log.debug("validator failed, response: " + JSON.stringify(fullMessage));
+                    store.log.debug("body => " + JSON.stringify(data));
+                    callback(false, fullMessage);
+                }
+            });
+        }
+        else {
+            store.validator(product, callback);
+        }
     }
 };
 
@@ -2578,11 +2626,16 @@ InAppPurchase.prototype.setAppStoreReceipt = function(base64) {
     this.appStoreReceipt = base64;
     if (window.localStorage && base64) {
         window.localStorage.sk_appStoreReceipt = base64;
+        window.localStorage.sk_appStoreReceiptDate = (+new Date());
     }
 };
 InAppPurchase.prototype.loadAppStoreReceipt = function() {
     if (window.localStorage && window.localStorage.sk_appStoreReceipt) {
         this.appStoreReceipt = window.localStorage.sk_appStoreReceipt;
+        var t = window.localStorage.sk_appStoreReceiptDate | 0;
+        // reset "appStoreReceipt" every week
+        if (Math.abs(t - new Date()) > 7 * 24 * 3600000)
+            this.appStoreReceipt = null;
     }
     if (this.appStoreReceipt === 'null')
         this.appStoreReceipt = null;
@@ -2673,6 +2726,12 @@ store.when("requested", function(product) {
             }), product]);
             return;
         }
+
+        // User will enter its password, so let's refresh the receipt.
+        store._latest_receipt = null;
+        storekit.setAppStoreReceipt(null);
+
+        // And initiate the purchase
         storekit.purchase(product.id, 1);
     });
 });
@@ -2840,8 +2899,19 @@ function storekitLoad() {
     var products = [];
     for (var i = 0; i < store.products.length; ++i)
         products.push(store.products[i].id);
-    store.log.debug("ios -> loading products");
-    storekit.load(products, storekitLoaded, storekitLoadFailed);
+
+    // refresh receipts
+    if (!storekit.appStoreReceipt) {
+        storekit.refreshReceipts(function (data) {
+            storekitSetApplicationData(data);
+            store.log.debug("ios -> loading products");
+            storekit.load(products, storekitLoaded, storekitLoadFailed);
+        });
+    }
+    else {
+        store.log.debug("ios -> loading products");
+        storekit.load(products, storekitLoaded, storekitLoadFailed);
+    }
 }
 
 //! ### <a name="storekitLoaded"></a> *storekitLoaded()*
@@ -2921,9 +2991,17 @@ function storekitRefreshReceipts(callback) {
             callbacks[i]();
     }
 
-    storekit.refreshReceipts(function() {
+    if (store._latest_receipt) {
+        refreshing = false;
+        storekit.setAppStoreReceipt(store._latest_receipt);
+        callCallbacks();
+        return;
+    }
+
+    storekit.refreshReceipts(function(data) {
         // success
         refreshing = false;
+        storekitSetApplicationData(data);
         callCallbacks();
     },
     function() {
@@ -2933,9 +3011,9 @@ function storekitRefreshReceipts(callback) {
     });
 }
 
-store.when("expired", function() {
-    storekitRefreshReceipts();
-});
+// store.when("expired", function() {
+//     storekitRefreshReceipts();
+// });
 
 //! ### <a name="storekitPurchasing"></a> *storekitPurchasing()*
 //!
@@ -3065,35 +3143,41 @@ store.manageSubscriptions = function() {
     storekit.manageSubscriptions();
 };
 
+function storekitSetApplicationData(data) {
+    // Why create a product whose ID equals the application bundle ID?
+    // Is allows to trigger a validation of the appStoreReceipt.
+    if (data) {
+        var p = data.bundleIdentifier ? store.get(data.bundleIdentifier) : null;
+        if (!p) {
+            p = new store.Product({
+                id:    data.bundleIdentifier || "application data",
+                alias: "application data",
+                type:  store.NON_CONSUMABLE
+            });
+            store.register(p);
+        }
+        p.version = data.bundleShortVersion;
+        p.transaction = {
+            type: 'ios-appstore',
+            appStoreReceipt: data.appStoreReceipt,
+            signature: data.signature
+        };
+        p.trigger("loaded");
+        p.set('state', store.APPROVED);
+    }
+}
+
+
 // Restore purchases.
 // store.restore = function() {
 // };
 store.when("re-refreshed", function() {
     storekit.restore();
-    storekit.refreshReceipts(function(data) {
-        // What the point of this?
-        // Why create a product whose ID equals the application bundle ID (?)
-        // Is it just to trigger force a validation of the appStoreReceipt?
-        if (data) {
-            var p = data.bundleIdentifier ? store.get(data.bundleIdentifier) : null;
-            if (!p) {
-                p = new store.Product({
-                    id:    data.bundleIdentifier || "application data",
-                    alias: "application data",
-                    type:  store.NON_CONSUMABLE
-                });
-                store.register(p);
-            }
-            p.version = data.bundleShortVersion;
-            p.transaction = {
-                type: 'ios-appstore',
-                appStoreReceipt: data.appStoreReceipt,
-                signature: data.signature
-            };
-            p.trigger("loaded");
-            p.set('state', store.APPROVED);
-        }
-    });
+
+    // User has entered his password, so let's refresh the receipt.
+    store._latest_receipt = null;
+    storekit.setAppStoreReceipt(null);
+    storekit.refreshReceipts(storekitSetApplicationData);
 });
 
 function storekitRestored(originalTransactionId, productId) {
@@ -3149,33 +3233,15 @@ store._refreshForValidation = function(callback) {
 
 // Load receipts required by server-side validation of purchases.
 store._prepareForValidation = function(product, callback) {
-    var nRetry = 0;
-    function loadReceipts() {
-        storekit.setAppStoreReceipt(null);
-        storekit.loadReceipts(function(r) {
-            if (!product.transaction) {
-                product.transaction = {
-                    type: 'ios-appstore'
-                };
-            }
-            product.transaction.appStoreReceipt = r.appStoreReceipt;
-            if (product.transaction.id)
-                product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
-            if (!product.transaction.appStoreReceipt && !product.transaction.transactionReceipt) {
-                nRetry ++;
-                if (nRetry < 2) {
-                    setTimeout(loadReceipts, 500);
-                    return;
-                }
-                else if (nRetry === 2) {
-                    storekit.refreshReceipts(loadReceipts);
-                    return;
-                }
-            }
-            callback();
-        });
-    }
-    loadReceipts();
+    storekit.loadReceipts(function(r) {
+        if (!product.transaction) {
+            product.transaction = {
+                type: 'ios-appstore'
+            };
+        }
+        product.transaction.appStoreReceipt = r.appStoreReceipt;
+        callback();
+    });
 };
 
 //!

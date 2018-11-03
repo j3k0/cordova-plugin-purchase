@@ -53,7 +53,9 @@ global.storekit = {
         if (cb) {
             cb({});
         }
-    }
+    },
+    loadAppStoreReceipt: function() {
+    },
 };
 })();
 
@@ -85,7 +87,7 @@ describe('iOS', function(){
             store.register({ id: "cc.fovea.i", type: store.NON_CONSUMABLE});
             store.refresh();
 
-            assert.equal(1,     storekit.initCalled);
+            assert.equal(1,     storekit.initCalled | 0);
             assert.equal(false, storekit.initialized);
 
             storekit.initShouldFail = false;
@@ -96,7 +98,7 @@ describe('iOS', function(){
                 // but failed at load
                 assert.equal(2,     storekit.initCalled);
                 assert.equal(true,  storekit.initialized);
-                assert.equal(1,     storekit.loadCalled);
+                assert.equal(1,     storekit.loadCalled | 0);
                 assert.equal(false, storekit.loaded);
                 assert.equal(false, store.ready(), "store shouldn't be ready after failed load");
 

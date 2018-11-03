@@ -180,6 +180,11 @@ store.Product.prototype.verify = function() {
 
         store._validator(that, function(success, data) {
             store.log.debug("verify -> " + JSON.stringify(success));
+
+            // Update the appStoreReceipt
+            if (data && data.latest_receipt)
+                store._latest_receipt = data.latest_receipt;
+
             if (success) {
                 if (that.expired)
                     that.set("expired", false);

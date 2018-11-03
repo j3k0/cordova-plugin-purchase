@@ -38,6 +38,12 @@ store.when("requested", function(product) {
             }), product]);
             return;
         }
+
+        // User will enter its password, so let's refresh the receipt.
+        store._latest_receipt = null;
+        storekit.setAppStoreReceipt(null);
+
+        // And initiate the purchase
         storekit.purchase(product.id, 1);
     });
 });
@@ -205,8 +211,19 @@ function storekitLoad() {
     var products = [];
     for (var i = 0; i < store.products.length; ++i)
         products.push(store.products[i].id);
-    store.log.debug("ios -> loading products");
-    storekit.load(products, storekitLoaded, storekitLoadFailed);
+
+    // refresh receipts
+    if (!storekit.appStoreReceipt) {
+        storekit.refreshReceipts(function (data) {
+            storekitSetApplicationData(data);
+            store.log.debug("ios -> loading products");
+            storekit.load(products, storekitLoaded, storekitLoadFailed);
+        });
+    }
+    else {
+        store.log.debug("ios -> loading products");
+        storekit.load(products, storekitLoaded, storekitLoadFailed);
+    }
 }
 
 //! ### <a name="storekitLoaded"></a> *storekitLoaded()*
@@ -286,9 +303,17 @@ function storekitRefreshReceipts(callback) {
             callbacks[i]();
     }
 
-    storekit.refreshReceipts(function() {
+    if (store._latest_receipt) {
+        refreshing = false;
+        storekit.setAppStoreReceipt(store._latest_receipt);
+        callCallbacks();
+        return;
+    }
+
+    storekit.refreshReceipts(function(data) {
         // success
         refreshing = false;
+        storekitSetApplicationData(data);
         callCallbacks();
     },
     function() {
@@ -298,9 +323,9 @@ function storekitRefreshReceipts(callback) {
     });
 }
 
-store.when("expired", function() {
-    storekitRefreshReceipts();
-});
+// store.when("expired", function() {
+//     storekitRefreshReceipts();
+// });
 
 //! ### <a name="storekitPurchasing"></a> *storekitPurchasing()*
 //!
@@ -430,35 +455,41 @@ store.manageSubscriptions = function() {
     storekit.manageSubscriptions();
 };
 
+function storekitSetApplicationData(data) {
+    // Why create a product whose ID equals the application bundle ID?
+    // Is allows to trigger a validation of the appStoreReceipt.
+    if (data) {
+        var p = data.bundleIdentifier ? store.get(data.bundleIdentifier) : null;
+        if (!p) {
+            p = new store.Product({
+                id:    data.bundleIdentifier || "application data",
+                alias: "application data",
+                type:  store.NON_CONSUMABLE
+            });
+            store.register(p);
+        }
+        p.version = data.bundleShortVersion;
+        p.transaction = {
+            type: 'ios-appstore',
+            appStoreReceipt: data.appStoreReceipt,
+            signature: data.signature
+        };
+        p.trigger("loaded");
+        p.set('state', store.APPROVED);
+    }
+}
+
+
 // Restore purchases.
 // store.restore = function() {
 // };
 store.when("re-refreshed", function() {
     storekit.restore();
-    storekit.refreshReceipts(function(data) {
-        // What the point of this?
-        // Why create a product whose ID equals the application bundle ID (?)
-        // Is it just to trigger force a validation of the appStoreReceipt?
-        if (data) {
-            var p = data.bundleIdentifier ? store.get(data.bundleIdentifier) : null;
-            if (!p) {
-                p = new store.Product({
-                    id:    data.bundleIdentifier || "application data",
-                    alias: "application data",
-                    type:  store.NON_CONSUMABLE
-                });
-                store.register(p);
-            }
-            p.version = data.bundleShortVersion;
-            p.transaction = {
-                type: 'ios-appstore',
-                appStoreReceipt: data.appStoreReceipt,
-                signature: data.signature
-            };
-            p.trigger("loaded");
-            p.set('state', store.APPROVED);
-        }
-    });
+
+    // User has entered his password, so let's refresh the receipt.
+    store._latest_receipt = null;
+    storekit.setAppStoreReceipt(null);
+    storekit.refreshReceipts(storekitSetApplicationData);
 });
 
 function storekitRestored(originalTransactionId, productId) {
@@ -521,8 +552,8 @@ store._prepareForValidation = function(product, callback) {
             };
         }
         product.transaction.appStoreReceipt = r.appStoreReceipt;
+        callback();
     });
-    callback();
 };
 
 //!
