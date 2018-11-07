@@ -47,5 +47,6 @@
     "preprocessor": "^1.4.0",
     "uglify-js": "^2.7.4",
     "coveralls": "^2.11.14"
-  }
+  },
+  "types": "./src/js/index.d.ts"
 }
