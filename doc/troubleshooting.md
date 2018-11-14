@@ -8,3 +8,7 @@ Sometimes you have to change the `BILLING_KEY`, if this is the case you have to 
 It is best to search for the old `BILLING_KEY` and change the `BILLING_KEY` with the new `BILLING_KEY`. This should fix all problems.
 
 See: https://github.com/j3k0/cordova-plugin-purchase/issues/76#issuecomment-407454342
+
+#### Android - "error:0c0000b1:ASN.1 encoding routines:OPENSSL_internal:TOO_LONG"
+
+If you see this error in your adb logcat output, it means the billing key is not set correctly (for some reasons this makes openssl crash).
