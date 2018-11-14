@@ -2553,8 +2553,11 @@ InAppPurchase.prototype.restoreCompletedTransactionsFailed = function (errorCode
 
 InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
     var that = this;
+    var handled = false;
 
     var loaded = function (args) {
+        if (handled) return;
+        handled = true;
         var base64 = args[0];
         var bundleIdentifier = args[1];
         var bundleShortVersion = args[2];
@@ -2574,13 +2577,31 @@ InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
     };
 
     var error = function(errMessage) {
+        if (handled) return;
+        handled = true;
         log('refresh receipt failed: ' + errMessage);
         protectCall(that.options.error, 'options.error', InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
         protectCall(errorCb, "refreshReceipts.error", InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
     };
 
+    var timeout = function() {
+        if (handled) return;
+        // Why a double timeout?
+        // Because the first one can be "stuck" to until the native UI is done
+        // doing its job. If that happens, it'll get call right when the javascript 
+        // engine recovers control, and as such gets called before the
+        // `loaded`/`error` handlers.
+        setTimeout(function() {
+            if (handled) return;
+            log('timeout... re-refreshing appStoreReceipt');
+            exec('appStoreRefreshReceipt', [], loaded, error);
+            setTimeout(timeout, 60000);
+        }, 1000);
+    };
+
     log('refreshing appStoreReceipt');
     exec('appStoreRefreshReceipt', [], loaded, error);
+    setTimeout(timeout, 60000);
 };
 
 InAppPurchase.prototype.loadReceipts = function (callback) {
@@ -2624,17 +2645,22 @@ InAppPurchase.prototype.loadReceipts = function (callback) {
 
 InAppPurchase.prototype.setAppStoreReceipt = function(base64) {
     this.appStoreReceipt = base64;
-    if (window.localStorage && base64) {
+    log('storing appStoreReceipt');
+    if (window.localStorage) {
         window.localStorage.sk_appStoreReceipt = base64;
-        window.localStorage.sk_appStoreReceiptDate = (+new Date());
+        window.localStorage.sk_appStoreReceiptDate = '' + (+new Date());
+        log('storing appStoreReceipt: ' + window.localStorage.sk_appStoreReceiptDate);
     }
 };
 InAppPurchase.prototype.loadAppStoreReceipt = function() {
     if (window.localStorage && window.localStorage.sk_appStoreReceipt) {
         this.appStoreReceipt = window.localStorage.sk_appStoreReceipt;
-        var t = window.localStorage.sk_appStoreReceiptDate | 0;
+        var t = parseInt(window.localStorage.sk_appStoreReceiptDate);
+        var hoursAgo = Math.round((new Date() - t) / 360000) / 10;
+        log('appStoreReceipt stored: ' + window.localStorage.sk_appStoreReceiptDate);
+        log('appStoreReceipt has been refreshed ' + hoursAgo + ' hours ago');
         // reset "appStoreReceipt" every week
-        if (Math.abs(t - new Date()) > 7 * 24 * 3600000)
+        if ((new Date() - t) > 7 * 24 * 3600000)
             this.appStoreReceipt = null;
     }
     if (this.appStoreReceipt === 'null')

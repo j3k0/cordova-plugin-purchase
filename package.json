@@ -39,13 +39,13 @@
   },
   "homepage": "https://github.com/j3k0/cordova-plugin-purchase",
   "devDependencies": {
-    "cordova": "^6.3.1",
-    "eslint": "^3.8.1",
+    "cordova": "^6.5.0",
+    "coveralls": "^2.13.3",
+    "eslint": "^3.19.0",
     "istanbul": "^0.4.5",
-    "jshint": "^2.9.4",
-    "mocha": "^3.1.2",
+    "jshint": "^2.9.6",
+    "mocha": "^3.5.3",
     "preprocessor": "^1.4.0",
-    "uglify-js": "^2.7.4",
-    "coveralls": "^2.11.14"
+    "uglify-js": "^2.7.4"
   }
 }
