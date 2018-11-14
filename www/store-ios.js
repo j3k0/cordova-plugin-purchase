@@ -568,6 +568,9 @@ store.Product.prototype.verify = function() {
             if (success) {
                 if (that.expired)
                     that.set("expired", false);
+                if (data.transaction)
+                    that.transaction = Object.assign(that.transaction || {},
+                                                     data.transaction);
                 store.log.debug("verify -> success: " + JSON.stringify(data));
                 store.utils.callExternal('verify.success', successCb, that, data);
                 store.utils.callExternal('verify.done', doneCb, that);
