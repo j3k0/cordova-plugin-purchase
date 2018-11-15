@@ -80,11 +80,7 @@ SOFTWARE.
             <uses-permission android:name="com.android.vending.BILLING" />
         </config-file>
 
-        <!-- Different version of cordova-android have their resources in different places.
-             Let's try to have them all setup.
-             First we need to make sure the required directories exists. This is what the
-             pre-install hook does -->
-        <hook type="before_plugin_install" src="scripts/androidBeforeInstall.js" />
+        <source-file src="src/android/billing_key_param.xml" target-dir="res/values/" />
         <config-file target="*/billing_key_param.xml" parent="/*">
             <string name="billing_key_param">$BILLING_KEY</string>
         </config-file>
@@ -104,7 +100,6 @@ SOFTWARE.
 
         <!-- cordova plugin src files -->
         <source-file src="src/android/com/smartmobilesoftware/inappbilling/InAppBillingPlugin.java" target-dir="src/com/smartmobilesoftware/inappbilling" />
-
 		<source-file src="src/android/com/smartmobilesoftware/util/Base64.java" target-dir="src/com/smartmobilesoftware/util" />
 		<source-file src="src/android/com/smartmobilesoftware/util/Base64DecoderException.java" target-dir="src/com/smartmobilesoftware/util" />
 		<source-file src="src/android/com/smartmobilesoftware/util/IabException.java" target-dir="src/com/smartmobilesoftware/util" />
