@@ -26,7 +26,7 @@ SOFTWARE.
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="cordova-plugin-purchase"
-    version="7.2.4">
+    version="7.2.5">
 
     <name>Purchase</name>
 	<description>Cordova Purchase plugin for iOS (AppStore), Android (PlayStore) and Windows</description>
@@ -101,7 +101,6 @@ SOFTWARE.
 
         <!-- In-app Billing Library -->
         <source-file src="src/android/com/android/vending/billing/IInAppBillingService.aidl" target-dir="src/com/android/vending/billing" />
-        <source-file src="src/android/com/android/vending/billing/IInAppBillingService.aidl" target-dir="app/src/main/aidl/com/android/vending/billing" />
 
         <!-- cordova plugin src files -->
         <source-file src="src/android/com/smartmobilesoftware/inappbilling/InAppBillingPlugin.java" target-dir="src/com/smartmobilesoftware/inappbilling" />
