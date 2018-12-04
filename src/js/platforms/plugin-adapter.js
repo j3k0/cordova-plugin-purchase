@@ -72,6 +72,18 @@ function iabLoaded(validProducts) {
             p = null;
 
         if (p) {
+            var introPriceSubscriptionPeriod = validProducts[i].introductoryPricePeriod ? validProducts[i].introductoryPricePeriod : "";
+
+            if(introPriceSubscriptionPeriod === 'D') {
+				introPriceSubscriptionPeriod = 'Day';
+            } else if(introPriceSubscriptionPeriod === 'W') {
+				introPriceSubscriptionPeriod = 'Week';
+            } else if(introPriceSubscriptionPeriod === 'M') {
+				introPriceSubscriptionPeriod = 'Month';
+            } else if(introPriceSubscriptionPeriod === 'Y') {
+				introPriceSubscriptionPeriod = 'Year';
+            }
+
             p.set({
                 title: validProducts[i].title || validProducts[i].name,
                 price: validProducts[i].price || validProducts[i].formattedPrice,
@@ -81,7 +93,7 @@ function iabLoaded(validProducts) {
 				introPrice: validProducts[i].introductoryPrice ? validProducts[i].introductoryPrice : "",
 				introPriceMicros: validProducts[i].introductoryPriceAmountMicros ? validProducts[i].introductoryPriceAmountMicros : "",
 				introPriceNumberOfPeriods: validProducts[i].introductoryPriceCycles ? validProducts[i].introductoryPriceCycles : 0,
-				introPriceSubscriptionPeriod: validProducts[i].introductoryPricePeriod ? validProducts[i].introductoryPricePeriod : null,
+				introPriceSubscriptionPeriod: introPriceSubscriptionPeriod,
                 state: store.VALID
             });
             p.trigger("loaded");
