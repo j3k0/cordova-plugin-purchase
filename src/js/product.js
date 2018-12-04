@@ -56,19 +56,19 @@ store.Product = function(options) {
     this.countryCode = options.countryCode || null;
 
 
-    ///  - `product.introPrice` - Localized introductory price, with currency symbol. Available only on iOS
+    ///  - `product.introPrice` - Localized introductory price, with currency symbol
     this.introPrice = options.introPrice || null;
 
-    ///  - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price). Available only on iOS
+    ///  - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price)
     this.introPriceMicros = options.introPriceMicros || null;
 
-    ///  - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available. Available only on iOS
+    ///  - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available
     this.introPriceNumberOfPeriods = options.introPriceNumberOfPeriods || null;
 
-    ///  - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year"). Available only on iOS
+    ///  - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year")
     this.introPriceSubscriptionPeriod = options.introPriceSubscriptionPeriod || null;
 
-    ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial"). Available only on iOS
+    ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
     this.introPricePaymentMode = options.introPricePaymentMode || null;
 
     ///  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
