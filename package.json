@@ -1,9 +1,9 @@
 {
-  "name": "cc.fovea.cordova.purchase",
+  "name": "tcg.cordova.purchase",
   "version": "7.2.5",
   "description": "Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)",
   "cordova": {
-    "id": "cc.fovea.cordova.purchase",
+    "id": "tcg.cordova.purchase",
     "platforms": [
       "android",
       "ios",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/j3k0/cordova-plugin-purchase.git"
+    "url": "git+https://github.com/the-control-group/cordova-plugin-purchase.git"
   },
   "keywords": [
     "ecosystem:cordova",
@@ -32,12 +32,12 @@
     "test": "make test-js",
     "coverage": "make test-js-coverage"
   },
-  "author": "Jean-Christophe Hoelt <hoelt@fovea.cc>",
+  "author": "Mehmet Koc <mehmet.koc@thecontrolgroup.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/j3k0/cordova-plugin-purchase/issues"
+    "url": "https://github.com/the-control-group/cordova-plugin-purchase/issues"
   },
-  "homepage": "https://github.com/j3k0/cordova-plugin-purchase",
+  "homepage": "https://github.com/the-control-group/cordova-plugin-purchase",
   "devDependencies": {
     "cordova": "^6.3.1",
     "eslint": "^3.8.1",
@@ -48,5 +48,11 @@
     "uglify-js": "^2.7.4",
     "coveralls": "^2.11.14"
   },
-  "types": "./src/js/index.d.ts"
+  "types": "./src/js/index.d.ts",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc",
+    "test": "test"
+  },
+  "dependencies": {}
 }
