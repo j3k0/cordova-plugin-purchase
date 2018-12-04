@@ -78,6 +78,10 @@ function iabLoaded(validProducts) {
                 priceMicros: validProducts[i].price_amount_micros,
                 description: validProducts[i].description,
                 currency: validProducts[i].price_currency_code ? validProducts[i].price_currency_code : "",
+				introPrice: validProducts[i].introductoryPrice ? validProducts[i].introductoryPrice : "",
+				introPriceMicros: validProducts[i].introductoryPriceAmountMicros ? validProducts[i].introductoryPriceAmountMicros : "",
+				introPriceNumberOfPeriods: validProducts[i].introductoryPriceCycles ? validProducts[i].introductoryPriceCycles : 0,
+				introPriceSubscriptionPeriod: validProducts[i].introductoryPricePeriod ? validProducts[i].introductoryPricePeriod : null,
                 state: store.VALID
             });
             p.trigger("loaded");
