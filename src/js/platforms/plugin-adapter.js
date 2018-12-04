@@ -75,6 +75,34 @@ function iabLoaded(validProducts) {
             p = null;
 
         if (p) {
+            var subscriptionPeriod = vp.subscriptionPeriod ? vp.subscriptionPeriod : "";
+            var introPriceSubscriptionPeriod = vp.introductoryPricePeriod ? vp.introductoryPricePeriod : "";
+            var introPriceNumberOfPeriods = vp.introductoryPriceCycles ? vp.introductoryPriceCycles : 0;
+
+            var introPricePaymentMode = null;
+			if (vp.freeTrialPeriod) {
+				introPricePaymentMode = 'FreeTrial';
+			}
+            else if (vp.introductoryPrice) {
+			    if (vp.introductoryPrice < vp.price && subscriptionPeriod === introPriceSubscriptionPeriod) {
+			        introPricePaymentMode = 'PayAsYouGo';
+			    }
+                else if (introPriceNumberOfPeriods === 1) {
+					introPricePaymentMode = 'UpFront';
+                }
+            }
+
+            var normalizeIntroPricePeriod = function (period) {
+                switch (period.slice(-1)) { /// XXX Why not slice(0,1)?
+                    case 'D': return 'Day';
+                    case 'W': return 'Week';
+                    case 'M': return 'Month';
+                    case 'Y': return 'Year';
+                    default:  return period;
+                }
+            };
+            introPriceSubscriptionPeriod = normalizeIntroPricePeriod(introPriceSubscriptionPeriod);
+
             p.set({
                 title: vp.title || vp.name,
                 price: vp.price || vp.formattedPrice,
@@ -85,8 +113,14 @@ function iabLoaded(validProducts) {
                 billingPeriodUnit: vp.billing_period_unit || null,
                 description: vp.description,
                 currency: vp.price_currency_code || "",
+                introPrice: vp.introductoryPrice ? vp.introductoryPrice : "",
+                introPriceMicros: vp.introductoryPriceAmountMicros ? vp.introductoryPriceAmountMicros : "",
+                introPriceNumberOfPeriods: introPriceNumberOfPeriods,
+                introPriceSubscriptionPeriod: introPriceSubscriptionPeriod,
+                introPricePaymentMode: introPricePaymentMode,
                 state: store.VALID
             });
+
             p.trigger("loaded");
         }
     }

@@ -351,11 +351,11 @@ Products object have the following fields and methods.
  - `product.price` - Localized price, with currency symbol
  - `product.currency` - Currency code (optionaly)
  - `product.countryCode` - Country code. Available only on iOS
- - `product.introPrice` - Localized introductory price, with currency symbol. Available only on iOS
- - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price). Available only on iOS
- - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available. Available only on iOS
- - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year"). Available only on iOS
- - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial"). Available only on iOS
+ - `product.introPrice` - Localized introductory price, with currency symbol
+ - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price)
+ - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available
+ - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year")
+ - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
  - `product.loaded` - Product has been loaded from server, however it can still be either `valid` or not
  - `product.valid` - Product has been loaded and is a valid product

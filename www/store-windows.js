@@ -443,19 +443,19 @@ store.Product = function(options) {
     this.countryCode = options.countryCode || null;
 
 
-    ///  - `product.introPrice` - Localized introductory price, with currency symbol. Available only on iOS
+    ///  - `product.introPrice` - Localized introductory price, with currency symbol
     this.introPrice = options.introPrice || null;
 
-    ///  - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price). Available only on iOS
+    ///  - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price)
     this.introPriceMicros = options.introPriceMicros || null;
 
-    ///  - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available. Available only on iOS
+    ///  - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available
     this.introPriceNumberOfPeriods = options.introPriceNumberOfPeriods || null;
 
-    ///  - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year"). Available only on iOS
+    ///  - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year")
     this.introPriceSubscriptionPeriod = options.introPriceSubscriptionPeriod || null;
 
-    ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial"). Available only on iOS
+    ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
     this.introPricePaymentMode = options.introPricePaymentMode || null;
 
     ///  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
@@ -2372,6 +2372,34 @@ function iabLoaded(validProducts) {
             p = null;
 
         if (p) {
+            var subscriptionPeriod = vp.subscriptionPeriod ? vp.subscriptionPeriod : "";
+            var introPriceSubscriptionPeriod = vp.introductoryPricePeriod ? vp.introductoryPricePeriod : "";
+            var introPriceNumberOfPeriods = vp.introductoryPriceCycles ? vp.introductoryPriceCycles : 0;
+
+            var introPricePaymentMode = null;
+			if (vp.freeTrialPeriod) {
+				introPricePaymentMode = 'FreeTrial';
+			}
+            else if (vp.introductoryPrice) {
+			    if (vp.introductoryPrice < vp.price && subscriptionPeriod === introPriceSubscriptionPeriod) {
+			        introPricePaymentMode = 'PayAsYouGo';
+			    }
+                else if (introPriceNumberOfPeriods === 1) {
+					introPricePaymentMode = 'UpFront';
+                }
+            }
+
+            var normalizeIntroPricePeriod = function (period) {
+                switch (period.slice(-1)) { /// XXX Why not slice(0,1)?
+                    case 'D': return 'Day';
+                    case 'W': return 'Week';
+                    case 'M': return 'Month';
+                    case 'Y': return 'Year';
+                    default:  return period;
+                }
+            };
+            introPriceSubscriptionPeriod = normalizeIntroPricePeriod(introPriceSubscriptionPeriod);
+
             p.set({
                 title: vp.title || vp.name,
                 price: vp.price || vp.formattedPrice,
@@ -2382,8 +2410,14 @@ function iabLoaded(validProducts) {
                 billingPeriodUnit: vp.billing_period_unit || null,
                 description: vp.description,
                 currency: vp.price_currency_code || "",
+                introPrice: vp.introductoryPrice ? vp.introductoryPrice : "",
+                introPriceMicros: vp.introductoryPriceAmountMicros ? vp.introductoryPriceAmountMicros : "",
+                introPriceNumberOfPeriods: introPriceNumberOfPeriods,
+                introPriceSubscriptionPeriod: introPriceSubscriptionPeriod,
+                introPricePaymentMode: introPricePaymentMode,
                 state: store.VALID
             });
+
             p.trigger("loaded");
         }
     }
