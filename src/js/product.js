@@ -43,7 +43,7 @@ store.Product = function(options) {
     ///  - `product.description` - Localized longer description
     this.description = options.description || options.localizedDescription || null;
 
-    ///  - `product.priceMicros` - Localized price, in micro-units (divide by 1000000 to get numeric price)
+    ///  - `product.priceMicros` - Price in micro-units (divide by 1000000 to get numeric price)
     this.priceMicros = options.priceMicros || null;
 
     ///  - `product.price` - Localized price, with currency symbol
@@ -54,6 +54,26 @@ store.Product = function(options) {
 
     ///  - `product.countryCode` - Country code. Available only on iOS
     this.countryCode = options.countryCode || null;
+
+
+    ///  - `product.introPrice` - Localized introductory price, with currency symbol. Available only on iOS
+    this.introPrice = options.introPrice || null;
+
+    ///  - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price). Available only on iOS
+    this.introPriceMicros = options.introPriceMicros || null;
+
+    ///  - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available. Available only on iOS
+    this.introPriceNumberOfPeriods = options.introPriceNumberOfPeriods || null;
+
+    ///  - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year"). Available only on iOS
+    this.introPriceSubscriptionPeriod = options.introPriceSubscriptionPeriod || null;
+
+    ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial"). Available only on iOS
+    this.introPricePaymentMode = options.introPricePaymentMode || null;
+
+    ///  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
+    this.ineligibleForIntroPrice = options.ineligibleForIntroPrice || null;
+
 
     //  - `product.localizedTitle` - Localized name or short description ready for display
     // this.localizedTitle = options.localizedTitle || options.title || null;
@@ -167,6 +187,17 @@ store.Product.prototype.verify = function() {
                 store.utils.callExternal('verify.success', successCb, that, data);
                 store.utils.callExternal('verify.done', doneCb, that);
                 that.trigger("verified");
+
+                // Process the list of products that are ineligible
+                // for introductory prices.
+                if (data && data.ineligible_for_intro_price &&
+                         data.ineligible_for_intro_price.forEach) {
+                    data.ineligible_for_intro_price.forEach(function(pid) {
+                        var p = store.get(pid);
+                        if (p)
+                            p.set('ineligibleForIntroPrice', true);
+                    });
+                }
             }
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));

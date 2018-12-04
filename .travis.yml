@@ -1,19 +1,9 @@
 sudo: false
 env:
   global:
-  - TRAVIS_NODE_VERSION="6"
+  - TRAVIS_NODE_VERSION="8"
 matrix:
   include:
-  - env: PLATFORM=ios-9.3
-    os: osx
-    osx_image: xcode8
-    language: node_js
-    node_js: "4"
-  - env: PLATFORM=ios-10.0
-    os: osx
-    osx_image: xcode9
-    language: node_js
-    node_js: "6"
   - env: PLATFORM=ios-11.0
     os: osx
     osx_image: xcode10
@@ -60,14 +50,14 @@ before_install:
 - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
 - node --version
 - if [[ "$PLATFORM" =~ android ]]; then gradle --version; fi
-- if [[ "$PLATFORM" =~ ios ]]; then npm install -g ios-deploy; fi
+- if [[ "$PLATFORM" =~ ios ]]; then npm install -g ios-deploy > /dev/null; fi
 - if [[ "$PLATFORM" =~ android ]];
   then echo y | android update sdk -u --filter android-22,android-23,android-24,android-25,android-26,android-27;
   fi
-- npm install -g cordova
+- npm install -g cordova > /dev/null
 
 install:
-- npm install
+- npm install > /dev/null
 
 script:
 - make all
