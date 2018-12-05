@@ -72,17 +72,34 @@ function iabLoaded(validProducts) {
             p = null;
 
         if (p) {
+            var subscriptionPeriod = validProducts[i].subscriptionPeriod ? validProducts[i].subscriptionPeriod : "";
             var introPriceSubscriptionPeriod = validProducts[i].introductoryPricePeriod ? validProducts[i].introductoryPricePeriod : "";
+            var introPriceNumberOfPeriods = validProducts[i].introductoryPriceCycles ? validProducts[i].introductoryPriceCycles : 0;
 
-            if(introPriceSubscriptionPeriod === 'D') {
-				introPriceSubscriptionPeriod = 'Day';
-            } else if(introPriceSubscriptionPeriod === 'W') {
-				introPriceSubscriptionPeriod = 'Week';
-            } else if(introPriceSubscriptionPeriod === 'M') {
-				introPriceSubscriptionPeriod = 'Month';
-            } else if(introPriceSubscriptionPeriod === 'Y') {
-				introPriceSubscriptionPeriod = 'Year';
+            var introPricePaymentMode = null;
+
+			if(!!validProducts[i].freeTrialPeriod) {
+				introPricePaymentMode = 'FreeTrial';
+			} else if(!!validProducts[i].introductoryPrice) {
+			    if(
+					(validProducts[i].introductoryPrice < validProducts[i].price) &&
+					(subscriptionPeriod === introPriceSubscriptionPeriod)
+                ) {
+			        introPricePaymentMode = 'PayAsYouGo';
+			    } else if(introPriceNumberOfPeriods === 1) {
+					introPricePaymentMode = 'UpFront';
+                }
             }
+
+			if(introPriceSubscriptionPeriod === 'D') {
+				introPriceSubscriptionPeriod = 'Day';
+			} else if(introPriceSubscriptionPeriod === 'W') {
+				introPriceSubscriptionPeriod = 'Week';
+			} else if(introPriceSubscriptionPeriod === 'M') {
+				introPriceSubscriptionPeriod = 'Month';
+			} else if(introPriceSubscriptionPeriod === 'Y') {
+				introPriceSubscriptionPeriod = 'Year';
+			}
 
             p.set({
                 title: validProducts[i].title || validProducts[i].name,
@@ -92,8 +109,9 @@ function iabLoaded(validProducts) {
                 currency: validProducts[i].price_currency_code ? validProducts[i].price_currency_code : "",
 				introPrice: validProducts[i].introductoryPrice ? validProducts[i].introductoryPrice : "",
 				introPriceMicros: validProducts[i].introductoryPriceAmountMicros ? validProducts[i].introductoryPriceAmountMicros : "",
-				introPriceNumberOfPeriods: validProducts[i].introductoryPriceCycles ? validProducts[i].introductoryPriceCycles : 0,
+				introPriceNumberOfPeriods: introPriceNumberOfPeriods,
 				introPriceSubscriptionPeriod: introPriceSubscriptionPeriod,
+				introPricePaymentMode: introPricePaymentMode,
                 state: store.VALID
             });
             p.trigger("loaded");
