@@ -108,6 +108,8 @@ store.Product = function(options) {
     ///  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
     this.transaction = null;
 
+    console.log(this);
+
     this.stateChanged();
 };
 

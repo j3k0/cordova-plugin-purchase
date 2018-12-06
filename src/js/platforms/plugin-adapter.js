@@ -101,6 +101,8 @@ function iabLoaded(validProducts) {
 				introPriceSubscriptionPeriod = 'Year';
 			}
 
+			console.log(validProducts[i]);
+
             p.set({
                 title: validProducts[i].title || validProducts[i].name,
                 price: validProducts[i].price || validProducts[i].formattedPrice,
@@ -114,6 +116,8 @@ function iabLoaded(validProducts) {
 				introPricePaymentMode: introPricePaymentMode,
                 state: store.VALID
             });
+
+			console.log(p);
             p.trigger("loaded");
         }
     }
