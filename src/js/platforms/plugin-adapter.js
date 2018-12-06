@@ -101,7 +101,8 @@ function iabLoaded(validProducts) {
 				introPriceSubscriptionPeriod = 'Year';
 			}
 
-			console.log(validProducts[i]);
+			console.log('this is the data available for this product');
+			console.log(JSON.stringify(validProducts[i]));
 
             p.set({
                 title: validProducts[i].title || validProducts[i].name,
@@ -117,7 +118,8 @@ function iabLoaded(validProducts) {
                 state: store.VALID
             });
 
-			console.log(p);
+            console.log('this is the data we have extracted for the product');
+			console.log(JSON.stringify(p));
             p.trigger("loaded");
         }
     }
