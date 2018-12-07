@@ -72,14 +72,54 @@ function iabLoaded(validProducts) {
             p = null;
 
         if (p) {
+            var subscriptionPeriod = validProducts[i].subscriptionPeriod ? validProducts[i].subscriptionPeriod : "";
+            var introPriceSubscriptionPeriod = validProducts[i].introductoryPricePeriod ? validProducts[i].introductoryPricePeriod : "";
+            var introPriceNumberOfPeriods = validProducts[i].introductoryPriceCycles ? validProducts[i].introductoryPriceCycles : 0;
+
+            var introPricePaymentMode = null;
+
+			if(!!validProducts[i].freeTrialPeriod) {
+				introPricePaymentMode = 'FreeTrial';
+			} else if(!!validProducts[i].introductoryPrice) {
+			    if(
+					(validProducts[i].introductoryPrice < validProducts[i].price) &&
+					(subscriptionPeriod === introPriceSubscriptionPeriod)
+                ) {
+			        introPricePaymentMode = 'PayAsYouGo';
+			    } else if(introPriceNumberOfPeriods === 1) {
+					introPricePaymentMode = 'UpFront';
+                }
+            }
+
+			if(introPriceSubscriptionPeriod === 'D') {
+				introPriceSubscriptionPeriod = 'Day';
+			} else if(introPriceSubscriptionPeriod === 'W') {
+				introPriceSubscriptionPeriod = 'Week';
+			} else if(introPriceSubscriptionPeriod === 'M') {
+				introPriceSubscriptionPeriod = 'Month';
+			} else if(introPriceSubscriptionPeriod === 'Y') {
+				introPriceSubscriptionPeriod = 'Year';
+			}
+
+			console.log('this is the data available for this product');
+			console.log(JSON.stringify(validProducts[i]));
+
             p.set({
                 title: validProducts[i].title || validProducts[i].name,
                 price: validProducts[i].price || validProducts[i].formattedPrice,
                 priceMicros: validProducts[i].price_amount_micros,
                 description: validProducts[i].description,
                 currency: validProducts[i].price_currency_code ? validProducts[i].price_currency_code : "",
+				introPrice: validProducts[i].introductoryPrice ? validProducts[i].introductoryPrice : "",
+				introPriceMicros: validProducts[i].introductoryPriceAmountMicros ? validProducts[i].introductoryPriceAmountMicros : "",
+				introPriceNumberOfPeriods: introPriceNumberOfPeriods,
+				introPriceSubscriptionPeriod: introPriceSubscriptionPeriod,
+				introPricePaymentMode: introPricePaymentMode,
                 state: store.VALID
             });
+
+            console.log('this is the data we have extracted for the product');
+			console.log(JSON.stringify(p));
             p.trigger("loaded");
         }
     }
