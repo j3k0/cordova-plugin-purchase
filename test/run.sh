@@ -36,7 +36,7 @@ if [ "x$IAP_ID" = "x" ] || [ "x$1" = "x--help" ]; then
     echo " - click restore and check the console that it also worked."
     echo
     echo "example:"
-    echo "    \$ $0 cc.fovea.babygoo babygooinapp1"
+    echo "    \$ $0 tcg.babygoo babygooinapp1"
     echo
     exit 1
 fi
@@ -62,9 +62,9 @@ echo Add Purchase plugin
 cordova plugin add "$PLUGIN_URL" --variable BILLING_KEY="$BILLING_KEY" || exit 1
 
 echo Copy non commited files
-rsync -r "$ROOT_DIR"/src/android/ plugins/cc.fovea.cordova.purchase/src/android
-cp "$ROOT_DIR"/src/ios/*.[hm] plugins/cc.fovea.cordova.purchase/src/ios/
-cp "$ROOT_DIR"/www/*.js plugins/cc.fovea.cordova.purchase/www/
+rsync -r "$ROOT_DIR"/src/android/ plugins/tcg.cordova.purchase/src/android
+cp "$ROOT_DIR"/src/ios/*.[hm] plugins/tcg.cordova.purchase/src/ios/
+cp "$ROOT_DIR"/www/*.js plugins/tcg.cordova.purchase/www/
 
 # Add console debug
 cordova plugin add https://github.com/apache/cordova-plugin-console.git || exit 1
@@ -92,8 +92,8 @@ case "$OSTYPE" in darwin*)
 
     echo
     echo Check iOS installation
-    IOS_PLUGIN_DIR="$BUILD_DIR/platforms/ios/Test/Plugins/cc.fovea.cordova.purchase"
-    IOS_WWW_DIR="$BUILD_DIR/platforms/ios/www/plugins/cc.fovea.cordova.purchase/www"
+    IOS_PLUGIN_DIR="$BUILD_DIR/platforms/ios/Test/Plugins/tcg.cordova.purchase"
+    IOS_WWW_DIR="$BUILD_DIR/platforms/ios/www/plugins/tcg.cordova.purchase/www"
     IOS_PROJ="$BUILD_DIR/platforms/ios/Test.xcodeproj/project.pbxproj"
 
     hasFile "$IOS_PLUGIN_DIR/InAppPurchase.m"

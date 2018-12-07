@@ -53,7 +53,7 @@ test-js-coverage: jshint eslint prepare-test-js
 	@node_modules/.bin/coveralls < coverage/lcov.info
 
 test-install: build
-	@./test/run.sh cc.fovea.babygoo babygooinapp1
+	@./test/run.sh tcg.babygoo babygooinapp1
 
 tests: test-js test-install
 	@echo 'ok'

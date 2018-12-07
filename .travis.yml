@@ -61,4 +61,4 @@ install:
 
 script:
 - make all
-- ./test/run.sh cc.fovea.babygoo babygooinapp1
+- ./test/run.sh tcg.babygoo babygooinapp1
