@@ -440,19 +440,19 @@ store.Product = function(options) {
     this.countryCode = options.countryCode || null;
 
 
-    ///  - `product.introPrice` - Localized introductory price, with currency symbol. Available only on iOS
+    ///  - `product.introPrice` - Localized introductory price, with currency symbol
     this.introPrice = options.introPrice || null;
 
-    ///  - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price). Available only on iOS
+    ///  - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price)
     this.introPriceMicros = options.introPriceMicros || null;
 
-    ///  - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available. Available only on iOS
+    ///  - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available
     this.introPriceNumberOfPeriods = options.introPriceNumberOfPeriods || null;
 
-    ///  - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year"). Available only on iOS
+    ///  - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year")
     this.introPriceSubscriptionPeriod = options.introPriceSubscriptionPeriod || null;
 
-    ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial"). Available only on iOS
+    ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
     this.introPricePaymentMode = options.introPricePaymentMode || null;
 
     ///  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
@@ -491,6 +491,9 @@ store.Product = function(options) {
 
     ///  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
     this.transaction = null;
+
+    console.log('this is the store product in the product.js file');
+    console.log(JSON.stringify(this));
 
     this.stateChanged();
 };
@@ -2289,14 +2292,54 @@ function iabLoaded(validProducts) {
             p = null;
 
         if (p) {
+            var subscriptionPeriod = validProducts[i].subscriptionPeriod ? validProducts[i].subscriptionPeriod : "";
+            var introPriceSubscriptionPeriod = validProducts[i].introductoryPricePeriod ? validProducts[i].introductoryPricePeriod : "";
+            var introPriceNumberOfPeriods = validProducts[i].introductoryPriceCycles ? validProducts[i].introductoryPriceCycles : 0;
+
+            var introPricePaymentMode = null;
+
+			if(!!validProducts[i].freeTrialPeriod) {
+				introPricePaymentMode = 'FreeTrial';
+			} else if(!!validProducts[i].introductoryPrice) {
+			    if(
+					(validProducts[i].introductoryPrice < validProducts[i].price) &&
+					(subscriptionPeriod === introPriceSubscriptionPeriod)
+                ) {
+			        introPricePaymentMode = 'PayAsYouGo';
+			    } else if(introPriceNumberOfPeriods === 1) {
+					introPricePaymentMode = 'UpFront';
+                }
+            }
+
+			if(introPriceSubscriptionPeriod === 'D') {
+				introPriceSubscriptionPeriod = 'Day';
+			} else if(introPriceSubscriptionPeriod === 'W') {
+				introPriceSubscriptionPeriod = 'Week';
+			} else if(introPriceSubscriptionPeriod === 'M') {
+				introPriceSubscriptionPeriod = 'Month';
+			} else if(introPriceSubscriptionPeriod === 'Y') {
+				introPriceSubscriptionPeriod = 'Year';
+			}
+
+			console.log('this is the data available for this product');
+			console.log(JSON.stringify(validProducts[i]));
+
             p.set({
                 title: validProducts[i].title || validProducts[i].name,
                 price: validProducts[i].price || validProducts[i].formattedPrice,
                 priceMicros: validProducts[i].price_amount_micros,
                 description: validProducts[i].description,
                 currency: validProducts[i].price_currency_code ? validProducts[i].price_currency_code : "",
+				introPrice: validProducts[i].introductoryPrice ? validProducts[i].introductoryPrice : "",
+				introPriceMicros: validProducts[i].introductoryPriceAmountMicros ? validProducts[i].introductoryPriceAmountMicros : "",
+				introPriceNumberOfPeriods: introPriceNumberOfPeriods,
+				introPriceSubscriptionPeriod: introPriceSubscriptionPeriod,
+				introPricePaymentMode: introPricePaymentMode,
                 state: store.VALID
             });
+
+            console.log('this is the data we have extracted for the product');
+			console.log(JSON.stringify(p));
             p.trigger("loaded");
         }
     }
