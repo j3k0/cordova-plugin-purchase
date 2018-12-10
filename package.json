@@ -1,6 +1,6 @@
 {
   "name": "tcg.cordova.purchase",
-  "version": "7.3.1",
+  "version": "7.3.2",
   "description": "Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)",
   "cordova": {
     "id": "tcg.cordova.purchase",
