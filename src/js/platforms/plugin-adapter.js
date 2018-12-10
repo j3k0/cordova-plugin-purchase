@@ -91,13 +91,13 @@ function iabLoaded(validProducts) {
                 }
             }
 
-			if(introPriceSubscriptionPeriod === 'D') {
+			if(introPriceSubscriptionPeriod.slice(-1) === 'D') {
 				introPriceSubscriptionPeriod = 'Day';
-			} else if(introPriceSubscriptionPeriod === 'W') {
+			} else if(introPriceSubscriptionPeriod.slice(-1) === 'W') {
 				introPriceSubscriptionPeriod = 'Week';
-			} else if(introPriceSubscriptionPeriod === 'M') {
+			} else if(introPriceSubscriptionPeriod.slice(-1) === 'M') {
 				introPriceSubscriptionPeriod = 'Month';
-			} else if(introPriceSubscriptionPeriod === 'Y') {
+			} else if(introPriceSubscriptionPeriod.slice(-1) === 'Y') {
 				introPriceSubscriptionPeriod = 'Year';
 			}
 
