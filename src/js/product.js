@@ -108,9 +108,6 @@ store.Product = function(options) {
     ///  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
     this.transaction = null;
 
-    console.log('this is the store product in the product.js file');
-    console.log(JSON.stringify(this));
-
     this.stateChanged();
 };
 
