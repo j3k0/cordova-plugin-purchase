@@ -49,7 +49,7 @@
     "coveralls": "^2.11.14"
   },
   "types": "./src/js/index.d.ts",
-  "main": "index.js",
+  "main": "Makefile",
   "directories": {
     "doc": "doc",
     "test": "test"
