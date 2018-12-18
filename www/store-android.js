@@ -2346,28 +2346,28 @@ function iabLoaded(validProducts) {
 
             var introPricePaymentMode = null;
 
-			if(!!validProducts[i].freeTrialPeriod) {
-				introPricePaymentMode = 'FreeTrial';
-			} else if(!!validProducts[i].introductoryPrice) {
-			    if(
-					(validProducts[i].introductoryPrice < validProducts[i].price) &&
-					(subscriptionPeriod === introPriceSubscriptionPeriod)
+            if(!!validProducts[i].freeTrialPeriod) {
+                introPricePaymentMode = 'FreeTrial';
+            } else if(!!validProducts[i].introductoryPrice) {
+                if(
+                    (validProducts[i].introductoryPrice < validProducts[i].price) &&
+                        (subscriptionPeriod === introPriceSubscriptionPeriod)
                 ) {
-			        introPricePaymentMode = 'PayAsYouGo';
-			    } else if(introPriceNumberOfPeriods === 1) {
-					introPricePaymentMode = 'UpFront';
+                    introPricePaymentMode = 'PayAsYouGo';
+                } else if(introPriceNumberOfPeriods === 1) {
+                    introPricePaymentMode = 'UpFront';
                 }
             }
 
-			if(introPriceSubscriptionPeriod.slice(-1) === 'D') {
-				introPriceSubscriptionPeriod = 'Day';
-			} else if(introPriceSubscriptionPeriod.slice(-1) === 'W') {
-				introPriceSubscriptionPeriod = 'Week';
-			} else if(introPriceSubscriptionPeriod.slice(-1) === 'M') {
-				introPriceSubscriptionPeriod = 'Month';
-			} else if(introPriceSubscriptionPeriod.slice(-1) === 'Y') {
-				introPriceSubscriptionPeriod = 'Year';
-			}
+            if (introPriceSubscriptionPeriod.slice(-1) === 'D') {
+                introPriceSubscriptionPeriod = 'Day';
+            } else if (introPriceSubscriptionPeriod.slice(-1) === 'W') {
+                introPriceSubscriptionPeriod = 'Week';
+            } else if (introPriceSubscriptionPeriod.slice(-1) === 'M') {
+                introPriceSubscriptionPeriod = 'Month';
+            } else if (introPriceSubscriptionPeriod.slice(-1) === 'Y') {
+                introPriceSubscriptionPeriod = 'Year';
+            }
 
             p.set({
                 title: validProducts[i].title || validProducts[i].name,
@@ -2375,14 +2375,13 @@ function iabLoaded(validProducts) {
                 priceMicros: validProducts[i].price_amount_micros,
                 description: validProducts[i].description,
                 currency: validProducts[i].price_currency_code ? validProducts[i].price_currency_code : "",
-				introPrice: validProducts[i].introductoryPrice ? validProducts[i].introductoryPrice : "",
-				introPriceMicros: validProducts[i].introductoryPriceAmountMicros ? validProducts[i].introductoryPriceAmountMicros : "",
-				introPriceNumberOfPeriods: introPriceNumberOfPeriods,
-				introPriceSubscriptionPeriod: introPriceSubscriptionPeriod,
-				introPricePaymentMode: introPricePaymentMode,
+                introPrice: validProducts[i].introductoryPrice ? validProducts[i].introductoryPrice : "",
+                introPriceMicros: validProducts[i].introductoryPriceAmountMicros ? validProducts[i].introductoryPriceAmountMicros : "",
+                introPriceNumberOfPeriods: introPriceNumberOfPeriods,
+                introPriceSubscriptionPeriod: introPriceSubscriptionPeriod,
+                introPricePaymentMode: introPricePaymentMode,
                 state: store.VALID
             });
-
             p.trigger("loaded");
         }
     }
