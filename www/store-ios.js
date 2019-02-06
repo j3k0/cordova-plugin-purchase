@@ -568,6 +568,9 @@ store.Product.prototype.verify = function() {
             if (success) {
                 if (that.expired)
                     that.set("expired", false);
+                if (data.transaction)
+                    that.transaction = Object.assign(that.transaction || {},
+                                                     data.transaction);
                 store.log.debug("verify -> success: " + JSON.stringify(data));
                 store.utils.callExternal('verify.success', successCb, that, data);
                 store.utils.callExternal('verify.done', doneCb, that);
@@ -1370,8 +1373,10 @@ store.validator = null;
 // Also makes sure to refresh the receipts.
 //
 store._validator = function(product, callback, isPrepared) {
-    if (!store.validator)
+    if (!store.validator) {
         callback(true, product);
+        return;
+    }
 
     if (store._prepareForValidation && isPrepared !== true) {
         store._prepareForValidation(product, function() {
