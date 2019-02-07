@@ -544,6 +544,7 @@ store.Product.prototype.verify = function() {
 
         store._validator(that, function(success, data) {
             store.log.debug("verify -> " + JSON.stringify(success));
+            if (!data) data = {};
             if (success) {
                 if (that.expired)
                     that.set("expired", false);
@@ -557,7 +558,6 @@ store.Product.prototype.verify = function() {
             }
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));
-                if (!data) data = {};
                 var msg = (data && data.error && data.error.message ? data.error.message : '');
                 var err = new store.Error({
                     code: store.ERR_VERIFICATION_FAILED,
