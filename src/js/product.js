@@ -182,6 +182,7 @@ store.Product.prototype.verify = function() {
             store.log.debug("verify -> " + JSON.stringify(success));
 
             // Update the appStoreReceipt
+            if (!data) data = {};
             if (data && data.latest_receipt)
                 store._latest_receipt = data.latest_receipt;
 
@@ -209,7 +210,6 @@ store.Product.prototype.verify = function() {
             }
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));
-                if (!data) data = {};
                 var msg = (data && data.error && data.error.message ? data.error.message : '');
                 var err = new store.Error({
                     code: store.ERR_VERIFICATION_FAILED,
