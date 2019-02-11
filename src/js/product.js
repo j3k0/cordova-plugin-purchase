@@ -153,20 +153,32 @@ store.Product.prototype.verify = function() {
 
     var tryValidation = function() {
 
+        function getData(data, key) {
+            if (!data)
+                return null;
+            return data.data && data.data[key] || data[key];
+        }
+
         // No need to verify a which status isn't approved
         // It means it already has been
         if (that.state !== store.APPROVED)
             return;
 
         store._validator(that, function(success, data) {
-            store.log.debug("verify -> " + JSON.stringify(success));
             if (!data) data = {};
+            store.log.debug("verify -> " + JSON.stringify({
+                success: success,
+                data: data
+            }));
+            var dataTransaction = getData(data, 'transaction');
+            if (dataTransaction) {
+                that.transaction = Object.assign(that.transaction || {},
+                                                 dataTransaction);
+                that.trigger("updated");
+            }
             if (success) {
                 if (that.expired)
                     that.set("expired", false);
-                if (data.transaction)
-                    that.transaction = Object.assign(that.transaction || {},
-                                                     data.transaction);
                 store.log.debug("verify -> success: " + JSON.stringify(data));
                 store.utils.callExternal('verify.success', successCb, that, data);
                 store.utils.callExternal('verify.done', doneCb, that);
@@ -179,6 +191,12 @@ store.Product.prototype.verify = function() {
                     code: store.ERR_VERIFICATION_FAILED,
                     message: "Transaction verification failed: " + msg
                 });
+                if (getData(data, "latest_receipt")) {
+                    // when the server is making use of the latest_receipt,
+                    // there is no need to retry
+                    store.log.debug("verify -> server did use the latest_receipt, no retries");
+                    nRetry = 999999;
+                }
                 if (data.code === store.PURCHASE_EXPIRED) {
                     err = new store.Error({
                         code: store.ERR_PAYMENT_EXPIRED,
@@ -208,7 +226,7 @@ store.Product.prototype.verify = function() {
                     delay(this, tryValidation, 1000 * nRetry * nRetry);
                 }
                 else {
-                    store.log.debug("validation failed 5 times, stop retrying, trigger an error");
+                    store.log.debug("validation failed, no retrying, trigger an error");
                     store.error(err);
                     store.utils.callExternal('verify.error', errorCb, err);
                     store.utils.callExternal('verify.done', doneCb, that);
