@@ -292,9 +292,12 @@ function storekitRefreshReceipts(callback) {
     });
 }
 
-store.when("expired", function() {
-    storekitRefreshReceipts();
-});
+// The better default is now for validation services to use the
+// `latest_receipt_info` field. If if doesn't we can ask the user to implement
+// the below:
+// store.when("expired", function() {
+//     storekitRefreshReceipts();
+// });
 
 //! ### <a name="storekitPurchasing"></a> *storekitPurchasing()*
 //!
