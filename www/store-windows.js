@@ -556,8 +556,8 @@ store.Product.prototype.verify = function() {
             }));
             var dataTransaction = getData(data, 'transaction');
             if (dataTransaction) {
-                that.transaction = Object.assign(that.transaction || {},
-                                                 unifiedTransaction(dataTransaction));
+                that.transaction = Object.assign(that.transaction || {}, dataTransaction);
+                extractTransactionFields(that);
                 that.trigger("updated");
             }
             if (success) {
@@ -662,17 +662,17 @@ store.Product.prototype.verify = function() {
 
     return ret;
 
-    function unifiedTransaction(t) {
-        t = Object.assign({}, t);
+    function extractTransactionFields(that) {
+        var t = that.transaction;
         if (t.type === 'ios-appstore' && t.expires_date_ms) {
-            t.expiresAt = parseInt(t.expires_date_ms);
-            t.renewedAt = parseInt(t.purchase_date_ms);
-            t.subscribedAt = parseInt(t.original_purchase_date_ms);
+            that.renewedAt = new Date(parseInt(t.purchase_date_ms));
+            that.expiresAt = new Date(parseInt(t.expires_date_ms));
+            that.subscribedAt = new Date(parseInt(t.original_purchase_date_ms));
         }
         if (t.type === 'android-appstore' && t.expiryTimeMillis > 0) {
-            t.renewedAt = parseInt(t.startTimeMillis);
-            t.expiresAt = parseInt(t.expiryTimeMillis);
-            t.canceled = typeof t.cancelReason !== 'undefined';
+            that.renewedAt = new Date(parseInt(t.startTimeMillis));
+            that.expiresAt = new Date(parseInt(t.expiryTimeMillis));
+            that.canceled = typeof t.cancelReason !== 'undefined';
         }
         return t;
     }
