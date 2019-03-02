@@ -557,7 +557,7 @@ store.Product.prototype.verify = function() {
             var dataTransaction = getData(data, 'transaction');
             if (dataTransaction) {
                 that.transaction = Object.assign(that.transaction || {},
-                                                 dataTransaction);
+                                                 unifiedTransaction(dataTransaction));
                 that.trigger("updated");
             }
             if (success) {
@@ -661,6 +661,21 @@ store.Product.prototype.verify = function() {
     ///
 
     return ret;
+
+    function unifiedTransaction(t) {
+        t = Object.assign({}, t);
+        if (t.type === 'ios-appstore' && t.expires_date_ms) {
+            t.expiresAt = parseInt(t.expires_date_ms);
+            t.renewedAt = parseInt(t.purchase_date_ms);
+            t.subscribedAt = parseInt(t.original_purchase_date_ms);
+        }
+        if (t.type === 'android-appstore' && t.expiryTimeMillis > 0) {
+            t.renewedAt = parseInt(t.startTimeMillis);
+            t.expiresAt = parseInt(t.expiryTimeMillis);
+            t.canceled = typeof t.cancelReason !== 'undefined';
+        }
+        return t;
+    }
 };
 
 ///
