@@ -2083,6 +2083,10 @@ store.utils = {
 (function(){
 "use strict";
 
+var noop = function () {};
+
+var log = noop;
+
 var exec = function (methodName, options, success, error) {
     cordova.exec(success, error, "InAppPurchase", methodName, options);
 };
@@ -2113,10 +2117,6 @@ var InAppPurchase = function () {
     if (window.localStorage && window.localStorage.sk_transactionForProduct)
         this.transactionForProduct = JSON.parse(window.localStorage.sk_transactionForProduct);
 };
-
-var noop = function () {};
-
-var log = noop;
 
 // Error codes
 // (keep synchronized with InAppPurchase.m)
@@ -2920,8 +2920,7 @@ function storekitRefreshReceipts(callback) {
 }
 
 // The better default is now for validation services to use the
-// `latest_receipt_info` field. If if doesn't we can ask the user to implement
-// the below:
+// `latest_receipt_info` field.
 // store.when("expired", function() {
 //     storekitRefreshReceipts();
 // });
