@@ -357,7 +357,7 @@ Products object have the following fields and methods.
  - `product.additionalData` - additional data possibly required for product purchase
  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
- - `product.lastRenewalDate - Latest date a subscription was renewed (a javascript Date)
+ - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
 
 ### *store.Product* public methods
 

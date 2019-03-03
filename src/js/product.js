@@ -89,7 +89,7 @@ store.Product = function(options) {
     this.transaction = null;
 
     ///  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
-    ///  - `product.lastRenewalDate - Latest date a subscription was renewed (a javascript Date)
+    ///  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
 
     this.stateChanged();
 };
