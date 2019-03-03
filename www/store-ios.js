@@ -685,16 +685,20 @@ store.Product.prototype.verify = function() {
 
     function extractTransactionFields(that) {
         var t = that.transaction;
+        // using legacy transactions (platform specific)
         if (t.type === 'ios-appstore' && t.expires_date_ms) {
-            that.renewedAt = new Date(parseInt(t.purchase_date_ms));
-            that.expiresAt = new Date(parseInt(t.expires_date_ms));
-            that.subscribedAt = new Date(parseInt(t.original_purchase_date_ms));
+            that.lastRenewalDate = new Date(parseInt(t.purchase_date_ms));
+            that.expiryDate = new Date(parseInt(t.expires_date_ms));
         }
-        if (t.type === 'android-appstore' && t.expiryTimeMillis > 0) {
-            that.renewedAt = new Date(parseInt(t.startTimeMillis));
-            that.expiresAt = new Date(parseInt(t.expiryTimeMillis));
-            that.canceled = typeof t.cancelReason !== 'undefined';
+        else if (t.type === 'android-appstore' && t.expiryTimeMillis > 0) {
+            that.lastRenewalDate = new Date(parseInt(t.startTimeMillis));
+            that.expiryDate = new Date(parseInt(t.expiryTimeMillis));
         }
+        // using unified transaction fields
+        if (t.expiryDate)
+            that.expiryDate = new Date(t.expiryDate);
+        if (t.lastRenewalDate)
+            that.lastRenewalDate = new Date(t.lastRenewalDate);
         return t;
     }
 };
