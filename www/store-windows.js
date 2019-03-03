@@ -472,6 +472,9 @@ store.Product = function(options) {
     ///  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
     this.transaction = null;
 
+    ///  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
+    ///  - `product.lastRenewalDate - Latest date a subscription was renewed (a javascript Date)
+
     this.stateChanged();
 };
 
