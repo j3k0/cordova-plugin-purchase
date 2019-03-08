@@ -9,7 +9,7 @@ Doing this will route purchases through the simulator which will allow the user 
 store.sandbox = true; //Don't call this in production
 ```
 
-####Sample simulator xml file.
+#### Sample simulator xml file.
 Create a UTF-16 encoded file called `in-app-purchase.xml` with the following content inside the `www` folder in your cordova app or in `merges\windows` for only windows platform.
 ```
 <?xml version="1.0" encoding="utf-16" ?>
