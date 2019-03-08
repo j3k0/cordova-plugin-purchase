@@ -10,7 +10,7 @@ store.sandbox = true; //Don't call this in production
 ```
 
 ####Sample simulator xml file.
-Put this inside the `www` folder in your cordova app or in `merges\windows` for only windows platform.
+Create a UTF-16 encoded file called `in-app-purchase.xml` with the following content inside the `www` folder in your cordova app or in `merges\windows` for only windows platform.
 ```
 <?xml version="1.0" encoding="utf-16" ?>
 <CurrentApp>
@@ -65,6 +65,8 @@ Put this inside the `www` folder in your cordova app or in `merges\windows` for 
   </LicenseInformation>
 </CurrentApp>
 ```
+
+More details about the XML structure can be found [here](https://docs.microsoft.com/windows/uwp/monetize/in-app-purchases-and-trials-using-the-windows-applicationmodel-store-namespace).
 
 ## Building source on Windows
 
