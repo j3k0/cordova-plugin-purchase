@@ -138,7 +138,7 @@ declare namespace IapStore {
 
   export interface IRegisterRequest {
     id: string;
-    alias: string;
+    alias?: string;
     type: StoreProductType;
   }
 
