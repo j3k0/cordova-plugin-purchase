@@ -1,5 +1,5 @@
 (function() {
-"use strict";
+
 
 /// ## <a name="register"></a>*store.register(product)*
 /// Add (or register) a product into the store.

@@ -1,5 +1,5 @@
 (function() {
-"use strict";
+
 
 var initialized = false;
 var skus = [];
@@ -77,7 +77,7 @@ function iabLoaded(validProducts) {
                 price: validProducts[i].price || validProducts[i].formattedPrice,
                 priceMicros: validProducts[i].price_amount_micros,
                 description: validProducts[i].description,
-                currency: validProducts[i].price_currency_code ? validProducts[i].price_currency_code : "",
+                currency: validProducts[i].price_currency_code || "",
                 state: store.VALID
             });
             p.trigger("loaded");

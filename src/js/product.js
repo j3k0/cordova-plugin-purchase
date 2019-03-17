@@ -1,5 +1,5 @@
 (function() {
-'use strict';
+
 
 function defer(thisArg, cb, delay) {
     setTimeout(function() {
@@ -189,7 +189,7 @@ store.Product.prototype.verify = function() {
             }
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));
-                var msg = (data && data.error && data.error.message ? data.error.message : '');
+                var msg = data && data.error && data.error.message ? data.error.message : '';
                 var err = new store.Error({
                     code: store.ERR_VERIFICATION_FAILED,
                     message: "Transaction verification failed: " + msg

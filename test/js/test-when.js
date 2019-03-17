@@ -5,7 +5,7 @@ var store = require("../tmp/store-test");
 var helper = require("./helper");
 
 describe('When', function(){
-    "use strict";
+    
 
     var product = {
         id: "p1",

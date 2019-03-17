@@ -1,5 +1,5 @@
 (function() {
-"use strict";
+
 
 /// ## *store.products* array ##
 /// Array of all registered products

@@ -4,7 +4,7 @@ var assert = require("assert");
 var store = require("../tmp/store-test");
 
 describe('Errors', function(){
-    "use strict";
+    
 
     beforeEach(function() {
         store.error.callbacks.reset();

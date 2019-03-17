@@ -1,5 +1,5 @@
 (function() {
-"use strict";
+
 
 /// ## <a name="get"></a>*store.get(id)*
 /// Retrieve a [product](#product) from its `id` or `alias`.

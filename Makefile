@@ -15,7 +15,7 @@ help:
 	@echo "extra targets"
 	@echo "    all ............ Generate javascript files and documentation"
 	@echo ""
-	@echo "(c)2014, Jean-Christophe Hoelt <hoelt@fovea.cc>"
+	@echo "(c)2014-2019, Jean-Christophe Hoelt <hoelt@fovea.cc>"
 	@echo ""
 
 all: build doc
@@ -41,6 +41,10 @@ jshint: check-jshint sync-android
 eslint: jshint
 	@echo "- ESLint"
 	@node_modules/.bin/eslint --config .eslintrc src/js/*.js src/js/platforms/*.js test/js/*.js
+
+eslint-fix:
+	@echo "- ESLint Fix"
+	@node_modules/.bin/eslint --fix --config .eslintrc src/js/*.js src/js/platforms/*.js test/js/*.js
 
 test-js: jshint eslint prepare-test-js
 	@echo "- Mocha"

@@ -1,5 +1,5 @@
 (function() {
-"use strict";
+
 
 /// ## <a name="off"></a>*store.off(callback)*
 /// Unregister a callback. Works for callbacks registered with `ready`, `when`, `once` and `error`.

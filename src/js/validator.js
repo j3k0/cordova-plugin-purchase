@@ -1,5 +1,5 @@
 (function() {
-'use strict';
+
 
 /// ## <a name="validator"></a> *store.validator*
 /// Set this attribute to either:

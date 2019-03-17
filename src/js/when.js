@@ -1,5 +1,5 @@
 (function(){
-'use strict';
+
 
 /// ## <a name="when"></a>*store.when(query)*
 ///

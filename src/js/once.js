@@ -1,5 +1,5 @@
 (function(){
-"use strict";
+
 
 /// ## <a name="once"></a>*store.once(query)*
 ///

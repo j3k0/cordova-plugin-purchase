@@ -5,7 +5,7 @@
 /*global cordova */
 
 (function() {
-"use strict";
+
 
 var log = function (msg) {
     console.log("InAppBilling[js]: " + msg);
@@ -67,14 +67,14 @@ InAppBilling.prototype.buy = function (success, fail, productId, additionalData)
 	if (this.options.showLog) {
 		log('buy called!');
 	}
-	additionalData = (!!additionalData) && (additionalData.constructor === Object) ? additionalData : {};
+	additionalData = !!additionalData && additionalData.constructor === Object ? additionalData : {};
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId, additionalData]);
 };
 InAppBilling.prototype.subscribe = function (success, fail, productId, additionalData) {
 	if (this.options.showLog) {
 		log('subscribe called!');
 	}
-	additionalData = (!!additionalData) && (additionalData.constructor === Object) ? additionalData : {};
+	additionalData = !!additionalData && additionalData.constructor === Object ? additionalData : {};
 	if (additionalData.oldPurchasedSkus && this.options.showLog) {
         log('subscribe called with upgrading of old SKUs!');
     }
@@ -153,6 +153,7 @@ window.inappbilling = new InAppBilling();
 try {
     store.inappbilling = window.inappbilling;
 }
-catch (e) {}
-
+catch (e) {
+    log(e);
+}
 })();

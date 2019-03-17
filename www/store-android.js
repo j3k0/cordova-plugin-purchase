@@ -306,7 +306,7 @@ store.verbosity = 0;
 store.sandbox = false;
 
 (function(){
-'use strict';
+
 
 ///
 /// ## Constants
@@ -383,7 +383,7 @@ var ERROR_CODES_BASE = 6777000;
 
 })();
 (function() {
-'use strict';
+
 
 function defer(thisArg, cb, delay) {
     setTimeout(function() {
@@ -573,7 +573,7 @@ store.Product.prototype.verify = function() {
             }
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));
-                var msg = (data && data.error && data.error.message ? data.error.message : '');
+                var msg = data && data.error && data.error.message ? data.error.message : '';
                 var err = new store.Error({
                     code: store.ERR_VERIFICATION_FAILED,
                     message: "Transaction verification failed: " + msg
@@ -733,7 +733,7 @@ store.Product.prototype.verify = function() {
 
 })();
 (function(){
-'use strict';
+
 
 ///
 /// ## <a name="errors"></a>*store.Error* object
@@ -822,7 +822,7 @@ store.error.unregister = function(cb) {
 })();
 
 (function() {
-"use strict";
+
 
 /// ## <a name="register"></a>*store.register(product)*
 /// Add (or register) a product into the store.
@@ -923,7 +923,7 @@ function hasKeyword(string) {
 
 })();
 (function() {
-"use strict";
+
 
 /// ## <a name="get"></a>*store.get(id)*
 /// Retrieve a [product](#product) from its `id` or `alias`.
@@ -941,7 +941,7 @@ store.get = function(id) {
 
 })();
 (function(){
-'use strict';
+
 
 /// ## <a name="when"></a>*store.when(query)*
 ///
@@ -1113,7 +1113,7 @@ store.when.unregister = function(cb) {
 
 })();
 (function(){
-"use strict";
+
 
 /// ## <a name="once"></a>*store.once(query)*
 ///
@@ -1141,7 +1141,7 @@ store.once.unregister = store.when.unregister;
 
 })();
 (function() {
-"use strict";
+
 
 // Store all pending callbacks, prevents promises to be called multiple times.
 var callbacks = {};
@@ -1248,7 +1248,7 @@ store.order.unregister = function(cb) {
 
 })();
 (function() {
-"use strict";
+
 
 var isReady = false;
 
@@ -1307,7 +1307,7 @@ store.ready.reset = function() {
 
 })();
 (function() {
-"use strict";
+
 
 /// ## <a name="off"></a>*store.off(callback)*
 /// Unregister a callback. Works for callbacks registered with `ready`, `when`, `once` and `error`.
@@ -1344,7 +1344,7 @@ store.off = function(callback) {
 
 })();
 (function() {
-'use strict';
+
 
 /// ## <a name="validator"></a> *store.validator*
 /// Set this attribute to either:
@@ -1445,7 +1445,7 @@ store._validator = function(product, callback, isPrepared) {
 
 })();
 (function() {
-'use strict';
+
 
 /// ## <a name="refresh"></a>*store.refresh()*
 ///
@@ -1537,7 +1537,7 @@ store.refresh = function() {
 ///
 
 (function(){
-"use strict";
+
 
 var logLevel = {};
 logLevel[store.ERROR] = "ERROR";
@@ -1546,7 +1546,7 @@ logLevel[store.INFO] = "INFO";
 logLevel[store.DEBUG] = "DEBUG";
 
 function log(level, o) {
-    var maxLevel = (store.verbosity === true ? 1 : store.verbosity);
+    var maxLevel = store.verbosity === true ? 1 : store.verbosity;
     if (level > maxLevel)
         return;
 
@@ -1589,7 +1589,7 @@ store.log = {
 /// USE AT YOUR OWN RISKS
 
 (function() {
-"use strict";
+
 
 /// ## *store.products* array ##
 /// Array of all registered products
@@ -1637,7 +1637,7 @@ store.products.reset = function() {
 
 })();
 (function() {
-"use strict";
+
 
 store.Product.prototype.set = function(key, value) {
     if (typeof key === 'string') {
@@ -1691,7 +1691,7 @@ store.Product.prototype.trigger = function(action, args) {
 
 })();
 (function(){
-'use strict';
+
 
 ///
 /// ## *store._queries* object
@@ -1875,7 +1875,7 @@ function deferThrow(err) {
 
 })();
 (function() {
-"use strict";
+
 
 /// ## <a name="trigger"></a>*store.trigger(product, action, args)*
 ///
@@ -1919,7 +1919,7 @@ store.trigger = function(product, action, args) {
 
 })();
 (function(){
-'use strict';
+
 
 ///
 /// ## *store.error.callbacks* array
@@ -1969,7 +1969,7 @@ function deferThrow(err) {
 
 })();
 (function(){
-"use strict";
+
 
 /// ## store.utils
 store.utils = {
@@ -2078,7 +2078,7 @@ store.utils = {
 /*global cordova */
 
 (function() {
-"use strict";
+
 
 var log = function (msg) {
     console.log("InAppBilling[js]: " + msg);
@@ -2140,14 +2140,14 @@ InAppBilling.prototype.buy = function (success, fail, productId, additionalData)
 	if (this.options.showLog) {
 		log('buy called!');
 	}
-	additionalData = (!!additionalData) && (additionalData.constructor === Object) ? additionalData : {};
+	additionalData = !!additionalData && additionalData.constructor === Object ? additionalData : {};
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId, additionalData]);
 };
 InAppBilling.prototype.subscribe = function (success, fail, productId, additionalData) {
 	if (this.options.showLog) {
 		log('subscribe called!');
 	}
-	additionalData = (!!additionalData) && (additionalData.constructor === Object) ? additionalData : {};
+	additionalData = !!additionalData && additionalData.constructor === Object ? additionalData : {};
 	if (additionalData.oldPurchasedSkus && this.options.showLog) {
         log('subscribe called with upgrading of old SKUs!');
     }
@@ -2226,11 +2226,12 @@ window.inappbilling = new InAppBilling();
 try {
     store.inappbilling = window.inappbilling;
 }
-catch (e) {}
-
+catch (e) {
+    log(e);
+}
 })();
 (function() {
-"use strict";
+
 
 var initialized = false;
 var skus = [];
@@ -2308,7 +2309,7 @@ function iabLoaded(validProducts) {
                 price: validProducts[i].price || validProducts[i].formattedPrice,
                 priceMicros: validProducts[i].price_amount_micros,
                 description: validProducts[i].description,
-                currency: validProducts[i].price_currency_code ? validProducts[i].price_currency_code : "",
+                currency: validProducts[i].price_currency_code || "",
                 state: store.VALID
             });
             p.trigger("loaded");
@@ -2426,9 +2427,9 @@ store.when("product", "finished", function(product) {
 
 })();
 (function () {
-    "use strict";
+    
 
-	  //   {
+    //   {
     //     "purchaseToken":"tokenabc",
     //     "developerPayload":"mypayload1",
     //     "packageName":"com.example.MyPackage",
