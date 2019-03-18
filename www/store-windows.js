@@ -2503,6 +2503,7 @@ store.when("product", "finished", function(product) {
 
     store.iabGetPurchases = function() {
         store.inappbilling.getPurchases(function(purchases) {
+            store.log.debug("getPurchases -> " + JSON.stringify(purchases));
             if (purchases && purchases.length) {
                 for (var i = 0; i < purchases.length; ++i) {
                     var purchase = purchases[i];
