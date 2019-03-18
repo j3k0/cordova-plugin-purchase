@@ -92,36 +92,6 @@ InAppBilling.prototype.getAvailableProducts = function (success, fail) {
 	}
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getAvailableProducts", ["null"]);
 };
-InAppBilling.prototype.getProductDetails = function (success, fail, skus) {
-	if (this.options.showLog) {
-		log('getProductDetails called!');
-	}
-
-	if (typeof skus === "string") {
-        skus = [skus];
-    }
-    if (!skus.length) {
-        // Empty array, nothing to do.
-        return;
-    }else {
-        if (typeof skus[0] !== 'string') {
-            var msg = 'invalid productIds: ' + JSON.stringify(skus);
-            log(msg);
-			fail(msg, store.ERR_INVALID_PRODUCT_ID);
-            return;
-        }
-        if (this.options.showLog) {
-			log('load ' + JSON.stringify(skus));
-        }
-		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getProductDetails", [skus]);
-    }
-};
-InAppBilling.prototype.setTestMode = function (success, fail) {
-	if (this.options.showLog) {
-		log('setTestMode called!');
-	}
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "setTestMode", [""]);
-};
 
 // Generates a `fail` function that accepts an optional error code
 // in the first part of the error string.
