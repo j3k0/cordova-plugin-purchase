@@ -253,7 +253,7 @@ function newApi () {
                 }));
                 if (result.extendedError)
                     return fail(errorString(result.extendedError));
-                Object.values(result.products)
+                win(Object.values(result.products)
                 .filter(p => typeof p === 'object' && p.storeId)
                 .map(p => {
                     log('Product in collection: ' + JSON.stringify(p));
@@ -262,11 +262,16 @@ function newApi () {
                         id: p.inAppOfferToken,
                         license: {
                             productId: p.inAppOfferToken,
-                            expirationDate: skus.reduce((acc, sku) => Math.max(acc, sku.endDate), 0),
+                            expirationDate: skus.reduce((acc, sku) => Math.max(acc, +sku.collectionData.endDate), 0),
                             isActive: !!skus.find(sku => sku.isInUserCollection),
-                        }
-                        transaction: {
                         },
+                        transaction: {
+                            status: 0,
+                            transactionId: '?',
+                            offerId: '?',
+                            receipt: '?',
+                        },
+                        skus: skus,
                     };
                     // {
                     //     description: "This subscription lets you enjoy the fact that you're a subscriber.",
@@ -315,9 +320,12 @@ function newApi () {
                     //     title: "Subscribe to Nothing for 1 Month",
                     //     videos: { }
                     // },
-                });
-                win([]);
-            }, fail);
+                }));
+                // win([]);
+            }, (err) => {
+                log('getUserCollectionAsync failed ' + err);
+                fail(err);
+            });
         },
 
         getAvailableProducts: function (win, fail, args) {

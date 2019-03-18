@@ -2444,6 +2444,9 @@ store.when("product", "finished", function(product) {
                 expirationDate: license.expirationDate,
                 isActive: license.isActive
             };
+            if (license.expirationDate > 0) {
+                product.expiryDate = new Date(+license.expirationDate);
+            }
         }
         else {
             license = {};
