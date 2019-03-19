@@ -335,12 +335,25 @@ function newApi () {
                 if (result.extendedError)
                     return fail(errorString(result.extendedError));
                 products = result.products;
+                var trialPeriod = function (p) {
+                    if (!p.skus) return {};
+                    var sku = p.skus.find(sku => sku.isTrial);
+                    if (!sku) return {};
+                    var info = sku.subscriptionInfo;
+                    if (!info) return {};
+                    return {
+                        value: sku.trialPeriod,
+                        unit: sku.trialPeriodUnit
+                    };
+                };
                 win(Object.values(products).map((p) => ({
                     productId: p.inAppOfferToken,
                     title: p.title,
                     description: p.description,
                     price: p.price.formattedReccurencePrice || p.price.formattedPrice,
                     price_currency_code: p.price.currencyCode,
+                    trial_period: trialPeriod(p).value || null,
+                    trial_period_unit: trialPeriod(p).unit || null,
                 })));
             }, fail);
         },
