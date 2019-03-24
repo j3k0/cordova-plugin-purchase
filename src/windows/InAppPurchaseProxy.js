@@ -246,6 +246,11 @@ function newApi () {
 
         getPurchases: function (win, fail, args) {
             log('getPurchases()');
+            // storeContext.getAppLicenseAsync().done(result => {
+            //     if (result.extendedError)
+            //         return log('getAppLicenseAsync: ' + errorString(result.extendedError));
+            //     result.license.addOnLicenses;
+            // });
             storeContext.getUserCollectionAsync(ALL_PRODUCT_TYPES).done((result) => {
                 log('getUserCollectionAsync: ' + JSON.stringify({
                     extendedError: result.extendedError,
@@ -258,18 +263,24 @@ function newApi () {
                 .map(p => {
                     log('Product in collection: ' + JSON.stringify(p));
                     var skus = p.skus.filter((sku) => typeof sku === 'object' && sku.collectionData);
+                    const lastSku = skus.reduce(
+                        (acc, sku) => +acc.collectionData.endDate > +sku.collectionData.endDate ? acc : sku,
+                        skus[0]) || {collectionData:{endDate:0, storeId:''}};
                     return {
                         id: p.inAppOfferToken,
                         license: {
+                            storeId: p.storeId,
                             productId: p.inAppOfferToken,
-                            expirationDate: skus.reduce((acc, sku) => Math.max(acc, +sku.collectionData.endDate), 0),
+                            expirationDate: +lastSku.collectionData.endDate,
                             isActive: !!skus.find(sku => sku.isInUserCollection),
                         },
                         transaction: {
                             status: 0,
-                            transactionId: '?',
-                            offerId: '?',
-                            receipt: '?',
+                            storeId: p.storeId,
+                            skuId: lastSku.storeId.split('/').slice(-1)[0],
+                            transactionId: '???',
+                            offerId: '???',
+                            receipt: '???',
                         },
                         skus: skus,
                     };
@@ -408,6 +419,9 @@ function newApi () {
 
         consumePurchase: function (win, fail, args) {
             log('consumePurchase()');
+            // var productId = args[0];
+            // var transactionId = args[1];
+            // Windows.Services.Store.StoreContext.reportConsumableFulfillmentAsync(productStoreId, quantity, trackingId).done(
             /* TODO
             var fulfillmentResult = Windows.ApplicationModel.Store.FulfillmentResult;
             var productId = args[0];
