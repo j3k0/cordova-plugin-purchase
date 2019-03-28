@@ -9,7 +9,9 @@ store.when("refreshed", function() {
 });
 
 store.when("re-refreshed", function() {
-    store.iabGetPurchases();
+    store.iabGetPurchases(function() {
+        store.trigger('refresh-completed');
+    });
 });
 
 // The following table lists all of the server response codes
@@ -91,7 +93,9 @@ function iabLoaded(validProducts) {
         }
     }
 
-    store.iabGetPurchases();
+    store.iabGetPurchases(function() {
+        store.trigger('refresh-completed');
+    });
 }
 
 store.when("requested", function(product) {
