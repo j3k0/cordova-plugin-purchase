@@ -225,16 +225,16 @@ function newApi () {
 
     var storeContext, products;
 
-    var errorString = (code) => {
-        var fixedError = (code) => (code >= 0 ? code : (0x100000000 + code));
-        var codeString = (code) => ('0x' + fixedError(code).toString(16).toUpperCase());
+    var errorString = function (code) {
+        var fixedError = function (code) { return code >= 0 ? code : 0x100000000 + code; };
+        var codeString = function (code) { return '0x' + fixedError(code).toString(16).toUpperCase(); };
         var e = codeString(code);
-        var d = MICROSOFT_ERROR_DESCRIPTIONS[e]
-        return 'Windows.Services.Store ' + s + (d ? ': ' + d : '');
+        var d = MICROSOFT_ERROR_DESCRIPTIONS[e];
+        return 'Windows.Services.Store ' + e + (d ? ': ' + d : '');
     };
 
     var ALL_PRODUCT_TYPES = [
-        "Durable", "Consumable", "UnmanagedConsumable"
+        'Durable', 'Consumable', 'UnmanagedConsumable'
     ];
 
     module.exports = {
@@ -242,30 +242,42 @@ function newApi () {
             log('init()');
             if (!storeContext)
                 storeContext = Windows.Services.Store.StoreContext.getDefault();
+            if (storeContext && storeContext.user) {
+                var user = storeContext.user;
+                if (user.extendedJsonData)
+                    log('user: ' + user.extendedJsonData);
+                if (user.nonRoamableId)
+                    log('nonRoamableId: ' + user.nonRoamableId);
+            }
             win(true);
         },
 
         getPurchases: function (win, fail, args) {
             log('getPurchases()');
-            // storeContext.getAppLicenseAsync().done(result => {
-            //     if (result.extendedError)
-            //         return log('getAppLicenseAsync: ' + errorString(result.extendedError));
-            //     result.license.addOnLicenses;
-            // });
-            storeContext.getUserCollectionAsync(ALL_PRODUCT_TYPES).done((result) => {
-                log('getUserCollectionAsync: ' + JSON.stringify({
-                    extendedError: result.extendedError,
-                    products: result.products
-                }));
+            storeContext.getAppLicenseAsync().done(function (result) {
                 if (result.extendedError)
+                    return log('getAppLicenseAsync: ' + errorString(result.extendedError));
+                if (result.extendedJsonData)
+                    log('getAppLicenseAsync: ' + result.extendedJsonData);
+                if (result.license && result.license.extendedJsonData)
+                    log('getAppLicenseAsync.license: ' + result.license.extendedJsonData);
+                // result.license.addOnLicenses;
+            });
+            storeContext.getUserCollectionAsync(ALL_PRODUCT_TYPES).done(function (result) {
+                var productsJson = result.products && result.products.extendedJsonData || result.extendedJsonData;
+                if (productsJson)
+                    log('getUserCollectionAsync: ' + productsJson);
+                if (result.extendedError) {
+                    log('getUserCollectionAsync: ' + errorString(result.extendedError));
                     return fail(errorString(result.extendedError));
+                }
                 win(Object.values(result.products)
-                .filter(p => typeof p === 'object' && p.storeId)
-                .map(p => {
-                    log('Product in collection: ' + JSON.stringify(p));
-                    var skus = p.skus.filter((sku) => typeof sku === 'object' && sku.collectionData);
-                    const lastSku = skus.reduce(
-                        (acc, sku) => +acc.collectionData.endDate > +sku.collectionData.endDate ? acc : sku,
+                .filter(function (p) { return typeof p === 'object' && p.storeId; })
+                .map(function (p) {
+                    log('Product in collection: ' + p.extendedJsonData);
+                    var skus = p.skus.filter(function (sku) { return typeof sku === 'object' && sku.collectionData; });
+                    var lastSku = skus.reduce(
+                        function (acc, sku) { return +acc.collectionData.endDate > +sku.collectionData.endDate ? acc : sku; },
                         skus[0]) || {collectionData:{endDate:0, storeId:''}};
                     return {
                         id: p.inAppOfferToken,
@@ -273,7 +285,7 @@ function newApi () {
                             storeId: p.storeId,
                             productId: p.inAppOfferToken,
                             expirationDate: +lastSku.collectionData.endDate,
-                            isActive: !!skus.find(sku => sku.isInUserCollection),
+                            isActive: !!skus.find(function (sku) { return sku.isInUserCollection; }),
                         },
                         transaction: {
                             status: 0,
@@ -334,7 +346,7 @@ function newApi () {
                     // },
                 }));
                 // win([]);
-            }, (err) => {
+            }, function (err) {
                 log('getUserCollectionAsync failed ' + err);
                 fail(err);
             });
@@ -342,14 +354,14 @@ function newApi () {
 
         getAvailableProducts: function (win, fail, args) {
             log('getAvailableProducts()');
-            storeContext.getAssociatedStoreProductsAsync(ALL_PRODUCT_TYPES).done((result) => {
+            storeContext.getAssociatedStoreProductsAsync(ALL_PRODUCT_TYPES).done(function (result) {
                 log('getAssociatedStoreProductsAsync: ' + JSON.stringify(result));
                 if (result.extendedError)
                     return fail(errorString(result.extendedError));
                 products = result.products;
                 var trialPeriod = function (p) {
                     if (!p.skus) return {};
-                    var sku = p.skus.find(sku => sku.isTrial);
+                    var sku = p.skus.find(function (sku) { return sku.isTrial; });
                     if (!sku) return {};
                     var info = sku.subscriptionInfo;
                     if (!info) return {};
@@ -358,15 +370,17 @@ function newApi () {
                         unit: sku.trialPeriodUnit
                     };
                 };
-                win(Object.values(products).map((p) => ({
-                    productId: p.inAppOfferToken,
-                    title: p.title,
-                    description: p.description,
-                    price: p.price.formattedReccurencePrice || p.price.formattedPrice,
-                    price_currency_code: p.price.currencyCode,
-                    trial_period: trialPeriod(p).value || null,
-                    trial_period_unit: trialPeriod(p).unit || null,
-                })));
+                win(Object.values(products).map(function (p) {
+                    return {
+                        productId: p.inAppOfferToken,
+                        title: p.title,
+                        description: p.description,
+                        price: p.price.formattedReccurencePrice || p.price.formattedPrice,
+                        price_currency_code: p.price.currencyCode,
+                        trial_period: trialPeriod(p).value || null,
+                        trial_period_unit: trialPeriod(p).unit || null,
+                    };
+                }));
             }, fail);
         },
 
@@ -381,9 +395,9 @@ function newApi () {
             }
             var productId = args[0];
             var product = Object.values(products)
-                .find((p) => p.inAppOfferToken === productId);
-            storeContext.requestPurchaseAsync(product.storeId).done((result) => {
-                log('requestPurchaseAsync: ' + JSON.stringify(result));
+                .find(function (p) { return p.inAppOfferToken === productId; });
+            storeContext.requestPurchaseAsync(product.storeId).done(function (result) {
+                log('requestPurchaseAsync: ' + result.extendedError || result.extendedJsonData);
                 if (result.extendedError)
                     return fail(errorString(result.extendedError));
                 var StorePurchaseStatus = Windows.Services.Store.StorePurchaseStatus;
@@ -392,6 +406,10 @@ function newApi () {
                         log('StorePurchaseStatus.succeeded');
                         var transaction_results = {
                             transaction: {
+                                storeId: product.storeId,
+                                transactionId: '???',
+                                offerId: '???',
+                                receipt: '???',
                                 status: result.status,
                             },
                         };
@@ -419,42 +437,43 @@ function newApi () {
         },
 
         consumePurchase: function (win, fail, args) {
-            log('consumePurchase()');
-            // var productId = args[0];
-            // var transactionId = args[1];
-            // Windows.Services.Store.StoreContext.reportConsumableFulfillmentAsync(productStoreId, quantity, trackingId).done(
-            /* TODO
-            var fulfillmentResult = Windows.ApplicationModel.Store.FulfillmentResult;
+            log('consumePurchase(' + JSON.stringify(args) + ')');
             var productId = args[0];
             var transactionId = args[1];
-            this.currentApp.reportConsumableFulfillmentAsync(productId, transactionId).done(
-                function (result) {
-                    switch (result) {
-                        case fulfillmentResult.succeeded:
-                            win("There is no purchased product 1 to fulfill.", fulfillmentResult.succeeded);
-                            break;
-                        case fulfillmentResult.nothingToFulfill:
-                            fail("There is no purchased product 1 to fulfill.", fulfillmentResult.nothingToFulfill);
-                            break;
-                        case fulfillmentResult.purchasePending:
-                            fail("The purchase is pending so we cannot fulfill the product.", fulfillmentResult.purchasePending);
-                            break;
-                        case fulfillmentResult.purchaseReverted:
-                            fail("Your purchase has been reverted..", fulfillmentResult.purchaseReverted);
-                            // Since the user's purchase was revoked, they got their money back. 
-                            // You may want to revoke the user's access to the consumable content that was granted. 
-                            break;
-                        case fulfillmentResult.serverError:
-                            fail("There was an error when fulfilling.", fulfillmentResult.serverError);
-                            break;
-                    }
-                },
-                function (error) {
+            var product = Object.values(products)
+                .find(function (p) { return p.inAppOfferToken === productId; });
+            var trackingId = store.utils.uuidv4();
+            storeContext.reportConsumableFulfillmentAsync(product.storeId, 1, trackingId).done(function (result) {
+                if (result.extendedError) {
+                    log('reportConsumableFulfillmentAsync: ' + errorString(result.extendedError));
+                    return fail(errorString(result.extendedError));
+                }
+                var StoreConsumableStatus = Windows.Services.Store.StoreConsumableStatus;
+                var error;
+                switch (result.status) {
+                    case StoreConsumableStatus.succeeded:
+                        log('The fulfillment was successful. ' + result.extendedJsonData);
+                        win(result.extendedJsonData);
+                        break;
+                    case StoreConsumableStatus.insufficentQuantity:
+                        error = 'The fulfillment was unsuccessful because the remaining balance is insufficient.';
+                        break;
+                    case StoreConsumableStatus.networkError:
+                        error = 'The fulfillment was unsuccessful due to a network error.';
+                        break;
+                    case StoreConsumableStatus.serverError:
+                        error = 'The fulfillment was unsuccessful due to a server error.';
+                        break;
+                    default:
+                        error = 'The fulfillment was unsuccessful due to an unknown error.';
+                        break;
+                }
+                if (error) {
+                    log('reportConsumableFulfillmentAsync: ' + error);
                     fail(error);
                 }
-            );
-            */
-        }
+            });
+        },
     };
 }
 
