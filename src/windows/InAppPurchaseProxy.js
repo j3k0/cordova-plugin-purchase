@@ -1,6 +1,7 @@
-﻿var cordova = require('cordova');
+﻿/* global Windows */
+var cordova = require('cordova');
 
-var log = (s) => console.log('[InAppPurchaseProxy.js]', s);
+var log = function (s) { console.log('[InAppPurchaseProxy.js]', s); };
 
 var MICROSOFT_ERROR_DESCRIPTIONS = {
     // Miscellaneous error codes

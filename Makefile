@@ -37,11 +37,11 @@ prepare-test-js:
 
 jshint: check-jshint sync-android
 	@echo "- JSHint"
-	@${NODE_MODULES}/.bin/jshint --config .jshintrc src/js/*.js src/js/platforms/*.js test/js/*.js
+	@${NODE_MODULES}/.bin/jshint --config .jshintrc src/js/*.js src/js/platforms/*.js test/js/*.js src/windows/*.js
 
 eslint: jshint
 	@echo "- ESLint"
-	@${NODE_MODULES}/.bin/eslint --config .eslintrc src/js/*.js src/js/platforms/*.js test/js/*.js
+	@${NODE_MODULES}/.bin/eslint --config .eslintrc src/js/*.js src/js/platforms/*.js test/js/*.js src/windows/*.js
 
 eslint-fix:
 	@echo "- ESLint Fix"
