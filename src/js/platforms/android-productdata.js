@@ -1,7 +1,7 @@
 (function () {
-    "use strict";
+    
 
-	  //   {
+    //   {
     //     "purchaseToken":"tokenabc",
     //     "developerPayload":"mypayload1",
     //     "packageName":"com.example.MyPackage",

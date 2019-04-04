@@ -1,5 +1,5 @@
 (function(){
-'use strict';
+
 
 ///
 /// ## Constants
@@ -73,5 +73,8 @@ var ERROR_CODES_BASE = 6777000;
 /*///*/     store.INVALID_PAYLOAD   = 6778001;
 /*///*/     store.CONNECTION_FAILED = 6778002;
 /*///*/     store.PURCHASE_EXPIRED  = 6778003;
+/*///*/     store.PURCHASE_CONSUMED = 6778004;
+/*///*/     store.INTERNAL_ERROR    = 6778005;
+/*///*/     store.NEED_MORE_DATA    = 6778006;
 
 })();

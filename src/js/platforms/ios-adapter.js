@@ -1,6 +1,6 @@
 /*global storekit */
 (function() {
-"use strict";
+
 
 //! ## Reacting to product state changes
 //!
@@ -60,7 +60,7 @@ store.when("finished", function(product) {
 
 function storekitFinish(product) {
     if (product.type === store.CONSUMABLE || product.type === store.NON_RENEWING_SUBSCRIPTION) {
-        var transactionId = (product.transaction && product.transaction.id) || storekit.transactionForProduct[product.id];
+        var transactionId = product.transaction && product.transaction.id || storekit.transactionForProduct[product.id];
         if (transactionId) {
             storekit.finish(transactionId);
             // TH 08/03/2016: Remove the finished transaction from product.transactions.

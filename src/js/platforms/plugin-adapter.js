@@ -1,5 +1,5 @@
 (function() {
-"use strict";
+
 
 var initialized = false;
 var skus = [];
@@ -65,21 +65,26 @@ function iabReady() {
 
 function iabLoaded(validProducts) {
     store.log.debug("plugin -> loaded - " + JSON.stringify(validProducts));
-    var p, i;
+    var p, i, vp;
     for (i = 0; i < validProducts.length; ++i) {
+        vp = validProducts[i];
 
-        if (validProducts[i].productId)
-            p = store.products.byId[validProducts[i].productId];
+        if (vp.productId)
+            p = store.products.byId[vp.productId];
         else
             p = null;
 
         if (p) {
             p.set({
-                title: validProducts[i].title || validProducts[i].name,
-                price: validProducts[i].price || validProducts[i].formattedPrice,
-                priceMicros: validProducts[i].price_amount_micros,
-                description: validProducts[i].description,
-                currency: validProducts[i].price_currency_code ? validProducts[i].price_currency_code : "",
+                title: vp.title || vp.name,
+                price: vp.price || vp.formattedPrice,
+                priceMicros: vp.price_amount_micros,
+                trialPeriod: vp.trial_period || null,
+                trialPeriodUnit: vp.trial_period_unit || null,
+                billingPeriod: vp.billing_period || null,
+                billingPeriodUnit: vp.billing_period_unit || null,
+                description: vp.description,
+                currency: vp.price_currency_code || "",
                 state: store.VALID
             });
             p.trigger("loaded");

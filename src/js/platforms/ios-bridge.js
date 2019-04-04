@@ -1,4 +1,4 @@
-/**
+/*
  * A plugin to enable iOS In-App Purchases.
  *
  * Copyright (c) Matt Kane 2011
@@ -9,7 +9,7 @@
 /*eslint camelcase:0 */
 /*global cordova, window */
 (function(){
-"use strict";
+
 
 var noop = function () {};
 
@@ -118,20 +118,20 @@ InAppPurchase.prototype.init = function (options, success, error) {
     exec('setup', [], setupOk, setupFailed);
 };
 
-/**
+/*
  * Makes an in-app purchase.
  *
  * @param {String} productId The product identifier. e.g. "com.example.MyApp.myproduct"
- * @param {int} quantity
+ * @param {int} quantity Quantity of product to purchase
  */
 InAppPurchase.prototype.purchase = function (productId, quantity) {
-	quantity = (quantity | 0) || 1;
+	quantity = quantity | 0 || 1;
     var options = this.options;
 
     // Many people forget to load information about their products from apple's servers before allowing
     // users to purchase them... leading them to spam us with useless issues and comments.
     // Let's chase them down!
-    if ((!InAppPurchase._productIds) || (InAppPurchase._productIds.indexOf(productId) < 0)) {
+    if (!InAppPurchase._productIds || InAppPurchase._productIds.indexOf(productId) < 0) {
         var msg = 'Purchasing ' + productId + ' failed.  Ensure the product was loaded first with storekit.load(...)!';
         log(msg);
         if (typeof options.error === 'function') {
@@ -156,14 +156,14 @@ InAppPurchase.prototype.purchase = function (productId, quantity) {
     exec('purchase', [productId, quantity], purchaseOk, purchaseFailed);
 };
 
-/**
+/*
  * Checks if device/user is allowed to make in-app purchases
  */
 InAppPurchase.prototype.canMakePayments = function(success, error){
     return exec("canMakePayments", [], success, error);
 };
 
-/**
+/*
  * Asks the payment queue to restore previously completed purchases.
  * The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
  *
@@ -237,7 +237,7 @@ InAppPurchase.prototype.cancel = function() {
     return exec('cancel', [], ok, failed);
 };
 
-/**
+/*
  * Retrieves localized product data, including price (as localized
  * string), name, description of multiple products.
  *
@@ -303,7 +303,7 @@ InAppPurchase.prototype.load = function (productIds, success, error) {
     }
 };
 
-/**
+/*
  * Finish an unfinished transaction.
  *
  * @param {String} transactionId
@@ -515,7 +515,7 @@ InAppPurchase.prototype.loadAppStoreReceipt = function() {
  * in the queue.
  */
 InAppPurchase.prototype.runQueue = function () {
-	if(!this.eventQueue.length || (!this.onPurchased && !this.onFailed && !this.onRestored)) {
+	if(!this.eventQueue.length || !this.onPurchased && !this.onFailed && !this.onRestored) {
 		return;
 	}
 	var args;

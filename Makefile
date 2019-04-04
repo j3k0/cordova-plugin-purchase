@@ -1,3 +1,4 @@
+NODE_MODULES?=node_modules
 help:
 	@echo ""
 	@echo "Usage: make <target>"
@@ -15,42 +16,46 @@ help:
 	@echo "extra targets"
 	@echo "    all ............ Generate javascript files and documentation"
 	@echo ""
-	@echo "(c)2014, Jean-Christophe Hoelt <hoelt@fovea.cc>"
+	@echo "(c)2014-2019, Jean-Christophe Hoelt <hoelt@fovea.cc>"
 	@echo ""
 
 all: build doc
 
 build: sync-android test-js
 	@echo "- Preprocess"
-	@node_modules/.bin/preprocess src/js/store-ios.js src/js > www/store-ios.js
-	@node_modules/.bin/preprocess src/js/store-android.js src/js > www/store-android.js
-	@node_modules/.bin/preprocess src/js/store-windows.js src/js > www/store-windows.js
+	@${NODE_MODULES}/.bin/preprocess src/js/store-ios.js src/js > www/store-ios.js
+	@${NODE_MODULES}/.bin/preprocess src/js/store-android.js src/js > www/store-android.js
+	@${NODE_MODULES}/.bin/preprocess src/js/store-windows.js src/js > www/store-windows.js
 	@echo "- Done"
 	@echo ""
 
 prepare-test-js:
 	@mkdir -p test/tmp
-	@node_modules/.bin/preprocess src/js/store-test.js src/js > test/tmp/store-test.js
+	@${NODE_MODULES}/.bin/preprocess src/js/store-test.js src/js > test/tmp/store-test.js
 	@cp src/js/platforms/*-adapter.js test/tmp/
-	@#node_modules/.bin/istanbul instrument --no-compact --output test/tmp/store-test.js test/store-test-src.js
+	@#${NODE_MODULES}/.bin/istanbul instrument --no-compact --output test/tmp/store-test.js test/store-test-src.js
 
 jshint: check-jshint sync-android
 	@echo "- JSHint"
-	@node_modules/.bin/jshint --config .jshintrc src/js/*.js src/js/platforms/*.js test/js/*.js
+	@${NODE_MODULES}/.bin/jshint --config .jshintrc src/js/*.js src/js/platforms/*.js test/js/*.js src/windows/*.js
 
 eslint: jshint
 	@echo "- ESLint"
-	@node_modules/.bin/eslint --config .eslintrc src/js/*.js src/js/platforms/*.js test/js/*.js
+	@${NODE_MODULES}/.bin/eslint --config .eslintrc src/js/*.js src/js/platforms/*.js test/js/*.js src/windows/*.js
+
+eslint-fix:
+	@echo "- ESLint Fix"
+	@${NODE_MODULES}/.bin/eslint --fix --config .eslintrc src/js/*.js src/js/platforms/*.js test/js/*.js
 
 test-js: jshint eslint prepare-test-js
 	@echo "- Mocha"
-	@node_modules/.bin/istanbul test --root test/tmp test/js/run.js
+	@${NODE_MODULES}/.bin/istanbul test --root test/tmp test/js/run.js
 	@echo
 
 test-js-coverage: jshint eslint prepare-test-js
 	@echo "- Mocha / Instanbul"
-	@node_modules/.bin/istanbul cover --root test/ test/js/run.js
-	@node_modules/.bin/coveralls < coverage/lcov.info
+	@${NODE_MODULES}/.bin/istanbul cover --root test/ test/js/run.js
+	@${NODE_MODULES}/.bin/coveralls < coverage/lcov.info
 
 test-install: build
 	@./test/run.sh cc.fovea.babygoo babygooinapp1
@@ -59,7 +64,7 @@ tests: test-js test-install
 	@echo 'ok'
 
 check-jshint:
-	@test -e node_modules/.bin/jshint || ( echo 'Please install dependencies: npm install'; exit 1 )
+	@test -e "${NODE_MODULES}/.bin/jshint" || ( echo "${NODE_MODULES} not found."; echo 'Please install dependencies: npm install'; exit 1 )
 
 doc-api: test-js
 	@echo "# API Documentation" > doc/api.md

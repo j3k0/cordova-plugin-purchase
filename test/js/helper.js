@@ -1,5 +1,5 @@
 (function(){
-    "use strict";
+    
 
     var timeFactor = 1;
     var pSetTimeout = global.setTimeout;

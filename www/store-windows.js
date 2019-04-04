@@ -306,7 +306,7 @@ store.verbosity = 0;
 store.sandbox = false;
 
 (function(){
-'use strict';
+
 
 ///
 /// ## Constants
@@ -380,10 +380,13 @@ var ERROR_CODES_BASE = 6777000;
 /*///*/     store.INVALID_PAYLOAD   = 6778001;
 /*///*/     store.CONNECTION_FAILED = 6778002;
 /*///*/     store.PURCHASE_EXPIRED  = 6778003;
+/*///*/     store.PURCHASE_CONSUMED = 6778004;
+/*///*/     store.INTERNAL_ERROR    = 6778005;
+/*///*/     store.NEED_MORE_DATA    = 6778006;
 
 })();
 (function() {
-'use strict';
+
 
 function defer(thisArg, cb, delay) {
     setTimeout(function() {
@@ -474,6 +477,10 @@ store.Product = function(options) {
 
     ///  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
     ///  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
+    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows only)
+    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows only)
+    ///  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
+    ///  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
     this.stateChanged();
 };
@@ -573,7 +580,7 @@ store.Product.prototype.verify = function() {
             }
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));
-                var msg = (data && data.error && data.error.message ? data.error.message : '');
+                var msg = data && data.error && data.error.message ? data.error.message : '';
                 var err = new store.Error({
                     code: store.ERR_VERIFICATION_FAILED,
                     message: "Transaction verification failed: " + msg
@@ -733,7 +740,7 @@ store.Product.prototype.verify = function() {
 
 })();
 (function(){
-'use strict';
+
 
 ///
 /// ## <a name="errors"></a>*store.Error* object
@@ -822,7 +829,7 @@ store.error.unregister = function(cb) {
 })();
 
 (function() {
-"use strict";
+
 
 /// ## <a name="register"></a>*store.register(product)*
 /// Add (or register) a product into the store.
@@ -923,7 +930,7 @@ function hasKeyword(string) {
 
 })();
 (function() {
-"use strict";
+
 
 /// ## <a name="get"></a>*store.get(id)*
 /// Retrieve a [product](#product) from its `id` or `alias`.
@@ -941,7 +948,7 @@ store.get = function(id) {
 
 })();
 (function(){
-'use strict';
+
 
 /// ## <a name="when"></a>*store.when(query)*
 ///
@@ -1113,7 +1120,7 @@ store.when.unregister = function(cb) {
 
 })();
 (function(){
-"use strict";
+
 
 /// ## <a name="once"></a>*store.once(query)*
 ///
@@ -1141,7 +1148,7 @@ store.once.unregister = store.when.unregister;
 
 })();
 (function() {
-"use strict";
+
 
 // Store all pending callbacks, prevents promises to be called multiple times.
 var callbacks = {};
@@ -1248,7 +1255,7 @@ store.order.unregister = function(cb) {
 
 })();
 (function() {
-"use strict";
+
 
 var isReady = false;
 
@@ -1307,7 +1314,7 @@ store.ready.reset = function() {
 
 })();
 (function() {
-"use strict";
+
 
 /// ## <a name="off"></a>*store.off(callback)*
 /// Unregister a callback. Works for callbacks registered with `ready`, `when`, `once` and `error`.
@@ -1344,7 +1351,7 @@ store.off = function(callback) {
 
 })();
 (function() {
-'use strict';
+
 
 /// ## <a name="validator"></a> *store.validator*
 /// Set this attribute to either:
@@ -1445,7 +1452,7 @@ store._validator = function(product, callback, isPrepared) {
 
 })();
 (function() {
-'use strict';
+
 
 /// ## <a name="refresh"></a>*store.refresh()*
 ///
@@ -1537,7 +1544,7 @@ store.refresh = function() {
 ///
 
 (function(){
-"use strict";
+
 
 var logLevel = {};
 logLevel[store.ERROR] = "ERROR";
@@ -1546,7 +1553,7 @@ logLevel[store.INFO] = "INFO";
 logLevel[store.DEBUG] = "DEBUG";
 
 function log(level, o) {
-    var maxLevel = (store.verbosity === true ? 1 : store.verbosity);
+    var maxLevel = store.verbosity === true ? 1 : store.verbosity;
     if (level > maxLevel)
         return;
 
@@ -1589,7 +1596,7 @@ store.log = {
 /// USE AT YOUR OWN RISKS
 
 (function() {
-"use strict";
+
 
 /// ## *store.products* array ##
 /// Array of all registered products
@@ -1637,7 +1644,7 @@ store.products.reset = function() {
 
 })();
 (function() {
-"use strict";
+
 
 store.Product.prototype.set = function(key, value) {
     if (typeof key === 'string') {
@@ -1691,7 +1698,7 @@ store.Product.prototype.trigger = function(action, args) {
 
 })();
 (function(){
-'use strict';
+
 
 ///
 /// ## *store._queries* object
@@ -1875,7 +1882,7 @@ function deferThrow(err) {
 
 })();
 (function() {
-"use strict";
+
 
 /// ## <a name="trigger"></a>*store.trigger(product, action, args)*
 ///
@@ -1919,7 +1926,7 @@ store.trigger = function(product, action, args) {
 
 })();
 (function(){
-'use strict';
+
 
 ///
 /// ## *store.error.callbacks* array
@@ -1969,7 +1976,7 @@ function deferThrow(err) {
 
 })();
 (function(){
-"use strict";
+
 
 /// ## store.utils
 store.utils = {
@@ -2067,7 +2074,14 @@ store.utils = {
         return {
             done: function(cb) { doneCb = cb; return this; }
         };
-    }
+    },
+
+    uuidv4: function () {
+        return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, function (c) {
+            return (c ^ window.crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
+        });
+    },
+
 };
 
 })();
@@ -2078,7 +2092,7 @@ store.utils = {
 /*global cordova */
 
 (function() {
-"use strict";
+
 
 var log = function (msg) {
     console.log("InAppBilling[js]: " + msg);
@@ -2140,14 +2154,14 @@ InAppBilling.prototype.buy = function (success, fail, productId, additionalData)
 	if (this.options.showLog) {
 		log('buy called!');
 	}
-	additionalData = (!!additionalData) && (additionalData.constructor === Object) ? additionalData : {};
+	additionalData = !!additionalData && additionalData.constructor === Object ? additionalData : {};
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId, additionalData]);
 };
 InAppBilling.prototype.subscribe = function (success, fail, productId, additionalData) {
 	if (this.options.showLog) {
 		log('subscribe called!');
 	}
-	additionalData = (!!additionalData) && (additionalData.constructor === Object) ? additionalData : {};
+	additionalData = !!additionalData && additionalData.constructor === Object ? additionalData : {};
 	if (additionalData.oldPurchasedSkus && this.options.showLog) {
         log('subscribe called with upgrading of old SKUs!');
     }
@@ -2164,36 +2178,6 @@ InAppBilling.prototype.getAvailableProducts = function (success, fail) {
 		log('getAvailableProducts called!');
 	}
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getAvailableProducts", ["null"]);
-};
-InAppBilling.prototype.getProductDetails = function (success, fail, skus) {
-	if (this.options.showLog) {
-		log('getProductDetails called!');
-	}
-
-	if (typeof skus === "string") {
-        skus = [skus];
-    }
-    if (!skus.length) {
-        // Empty array, nothing to do.
-        return;
-    }else {
-        if (typeof skus[0] !== 'string') {
-            var msg = 'invalid productIds: ' + JSON.stringify(skus);
-            log(msg);
-			fail(msg, store.ERR_INVALID_PRODUCT_ID);
-            return;
-        }
-        if (this.options.showLog) {
-			log('load ' + JSON.stringify(skus));
-        }
-		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getProductDetails", [skus]);
-    }
-};
-InAppBilling.prototype.setTestMode = function (success, fail) {
-	if (this.options.showLog) {
-		log('setTestMode called!');
-	}
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "setTestMode", [""]);
 };
 
 // Generates a `fail` function that accepts an optional error code
@@ -2226,11 +2210,12 @@ window.inappbilling = new InAppBilling();
 try {
     store.inappbilling = window.inappbilling;
 }
-catch (e) {}
-
+catch (e) {
+    log(e);
+}
 })();
 (function() {
-"use strict";
+
 
 var initialized = false;
 var skus = [];
@@ -2294,21 +2279,26 @@ function iabReady() {
 
 function iabLoaded(validProducts) {
     store.log.debug("plugin -> loaded - " + JSON.stringify(validProducts));
-    var p, i;
+    var p, i, vp;
     for (i = 0; i < validProducts.length; ++i) {
+        vp = validProducts[i];
 
-        if (validProducts[i].productId)
-            p = store.products.byId[validProducts[i].productId];
+        if (vp.productId)
+            p = store.products.byId[vp.productId];
         else
             p = null;
 
         if (p) {
             p.set({
-                title: validProducts[i].title || validProducts[i].name,
-                price: validProducts[i].price || validProducts[i].formattedPrice,
-                priceMicros: validProducts[i].price_amount_micros,
-                description: validProducts[i].description,
-                currency: validProducts[i].price_currency_code ? validProducts[i].price_currency_code : "",
+                title: vp.title || vp.name,
+                price: vp.price || vp.formattedPrice,
+                priceMicros: vp.price_amount_micros,
+                trialPeriod: vp.trial_period || null,
+                trialPeriodUnit: vp.trial_period_unit || null,
+                billingPeriod: vp.billing_period || null,
+                billingPeriodUnit: vp.billing_period_unit || null,
+                description: vp.description,
+                currency: vp.price_currency_code || "",
                 state: store.VALID
             });
             p.trigger("loaded");
@@ -2425,11 +2415,13 @@ store.when("product", "finished", function(product) {
 });
 
 })();
+/* global Windows */
+/* global crypto */
+
 (function () {
-    "use strict";
 
 	/*
-     *  Pruduct Listing
+     *  Product Listing
      *
         Description     Read-only	Windows Phone only. Gets the description for the in-app product.
         FormattedPrice  Read-only	Gets the in-app product purchase price with the appropriate formatting for the current market.
@@ -2471,20 +2463,29 @@ store.when("product", "finished", function(product) {
             product.license = {
                 type: 'windows-store-license',
                 expirationDate: license.expirationDate,
-                isActive: license.isActive
+                isActive: license.isActive,
+                storeId: license.storeId
             };
+            if (license.expirationDate > 0) {
+                product.expiryDate = new Date(+license.expirationDate);
+            }
         }
         else {
             license = {};
         }
 
         if (transaction) {
-            product.transaction = {
+            product.transaction = Object.assign(product.transaction || {}, {
                 type: 'windows-store-transaction',
                 id: transaction.transactionId,
                 offerId: transaction.offerId,
-                receipt: transaction.receiptXml
-            };
+                receipt: transaction.receiptXml,
+                storeId: transaction.storeId,
+                skuId: transaction.skuId
+            });
+            if (license && license.expirationDate > 0) {
+                product.transaction.expirationDate = license.expirationDate;
+            }
         }
         else {
             transaction = {};
@@ -2499,7 +2500,8 @@ store.when("product", "finished", function(product) {
             }
             //AlreadyPurchased
             if (transaction.status === 1 || license.isActive) {
-                product.set("state", store.OWNED);
+                // product.set("state", store.OWNED);
+                product.set("state", store.APPROVED);
             }
         }
 
@@ -2529,6 +2531,7 @@ store.when("product", "finished", function(product) {
 
     store.iabGetPurchases = function() {
         store.inappbilling.getPurchases(function(purchases) {
+            store.log.debug("getPurchases -> " + JSON.stringify(purchases));
             if (purchases && purchases.length) {
                 for (var i = 0; i < purchases.length; ++i) {
                     var purchase = purchases[i];
@@ -2543,6 +2546,75 @@ store.when("product", "finished", function(product) {
             store.ready(true);
         }, function() {});
     };
+
+    var ONE_DAY_MILLS = 24 * 3600 * 1000;
+    var NINETY_DAYS_MILLIS = ONE_DAY_MILLS * 90;
+    function loadStoreIdKey(type) {
+        var value = window.localStorage['cordova_storeidkey_' + type];
+        var created = window.localStorage['cordova_storeidkey_' + type + '_date'];
+        var expires = (+new Date(created)) + NINETY_DAYS_MILLIS - ONE_DAY_MILLS;
+        if (value && expires > +new Date())
+            return value;
+    }
+    function saveStoreIdKey(type, value) {
+        window.localStorage['cordova_storeidkey_' + type] = value;
+        window.localStorage['cordova_storeidkey_' + type + '_date'] = (new Date()).toISOString();
+    }
+    store.when().updated(function(p) {
+        if (!p.transaction)
+            p.transaction = {};
+        if (!p.license)
+            p.license = {};
+        if (!p.license.storeIdKey_purchase)
+            p.license.storeIdKey_purchase = loadStoreIdKey('purchase');
+        if (!p.license.storeIdKey_collections)
+            p.license.storeIdKey_collections = loadStoreIdKey('collections');
+        if (p.transaction.serviceTicket && p.transaction.serviceTicketType) {
+            var storeIdKey = loadStoreIdKey(p.transaction.serviceTicketType);
+            var cachedApplicationUsername = window.localStorage._cordova_application_username;
+            p.licence = Object.assign(p.license || {}, {applicationUsername: cachedApplicationUsername});
+            var publisherUserId = p.additionalData && p.additionalData.applicationUsername || cachedApplicationUsername || store.utils.uuidv4();
+            if (!cachedApplicationUsername) {
+                window.localStorage._cordova_application_username = publisherUserId;
+            }
+            var storeContext;
+            if (storeIdKey) {
+                p.license['storeIdKey_' + p.transaction.serviceTicketType] = storeIdKey;
+            }
+            else if (p.transaction.serviceTicketType === 'purchase') {
+                storeContext = Windows.Services.Store.StoreContext.getDefault();
+				storeContext.getCustomerPurchaseIdAsync(p.transaction.serviceTicket, publisherUserId)
+                .done(function (result) {
+                    if (result) {
+                        store.log.info('getCustomerPurchaseIdAsync -> ' + result);
+                        p.license['storeIdKey_' + p.transaction.serviceTicketType] = result;
+                        delete p.transaction.serviceTicket;
+                        delete p.transaction.serviceTicketType;
+                        saveStoreIdKey('purchase', result);
+                    }
+                    else {
+                        store.log.error('getCustomerPurchaseIdAsync failed');
+                    }
+                });
+            }
+            else if (p.transaction.serviceTicketType === 'collections') {
+                storeContext = Windows.Services.Store.StoreContext.getDefault();
+				storeContext.getCustomerCollectionsIdAsync(p.transaction.serviceTicket, publisherUserId)
+                .done(function (result) {
+                    if (result) {
+                        store.log.info('getCustomerCollectionsIdAsync -> ' + result);
+                        p.license['storeIdKey_' + p.transaction.serviceTicketType] = result;
+                        delete p.transaction.serviceTicket;
+                        delete p.transaction.serviceTicketType;
+                        saveStoreIdKey('collections', result);
+                    }
+                    else {
+                        store.log.error('getCustomerCollectionsIdAsync failed');
+                    }
+                });
+            }
+        }
+    });
 
 })();
 

@@ -330,6 +330,9 @@ The `sandbox` property defines if you want to invoke the platform purchase sandb
     store.INVALID_PAYLOAD   = 6778001;
     store.CONNECTION_FAILED = 6778002;
     store.PURCHASE_EXPIRED  = 6778003;
+    store.PURCHASE_CONSUMED = 6778004;
+    store.INTERNAL_ERROR    = 6778005;
+    store.NEED_MORE_DATA    = 6778006;
 ## <a name="product"></a>*store.Product* object ##
 
 Most events methods give you access to a `product` object.
@@ -358,6 +361,10 @@ Products object have the following fields and methods.
  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
+ - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows only)
+ - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows only)
+ - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
+ - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
 ### *store.Product* public methods
 

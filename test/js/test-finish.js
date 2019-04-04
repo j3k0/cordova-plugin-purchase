@@ -4,7 +4,7 @@ var assert = require("assert");
 var store = require("../tmp/store-test");
 
 describe('Finish', function() {
-    "use strict";
+    
 
     before(function() {
         require("./helper").resetTest();
