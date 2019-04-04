@@ -237,6 +237,15 @@ function newApi () {
         'Durable', 'Consumable', 'UnmanagedConsumable'
     ];
 
+    var PERIOD_UNITS = {
+        '0': 'Minute',
+        '1': 'Hour',
+        '2': 'Day',
+        '3': 'Week',
+        '4': 'Month',
+        '5': 'Year'
+    };
+
     module.exports = {
         init: function (win, fail, args) {
             log('init()');
@@ -355,10 +364,12 @@ function newApi () {
         getAvailableProducts: function (win, fail, args) {
             log('getAvailableProducts()');
             storeContext.getAssociatedStoreProductsAsync(ALL_PRODUCT_TYPES).done(function (result) {
-                log('getAssociatedStoreProductsAsync: ' + JSON.stringify(result));
-                if (result.extendedError)
+                if (result.extendedError) {
+                    log('getAssociatedStoreProductsAsync failed ' + errorString(result.extendedError));
                     return fail(errorString(result.extendedError));
+                }
                 products = result.products;
+
                 var trialPeriod = function (p) {
                     if (!p.skus) return {};
                     var sku = p.skus.find(function (sku) { return sku.isTrial; });
@@ -366,20 +377,37 @@ function newApi () {
                     var info = sku.subscriptionInfo;
                     if (!info) return {};
                     return {
-                        value: sku.trialPeriod,
-                        unit: sku.trialPeriodUnit
+                        value: info.trialPeriod,
+                        unit: PERIOD_UNITS[info.trialPeriodUnit]
                     };
                 };
-                win(Object.values(products).map(function (p) {
+                var billingPeriod = function (p) {
+                    if (!p.skus) return {};
+                    var sku = p.skus.find(function (sku) { return !sku.isTrial; });
+                    if (!sku) return {};
+                    var info = sku.subscriptionInfo;
+                    if (!info) return {};
                     return {
+                        value: info.billingPeriod,
+                        unit: PERIOD_UNITS[info.billingPeriodUnit]
+                    };
+                };
+                log('getAssociatedStoreProductsAsync:');
+                win(Object.values(products).map(function (p) {
+                    log(p.extendedJsonData);
+                    var ret = {
                         productId: p.inAppOfferToken,
                         title: p.title,
                         description: p.description,
-                        price: p.price.formattedReccurencePrice || p.price.formattedPrice,
+                        price: p.price.formattedRecurrencePrice || p.price.formattedPrice,
                         price_currency_code: p.price.currencyCode,
+                        billing_period: billingPeriod(p).value || null,
+                        billing_period_unit: billingPeriod(p).unit || null,
                         trial_period: trialPeriod(p).value || null,
                         trial_period_unit: trialPeriod(p).unit || null,
                     };
+                    log('=> ' + JSON.stringify(ret));
+                    return ret;
                 }));
             }, fail);
         },

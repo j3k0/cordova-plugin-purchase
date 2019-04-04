@@ -77,8 +77,10 @@ function iabLoaded(validProducts) {
                 title: vp.title || vp.name,
                 price: vp.price || vp.formattedPrice,
                 priceMicros: vp.price_amount_micros,
-                trialPeriod: vp.trial_period,
-                trialPeriodUnit: vp.trial_period_unit,
+                trialPeriod: vp.trial_period || null,
+                trialPeriodUnit: vp.trial_period_unit || null,
+                billingPeriod: vp.billing_period || null,
+                billingPeriodUnit: vp.billing_period_unit || null,
                 description: vp.description,
                 currency: vp.price_currency_code || "",
                 state: store.VALID
