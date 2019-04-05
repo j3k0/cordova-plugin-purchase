@@ -104,6 +104,7 @@ declare namespace IapStore {
     when(query: string): IWhen;
     when(action: string, query: string, callback: (product: IStoreProduct) => void): IWhen;
     ready(callback: () => void): void;
+    ready(): boolean;
     refresh(): void;
     off(callback: Function): void;
     order(id: string, additionalData?: null | { oldPurchasedSkus: string[] } | { developerPayload: string }): void;
