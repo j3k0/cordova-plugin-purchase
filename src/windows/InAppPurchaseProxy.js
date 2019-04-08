@@ -1,7 +1,25 @@
 ﻿/* global Windows */
 var cordova = require('cordova');
 
-var log = function (s) { console.log('[InAppPurchaseProxy.js]', s); };
+// Visual Studio trims log lines to 1024 chars, thus this complicated mess.
+var logTag = '[InAppPurchaseProxy.js]';
+var logLine = function(s) { console.log(logTag, s); };
+var chunkSize = 1024 - logTag.length - 1;
+var log = function(s) {
+  if (typeof s === 'string')
+    chunkSubstr(s, chunkSize).forEach(logLine);
+  else
+    logLine(s);
+};
+
+// from https://stackoverflow.com/a/29202760
+function chunkSubstr(str, size) {
+  var numChunks = Math.ceil(str.length / size);
+  var chunks = new Array(numChunks);
+  for (var i = 0, o = 0; i < numChunks; ++i, o += size)
+    chunks[i] = str.substr(o, size);
+  return chunks;
+}
 
 var MICROSOFT_ERROR_DESCRIPTIONS = {
     // Miscellaneous error codes
