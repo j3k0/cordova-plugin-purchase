@@ -520,9 +520,7 @@ store._prepareForValidation = function(product, callback) {
                 };
             }
             product.transaction.appStoreReceipt = r.appStoreReceipt;
-            if (product.transaction.id)
-                product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
-            if (!product.transaction.appStoreReceipt && !product.transaction.transactionReceipt) {
+            if (!product.transaction.appStoreReceipt) {
                 nRetry ++;
                 if (nRetry < 2) {
                     setTimeout(loadReceipts, 500);
