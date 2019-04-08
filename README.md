@@ -36,6 +36,11 @@ cordova plugin add cordova-plugin-purchase [--variable BILLING_KEY="<BILLING_KEY
 ```
 `BILLING_KEY` is only required for Android. Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#add-android-billing-key) for details.
 
+### Install recommended plugins
+
+If the plugin cannot connect to the app store because it has no network connection, it will retry either periodically after a certain amount of time, or in case the device fires an ['online'](https://developer.mozilla.org/en-US/docs/Web/Events/online) event.
+In order for the 'online' event to be properly received in the Cordova application, the [cordova-plugin-network-information](https://github.com/apache/cordova-plugin-network-information) plugin is required as well. Without it, this plugin will only be able to use the periodic check to determine if the device is back online.
+
 ### Setup your Application
 
 See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-ios-applications) and [Setup Android Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-android-applications).
