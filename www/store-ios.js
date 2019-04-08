@@ -1411,6 +1411,65 @@ store.off = function(callback) {
 /// Validation error codes are [documented here](#validation-error-codes).
 store.validator = null;
 
+var validationRequests = [];
+var timeout = null;
+
+function runValidation() {
+  store.log.debug('runValidation()');
+
+  timeout = null;
+  var requests = validationRequests;
+  validationRequests = [];
+
+  // Merge validation requests by products.
+  var byProduct = {};
+  requests.forEach(function(request) {
+    var productId = request.product.id;
+    if (byProduct[productId]) {
+      byProduct[productId].callbacks.push(request.callback);
+      // assume the most up to date value for product will come last
+      byProduct[productId].product = request.product;
+    }
+    else {
+      byProduct[productId] = {
+        product: request.product,
+        callbacks: [request.callback]
+      };
+    }
+  });
+
+  // Run one validation request for each product.
+  Object.keys(byProduct).forEach(function(productId) {
+      var request = byProduct[productId];
+      store.utils.ajax({
+          url: store.validator,
+          method: 'POST',
+          data: request.product,
+          success: function(data) {
+              store.log.debug("validator success, response: " + JSON.stringify(data));
+              request.callbacks.forEach(function(callback) {
+                  callback(data && data.ok, data.data);
+              });
+          },
+          error: function(status, message, data) {
+              var fullMessage = "Error " + status + ": " + message;
+              store.log.debug("validator failed, response: " + JSON.stringify(fullMessage));
+              store.log.debug("body => " + JSON.stringify(data));
+              request.callbacks.forEach(function(callback) {
+                  callback(false, fullMessage);
+              });
+          }
+      });
+  });
+}
+
+function scheduleValidation() {
+  store.log.debug('scheduleValidation()');
+  if (timeout)
+    clearTimeout(timeout);
+  timeout = setTimeout(runValidation, 500);
+}
+
 //
 // ## store._validator
 //
@@ -1433,21 +1492,11 @@ store._validator = function(product, callback, isPrepared) {
     }
 
     if (typeof store.validator === 'string') {
-        store.utils.ajax({
-            url: store.validator,
-            method: 'POST',
-            data: product,
-            success: function(data) {
-                store.log.debug("validator success, response: " + JSON.stringify(data));
-                callback(data && data.ok, data.data);
-            },
-            error: function(status, message, data) {
-                var fullMessage = "Error " + status + ": " + message;
-                store.log.debug("validator failed, response: " + JSON.stringify(fullMessage));
-                store.log.debug("body => " + JSON.stringify(data));
-                callback(false, fullMessage);
-            }
+        validationRequests.push({
+            product: product,
+            callback: callback
         });
+        scheduleValidation();
     }
     else {
         store.validator(product, callback);
