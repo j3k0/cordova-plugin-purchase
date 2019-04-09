@@ -99,10 +99,11 @@ declare namespace IapStore {
 
     error(callback: (err: IError) => void): void;
     get(id: string): IStoreProduct;
-    once(query: string, action: string, callback: any): void;
+    once(query: string): IWhen;
+    once(query: string, action: string, callback: (product: IStoreProduct) => void): IWhen;
     register(request: IRegisterRequest): void;
     when(query: string): IWhen;
-    when(action: string, query: string, callback: (product: IStoreProduct) => void): IWhen;
+    when(query: string, action: string, callback: (product: IStoreProduct) => void): IWhen;
     ready(callback: () => void): void;
     ready(): boolean;
     refresh(): void;
