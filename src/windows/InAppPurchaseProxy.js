@@ -410,14 +410,23 @@ function newApi () {
                         unit: PERIOD_UNITS[info.billingPeriodUnit]
                     };
                 };
+                var isRecurrent = function (p) {
+                    if (p.productKind !== 'Durable') return false;
+                    if (!p.skus) return false;
+                    var sku = p.skus.find(function (sku) { return sku.isSubscription; });
+                    return !!sku;
+                };
                 log('getAssociatedStoreProductsAsync:');
                 win(Object.values(products).map(function (p) {
                     log(p.extendedJsonData);
+                    log('formattedRecurrencePrice: ' + p.price.formattedRecurrencePrice);
+                    log('formattedPrice: ' + p.price.formattedPrice);
+                    log('kind: ' + p.productKind);
                     var ret = {
                         productId: p.inAppOfferToken,
                         title: p.title,
                         description: p.description,
-                        price: p.price.formattedRecurrencePrice || p.price.formattedPrice,
+                        price: isRecurrent(p) ? p.price.formattedRecurrencePrice : p.price.formattedPrice,
                         price_currency_code: p.price.currencyCode,
                         billing_period: billingPeriod(p).value || null,
                         billing_period_unit: billingPeriod(p).unit || null,
