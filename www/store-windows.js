@@ -679,7 +679,7 @@ store.Product.prototype.verify = function() {
             that.lastRenewalDate = new Date(parseInt(t.purchase_date_ms));
             that.expiryDate = new Date(parseInt(t.expires_date_ms));
         }
-        else if (t.type === 'android-appstore' && t.expiryTimeMillis > 0) {
+        else if (t.type === 'android-playstore' && t.expiryTimeMillis > 0) {
             that.lastRenewalDate = new Date(parseInt(t.startTimeMillis));
             that.expiryDate = new Date(parseInt(t.expiryTimeMillis));
         }
