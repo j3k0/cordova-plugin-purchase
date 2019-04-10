@@ -480,6 +480,16 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     DLog(@"paymentQueueRestoreCompletedTransactionsFinished:");
     NSString *js = @"window.storekit.restoreCompletedTransactionsFinished.apply(window.storekit)";
     [self.commandDelegate evalJs: js];
+
+    // Let's make sure no "unfinished" transaction stays in the queue.
+    if (g_autoFinishEnabled) {
+      for (SKPaymentTransaction *transaction in queue.transactions) {
+          if (transaction.transactionState == SKPaymentTransactionStateRestored) {
+              [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+              [self transactionFinished:transaction];
+          }
+      }
+    }
 }
 
 - (NSData *)appStoreReceipt {
