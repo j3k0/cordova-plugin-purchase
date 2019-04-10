@@ -101,6 +101,12 @@ function iabLoaded(validProducts) {
     store.iabGetPurchases(function() {
         store.trigger('refresh-completed');
     });
+
+    if (store.autoRefreshIntervalMillis !== 0) {
+        // Auto-refresh every 24 hours (or autoRefreshIntervalMillis)
+        var interval = store.autoRefreshIntervalMillis || (1000 * 3600 * 24);
+        window.setInterval(store.refresh, interval);
+    }
 }
 
 store.when("requested", function(product) {
