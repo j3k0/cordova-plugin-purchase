@@ -104,11 +104,8 @@ function iabLoaded(validProducts) {
 
     if (store.autoRefreshIntervalMillis !== 0) {
         // Auto-refresh every 24 hours (or autoRefreshIntervalMillis)
-        window.setInterval(function() {
-            store.iabGetPurchases(function() {
-                store.log.info('purchases automatically refreshed.');
-            });
-        }, store.autoRefreshIntervalMillis || (1000 * 3600 * 24));
+        var interval = store.autoRefreshIntervalMillis || (1000 * 3600 * 24);
+        window.setInterval(store.refresh, interval);
     }
 }
 
