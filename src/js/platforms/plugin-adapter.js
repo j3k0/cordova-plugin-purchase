@@ -80,15 +80,15 @@ function iabLoaded(validProducts) {
             var introPriceNumberOfPeriods = vp.introductoryPriceCycles ? vp.introductoryPriceCycles : 0;
 
             var introPricePaymentMode = null;
-			if (vp.freeTrialPeriod) {
-				introPricePaymentMode = 'FreeTrial';
-			}
+            if (vp.freeTrialPeriod) {
+                introPricePaymentMode = 'FreeTrial';
+            }
             else if (vp.introductoryPrice) {
-			    if (vp.introductoryPrice < vp.price && subscriptionPeriod === introPriceSubscriptionPeriod) {
-			        introPricePaymentMode = 'PayAsYouGo';
-			    }
+                if (vp.introductoryPrice < vp.price && subscriptionPeriod === introPriceSubscriptionPeriod) {
+                    introPricePaymentMode = 'PayAsYouGo';
+                }
                 else if (introPriceNumberOfPeriods === 1) {
-					introPricePaymentMode = 'UpFront';
+                    introPricePaymentMode = 'UpFront';
                 }
             }
 
