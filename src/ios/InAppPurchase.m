@@ -508,7 +508,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 
 - (void) appStoreReceipt: (CDVInvokedUrlCommand*)command {
 
-    DLog(@"appStoreRefresh:");
+    DLog(@"appStoreReceipt:");
     NSString *base64 = nil;
     NSData *receiptData = [self appStoreReceipt];
     if (receiptData != nil) {

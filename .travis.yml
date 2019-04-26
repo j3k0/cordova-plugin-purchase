@@ -9,6 +9,11 @@ matrix:
     osx_image: xcode10
     language: node_js
     node_js: "8"
+  - env: PLATFORM=ios-12.1
+    os: osx
+    osx_image: xcode10.1
+    language: node_js
+    node_js: "10"
   - env: PLATFORM=android-4.4
     os: linux
     language: android

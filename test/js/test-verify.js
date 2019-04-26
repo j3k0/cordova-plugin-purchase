@@ -5,7 +5,7 @@ var store = require("../tmp/store-test");
 var helper = require("./helper");
 
 describe('Verify', function() {
-    "use strict";
+    
 
     var ajaxCopy = store.utils.ajax;
     before(function() {
@@ -153,10 +153,10 @@ describe('Verify', function() {
               doneCalled ++;
           });
           setTimeout(function() {
-              assert.equal(5, nCalls);
-              assert.equal(0, successCalled, "success should be called");
-              assert.equal(1, errorCalled,   "error should be called");
-              assert.equal(1, doneCalled,    "done should be called");
+              assert.equal(nCalls, 5);
+              assert.equal(successCalled, 0, "success should be called");
+              assert.equal(errorCalled, 1,   "error should be called");
+              assert.equal(doneCalled, 1,    "done should be called");
               done();
           }, 200000);
         });

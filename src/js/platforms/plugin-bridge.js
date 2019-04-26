@@ -5,7 +5,7 @@
 /*global cordova */
 
 (function() {
-"use strict";
+
 
 var log = function (msg) {
     console.log("InAppBilling[js]: " + msg);
@@ -67,14 +67,14 @@ InAppBilling.prototype.buy = function (success, fail, productId, additionalData)
 	if (this.options.showLog) {
 		log('buy called!');
 	}
-	additionalData = (!!additionalData) && (additionalData.constructor === Object) ? additionalData : {};
+	additionalData = !!additionalData && additionalData.constructor === Object ? additionalData : {};
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId, additionalData]);
 };
 InAppBilling.prototype.subscribe = function (success, fail, productId, additionalData) {
 	if (this.options.showLog) {
 		log('subscribe called!');
 	}
-	additionalData = (!!additionalData) && (additionalData.constructor === Object) ? additionalData : {};
+	additionalData = !!additionalData && additionalData.constructor === Object ? additionalData : {};
 	if (additionalData.oldPurchasedSkus && this.options.showLog) {
         log('subscribe called with upgrading of old SKUs!');
     }
@@ -91,36 +91,6 @@ InAppBilling.prototype.getAvailableProducts = function (success, fail) {
 		log('getAvailableProducts called!');
 	}
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getAvailableProducts", ["null"]);
-};
-InAppBilling.prototype.getProductDetails = function (success, fail, skus) {
-	if (this.options.showLog) {
-		log('getProductDetails called!');
-	}
-
-	if (typeof skus === "string") {
-        skus = [skus];
-    }
-    if (!skus.length) {
-        // Empty array, nothing to do.
-        return;
-    }else {
-        if (typeof skus[0] !== 'string') {
-            var msg = 'invalid productIds: ' + JSON.stringify(skus);
-            log(msg);
-			fail(msg, store.ERR_INVALID_PRODUCT_ID);
-            return;
-        }
-        if (this.options.showLog) {
-			log('load ' + JSON.stringify(skus));
-        }
-		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getProductDetails", [skus]);
-    }
-};
-InAppBilling.prototype.setTestMode = function (success, fail) {
-	if (this.options.showLog) {
-		log('setTestMode called!');
-	}
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "setTestMode", [""]);
 };
 
 // Generates a `fail` function that accepts an optional error code
@@ -153,6 +123,7 @@ window.inappbilling = new InAppBilling();
 try {
     store.inappbilling = window.inappbilling;
 }
-catch (e) {}
-
+catch (e) {
+    log(e);
+}
 })();

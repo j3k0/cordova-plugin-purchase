@@ -4,7 +4,7 @@ var assert = require("assert");
 var store = require("../tmp/store-test");
 
 describe('Utils', function(){
-    "use strict";
+    
 
     describe('#ajax', function(){
 
