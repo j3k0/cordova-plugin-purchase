@@ -93,7 +93,7 @@ function iabLoaded(validProducts) {
             }
 
             var normalizeIntroPricePeriod = function (period) {
-                switch (period.slice(-1)) { /// XXX Why not slice(0,1)?
+                switch (period.slice(-1)) { // See https://en.wikipedia.org/wiki/ISO_8601#Time_intervals
                     case 'D': return 'Day';
                     case 'W': return 'Week';
                     case 'M': return 'Month';
