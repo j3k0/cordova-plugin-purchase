@@ -849,6 +849,35 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         NSString *currencyCode = [numberFormatter currencyCode];
         NSString *countryCode = [product.priceLocale objectForKey: NSLocaleCountryCode];
         NSDecimalNumber *priceMicros = [product.price decimalNumberByMultiplyingByPowerOf10:6];
+
+        // Introductory price fields
+        NSDecimalNumber *introPriceMicros = nil;
+        NSString *introPricePaymentMode = nil;
+        NSNumber *introPriceNumberOfPeriods = nil;
+        NSString *introPriceSubscriptionPeriod  = nil;
+        // Introductory price are supported from iOS 11.2
+        if (@available(iOS 11.2, *)) {
+            SKProductDiscount *introPrice = product.introductoryPrice;
+            if (introPrice != nil) {
+                introPriceMicros = [introPrice.price  decimalNumberByMultiplyingByPowerOf10:6];
+                // https://developer.apple.com/documentation/storekit/skproductdiscountpaymentmode?language=objc
+                if (introPrice.paymentMode == SKProductDiscountPaymentModePayAsYouGo)
+                    introPricePaymentMode = @"PayAsYouGo";
+                if (introPrice.paymentMode == SKProductDiscountPaymentModePayUpFront)
+                    introPricePaymentMode = @"UpFront";
+                if (introPrice.paymentMode == SKProductDiscountPaymentModeFreeTrial)
+                    introPricePaymentMode = @"FreeTrial";
+                introPriceNumberOfPeriods = [NSNumber numberWithUnsignedInt:introPrice.numberOfPeriods];
+                if (introPrice.subscriptionPeriod == SKProductPeriodUnitDay)
+                    introPriceSubscriptionPeriod = @"Day";
+                if (introPrice.subscriptionPeriod == SKProductPeriodUnitMonth)
+                    introPriceSubscriptionPeriod = @"Month";
+                if (introPrice.subscriptionPeriod == SKProductPeriodUnitWeek)
+                    introPriceSubscriptionPeriod = @"Week";
+                if (introPrice.subscriptionPeriod == SKProductPeriodUnitYear)
+                    introPriceSubscriptionPeriod = @"Year";
+            }
+        }
         
         DLog(@"BatchProductsRequestDelegate.productsRequest:didReceiveResponse:  - %@: %@", product.productIdentifier, product.localizedTitle);
         [validProducts addObject:
@@ -860,6 +889,11 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
                 NILABLE(priceMicros),                  @"priceMicros",
                 NILABLE(currencyCode),                 @"currency",
                 NILABLE(countryCode),                  @"countryCode",
+                NILABLE(product.localizedIntroPrice),  @"introPrice",
+                NILABLE(introPriceMicros),             @"introPriceMicros",
+                NILABLE(introPriceNumberOfPeriods),    @"introPriceNumberOfPeriods",
+                NILABLE(introPriceSubscriptionPeriod), @"introPriceSubscriptionPeriod",
+                NILABLE(introPricePaymentMode),        @"introPricePaymentMode",
                 nil]];
         [self.plugin.products setObject:product forKey:[NSString stringWithFormat:@"%@", product.productIdentifier]];
     }
