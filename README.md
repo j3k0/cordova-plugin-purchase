@@ -46,6 +46,7 @@ In order for the 'online' event to be properly received in the Cordova applicati
 See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-ios-applications) and [Setup Android Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-android-applications).
 
 ### Features
+
 |  | ios | android | win 8 | win 10 |
 |--|--|--|--|--|
 | consumables | ✅ | ✅ | ✅ | ✅ |
@@ -54,6 +55,7 @@ See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wik
 | restore purchases | ✅ | ✅ | ✅ | ✅ |
 | receipt validations | ✅ | ✅ |  | ✅ |
 | downloadable content | ✅ |   |   |   |
+| introductory prices | ✅ | ✅ |   |   |
 
 ### Supported platforms
 
