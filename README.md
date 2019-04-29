@@ -16,38 +16,13 @@ Need professional help and support? [Contact us](mailto:contact@fovea.cc)!
 
 ## Summary
 
-This plugin allows **In-App Purchases** to be made from **Cordova and PhoneGap** applications, on many platforms:
+This plugin allows **In-App Purchases** to be made from **Cordova, PhoneGap and Ionic** applications.
 
- - **Android**
- - **iOS**
- - **Windows**
- - **Windows 10 Mobile**
- - **Xbox One**
-
-It lets you handle in-app purchases on all platforms with a single codebase.
-
-
-## Installation
-
-### Install the plugin (cordova)
-
-```sh
-cordova plugin add cordova-plugin-purchase [--variable BILLING_KEY="<BILLING_KEY>"]
-```
-`BILLING_KEY` is only required for Android. Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#add-android-billing-key) for details.
-
-### Install recommended plugins
-
-If the plugin cannot connect to the app store because it has no network connection, it will retry either periodically after a certain amount of time, or in case the device fires an ['online'](https://developer.mozilla.org/en-US/docs/Web/Events/online) event.
-In order for the 'online' event to be properly received in the Cordova application, the [cordova-plugin-network-information](https://github.com/apache/cordova-plugin-network-information) plugin is required as well. Without it, this plugin will only be able to use the periodic check to determine if the device is back online.
-
-### Setup your Application
-
-See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-ios-applications) and [Setup Android Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-android-applications).
+It lets you handle in-app purchases on many platforms with a single codebase.
 
 ### Features
 
-|  | ios | android | win 8 | win 10 |
+|  | ios | android | win-8 | win-10/uwp |
 |--|--|--|--|--|
 | consumables | ✅ | ✅ | ✅ | ✅ |
 | non consumables | ✅ | ✅ | ✅ | ✅ |
@@ -63,8 +38,29 @@ See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wik
  - **Android** version 2.2 (API level 8) or higher
    - with Google Play client version 3.9.16 or higher
  - **Windows** Store/Phone 8.1 or higher
+ - **Windows 10 Mobile**
  - **Xbox One**
-   - and any platform supporting Microsoft's UWP
+   - (and any platform supporting Microsoft's UWP)
+
+
+## Installation
+
+### Install the plugin (cordova)
+
+```sh
+cordova plugin add cordova-plugin-purchase [--variable BILLING_KEY="<BILLING_KEY>"]
+```
+
+`BILLING_KEY` is only required for Android. Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#add-android-billing-key) for details.
+
+### Install recommended plugins
+
+If the plugin cannot connect to the app store because it has no network connection, it will retry either periodically after a certain amount of time, or in case the device fires an ['online'](https://developer.mozilla.org/en-US/docs/Web/Events/online) event.
+In order for the 'online' event to be properly received in the Cordova application, the [cordova-plugin-network-information](https://github.com/apache/cordova-plugin-network-information) plugin is required as well. Without it, this plugin will only be able to use the periodic check to determine if the device is back online.
+
+### Setup your Application
+
+See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-ios-applications) and [Setup Android Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-android-applications).
 
 ## Extensions
 
@@ -91,6 +87,7 @@ You're all good? Time to read some more documentation. Hooray!
 
 ## Documentation
 
+ - [Guide](https://purchase.cordova.fovea.cc/)
  - [API Documentation](doc/api.md)
  - [Documentation for iOS](doc/ios.md)
  - [Documentation for Android](doc/android.md)
