@@ -112,7 +112,7 @@
         }
     };
 
-    store.iabGetPurchases = function() {
+    store.iabGetPurchases = function(callback) {
         store.inappbilling.getPurchases(function(purchases) {
             store.log.debug("getPurchases -> " + JSON.stringify(purchases));
             if (purchases && purchases.length) {
@@ -127,7 +127,11 @@
                 }
             }
             store.ready(true);
-        }, function() {});
+            if (callback) callback();
+        }, function() { // error
+            // TODO
+            if (callback) callback();
+        });
     };
 
     var ONE_DAY_MILLS = 24 * 3600 * 1000;
