@@ -1,5 +1,5 @@
 (function(){
-'use strict';
+
 
 ///
 /// ## <a name="errors"></a>*store.Error* object

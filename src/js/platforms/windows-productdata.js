@@ -1,8 +1,10 @@
+/* global Windows */
+/* global crypto */
+
 (function () {
-    "use strict";
 
 	/*
-     *  Pruduct Listing
+     *  Product Listing
      *
         Description     Read-only	Windows Phone only. Gets the description for the in-app product.
         FormattedPrice  Read-only	Gets the in-app product purchase price with the appropriate formatting for the current market.
@@ -44,20 +46,29 @@
             product.license = {
                 type: 'windows-store-license',
                 expirationDate: license.expirationDate,
-                isActive: license.isActive
+                isActive: license.isActive,
+                storeId: license.storeId
             };
+            if (license.expirationDate > 0) {
+                product.expiryDate = new Date(+license.expirationDate);
+            }
         }
         else {
             license = {};
         }
 
         if (transaction) {
-            product.transaction = {
+            product.transaction = Object.assign(product.transaction || {}, {
                 type: 'windows-store-transaction',
                 id: transaction.transactionId,
                 offerId: transaction.offerId,
-                receipt: transaction.receiptXml
-            };
+                receipt: transaction.receiptXml,
+                storeId: transaction.storeId,
+                skuId: transaction.skuId
+            });
+            if (license && license.expirationDate > 0) {
+                product.transaction.expirationDate = license.expirationDate;
+            }
         }
         else {
             transaction = {};
@@ -72,7 +83,8 @@
             }
             //AlreadyPurchased
             if (transaction.status === 1 || license.isActive) {
-                product.set("state", store.OWNED);
+                // product.set("state", store.OWNED);
+                product.set("state", store.APPROVED);
             }
         }
 
@@ -100,21 +112,95 @@
         }
     };
 
-    store.iabGetPurchases = function() {
+    store.iabGetPurchases = function(callback) {
         store.inappbilling.getPurchases(function(purchases) {
+            store.log.debug("getPurchases -> " + JSON.stringify(purchases));
             if (purchases && purchases.length) {
                 for (var i = 0; i < purchases.length; ++i) {
                     var purchase = purchases[i];
                     var p = store.get(purchase.license.productId);
                     if (!p) {
-                        store.log.warn("plugin -> user owns a non-registered product");
+                        store.log.warn("plugin -> user owns a non-registered product: " + purchase.license.productId);
                         continue;
                     }
                     store.setProductData(p, purchase);
                 }
             }
             store.ready(true);
-        }, function() {});
+            if (callback) callback();
+        }, function() { // error
+            // TODO
+            if (callback) callback();
+        });
     };
+
+    var ONE_DAY_MILLS = 24 * 3600 * 1000;
+    var NINETY_DAYS_MILLIS = ONE_DAY_MILLS * 90;
+    function loadStoreIdKey(type) {
+        var value = window.localStorage['cordova_storeidkey_' + type];
+        var created = window.localStorage['cordova_storeidkey_' + type + '_date'];
+        var expires = (+new Date(created)) + NINETY_DAYS_MILLIS - ONE_DAY_MILLS;
+        if (value && expires > +new Date())
+            return value;
+    }
+    function saveStoreIdKey(type, value) {
+        window.localStorage['cordova_storeidkey_' + type] = value;
+        window.localStorage['cordova_storeidkey_' + type + '_date'] = (new Date()).toISOString();
+    }
+    store.when().updated(function(p) {
+        if (!p.transaction)
+            p.transaction = {};
+        if (!p.license)
+            p.license = {};
+        if (!p.license.storeIdKey_purchase)
+            p.license.storeIdKey_purchase = loadStoreIdKey('purchase');
+        if (!p.license.storeIdKey_collections)
+            p.license.storeIdKey_collections = loadStoreIdKey('collections');
+        if (p.transaction.serviceTicket && p.transaction.serviceTicketType) {
+            var storeIdKey = loadStoreIdKey(p.transaction.serviceTicketType);
+            var cachedApplicationUsername = window.localStorage._cordova_application_username;
+            p.licence = Object.assign(p.license || {}, {applicationUsername: cachedApplicationUsername});
+            var publisherUserId = p.additionalData && p.additionalData.applicationUsername || cachedApplicationUsername || store.utils.uuidv4();
+            if (!cachedApplicationUsername) {
+                window.localStorage._cordova_application_username = publisherUserId;
+            }
+            var storeContext;
+            if (storeIdKey) {
+                p.license['storeIdKey_' + p.transaction.serviceTicketType] = storeIdKey;
+            }
+            else if (p.transaction.serviceTicketType === 'purchase') {
+                storeContext = Windows.Services.Store.StoreContext.getDefault();
+				storeContext.getCustomerPurchaseIdAsync(p.transaction.serviceTicket, publisherUserId)
+                .done(function (result) {
+                    if (result) {
+                        store.log.info('getCustomerPurchaseIdAsync -> ' + result);
+                        p.license['storeIdKey_' + p.transaction.serviceTicketType] = result;
+                        delete p.transaction.serviceTicket;
+                        delete p.transaction.serviceTicketType;
+                        saveStoreIdKey('purchase', result);
+                    }
+                    else {
+                        store.log.error('getCustomerPurchaseIdAsync failed');
+                    }
+                });
+            }
+            else if (p.transaction.serviceTicketType === 'collections') {
+                storeContext = Windows.Services.Store.StoreContext.getDefault();
+				storeContext.getCustomerCollectionsIdAsync(p.transaction.serviceTicket, publisherUserId)
+                .done(function (result) {
+                    if (result) {
+                        store.log.info('getCustomerCollectionsIdAsync -> ' + result);
+                        p.license['storeIdKey_' + p.transaction.serviceTicketType] = result;
+                        delete p.transaction.serviceTicket;
+                        delete p.transaction.serviceTicketType;
+                        saveStoreIdKey('collections', result);
+                    }
+                    else {
+                        store.log.error('getCustomerCollectionsIdAsync failed');
+                    }
+                });
+            }
+        }
+    });
 
 })();

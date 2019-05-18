@@ -10,6 +10,8 @@
         "no-multi-spaces": 0,
         "key-spacing": 0,
         "curly": 0,
+        "comma-dangle": 0,
+        "no-extra-parens": 0,
         "no-use-before-define": [ 1, "nofunc" ]
     },
     "globals" : {

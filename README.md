@@ -1,6 +1,12 @@
 # Cordova Purchase Plugin
 
+> In-App Purchases for Cordova
+
 [![Build Status](https://travis-ci.org/j3k0/cordova-plugin-purchase.svg)](https://travis-ci.org/j3k0/cordova-plugin-purchase)
+
+---
+
+Need professional help and support? [Contact us](mailto:contact@fovea.cc)!
 
 **Author**: Jean-Christophe Hoelt - <hoelt@fovea.cc>
 
@@ -8,58 +14,23 @@
 
  * [Josef Fröhle](https://github.com/Dexus)
 
----
-
-Need professional help and support? [Contact us](mailto:contact@fovea.cc)!
-
 ## Summary
 
-This plugin allows **In-App Purchases** to be made from **Cordova and PhoneGap** applications, on **Android**, **iOS** and **Windows** (Store/Phone)
+This plugin allows **In-App Purchases** to be made from **Cordova, PhoneGap and Ionic** applications.
 
-It lets you handle all platforms with a single codebase.
-
-## Installation
-
-### Install the plugin (cordova)
-
-```sh
-cordova plugin add cc.fovea.cordova.purchase
-```
-
-Need android too?
-
-```sh
-cordova plugin add cc.fovea.cordova.purchase  --variable BILLING_KEY="<BILLING_KEY>"
-```
-
-Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#add-android-billing-key) for details on how to retrieve the billing key (or public key).
-
-### Install the plugin (PhoneGap Build)
-
-```xml
-<gap:plugin name="cc.fovea.cordova.purchase" source="npm" version="6.0.0" />
-```
-
-For Android:
-
-```xml
-<gap:plugin name="cc.fovea.cordova.purchase" source="npm" version="6.0.0">
-   <param name="BILLING_KEY" value="MIIB...."/>
-</gap:plugin>
-```
-
-### Setup your Application
-
-See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-ios-applications) and [Setup Android Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-android-applications).
+It lets you handle in-app purchases on many platforms with a single codebase.
 
 ### Features
 
- - consumable purchases (e.g. virtual currencies)
- - non consumable purchases (e.g. features unlocking)
- - paid and free subscriptions
- - receipts validation
- - restoring of purchases made on other devices
- - downloadable content (iOS)
+|  | ios | android | win-8 | win-10/uwp |
+|--|--|--|--|--|
+| consumables | ✅ | ✅ | ✅ | ✅ |
+| non consumables | ✅ | ✅ | ✅ | ✅ |
+| subscriptions | ✅ | ✅ | ✅ | ✅ |
+| restore purchases | ✅ | ✅ | ✅ | ✅ |
+| receipt validations | ✅ | ✅ |  | ✅ |
+| downloadable content | ✅ |   |   |   |
+| introductory prices | ✅ | ✅ |   |   |
 
 ### Supported platforms
 
@@ -67,6 +38,29 @@ See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wik
  - **Android** version 2.2 (API level 8) or higher
    - with Google Play client version 3.9.16 or higher
  - **Windows** Store/Phone 8.1 or higher
+ - **Windows 10 Mobile**
+ - **Xbox One**
+   - (and any platform supporting Microsoft's UWP)
+
+
+## Installation
+
+### Install the plugin (cordova)
+
+```sh
+cordova plugin add cordova-plugin-purchase [--variable BILLING_KEY="<BILLING_KEY>"]
+```
+
+`BILLING_KEY` is only required for Android. Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#add-android-billing-key) for details.
+
+### Install recommended plugins
+
+If the plugin cannot connect to the app store because it has no network connection, it will retry either periodically after a certain amount of time, or in case the device fires an ['online'](https://developer.mozilla.org/en-US/docs/Web/Events/online) event.
+In order for the 'online' event to be properly received in the Cordova application, the [cordova-plugin-network-information](https://github.com/apache/cordova-plugin-network-information) plugin is required as well. Without it, this plugin will only be able to use the periodic check to determine if the device is back online.
+
+### Setup your Application
+
+See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-ios-applications) and [Setup Android Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-android-applications).
 
 ## Extensions
 
@@ -93,6 +87,7 @@ You're all good? Time to read some more documentation. Hooray!
 
 ## Documentation
 
+ - [Guide](https://purchase.cordova.fovea.cc/)
  - [API Documentation](doc/api.md)
  - [Documentation for iOS](doc/ios.md)
  - [Documentation for Android](doc/android.md)
@@ -113,27 +108,27 @@ You're all good? Time to read some more documentation. Hooray!
 
 ### Contributors:
 
- * Jean-Christophe Hoelt
- * Guillaume Charhon (initial Android code)
- * Matt Kane (initial iOS code)
- * Mohammad Naghavi (original unification attempt)
- * Dave Alden [@dpa99c](https://github.com/dpa99c)(Apple-hosted IAPs for iOS)
- * Josef Fröhle
-
+ * ![](https://avatars1.githubusercontent.com/u/191881?s=64&v=4) Jean-Christophe Hoelt, Author
+* ![](https://avatars3.githubusercontent.com/u/1674289?s=64&v=4) Josef Fröhle, Support
+ * Guillaume Charhon, initial Android code
+ * Matt Kane, initial iOS code
+ * Mohammad Naghavi, original unification attempt
+ * Dave Alden [@dpa99c](https://github.com/dpa99c) (Apple-hosted IAPs for iOS)
+ 
 ## Sponsors
-Big thanks to:
 
- * Fovea (http://www.fovea.cc) for sponsoring most of JC's work on the plugin
+ * <a href="https://fovea.cc"><img alt="Logo Fovea" src="https://fovea.cc/blog/wp-content/uploads/2017/09/fovea-logo-flat-128.png" height="50" /></a><br/>For sponsoring most of JC's work on the plugin.
+ * <img alt="Logo Ionic" src="https://www.fovea.cc/files/Ionic-logo-landscape.png" height="50"><br/>Ionic Framework Team (http://ionicframework.com/)
+ * <a href="https://www.simplan.de/"><img alt="Logo SimPlan" src="https://files.fovea.cc/wp-content/uploads/SimPlan-Logo.png" height="50"></a><br/>For sponsoring the UWP platform.
  * Maxwell C. Moore ([MCM Consulting, LLC](http://mcmconsulting.biz))
  * Justin Noel [@calendee](https://github.com/calendee)
- * Ionic Framework Team (http://ionicframework.com/)
  * [Those guys](https://www.indiegogo.com/projects/phonegap-cordova-in-app-purchase-ios-and-android#pledges)
 
 ## Licence
 
 The MIT License
 
-Copyright (c) 2014, Jean-Christophe Hoelt and contributors
+Copyright (c) 2014-2019, Jean-Christophe Hoelt and contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -145,6 +140,7 @@ furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 
+```
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -152,3 +148,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+```

@@ -5,7 +5,7 @@ var store = require("../tmp/store-test");
 var helper = require("./helper");
 
 (function() {
-"use strict";
+
 global.store = store;
 global.document = {
     addEventListener: function(/*event, callback*/) {}
@@ -58,7 +58,7 @@ global.storekit = {
 })();
 
 describe('iOS', function(){
-    "use strict";
+    
 
     before(helper.resetTest);
     after(helper.resetTest);

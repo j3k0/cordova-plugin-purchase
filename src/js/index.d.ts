@@ -99,11 +99,15 @@ declare namespace IapStore {
 
     error(callback: (err: IError) => void): void;
     get(id: string): IStoreProduct;
-    once(query: string, action: string, callback: any): void;
+    once(query: string): IWhen;
+    once(action: string, callback: () => void): void;
+    once(query: string, action: string, callback: (product: IStoreProduct) => void): IWhen;
     register(request: IRegisterRequest): void;
     when(query: string): IWhen;
-    when(action: string, query: string, callback: (product: IStoreProduct) => void): IWhen;
+    when(action: string, callback: () => void): void;
+    when(query: string, action: string, callback: (product: IStoreProduct) => void): IWhen;
     ready(callback: () => void): void;
+    ready(): boolean;
     refresh(): void;
     off(callback: Function): void;
     order(id: string, additionalData?: null | { oldPurchasedSkus: string[] } | { developerPayload: string }): void;
@@ -138,7 +142,7 @@ declare namespace IapStore {
 
   export interface IRegisterRequest {
     id: string;
-    alias: string;
+    alias?: string;
     type: StoreProductType;
   }
 

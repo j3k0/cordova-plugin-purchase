@@ -1,6 +1,6 @@
 /*global storekit */
 (function() {
-"use strict";
+
 
 //! ## Reacting to product state changes
 //!
@@ -60,7 +60,7 @@ store.when("finished", function(product) {
 
 function storekitFinish(product) {
     if (product.type === store.CONSUMABLE || product.type === store.NON_RENEWING_SUBSCRIPTION) {
-        var transactionId = (product.transaction && product.transaction.id) || storekit.transactionForProduct[product.id];
+        var transactionId = product.transaction && product.transaction.id || storekit.transactionForProduct[product.id];
         if (transactionId) {
             storekit.finish(transactionId);
             // TH 08/03/2016: Remove the finished transaction from product.transactions.
@@ -225,13 +225,19 @@ function storekitLoaded(validProducts, invalidProductIds) {
         p = store.products.byId[validProducts[i].id];
         store.log.debug("ios -> product " + p.id + " is valid (" + p.alias + ")");
         store.log.debug("ios -> owned? " + p.owned);
+        var v = validProducts[i];
         p.set({
-            title: validProducts[i].title,
-            price: validProducts[i].price,
-            priceMicros: validProducts[i].priceMicros,
-            description: validProducts[i].description,
-            currency: validProducts[i].currency,
-            countryCode: validProducts[i].countryCode,
+            title: v.title,
+            description: v.description,
+            price: v.price,
+            priceMicros: v.priceMicros,
+            currency: v.currency,
+            countryCode: v.countryCode,
+            introPrice: v.introPrice,
+            introPriceMicros: v.introPriceMicros,
+            introPriceNumberOfPeriods: v.introPriceNumberOfPeriods,
+            introPriceSubscriptionPeriod: v.introPriceSubscriptionPeriod,
+            introPricePaymentMode: v.introPricePaymentMode,
             state: store.VALID
         });
         p.trigger("loaded");
@@ -292,9 +298,11 @@ function storekitRefreshReceipts(callback) {
     });
 }
 
-store.when("expired", function() {
-    storekitRefreshReceipts();
-});
+// The better default is now for validation services to use the
+// `latest_receipt_info` field.
+// store.when("expired", function() {
+//     storekitRefreshReceipts();
+// });
 
 //! ### <a name="storekitPurchasing"></a> *storekitPurchasing()*
 //!
@@ -518,9 +526,7 @@ store._prepareForValidation = function(product, callback) {
                 };
             }
             product.transaction.appStoreReceipt = r.appStoreReceipt;
-            if (product.transaction.id)
-                product.transaction.transactionReceipt = r.forTransaction(product.transaction.id);
-            if (!product.transaction.appStoreReceipt && !product.transaction.transactionReceipt) {
+            if (!product.transaction.appStoreReceipt) {
                 nRetry ++;
                 if (nRetry < 2) {
                     setTimeout(loadReceipts, 500);

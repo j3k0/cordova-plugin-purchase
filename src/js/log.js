@@ -1,5 +1,5 @@
 (function(){
-"use strict";
+
 
 var logLevel = {};
 logLevel[store.ERROR] = "ERROR";
@@ -8,7 +8,7 @@ logLevel[store.INFO] = "INFO";
 logLevel[store.DEBUG] = "DEBUG";
 
 function log(level, o) {
-    var maxLevel = (store.verbosity === true ? 1 : store.verbosity);
+    var maxLevel = store.verbosity === true ? 1 : store.verbosity;
     if (level > maxLevel)
         return;
 

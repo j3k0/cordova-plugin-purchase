@@ -85,7 +85,10 @@ function hasFile() {
 
 # Compile for iOS
 case "$OSTYPE" in darwin*)
-    cordova build ios || exit 1
+    if ! cordova build ios 2>&1 > $BUILD_DIR/build-ios.txt; then
+        tail -500 $BUILD_DIR/build-ios.txt
+        exit 1
+    fi
 
     echo
     echo Check iOS installation
@@ -109,7 +112,10 @@ case "$OSTYPE" in darwin*)
 
 # Compile for Android
 if [ "_$ANDROID_HOME" != "_" ]; then
-    cordova build android || exit 1
+    if ! cordova build android 2>&1 > $BUILD_DIR/build-android.txt; then
+        tail -500 $BUILD_DIR/build-android.txt
+        exit 1
+    fi
 
     echo Check Android installation
 

@@ -1,5 +1,5 @@
 (function() {
-'use strict';
+
 
 function defer(thisArg, cb, delay) {
     setTimeout(function() {
@@ -43,7 +43,7 @@ store.Product = function(options) {
     ///  - `product.description` - Localized longer description
     this.description = options.description || options.localizedDescription || null;
 
-    ///  - `product.priceMicros` - Localized price, in micro-units (divide by 1000000 to get numeric price)
+    ///  - `product.priceMicros` - Price in micro-units (divide by 1000000 to get numeric price)
     this.priceMicros = options.priceMicros || null;
 
     ///  - `product.price` - Localized price, with currency symbol
@@ -54,6 +54,26 @@ store.Product = function(options) {
 
     ///  - `product.countryCode` - Country code. Available only on iOS
     this.countryCode = options.countryCode || null;
+
+
+    ///  - `product.introPrice` - Localized introductory price, with currency symbol
+    this.introPrice = options.introPrice || null;
+
+    ///  - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price)
+    this.introPriceMicros = options.introPriceMicros || null;
+
+    ///  - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available
+    this.introPriceNumberOfPeriods = options.introPriceNumberOfPeriods || null;
+
+    ///  - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year")
+    this.introPriceSubscriptionPeriod = options.introPriceSubscriptionPeriod || null;
+
+    ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
+    this.introPricePaymentMode = options.introPricePaymentMode || null;
+
+    ///  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
+    this.ineligibleForIntroPrice = options.ineligibleForIntroPrice || null;
+
 
     //  - `product.localizedTitle` - Localized name or short description ready for display
     // this.localizedTitle = options.localizedTitle || options.title || null;
@@ -87,6 +107,13 @@ store.Product = function(options) {
 
     ///  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
     this.transaction = null;
+
+    ///  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
+    ///  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
+    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows only)
+    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows only)
+    ///  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
+    ///  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
     this.stateChanged();
 };
@@ -153,32 +180,61 @@ store.Product.prototype.verify = function() {
 
     var tryValidation = function() {
 
+        function getData(data, key) {
+            if (!data)
+                return null;
+            return data.data && data.data[key] || data[key];
+        }
+
         // No need to verify a which status isn't approved
         // It means it already has been
         if (that.state !== store.APPROVED)
             return;
 
         store._validator(that, function(success, data) {
-            store.log.debug("verify -> " + JSON.stringify(success));
             if (!data) data = {};
+            store.log.debug("verify -> " + JSON.stringify({
+                success: success,
+                data: data
+            }));
+            var dataTransaction = getData(data, 'transaction');
+            if (dataTransaction) {
+                that.transaction = Object.assign(that.transaction || {}, dataTransaction);
+                extractTransactionFields(that);
+                that.trigger("updated");
+            }
             if (success) {
                 if (that.expired)
                     that.set("expired", false);
-                if (data.transaction)
-                    that.transaction = Object.assign(that.transaction || {},
-                                                     data.transaction);
                 store.log.debug("verify -> success: " + JSON.stringify(data));
                 store.utils.callExternal('verify.success', successCb, that, data);
                 store.utils.callExternal('verify.done', doneCb, that);
                 that.trigger("verified");
+
+                // Process the list of products that are ineligible
+                // for introductory prices.
+                if (data && data.ineligible_for_intro_price &&
+                         data.ineligible_for_intro_price.forEach) {
+                    data.ineligible_for_intro_price.forEach(function(pid) {
+                        var p = store.get(pid);
+                        if (p)
+                            p.set('ineligibleForIntroPrice', true);
+                    });
+                }
             }
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));
-                var msg = (data && data.error && data.error.message ? data.error.message : '');
+                var msg = data && data.error && data.error.message ? data.error.message : '';
                 var err = new store.Error({
                     code: store.ERR_VERIFICATION_FAILED,
                     message: "Transaction verification failed: " + msg
                 });
+                if (getData(data, "latest_receipt")) {
+                    // when the server is making use of the latest_receipt,
+                    // there is no need to retry
+                    store.log.debug("verify -> server did use the latest_receipt, no retries");
+                    nRetry = 999999;
+                }
                 if (data.code === store.PURCHASE_EXPIRED) {
                     err = new store.Error({
                         code: store.ERR_PAYMENT_EXPIRED,
@@ -208,7 +264,7 @@ store.Product.prototype.verify = function() {
                     delay(this, tryValidation, 1000 * nRetry * nRetry);
                 }
                 else {
-                    store.log.debug("validation failed 5 times, stop retrying, trigger an error");
+                    store.log.debug("validation failed, no retrying, trigger an error");
                     store.error(err);
                     store.utils.callExternal('verify.error', errorCb, err);
                     store.utils.callExternal('verify.done', doneCb, that);
@@ -259,6 +315,25 @@ store.Product.prototype.verify = function() {
     ///
 
     return ret;
+
+    function extractTransactionFields(that) {
+        var t = that.transaction;
+        // using legacy transactions (platform specific)
+        if (t.type === 'ios-appstore' && t.expires_date_ms) {
+            that.lastRenewalDate = new Date(parseInt(t.purchase_date_ms));
+            that.expiryDate = new Date(parseInt(t.expires_date_ms));
+        }
+        else if (t.type === 'android-playstore' && t.expiryTimeMillis > 0) {
+            that.lastRenewalDate = new Date(parseInt(t.startTimeMillis));
+            that.expiryDate = new Date(parseInt(t.expiryTimeMillis));
+        }
+        // using unified transaction fields
+        if (t.expiryDate)
+            that.expiryDate = new Date(t.expiryDate);
+        if (t.lastRenewalDate)
+            that.lastRenewalDate = new Date(t.lastRenewalDate);
+        return t;
+    }
 };
 
 ///

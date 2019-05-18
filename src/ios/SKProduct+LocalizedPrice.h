@@ -42,5 +42,6 @@
 @interface SKProduct (LocalizedPrice)
 
 @property (nonatomic, readonly) NSString *localizedPrice;
+@property (nonatomic, readonly) NSString *localizedIntroPrice;
 
 @end

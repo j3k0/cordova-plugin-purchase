@@ -1,7 +1,7 @@
 (function () {
-    "use strict";
+    
 
-	//   {
+    //   {
     //     "purchaseToken":"tokenabc",
     //     "developerPayload":"mypayload1",
     //     "packageName":"com.example.MyPackage",
@@ -48,7 +48,7 @@
         }
     };
 
-    store.iabGetPurchases = function() {
+    store.iabGetPurchases = function(callback) {
         store.inappbilling.getPurchases(
             function(purchases) { // success
                 // example purchases data:
@@ -77,9 +77,11 @@
                     }
                 }
                 store.ready(true);
+                if (callback) callback();
             },
             function() { // error
                 // TODO
+                if (callback) callback();
             }
         );
     };

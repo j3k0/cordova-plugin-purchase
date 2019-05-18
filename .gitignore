@@ -5,6 +5,7 @@
 /www/.store-android.js
 /www/.store-ios.js
 *~
+.*.swp
 
 npm-debug.log
 /.idea

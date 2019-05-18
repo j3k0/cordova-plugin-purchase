@@ -1,7 +1,7 @@
 {
   "name": "cordova-plugin-purchase",
-  "version": "7.2.8",
-  "description": "Cordova Purchase plugin for iOS and Android (AppStore and PlayStore)",
+  "version": "8.0.0",
+  "description": "Cordova Purchase plugin for iOS, Android, Windows (AppStore, Play, UWP)",
   "cordova": {
     "id": "cordova-plugin-purchase",
     "platforms": [
@@ -39,14 +39,18 @@
   },
   "homepage": "https://github.com/j3k0/cordova-plugin-purchase",
   "devDependencies": {
+    "babel-eslint": "^10.0.1",
     "cordova": "^6.3.1",
-    "eslint": "^3.8.1",
+    "coveralls": "^3.0.3",
+    "eslint": "^5.15.0",
+    "eslint-config-defaults": "^9.0.0",
+    "eslint-plugin-import": "^2.16.0",
+    "eslint-plugin-react": "^7.12.4",
     "istanbul": "^0.4.5",
-    "jshint": "^2.9.4",
-    "mocha": "^3.1.2",
+    "jshint": "^2.10.1",
+    "mocha": "^6.0.2",
     "preprocessor": "^1.4.0",
-    "uglify-js": "^2.7.4",
-    "coveralls": "^2.11.14"
+    "uglify-js": "^3.4.9"
   },
   "types": "./src/js/index.d.ts"
 }

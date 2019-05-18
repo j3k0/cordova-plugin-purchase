@@ -1,5 +1,5 @@
 (function() {
-"use strict";
+
 
 /// ## <a name="trigger"></a>*store.trigger(product, action, args)*
 ///
