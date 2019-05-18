@@ -2377,20 +2377,20 @@ function iabLoaded(validProducts) {
             var introPriceNumberOfPeriods = vp.introductoryPriceCycles ? vp.introductoryPriceCycles : 0;
 
             var introPricePaymentMode = null;
-			if (vp.freeTrialPeriod) {
-				introPricePaymentMode = 'FreeTrial';
-			}
+            if (vp.freeTrialPeriod) {
+                introPricePaymentMode = 'FreeTrial';
+            }
             else if (vp.introductoryPrice) {
-			    if (vp.introductoryPrice < vp.price && subscriptionPeriod === introPriceSubscriptionPeriod) {
-			        introPricePaymentMode = 'PayAsYouGo';
-			    }
+                if (vp.introductoryPrice < vp.price && subscriptionPeriod === introPriceSubscriptionPeriod) {
+                    introPricePaymentMode = 'PayAsYouGo';
+                }
                 else if (introPriceNumberOfPeriods === 1) {
-					introPricePaymentMode = 'UpFront';
+                    introPricePaymentMode = 'UpFront';
                 }
             }
 
             var normalizeIntroPricePeriod = function (period) {
-                switch (period.slice(-1)) { /// XXX Why not slice(0,1)?
+                switch (period.slice(-1)) { // See https://en.wikipedia.org/wiki/ISO_8601#Time_intervals
                     case 'D': return 'Day';
                     case 'W': return 'Week';
                     case 'M': return 'Month';
@@ -2654,7 +2654,7 @@ store.when("product", "finished", function(product) {
         }
     };
 
-    store.iabGetPurchases = function() {
+    store.iabGetPurchases = function(callback) {
         store.inappbilling.getPurchases(function(purchases) {
             store.log.debug("getPurchases -> " + JSON.stringify(purchases));
             if (purchases && purchases.length) {
@@ -2669,7 +2669,11 @@ store.when("product", "finished", function(product) {
                 }
             }
             store.ready(true);
-        }, function() {});
+            if (callback) callback();
+        }, function() { // error
+            // TODO
+            if (callback) callback();
+        });
     };
 
     var ONE_DAY_MILLS = 24 * 3600 * 1000;
