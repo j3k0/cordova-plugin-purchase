@@ -232,7 +232,7 @@ public class IabHelper {
                 if (mDisposed) return;
                 logDebug("Billing service connected.");
                 mService = IInAppBillingService.Stub.asInterface(service);
-                String packageName = mContext.getPackageName();
+                final String packageName = mContext.getPackageName();
                 try {
                     logDebug("Checking for in-app billing 3 support.");
 
@@ -252,31 +252,46 @@ public class IabHelper {
 
                     // Check for v5 subscriptions support. This is needed for
                     // getBuyIntentToReplaceSku which allows for subscription update
-                    response = mService.isBillingSupported(5, packageName, ITEM_TYPE_SUBS);
-                    if (response == BILLING_RESPONSE_RESULT_OK) {
-                        logDebug("Subscription re-signup AVAILABLE.");
-                        mSubscriptionUpdateSupported = true;
-                    } else {
-                        logDebug("Subscription re-signup not available.");
-                        mSubscriptionUpdateSupported = false;
-                    }
-
-                    if (mSubscriptionUpdateSupported) {
-                        mSubscriptionsSupported = true;
-                    } else {
-                        // check for v3 subscriptions support
-                        response = mService.isBillingSupported(3, packageName, ITEM_TYPE_SUBS);
-                        if (response == BILLING_RESPONSE_RESULT_OK) {
-                            logDebug("Subscriptions AVAILABLE.");
-                            mSubscriptionsSupported = true;
-                        } else {
-                            logDebug("Subscriptions NOT AVAILABLE. Response: " + response);
-                            mSubscriptionsSupported = false;
-                            mSubscriptionUpdateSupported = false;
+                    new Thread("IabHelper-isBillingSupportedCheck") {
+                        @Override
+                        public void run() {
+                            try {
+                                int response = mService.isBillingSupported(5, packageName, ITEM_TYPE_SUBS);
+                                if (response == BILLING_RESPONSE_RESULT_OK) {
+                                    logDebug("Subscription re-signup AVAILABLE.");
+                                    mSubscriptionUpdateSupported = true;
+                                } else {
+                                    logDebug("Subscription re-signup not available.");
+                                    mSubscriptionUpdateSupported = false;
+                                }
+                                if (mSubscriptionUpdateSupported) {
+                                    mSubscriptionsSupported = true;
+                                } else {
+                                    // check for v3 subscriptions support
+                                    response = mService.isBillingSupported(3, packageName, ITEM_TYPE_SUBS);
+                                    if (response == BILLING_RESPONSE_RESULT_OK) {
+                                        logDebug("Subscriptions AVAILABLE.");
+                                        mSubscriptionsSupported = true;
+                                    } else {
+                                        logDebug("Subscriptions NOT AVAILABLE. Response: " + response);
+                                        mSubscriptionsSupported = false;
+                                        mSubscriptionUpdateSupported = false;
+                                    }
+                                }
+                                mSetupDone = true;
+                            } catch (RemoteException e) {
+                                if (listener != null) {
+                                    listener.onIabSetupFinished(new IabResult(IABHELPER_REMOTE_EXCEPTION,
+                                            "RemoteException while setting up in-app billing."));
+                                }
+                                e.printStackTrace();
+                                return;
+                            }
+                            if (listener != null) {
+                                listener.onIabSetupFinished(new IabResult(BILLING_RESPONSE_RESULT_OK, "Setup successful."));
+                            }
                         }
-                    }
-
-                    mSetupDone = true;
+                    }.start();
                 }
                 catch (RemoteException e) {
                     if (listener != null) {
@@ -285,10 +300,6 @@ public class IabHelper {
                     }
                     e.printStackTrace();
                     return;
-                }
-
-                if (listener != null) {
-                    listener.onIabSetupFinished(new IabResult(BILLING_RESPONSE_RESULT_OK, "Setup successful."));
                 }
             }
         };
