@@ -72,6 +72,9 @@ SOFTWARE.
         <js-module src="www/store-ios.js" name="InAppPurchase">
             <clobbers target="store" />
         </js-module>
+        <js-module src="www/cordova-osx-polyfill.js" name="CordovaOSXPolyfill">
+            <runs />
+        </js-module>        
 
         <!-- Cordova 2.5+ -->
         <config-file target="config.xml" parent="/*">
