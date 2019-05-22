@@ -281,7 +281,7 @@ public class IabHelper {
                                 mSetupDone = true;
                             } catch (RemoteException e) {
                                 if (listener != null) {
-                                    listener.onIabSetupFinished(new IabResult(IABHELPER_REMOTE_EXCEPTION,
+                                    listener.onIabSetupFinished(new IabResult(ERR_COMMUNICATION,
                                             "RemoteException while setting up in-app billing."));
                                 }
                                 e.printStackTrace();
