@@ -67,6 +67,33 @@ SOFTWARE.
         <framework src="StoreKit.framework" />
     </platform>
 
+    <!-- osx -->
+    <platform name="osx">
+        <js-module src="www/store-ios.js" name="InAppPurchase">
+            <clobbers target="store" />
+        </js-module>
+        <js-module src="www/cordova-osx-polyfill.js" name="CordovaOSXPolyfill">
+            <runs />
+        </js-module>        
+
+        <!-- Cordova 2.5+ -->
+        <config-file target="config.xml" parent="/*">
+            <feature name="InAppPurchase">
+                <param name="osx-package" value="InAppPurchase" />
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
+
+        <header-file src="src/ios/InAppPurchase.h" />
+        <source-file src="src/ios/InAppPurchase.m" />
+        <header-file src="src/ios/SKProduct+LocalizedPrice.h" />
+        <source-file src="src/ios/SKProduct+LocalizedPrice.m" />
+        <header-file src="src/ios/FileUtility.h" />
+        <source-file src="src/ios/FileUtility.m" />
+
+        <framework src="StoreKit.framework" />
+    </platform>    
+
     <!-- android -->
     <platform name="android">
         <preference name="BILLING_KEY" />
