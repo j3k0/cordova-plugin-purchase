@@ -14,6 +14,7 @@
 static BOOL g_initialized = NO;
 static BOOL g_debugEnabled = NO;
 static BOOL g_autoFinishEnabled = NO;
+static BOOL g_downloadHostedContent = YES;
 
 /*
  * Helpers
@@ -158,6 +159,10 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 
 -(void) autoFinish: (CDVInvokedUrlCommand*)command {
     g_autoFinishEnabled = YES;
+}
+
+-(void) omitHostedContentDownload: (CDVInvokedUrlCommand*)command {
+    g_downloadHostedContent = NO;
 }
 
 -(void) setup: (CDVInvokedUrlCommand*)command {
@@ -425,7 +430,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         || state == SKPaymentTransactionStateFailed
         || state == SKPaymentTransactionStatePurchased;
 
-    if (downloads && [downloads count] > 0) {
+    if (downloads && [downloads count] > 0 && g_downloadHostedContent) {
         [[SKPaymentQueue defaultQueue] startDownloads:downloads];
     }
     else if (g_autoFinishEnabled && canFinish) {

@@ -16,6 +16,7 @@
         storekit.init({
             debug:    true,
             noAutoFinish: true,
+            omitHostedContentDownload: false,
             ready:    IAP.onReady,
             purchase: IAP.onPurchase,
             finish:   IAP.onFinish,

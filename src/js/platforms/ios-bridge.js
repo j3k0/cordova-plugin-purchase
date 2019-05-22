@@ -98,6 +98,10 @@ InAppPurchase.prototype.init = function (options, success, error) {
         exec('autoFinish', [], noop, noop);
     }
 
+    if (options.omitHostedContentDownload) {
+        exec('omitHostedContentDownload', [], noop, noop);
+    }
+
     var that = this;
     var setupOk = function () {
         log('setup ok');

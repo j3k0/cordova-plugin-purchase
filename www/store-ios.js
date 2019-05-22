@@ -2287,6 +2287,10 @@ InAppPurchase.prototype.init = function (options, success, error) {
         exec('autoFinish', [], noop, noop);
     }
 
+    if (options.omitHostedContentDownload) {
+        exec('omitHostedContentDownload', [], noop, noop);
+    }
+
     var that = this;
     var setupOk = function () {
         log('setup ok');
@@ -2902,6 +2906,7 @@ function storekitInit() {
     storekit.init({
         debug:    store.verbosity >= store.DEBUG ? true : false,
         autoFinish: store.autoFinishTransactions,
+        omitHostedContentDownload: store.omitHostedContentDownload,
         error:    storekitError,
         purchase: storekitPurchased,
         purchasing: storekitPurchasing,
