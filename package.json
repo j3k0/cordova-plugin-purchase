@@ -39,8 +39,8 @@
   },
   "homepage": "https://github.com/j3k0/cordova-plugin-purchase",
   "devDependencies": {
+    "acorn": "^6.1.1",
     "babel-eslint": "^10.0.1",
-    "cordova": "^6.3.1",
     "coveralls": "^3.0.3",
     "eslint": "^5.15.0",
     "eslint-config-defaults": "^9.0.0",
