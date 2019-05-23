@@ -66,8 +66,18 @@ matrix:
         components:
           - tools
           - extra-android-m2repository
-          - build-tools;28.0.3
-          - platforms;android-28
+          - build-tools-28.0.3
+          - platforms-android-28
+    - env: PLATFORM=android-4.4 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+          - build-tools-28.0.3
+          - platforms-android-19
             #    - env: PLATFORM=android-4.4 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
             #      os: linux
             #      jdk: openjdk8
