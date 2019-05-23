@@ -179,7 +179,10 @@ before_install:
 - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
 - node --version
 - if [[ "$PLATFORM" =~ ios ]]; then npm install -g ios-deploy > /dev/null; fi
-- if [[ "$PLATFORM" =~ android ]]; then gradle --version; fi
+- if [[ "$PLATFORM" =~ android ]]; then
+    yes s | sdkmanager --licenses;
+    gradle --version;
+  fi
 - npm install -g "cordova@$CORDOVA" > /dev/null
 
 install:
