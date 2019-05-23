@@ -10,14 +10,14 @@ node_js:
   - "10"
 matrix:
   include:
-    #    # -------------
-    #    #  osx
-    #    # -------------
-    #    # base osx test
-    #    - env: PLATFORM=osx CORDOVA=9.0.0 CORDOVA_OSX=5.0.0
-    #      os: osx
-    #      osx_image: xcode10
-    #      language: objective-c
+    # -------------
+    #  osx
+    # -------------
+    # base osx test
+    - env: PLATFORM=osx CORDOVA=9.0.0 CORDOVA_OSX=5.0.0
+      os: osx
+      osx_image: xcode10
+      language: objective-c
     #    # test with xcode 9.3
     #    - env: PLATFORM=osx CORDOVA=9.0.0 CORDOVA_OSX=5.0.0
     #      os: osx
@@ -28,13 +28,13 @@ matrix:
     #      os: osx
     #      osx_image: xcode10
     #      language: objective-c
-    #    # -------------
-    #    #  ios
-    #    # -------------
-    #    - env: PLATFORM=ios-12.1 CORDOVA=9.0.0 CORDOVA_IOS=5.0.1
-    #      os: osx
-    #      osx_image: xcode10
-    #      language: objective-c
+    # -------------
+    #  ios
+    # -------------
+    - env: PLATFORM=ios-12.1 CORDOVA=9.0.0 CORDOVA_IOS=5.0.1
+      os: osx
+      osx_image: xcode10
+      language: objective-c
     #    - env: PLATFORM=ios-12.1 CORDOVA=8.1.2 CORDOVA_IOS=4.5.5
     #      os: osx
     #      osx_image: xcode10
@@ -66,8 +66,6 @@ matrix:
         components:
           - tools
           - extra-android-m2repository
-          - build-tools-28.0.3
-          - platforms-android-28
     - env: PLATFORM=android-4.4 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
       os: linux
       jdk: openjdk8
@@ -78,36 +76,30 @@ matrix:
           - extra-android-m2repository
           - build-tools-28.0.3
           - platforms-android-19
-            #    - env: PLATFORM=android-4.4 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
-            #      os: linux
-            #      jdk: openjdk8
-            #      language: android
-            #      android:
-            #        components:
-            #          - tools
-            #          - extra-android-m2repository
-            #          - build-tools-26.0.2
-            #          - android-26
-            #    - env: PLATFORM=android-4.4 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
-            #      os: linux
-            #      jdk: openjdk8
-            #      language: android
-            #      android:
-            #        components:
-            #          - tools
-            #          - extra-android-m2repository
-            #          - build-tools-28.0.3
-            #          - android-28
-            #    - env: PLATFORM=android-5.1 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
-            #      os: linux
-            #      jdk: openjdk8
-            #      language: android
-            #      android:
-            #        components:
-            #          - tools
-            #          - extra-android-m2repository
-            #          - build-tools-22.0.1
-            #          - android-22
+    - env: PLATFORM=android-4.4 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+    - env: PLATFORM=android-4.4 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+    - env: PLATFORM=android-5.1 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
             #    - env: PLATFORM=android-5.1 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
             #      os: linux
             #      jdk: openjdk8
