@@ -27,7 +27,6 @@ env:
     - ONLY=linux PLATFORM=android-7.0 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
     - ONLY=linux PLATFORM=android-7.0 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
 node_js:
-  - "6"
   - "8"
   - "10"
 os:
@@ -37,9 +36,10 @@ language:
   - objective-c
   - android
 osx_image:
+  - none
   - xcode10
-  - xcode10.1
 jdk:
+  - none
   - oraclejdk8
   - openjdk8
 android:
@@ -51,6 +51,12 @@ android:
 matrix:
   exclude:
     - os: osx
+      osx_image: none
+    - os: osx
+      jdk: oraclejdk8
+    - os: osx
+      jdk: openjdk8
+    - os: osx
       language: android
     - os: linux
       language: objective-c
@@ -58,6 +64,10 @@ matrix:
       env: ONLY=linux
     - os: linux
       env: ONLY=osx
+    - os: linux
+      jdk: none
+    - os: linux
+      osx_image: xcode10
 
 before_install:
 - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
@@ -77,9 +87,9 @@ script:
   - make all
   - rm -fr "$BUILD_DIR"
   - cd test && cordova create "$BUILD_DIR" "$BUNDLE_ID" Test
-  - cp "test/src/css/"* "$BUILD_DIR/www/css"
-  - cp "test/src/js/"* "$BUILD_DIR/www/js/"
-  - cp "test/src/index.html" "$BUILD_DIR/www/"
+  - cp src/css/* "$BUILD_DIR/www/css/"
+  - cp src/js/* "$BUILD_DIR/www/js/"
+  - cp src/index.html "$BUILD_DIR/www/"
   - sed -i "bak" "s/babygooinapp1/$IAP_ID/g" "$BUILD_DIR/www/js/iap.js"
   - cd "$BUILD_DIR"
   - if [[ "$PLATFORM" =~ ios ]]; then cordova platform add ios@$CORDOVA_IOS; fi
