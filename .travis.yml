@@ -168,8 +168,9 @@ before_install:
 - node --version
 - if [[ "$PLATFORM" =~ ios ]]; then npm install -g ios-deploy > /dev/null; fi
 - if [[ "$PLATFORM" =~ android ]]; then gradle --version; fi
-- if [[ "$PLATFORM" =~ android ]];
-  then echo y | android update sdk -u --filter android-22,android-23,android-24,android-25,android-26,android-27,android-28;
+- if [[ "$PLATFORM" =~ android ]]; then
+    echo y | android update sdk -u --filter android-22,android-23,android-24,android-25,android-26,android-27,android-28;
+    yes | sdkmanager --licenses
   fi
 - npm install -g "cordova@$CORDOVA" > /dev/null
 
@@ -184,14 +185,14 @@ script:
   - cp src/css/* "$BUILD_DIR/www/css/"
   - cp src/js/* "$BUILD_DIR/www/js/"
   - cp src/index.html "$BUILD_DIR/www/"
-  - sed -i "bak" "s/babygooinapp1/$IAP_ID/g" "$BUILD_DIR/www/js/iap.js"
   - cd "$BUILD_DIR"
+  - sed --in-place=.bak "s/babygooinapp1/$IAP_ID/g" "www/js/iap.js" || sed -i bak "s/babygooinapp1/$IAP_ID/g" "$BUILD_DIR/www/js/iap.js"
   - if [[ "$PLATFORM" =~ ios ]]; then cordova platform add ios@$CORDOVA_IOS; fi
   - if [[ "$PLATFORM" =~ osx ]]; then cordova platform add osx@$CORDOVA_OSX; fi
   - if [[ "$PLATFORM" =~ android ]]; then cordova platform add android@$CORDOVA_ANDROID; fi
-  - cordova plugin add "$ROOT_DIR"
+  - cordova plugin add "$ROOT_DIR" --variable BILLING_KEY=0123456789abcdef
   - rsync -r "$ROOT_DIR"/src/android/ plugins/cc.fovea.cordova.purchase/src/android
   - cp "$ROOT_DIR"/src/ios/*.[hm] plugins/cc.fovea.cordova.purchase/src/ios/
   - cp "$ROOT_DIR"/www/*.js plugins/cc.fovea.cordova.purchase/www/
-  - cordova plugin add https://github.com/apache/cordova-plugin-console.git || exit 1
+  - cordova plugin add https://github.com/apache/cordova-plugin-console.git
   - cordova build --debug 2>&1
