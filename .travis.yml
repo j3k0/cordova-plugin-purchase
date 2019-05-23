@@ -7,7 +7,7 @@ matrix:
   - env: PLATFORM=ios-11.0
     os: osx
     osx_image: xcode10
-    language: node_js
+    language: objective-c
     node_js: "8"
   - env: PLATFORM=ios-12.1
     os: osx

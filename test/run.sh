@@ -91,17 +91,16 @@ case "$OSTYPE" in darwin*)
     echo "iOS..."
     if cordova build ios 2>&1 > "$BUILD_DIR/build-ios.txt"; then
         echo build succeeded
-        tail -50 "$BUILD_DIR/build-ios.txt"
-        find "$BUILD_DIR/platforms/ios/build"
     else
         tail -400 "$BUILD_DIR/build-ios.txt"
         echo build failed
         exit 1
     fi
 
-    # seems like the `cordova build ios` command runs asynchronously on travis (?)
+    # cordova build ios fails silently
     # let's wait 1 minute and see if that's true
-    sleep "${SLEEP_AFTER_IOS_BUILD:-0}"
+    tail -50 "$BUILD_DIR/build-ios.txt"
+    find "$BUILD_DIR/platforms/ios/build"
 
     echo Check iOS installation
     IOS_PLUGIN_DIR="$BUILD_DIR/platforms/ios/Test/Plugins/cc.fovea.cordova.purchase"
