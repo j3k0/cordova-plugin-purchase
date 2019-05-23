@@ -330,7 +330,7 @@ function storekitPurchasing(productId) {
 //! It will set the product state to `APPROVED` and associates the product
 //! with the order's transaction identifier.
 //!
-function storekitPurchased(transactionId, productId) {
+function storekitPurchased(transactionId, productId, originalTransactionId) {
     store.ready(function() {
         var product = store.get(productId);
         if (!product) {
@@ -354,6 +354,9 @@ function storekitPurchased(transactionId, productId) {
             type: 'ios-appstore',
             id:   transactionId
         };
+        if(originalTransactionId){
+            product.transaction.original_transaction_id = originalTransactionId;
+        }
         if (!product.transactions)
             product.transactions = [];
         product.transactions.push(transactionId);

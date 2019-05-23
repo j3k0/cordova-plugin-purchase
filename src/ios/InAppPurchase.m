@@ -310,12 +310,12 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 //
 - (void) paymentQueue:(SKPaymentQueue*)queue updatedTransactions:(NSArray*)transactions {
 
-    NSString *state, *error, *transactionIdentifier, *transactionReceipt, *productId;
+    NSString *state, *error, *transactionIdentifier, *originalTransactionIdentifier, *transactionReceipt, *productId;
     NSInteger errorCode;
 
     for (SKPaymentTransaction *transaction in transactions) {
 
-        error = state = transactionIdentifier = transactionReceipt = productId = @"";
+        error = state = transactionIdentifier = originalTransactionIdentifier = transactionReceipt = productId = @"";
         errorCode = 0;
         DLog(@"paymentQueue:updatedTransactions: %@", transaction.payment.productIdentifier);
 
@@ -334,6 +334,9 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
                 transactionReceipt = [[transaction transactionReceipt] base64EncodedStringWithOptions:0];
 #endif
                 productId = transaction.payment.productIdentifier;
+                if(transaction.originalTransaction != nil){
+                    originalTransactionIdentifier = transaction.originalTransaction.transactionIdentifier;
+                }
                 break;
 
             case SKPaymentTransactionStateFailed:
@@ -385,6 +388,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
             NILABLE(transactionIdentifier),
             NILABLE(productId),
             NILABLE(transactionReceipt),
+            NILABLE(originalTransactionIdentifier),
             nil];
 
         if (g_initialized) {

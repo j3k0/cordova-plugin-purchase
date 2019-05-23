@@ -334,7 +334,7 @@ InAppPurchase.prototype.processPendingUpdates = function() {
 //
 // Note that it may eventually be called before initialization... unfortunately.
 // In this case, we'll just keep pending updates in a list for later processing.
-InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
+InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier) {
 
     if (!initialized) {
         var args = Array.prototype.slice.call(arguments);
@@ -358,7 +358,7 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
             protectCall(this.options.purchasing, 'options.purchasing', productId);
             return;
 		case "PaymentTransactionStatePurchased":
-            protectCall(this.options.purchase, 'options.purchase', transactionIdentifier, productId);
+            protectCall(this.options.purchase, 'options.purchase', transactionIdentifier, productId, originalTransactionIdentifier);
 			return;
 		case "PaymentTransactionStateFailed":
             protectCall(this.options.error, 'options.error', errorCode, errorText, {
