@@ -6,8 +6,7 @@ set -o xtrace
 cd "$(dirname "$0")/.."
 ROOT_DIR="$(pwd)"
 TEST_DIR="$ROOT_DIR/test"
-
-BUILD_DIR="/tmp/build-$RANDOM"
+BUILD_DIR="${BUILD_DIR:-/tmp/build-$RANDOM}"
 
 # Create and enter the build directory
 rm -fr "$BUILD_DIR"

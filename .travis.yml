@@ -1,69 +1,93 @@
 sudo: false
 env:
   global:
-  - TRAVIS_NODE_VERSION="8"
+    - TRAVIS_NODE_VERSION="8"
+    - BUILD_DIR="/tmp/build-0"
+    - BUNDLE_ID="cc.fovea.babygoo"
+    - IAP_ID="babygooinapp1"
+  matrix:
+    - ONLY=osx PLATFORM=osx CORDOVA=9.0.0 CORDOVA_OSX=5.0.0
+    - ONLY=osx PLATFORM=osx CORDOVA=8.1.2 CORDOVA_OSX=4.0.2
+    - ONLY=osx PLATFORM=ios-12.1 CORDOVA=9.0.0 CORDOVA_IOS=5.0.1
+    - ONLY=osx PLATFORM=ios-12.1 CORDOVA=8.1.2 CORDOVA_IOS=4.5.5
+    - ONLY=osx PLATFORM=ios-12.1 CORDOVA=7.1.0 CORDOVA_IOS=4.5.5
+    - ONLY=osx PLATFORM=ios-11.0 CORDOVA=9.0.0 CORDOVA_IOS=5.0.1
+    - ONLY=osx PLATFORM=ios-11.0 CORDOVA=8.1.2 CORDOVA_IOS=4.5.5
+    - ONLY=osx PLATFORM=ios-11.0 CORDOVA=7.1.0 CORDOVA_IOS=4.5.5
+    - ONLY=linux PLATFORM=android-4.4 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
+    - ONLY=linux PLATFORM=android-4.4 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
+    - ONLY=linux PLATFORM=android-4.4 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+    - ONLY=linux PLATFORM=android-5.1 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
+    - ONLY=linux PLATFORM=android-5.1 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
+    - ONLY=linux PLATFORM=android-5.1 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+    - ONLY=linux PLATFORM=android-6.0 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
+    - ONLY=linux PLATFORM=android-6.0 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
+    - ONLY=linux PLATFORM=android-6.0 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+    - ONLY=linux PLATFORM=android-7.0 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
+    - ONLY=linux PLATFORM=android-7.0 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
+    - ONLY=linux PLATFORM=android-7.0 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+node_js:
+  - "6"
+  - "8"
+  - "10"
+os:
+  - osx
+  - linux
+language:
+  - objective-c
+  - android
+osx_image:
+  - xcode10
+  - xcode10.1
+jdk:
+  - oraclejdk8
+  - openjdk8
+android:
+  components:
+    - tools
+    - extra-android-m2repository
+    - build-tools-22.0.1
+    - build-tools-26.0.2
 matrix:
-  include:
-  - env: PLATFORM=ios-11.0
-    os: osx
-    osx_image: xcode10
-    language: objective-c
-    node_js: "8"
-  - env: PLATFORM=ios-12.1
-    os: osx
-    osx_image: xcode10.1
-    language: node_js
-    node_js: "10"
-  - env: PLATFORM=android-4.4
-    os: linux
-    language: android
-    jdk: oraclejdk8
-    android:
-      components:
-      - tools
-      - extra-android-m2repository
-      - build-tools-26.0.2
-  - env: PLATFORM=android-5.1
-    os: linux
-    language: android
-    jdk: openjdk8
-    android:
-      components:
-      - tools
-      - extra-android-m2repository
-      - build-tools-22.0.1
-  - env: PLATFORM=android-6.0
-    os: linux
-    language: android
-    jdk: oraclejdk8
-    android:
-      components:
-      - tools
-      - extra-android-m2repository
-      - build-tools-22.0.1
-  - env: PLATFORM=android-7.0
-    os: linux
-    language: android
-    jdk: openjdk8
-    android:
-      components:
-      - tools
-      - extra-android-m2repository
-      - build-tools-26.0.2
+  exclude:
+    - os: osx
+      language: android
+    - os: linux
+      language: objective-c
+    - os: osx
+      env: ONLY=linux
+    - os: linux
+      env: ONLY=osx
 
 before_install:
 - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
 - node --version
-- if [[ "$PLATFORM" =~ android ]]; then gradle --version; fi
 - if [[ "$PLATFORM" =~ ios ]]; then npm install -g ios-deploy > /dev/null; fi
+- if [[ "$PLATFORM" =~ android ]]; then gradle --version; fi
 - if [[ "$PLATFORM" =~ android ]];
-  then echo y | android update sdk -u --filter android-22,android-23,android-24,android-25,android-26,android-27;
+  then echo y | android update sdk -u --filter android-22,android-23,android-24,android-25,android-26,android-27,android-28;
   fi
-- npm install -g cordova > /dev/null
+- npm install -g "cordova@$CORDOVA" > /dev/null
 
 install:
 - npm install > /dev/null
 
 script:
-- make all
-- ./test/run.sh cc.fovea.babygoo babygooinapp1
+  - export ROOT_DIR="$(pwd)"
+  - make all
+  - rm -fr "$BUILD_DIR"
+  - cd test && cordova create "$BUILD_DIR" "$BUNDLE_ID" Test
+  - cp "test/src/css/"* "$BUILD_DIR/www/css"
+  - cp "test/src/js/"* "$BUILD_DIR/www/js/"
+  - cp "test/src/index.html" "$BUILD_DIR/www/"
+  - sed -i "bak" "s/babygooinapp1/$IAP_ID/g" "$BUILD_DIR/www/js/iap.js"
+  - cd "$BUILD_DIR"
+  - if [[ "$PLATFORM" =~ ios ]]; then cordova platform add ios@$CORDOVA_IOS; fi
+  - if [[ "$PLATFORM" =~ osx ]]; then cordova platform add osx@$CORDOVA_OSX; fi
+  - if [[ "$PLATFORM" =~ android ]]; then cordova platform add android@$CORDOVA_ANDROID; fi
+  - cordova plugin add "$ROOT_DIR"
+  - rsync -r "$ROOT_DIR"/src/android/ plugins/cc.fovea.cordova.purchase/src/android
+  - cp "$ROOT_DIR"/src/ios/*.[hm] plugins/cc.fovea.cordova.purchase/src/ios/
+  - cp "$ROOT_DIR"/www/*.js plugins/cc.fovea.cordova.purchase/www/
+  - cordova plugin add https://github.com/apache/cordova-plugin-console.git || exit 1
+  - cordova build --debug 2>&1
