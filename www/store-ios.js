@@ -2287,8 +2287,8 @@ InAppPurchase.prototype.init = function (options, success, error) {
         exec('autoFinish', [], noop, noop);
     }
 
-    if (options.omitHostedContentDownload) {
-        exec('omitHostedContentDownload', [], noop, noop);
+    if (options.disableHostedContent) {
+        exec('disableHostedContent', [], noop, noop);
     }
 
     var that = this;
@@ -2906,7 +2906,7 @@ function storekitInit() {
     storekit.init({
         debug:    store.verbosity >= store.DEBUG ? true : false,
         autoFinish: store.autoFinishTransactions,
-        omitHostedContentDownload: store.omitHostedContentDownload,
+        disableHostedContent: store.disableHostedContent,
         error:    storekitError,
         purchase: storekitPurchased,
         purchasing: storekitPurchasing,

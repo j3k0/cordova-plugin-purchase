@@ -161,7 +161,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     g_autoFinishEnabled = YES;
 }
 
--(void) omitHostedContentDownload: (CDVInvokedUrlCommand*)command {
+-(void) disableHostedContent: (CDVInvokedUrlCommand*)command {
     g_downloadHostedContent = NO;
 }
 

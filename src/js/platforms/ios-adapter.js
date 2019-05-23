@@ -161,7 +161,7 @@ function storekitInit() {
     storekit.init({
         debug:    store.verbosity >= store.DEBUG ? true : false,
         autoFinish: store.autoFinishTransactions,
-        omitHostedContentDownload: store.omitHostedContentDownload,
+        disableHostedContent: store.disableHostedContent,
         error:    storekitError,
         purchase: storekitPurchased,
         purchasing: storekitPurchasing,

@@ -96,7 +96,7 @@ declare namespace IapStore {
     verbosity: number | boolean;
     validator: string | IValidator;
     autoFinishTransactions: boolean;
-    omitHostedContentDownload: boolean;
+    disableHostedContent: boolean;
 
     error(callback: (err: IError) => void): void;
     get(id: string): IStoreProduct;
