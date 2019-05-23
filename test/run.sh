@@ -96,6 +96,10 @@ case "$OSTYPE" in darwin*)
     fi
     tail -20 $BUILD_DIR/build-ios.txt
 
+    # seems like the `cordova build ios` command runs asynchronously on travis (?)
+    # let's wait 1 minute and see if that's true
+    sleep ${SLEEP_AFTER_IOS_BUILD:-0}
+
     echo
     echo Check iOS installation
     IOS_PLUGIN_DIR="$BUILD_DIR/platforms/ios/Test/Plugins/cc.fovea.cordova.purchase"
