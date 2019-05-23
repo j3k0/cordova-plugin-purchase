@@ -1,7 +1,8 @@
 #!/bin/bash
+set -e
 
 # Set variables: PLUGIN_DIR, TEST_DIR, BUILD_DIR
-cd "$(dirname $0)/.."
+cd "$(dirname "$0")/.."
 ROOT_DIR="$(pwd)"
 TEST_DIR="$ROOT_DIR/test"
 
@@ -88,11 +89,12 @@ function hasFile() {
 case "$OSTYPE" in darwin*)
     echo
     echo "iOS..."
+    echo
     if ! cordova build ios 2>&1 > $BUILD_DIR/build-ios.txt; then
         tail -500 $BUILD_DIR/build-ios.txt
         exit 1
     fi
-    tail -3 $BUILD_DIR/build-ios.txt
+    tail -20 $BUILD_DIR/build-ios.txt
 
     echo
     echo Check iOS installation
@@ -105,6 +107,7 @@ case "$OSTYPE" in darwin*)
     hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.h"
     hasFile "$IOS_PLUGIN_DIR/SKProduct+LocalizedPrice.m"
     hasFile "$IOS_WWW_DIR/store-ios.js"
+    hasFile "$BUILD_DIR/platforms/ios/build/emulator/Test.app"
 
     if grep StoreKit.framework "$IOS_PROJ" > /dev/null; then
         echo "StoreKit framework added."
@@ -118,11 +121,12 @@ case "$OSTYPE" in darwin*)
 case "$OSTYPE" in darwin*)
     echo
     echo "OSX..."
+    echo
     if ! cordova build osx 2>&1 > $BUILD_DIR/build-osx.txt; then
         tail -500 $BUILD_DIR/build-osx.txt
         exit 1
     fi
-    tail -3 $BUILD_DIR/build-osx.txt
+    tail -20 $BUILD_DIR/build-osx.txt
 
     echo
     echo Check OSX installation
@@ -135,6 +139,7 @@ case "$OSTYPE" in darwin*)
     hasFile "$OSX_PLUGIN_DIR/SKProduct+LocalizedPrice.h"
     hasFile "$OSX_PLUGIN_DIR/SKProduct+LocalizedPrice.m"
     hasFile "$OSX_WWW_DIR/store-ios.js"
+    hasFile "$BUILD_DIR/platforms/osx/build/Test.app"
 
     if grep StoreKit.framework "$OSX_PROJ" > /dev/null; then
         echo "StoreKit framework added."
@@ -148,11 +153,12 @@ case "$OSTYPE" in darwin*)
 if [ "_$ANDROID_HOME" != "_" ]; then
     echo
     echo "Android..."
+    echo
     if ! cordova build android 2>&1 > $BUILD_DIR/build-android.txt; then
         tail -500 $BUILD_DIR/build-android.txt
         exit 1
     fi
-    tail -3 $BUILD_DIR/build-android.txt
+    tail -20 $BUILD_DIR/build-android.txt
 
     echo
     echo Check Android installation
