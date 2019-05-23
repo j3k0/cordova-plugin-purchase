@@ -53,10 +53,10 @@ cordova create "$BUILD_DIR" "$BUNDLE_ID" Test
 cp "$TEST_DIR/src/css/"* "$BUILD_DIR/www/css/"
 cp "$TEST_DIR/src/js/"* "$BUILD_DIR/www/js/"
 cp "$TEST_DIR/src/index.html" "$BUILD_DIR/www/"
-sed -i "" "s/babygooinapp1/$IAP_ID/g" "$BUILD_DIR/www/js/iap.js"
+sed -i "bak" "s/babygooinapp1/$IAP_ID/g" "$BUILD_DIR/www/js/iap.js" || true # let this pass for now
 cd "$BUILD_DIR"
 
-echo Prepare iOS and Android platforms
+echo Prepare platforms
 cordova platform add ios || exit 1
 cordova platform add osx || exit 1
 cordova platform add android || exit 1
