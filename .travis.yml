@@ -52,6 +52,7 @@ matrix:
           - extra-android-m2repository
           - build-tools-22.0.1
           - build-tools-26.0.2
+          - build-tools-28.0.3
     - env: PLATFORM=android-4.4 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
       os: linux
       jdk: openjdk8
@@ -62,6 +63,7 @@ matrix:
           - extra-android-m2repository
           - build-tools-22.0.1
           - build-tools-26.0.2
+          - build-tools-28.0.3
     - env: PLATFORM=android-4.4 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
       os: linux
       jdk: openjdk8
@@ -72,6 +74,7 @@ matrix:
           - extra-android-m2repository
           - build-tools-22.0.1
           - build-tools-26.0.2
+          - build-tools-28.0.3
     - env: PLATFORM=android-5.1 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
       os: linux
       jdk: openjdk8
@@ -82,6 +85,7 @@ matrix:
           - extra-android-m2repository
           - build-tools-22.0.1
           - build-tools-26.0.2
+          - build-tools-28.0.3
     - env: PLATFORM=android-5.1 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
       os: linux
       jdk: openjdk8
@@ -92,6 +96,7 @@ matrix:
           - extra-android-m2repository
           - build-tools-22.0.1
           - build-tools-26.0.2
+          - build-tools-28.0.3
     - env: PLATFORM=android-5.1 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
       os: linux
       jdk: openjdk8
@@ -102,6 +107,7 @@ matrix:
           - extra-android-m2repository
           - build-tools-22.0.1
           - build-tools-26.0.2
+          - build-tools-28.0.3
     - env: PLATFORM=android-6.0 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
       os: linux
       jdk: openjdk8
@@ -112,6 +118,7 @@ matrix:
           - extra-android-m2repository
           - build-tools-22.0.1
           - build-tools-26.0.2
+          - build-tools-28.0.3
     - env: PLATFORM=android-6.0 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
       os: linux
       jdk: openjdk8
@@ -122,6 +129,7 @@ matrix:
           - extra-android-m2repository
           - build-tools-22.0.1
           - build-tools-26.0.2
+          - build-tools-28.0.3
     - env: PLATFORM=android-6.0 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
       os: linux
       jdk: openjdk8
@@ -132,6 +140,7 @@ matrix:
           - extra-android-m2repository
           - build-tools-22.0.1
           - build-tools-26.0.2
+          - build-tools-28.0.3
     - env: PLATFORM=android-7.0 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
       os: linux
       jdk: openjdk8
@@ -142,6 +151,7 @@ matrix:
           - extra-android-m2repository
           - build-tools-22.0.1
           - build-tools-26.0.2
+          - build-tools-28.0.3
     - env: PLATFORM=android-7.0 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
       os: linux
       jdk: openjdk8
@@ -152,6 +162,7 @@ matrix:
           - extra-android-m2repository
           - build-tools-22.0.1
           - build-tools-26.0.2
+          - build-tools-28.0.3
     - env: PLATFORM=android-7.0 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
       os: linux
       jdk: openjdk8
@@ -162,16 +173,13 @@ matrix:
           - extra-android-m2repository
           - build-tools-22.0.1
           - build-tools-26.0.2
+          - build-tools-28.0.3
 
 before_install:
 - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
 - node --version
 - if [[ "$PLATFORM" =~ ios ]]; then npm install -g ios-deploy > /dev/null; fi
 - if [[ "$PLATFORM" =~ android ]]; then gradle --version; fi
-- if [[ "$PLATFORM" =~ android ]]; then
-    echo y | android update sdk -u --filter android-22,android-23,android-24,android-25,android-26,android-27,android-28;
-    yes | sdkmanager --licenses;
-  fi
 - npm install -g "cordova@$CORDOVA" > /dev/null
 
 install:
