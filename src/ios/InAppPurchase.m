@@ -182,9 +182,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 
 #if TARGET_OS_IPHONE
     [[UIApplication sharedApplication] openURL:URL options:@{} completionHandler:nil];
-#endif
-
-#if TARGET_OS_MAC
+#else
     [[NSWorkspace sharedWorkspace] openURL:URL];
 #endif
     
@@ -505,8 +503,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
             receiptURL = [bundle performSelector:@selector(appStoreReceiptURL)];
         }
-#endif
-#if TARGET_OS_MAC
+#else
         receiptURL = [bundle appStoreReceiptURL];
 #endif
     }
@@ -589,8 +586,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         NSString *transactionId = transaction.transactionIdentifier;
 #if TARGET_OS_IPHONE
         NSString *transactionReceipt = [[transaction transactionReceipt] base64EncodedStringWithOptions:0];
-#endif
-#if TARGET_OS_MAC
+#else
         NSString *transactionReceipt = NULL;
 #endif
         SKPayment *payment = transaction.payment;
@@ -601,8 +597,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         
 #if TARGET_OS_IPHONE
         SKDownloadState downloadState = download.downloadState;
-#endif
-#if TARGET_OS_MAC
+#else
         SKDownloadState downloadState = download.state;
 #endif
         switch (downloadState) {
