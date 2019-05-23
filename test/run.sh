@@ -88,22 +88,21 @@ function hasFile() {
 
 # Compile for iOS
 case "$OSTYPE" in darwin*)
-    echo
     echo "iOS..."
-    echo
-    if ! cordova build ios 2>&1 > $BUILD_DIR/build-ios.txt; then
-        tail -500 $BUILD_DIR/build-ios.txt
+    if cordova build ios 2>&1 > "$BUILD_DIR/build-ios.txt"; then
+        echo build succeeded
+        tail -50 "$BUILD_DIR/build-ios.txt"
+        find "$BUILD_DIR/platforms/ios/build"
+    else
+        tail -400 "$BUILD_DIR/build-ios.txt"
+        echo build failed
         exit 1
     fi
-    tail -20 $BUILD_DIR/build-ios.txt
-    ps aux
-    find "$BUILD_DIR/platforms/ios/build"
 
     # seems like the `cordova build ios` command runs asynchronously on travis (?)
     # let's wait 1 minute and see if that's true
-    sleep ${SLEEP_AFTER_IOS_BUILD:-0}
+    sleep "${SLEEP_AFTER_IOS_BUILD:-0}"
 
-    echo
     echo Check iOS installation
     IOS_PLUGIN_DIR="$BUILD_DIR/platforms/ios/Test/Plugins/cc.fovea.cordova.purchase"
     IOS_WWW_DIR="$BUILD_DIR/platforms/ios/www/plugins/cc.fovea.cordova.purchase/www"
@@ -126,16 +125,13 @@ case "$OSTYPE" in darwin*)
 
 # Compile for OSX
 case "$OSTYPE" in darwin*)
-    echo
     echo "OSX..."
-    echo
     if ! cordova build osx 2>&1 > $BUILD_DIR/build-osx.txt; then
         tail -500 $BUILD_DIR/build-osx.txt
         exit 1
     fi
     tail -20 $BUILD_DIR/build-osx.txt
 
-    echo
     echo Check OSX installation
     OSX_PLUGIN_DIR="$BUILD_DIR/platforms/osx/Test/Plugins/cc.fovea.cordova.purchase"
     OSX_WWW_DIR="$BUILD_DIR/platforms/osx/www/plugins/cc.fovea.cordova.purchase/www"
@@ -158,16 +154,13 @@ case "$OSTYPE" in darwin*)
 
 # Compile for Android
 if [ "_$ANDROID_HOME" != "_" ]; then
-    echo
     echo "Android..."
-    echo
     if ! cordova build android 2>&1 > $BUILD_DIR/build-android.txt; then
         tail -500 $BUILD_DIR/build-android.txt
         exit 1
     fi
     tail -20 $BUILD_DIR/build-android.txt
 
-    echo
     echo Check Android installation
 
     # Plugin class has been built
