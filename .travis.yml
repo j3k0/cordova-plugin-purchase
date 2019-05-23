@@ -170,7 +170,7 @@ before_install:
 - if [[ "$PLATFORM" =~ android ]]; then gradle --version; fi
 - if [[ "$PLATFORM" =~ android ]]; then
     echo y | android update sdk -u --filter android-22,android-23,android-24,android-25,android-26,android-27,android-28;
-    yes | sdkmanager --licenses
+    yes | sdkmanager --licenses;
   fi
 - npm install -g "cordova@$CORDOVA" > /dev/null
 
