@@ -56,6 +56,7 @@ cd "$BUILD_DIR"
 
 echo Prepare iOS and Android platforms
 cordova platform add ios || exit 1
+cordova platform add osx || exit 1
 cordova platform add android || exit 1
 
 echo Add Purchase plugin
@@ -85,10 +86,13 @@ function hasFile() {
 
 # Compile for iOS
 case "$OSTYPE" in darwin*)
+    echo
+    echo "iOS..."
     if ! cordova build ios 2>&1 > $BUILD_DIR/build-ios.txt; then
         tail -500 $BUILD_DIR/build-ios.txt
         exit 1
     fi
+    tail -3 $BUILD_DIR/build-ios.txt
 
     echo
     echo Check iOS installation
@@ -110,13 +114,47 @@ case "$OSTYPE" in darwin*)
     fi
 ;; esac
 
+# Compile for OSX
+case "$OSTYPE" in darwin*)
+    echo
+    echo "OSX..."
+    if ! cordova build osx 2>&1 > $BUILD_DIR/build-osx.txt; then
+        tail -500 $BUILD_DIR/build-osx.txt
+        exit 1
+    fi
+    tail -3 $BUILD_DIR/build-osx.txt
+
+    echo
+    echo Check OSX installation
+    OSX_PLUGIN_DIR="$BUILD_DIR/platforms/osx/Test/Plugins/cc.fovea.cordova.purchase"
+    OSX_WWW_DIR="$BUILD_DIR/platforms/osx/www/plugins/cc.fovea.cordova.purchase/www"
+    OSX_PROJ="$BUILD_DIR/platforms/osx/Test.xcodeproj/project.pbxproj"
+
+    hasFile "$OSX_PLUGIN_DIR/InAppPurchase.m"
+    hasFile "$OSX_PLUGIN_DIR/InAppPurchase.h"
+    hasFile "$OSX_PLUGIN_DIR/SKProduct+LocalizedPrice.h"
+    hasFile "$OSX_PLUGIN_DIR/SKProduct+LocalizedPrice.m"
+    hasFile "$OSX_WWW_DIR/store-ios.js"
+
+    if grep StoreKit.framework "$OSX_PROJ" > /dev/null; then
+        echo "StoreKit framework added."
+    else
+        echo "ERROR: StoreKit framework missing."
+        EXIT=1
+    fi
+;; esac
+
 # Compile for Android
 if [ "_$ANDROID_HOME" != "_" ]; then
+    echo
+    echo "Android..."
     if ! cordova build android 2>&1 > $BUILD_DIR/build-android.txt; then
         tail -500 $BUILD_DIR/build-android.txt
         exit 1
     fi
+    tail -3 $BUILD_DIR/build-android.txt
 
+    echo
     echo Check Android installation
 
     # Plugin class has been built
