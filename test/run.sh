@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -o xtrace
 
 # Set variables: PLUGIN_DIR, TEST_DIR, BUILD_DIR
 cd "$(dirname "$0")/.."
@@ -95,6 +96,8 @@ case "$OSTYPE" in darwin*)
         exit 1
     fi
     tail -20 $BUILD_DIR/build-ios.txt
+    ps aux
+    find "$BUILD_DIR/platforms/ios/build"
 
     # seems like the `cordova build ios` command runs asynchronously on travis (?)
     # let's wait 1 minute and see if that's true
@@ -201,5 +204,8 @@ if [ "_$ANDROID_HOME" != "_" ]; then
     fi
 fi
 
-if [ "x$EXIT" != "x1" ]; then echo "Great! Everything looks good."; fi
+if [ "x$EXIT" != "x1" ]; then
+  echo "Great! Everything looks good.";
+fi
+
 exit $EXIT
