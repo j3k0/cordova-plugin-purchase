@@ -26,6 +26,7 @@ import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.text.TextUtils;
 import android.util.Log;
@@ -252,6 +253,7 @@ public class IabHelper {
 
                     // Check for v5 subscriptions support. This is needed for
                     // getBuyIntentToReplaceSku which allows for subscription update
+                    prepareThreadForLooper();
                     new Thread("IabHelper-isBillingSupportedCheck") {
                         @Override
                         public void run() {
@@ -359,6 +361,12 @@ public class IabHelper {
     public boolean subscriptionsSupported() {
         checkNotDisposed();
         return mSubscriptionsSupported;
+    }
+
+    private void prepareThreadForLooper(){
+        if (Looper.myLooper() == null) {
+            Looper.prepare();
+        }
     }
 
 
@@ -679,6 +687,7 @@ public class IabHelper {
     public void queryInventoryAsync(final boolean querySkuDetails,
                                final List<String> moreSkus,
                                final QueryInventoryFinishedListener listener) {
+        prepareThreadForLooper();
         final Handler handler = new Handler();
         checkNotDisposed();
         checkSetupDone("queryInventory");
@@ -1023,6 +1032,7 @@ public class IabHelper {
     void consumeAsyncInternal(final List<Purchase> purchases,
                               final OnConsumeFinishedListener singleListener,
                               final OnConsumeMultiFinishedListener multiListener) {
+        prepareThreadForLooper();
         final Handler handler = new Handler();
         flagStartAsync("consume");
         (new Thread(new Runnable() {
