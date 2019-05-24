@@ -38,7 +38,7 @@ SOFTWARE.
     <issue>https://github.com/j3k0/cordova-plugin-purchase/issues</issue>
 
 	<license>MIT</license>
-    <keywords>cordova,phonegap,purchase,storekit,ios,android,play,appstore,windows</keywords>
+    <keywords>cordova,phonegap,purchase,purchases,storekit,billing,ios,android,play,appstore,windows,osx,macos</keywords>
 
     <!-- ios -->
     <platform name="ios">

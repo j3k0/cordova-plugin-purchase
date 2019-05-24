@@ -1,69 +1,293 @@
 sudo: false
 env:
   global:
-  - TRAVIS_NODE_VERSION="8"
+    - TRAVIS_NODE_VERSION="8"
+    - BUILD_DIR="/tmp/build-0"
+    - BUNDLE_ID="cc.fovea.babygoo"
+    - IAP_ID="babygooinapp1"
+node_js: "8"
 matrix:
   include:
-  - env: PLATFORM=ios-11.0
-    os: osx
-    osx_image: xcode10
-    language: node_js
-    node_js: "8"
-  - env: PLATFORM=ios-12.1
-    os: osx
-    osx_image: xcode10.1
-    language: node_js
-    node_js: "10"
-  - env: PLATFORM=android-4.4
-    os: linux
-    language: android
-    jdk: oraclejdk8
-    android:
-      components:
-      - tools
-      - extra-android-m2repository
-      - build-tools-26.0.2
-  - env: PLATFORM=android-5.1
-    os: linux
-    language: android
-    jdk: openjdk8
-    android:
-      components:
-      - tools
-      - extra-android-m2repository
-      - build-tools-22.0.1
-  - env: PLATFORM=android-6.0
-    os: linux
-    language: android
-    jdk: oraclejdk8
-    android:
-      components:
-      - tools
-      - extra-android-m2repository
-      - build-tools-22.0.1
-  - env: PLATFORM=android-7.0
-    os: linux
-    language: android
-    jdk: openjdk8
-    android:
-      components:
-      - tools
-      - extra-android-m2repository
-      - build-tools-26.0.2
+
+    # -------------
+    #  osx
+    # -------------
+ 
+    # base osx test
+    - env: PLATFORM=osx CORDOVA=9.0.0 CORDOVA_OSX=5.0.0
+      os: osx
+      osx_image: xcode10.2
+      language: objective-c
+    # older cordova and cordova-osx versions
+    - env: PLATFORM=osx CORDOVA=8.1.2 CORDOVA_OSX=4.0.2
+      os: osx
+      osx_image: xcode10.2
+      language: objective-c
+    # older xcode (9.4)
+    - env: PLATFORM=osx CORDOVA=9.0.0 CORDOVA_OSX=5.0.0
+      os: osx
+      osx_image: xcode9.4
+      language: objective-c
+
+    # -------------
+    #  ios
+    # -------------
+    #  note: the cordova build doesn't run when using cordova-ios@4
+    #        so we only test with cordova-ios@5               
+
+    # up-to-date tools
+    - env: PLATFORM=ios-12.1 CORDOVA=9.0.0 CORDOVA_IOS=5.0.1
+      os: osx
+      osx_image: xcode10.2
+      language: objective-c
+    # cordova 8
+    - env: PLATFORM=ios-12.1 CORDOVA=8.1.2 CORDOVA_IOS=5.0.1
+      os: osx
+      osx_image: xcode10.1
+      language: objective-c
+    # cordova 7
+    - env: PLATFORM=ios-12.1 CORDOVA=7.1.0 CORDOVA_IOS=5.0.1
+      os: osx
+      osx_image: xcode10.0
+      language: objective-c
+    # xcode 9
+    - env: PLATFORM=ios-12.1 CORDOVA=9.0.0 CORDOVA_IOS=5.0.1
+      os: osx
+      osx_image: xcode9.4
+      language: objective-c
+    # - env: PLATFORM=ios-12.1 CORDOVA=9.0.0 CORDOVA_IOS=4.5.5
+    #   os: osx
+    #   osx_image: xcode10
+    #   language: objective-c
+    # - env: PLATFORM=ios-12.1 CORDOVA=9.0.0 CORDOVA_IOS=4.5.5
+    #   os: osx
+    #   osx_image: xcode10
+    #   language: objective-c
+    # - env: PLATFORM=ios-11.0 CORDOVA=9.0.0 CORDOVA_IOS=5.0.1
+    #   os: osx
+    #   osx_image: xcode10
+    #   language: objective-c
+    # - env: PLATFORM=ios-11.0 CORDOVA=8.1.2 CORDOVA_IOS=4.5.5
+    #   os: osx
+    #   osx_image: xcode10
+    #   language: objective-c
+    # - env: PLATFORM=ios-11.0 CORDOVA=7.1.0 CORDOVA_IOS=4.5.5
+    #   os: osx
+    #   osx_image: xcode10
+    #   language: objective-c
+
+    # -------------
+    #  android
+    # -------------
+
+    #
+    # android-4.4
+    #
+
+    # cordova-android@7.1.2
+    - env: PLATFORM=android-4.4 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+
+    # cordova-android@7.1.4
+    - env: PLATFORM=android-4.4 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+
+    # cordova-android@6.4.0
+    - env: PLATFORM=android-4.4 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+
+    #
+    # android-5.1
+    #
+
+    # cordova-android@8.0.0
+    - env: PLATFORM=android-5.1 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+
+    # cordova-android@7.1.4
+    - env: PLATFORM=android-5.1 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+
+    # cordova-android@7.1.3
+    - env: PLATFORM=android-5.1 CORDOVA=7.1.0 CORDOVA_ANDROID=7.1.3
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+
+    # broken versions, see: https://github.com/j3k0/cordova-plugin-purchase/issues/762
+    # cordova-android@7.1.2 (broken)
+    # - env: PLATFORM=android-5.1 CORDOVA=7.1.0 CORDOVA_ANDROID=7.1.2
+    #   os: linux
+    #   jdk: openjdk8
+    #   language: android
+    #   android:
+    #     components:
+    #       - tools
+    #       - extra-android-m2repository
+    #
+    # cordova-android@7.1.1 (broken)
+    # - env: PLATFORM=android-5.1 CORDOVA=7.1.0 CORDOVA_ANDROID=7.1.1
+    #   os: linux
+    #   jdk: openjdk8
+    #   language: android
+    #   android:
+    #     components:
+    #       - tools
+    #       - extra-android-m2repository
+
+    # cordova-android@6.4.0
+    - env: PLATFORM=android-5.1 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+
+    #
+    # android-6.0
+    #
+
+    # cordova-android@8.0.0
+    - env: PLATFORM=android-6.0 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+
+    # cordova-android@7.1.4
+    - env: PLATFORM=android-6.0 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+
+    # cordova-android@6.4.0
+    - env: PLATFORM=android-6.0 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+
+    #
+    # android-7.0
+    #
+
+    # cordova-android@8.0.0
+    - env: PLATFORM=android-7.0 CORDOVA=9.0.0 CORDOVA_ANDROID=8.0.0
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+
+    # cordova-android@7.1.4
+    - env: PLATFORM=android-7.0 CORDOVA=8.1.2 CORDOVA_ANDROID=7.1.4
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+
+    # cordova-android@6.4.0
+    - env: PLATFORM=android-7.0 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
 
 before_install:
 - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
 - node --version
-- if [[ "$PLATFORM" =~ android ]]; then gradle --version; fi
 - if [[ "$PLATFORM" =~ ios ]]; then npm install -g ios-deploy > /dev/null; fi
-- if [[ "$PLATFORM" =~ android ]];
-  then echo y | android update sdk -u --filter android-22,android-23,android-24,android-25,android-26,android-27;
+- if [[ "$PLATFORM" =~ android ]]; then
+    gradle --version;
+    mkdir -p "$ANDROID_HOME/licenses" || true;
+    echo -e "\n24333f8a63b6825ea9c5514f83c2829b004d1fee" >> "$ANDROID_HOME/licenses/android-sdk-license";
+    echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" >> "$ANDROID_HOME/licenses/android-sdk-license";
+    echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6481e" >> "$ANDROID_HOME/licenses/android-sdk-license";
+    echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" >> "$ANDROID_HOME/licenses/android-sdk-preview-license";
+    yes | sdkmanager --update;
+    yes | sdkmanager --licenses;
   fi
-- npm install -g cordova > /dev/null
+- npm install -g "cordova@$CORDOVA" > /dev/null
 
 install:
 - npm install > /dev/null
 
 script:
-- make all
-- ./test/run.sh cc.fovea.babygoo babygooinapp1
+  - export ROOT_DIR="$(pwd)"
+  - make all
+  - rm -fr "$BUILD_DIR"
+  - cd test && cordova create "$BUILD_DIR" "$BUNDLE_ID" Test
+  - cp src/css/* "$BUILD_DIR/www/css/"
+  - cp src/js/* "$BUILD_DIR/www/js/"
+  - cp src/index.html "$BUILD_DIR/www/"
+  - cd "$BUILD_DIR"
+  - sed --in-place=.bak "s/babygooinapp1/$IAP_ID/g" "www/js/iap.js" || sed -i bak "s/babygooinapp1/$IAP_ID/g" "$BUILD_DIR/www/js/iap.js"
+  - if [[ "$PLATFORM" =~ ios ]]; then cordova platform add ios@$CORDOVA_IOS; fi
+  - if [[ "$PLATFORM" =~ osx ]]; then cordova platform add osx@$CORDOVA_OSX; fi
+  - if [[ "$PLATFORM" =~ android ]]; then cordova platform add android@$CORDOVA_ANDROID; fi
+  - cordova plugin add "$ROOT_DIR" --variable BILLING_KEY=0123456789abcdef
+  - rsync -r "$ROOT_DIR"/src/android/ plugins/cc.fovea.cordova.purchase/src/android
+  - cp "$ROOT_DIR"/src/ios/*.[hm] plugins/cc.fovea.cordova.purchase/src/ios/
+  - cp "$ROOT_DIR"/www/*.js plugins/cc.fovea.cordova.purchase/www/
+  - cordova plugin add https://github.com/apache/cordova-plugin-console.git
+  - cordova build --debug 2>&1
+  - if [[ "$PLATFORM" =~ ios ]]; then test -e platforms/ios/build/emulator/Test.app; fi
+  - if [[ "$PLATFORM" =~ osx ]]; then test -e platforms/osx/build/Test.app; fi
+  - if [[ "$PLATFORM" =~ android ]]; then
+      test -e platforms/android/app/build/outputs/apk/debug/app-debug.apk || test -e platforms/android/build/outputs/apk/debug/android-debug.apk;
+    fi
+
