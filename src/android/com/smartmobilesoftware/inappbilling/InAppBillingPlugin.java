@@ -178,7 +178,7 @@ public class InAppBillingPlugin extends CordovaPlugin {
         Log.d(TAG, "Starting setup.");
 
         mHelper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
-            public void onIabSetupFinished(IabResult result) {
+            public void onIabSetupFinished(final IabResult result) {
                 Log.d(TAG, "Setup finished.");
 
                 cordova.getActivity().runOnUiThread(new Runnable() {
