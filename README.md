@@ -51,7 +51,7 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 
 ## Installation
 
-### Install the plugin (cordova)
+### Install the plugin (Cordova)
 
 ```sh
 cordova plugin add cordova-plugin-purchase [--variable BILLING_KEY="<BILLING_KEY>"]
@@ -59,14 +59,12 @@ cordova plugin add cordova-plugin-purchase [--variable BILLING_KEY="<BILLING_KEY
 
 `BILLING_KEY` is only required for Android. Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#add-android-billing-key) for details.
 
-### Install the plugin (phonegap)
+### Install the plugin (PhoneGap)
 
 Add the following to your `config.xml` file:
 
 <details>
-<summary>
-`phonegap cli-7.1.0`:
-</summary>
+<summary>phonegap cli-7.1.0</summary>
 
 
 ```xml
@@ -79,9 +77,7 @@ Add the following to your `config.xml` file:
 </details>
 
 <details>
-<summary>
-For `phonegap cli-8.0.0`:
-</summary>
+<summary>phonegap cli-8.0.0</summary>
 
 ```xml
 <plugin spec="https://github.com/j3k0/cordova-plugin-purchase.git#phonegap-cli-8.0.0">
