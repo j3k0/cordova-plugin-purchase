@@ -14,6 +14,7 @@
 static BOOL g_initialized = NO;
 static BOOL g_debugEnabled = NO;
 static BOOL g_autoFinishEnabled = NO;
+static BOOL g_downloadHostedContent = YES;
 
 /*
  * Helpers
@@ -160,6 +161,10 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     g_autoFinishEnabled = YES;
 }
 
+-(void) disableHostedContent: (CDVInvokedUrlCommand*)command {
+    g_downloadHostedContent = NO;
+}
+
 -(void) setup: (CDVInvokedUrlCommand*)command {
     CDVPluginResult* pluginResult = nil;
 
@@ -179,7 +184,13 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 
 -(void) manageSubscriptions: (CDVInvokedUrlCommand*)command {
     NSURL *URL = [NSURL URLWithString:@"https://buy.itunes.apple.com/WebObjects/MZFinance.woa/wa/manageSubscriptions"];
+
+#if TARGET_OS_IPHONE
     [[UIApplication sharedApplication] openURL:URL options:@{} completionHandler:nil];
+#else
+    [[NSWorkspace sharedWorkspace] openURL:URL];
+#endif
+    
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"manageSubscriptions"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
@@ -304,12 +315,12 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 //
 - (void) paymentQueue:(SKPaymentQueue*)queue updatedTransactions:(NSArray*)transactions {
 
-    NSString *state, *error, *transactionIdentifier, *transactionReceipt, *productId;
+    NSString *state, *error, *transactionIdentifier, *originalTransactionIdentifier, *transactionReceipt, *productId;
     NSInteger errorCode;
 
     for (SKPaymentTransaction *transaction in transactions) {
 
-        error = state = transactionIdentifier = transactionReceipt = productId = @"";
+        error = state = transactionIdentifier = originalTransactionIdentifier = transactionReceipt = productId = @"";
         errorCode = 0;
         DLog(@"paymentQueue:updatedTransactions: %@", transaction.payment.productIdentifier);
 
@@ -324,8 +335,13 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
             case SKPaymentTransactionStatePurchased:
                 state = @"PaymentTransactionStatePurchased";
                 transactionIdentifier = transaction.transactionIdentifier;
+#if TARGET_OS_IPHONE
                 transactionReceipt = [[transaction transactionReceipt] base64EncodedStringWithOptions:0];
+#endif
                 productId = transaction.payment.productIdentifier;
+                if(transaction.originalTransaction != nil){
+                    originalTransactionIdentifier = transaction.originalTransaction.transactionIdentifier;
+                }
                 break;
 
             case SKPaymentTransactionStateFailed:
@@ -347,7 +363,9 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
                 transactionIdentifier = transaction.transactionIdentifier;
                 if (!transactionIdentifier)
                     transactionIdentifier = transaction.originalTransaction.transactionIdentifier;
+#if TARGET_OS_IPHONE
                 transactionReceipt = [[transaction transactionReceipt] base64EncodedStringWithOptions:0];
+#endif
                 // TH 08/03/2016: default to transaction.payment.productIdentifier and use transaction.originalTransaction.payment.productIdentifier as a fallback.
                 // Previously only used transaction.originalTransaction.payment.productIdentifier.
                 // When restoring transactions when there are unfinished transactions, I encountered transactions for which originalTransaction is nil, leading to a nil productId.
@@ -375,6 +393,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
             NILABLE(transactionIdentifier),
             NILABLE(productId),
             NILABLE(transactionReceipt),
+            NILABLE(originalTransactionIdentifier),
             nil];
 
         if (g_initialized) {
@@ -413,7 +432,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         || state == SKPaymentTransactionStateFailed
         || state == SKPaymentTransactionStatePurchased;
 
-    if (downloads && [downloads count] > 0) {
+    if (downloads && [downloads count] > 0 && g_downloadHostedContent) {
         [[SKPaymentQueue defaultQueue] startDownloads:downloads];
     }
     else if (g_autoFinishEnabled && canFinish) {
@@ -486,12 +505,16 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     NSURL *receiptURL = nil;
     NSBundle *bundle = [NSBundle mainBundle];
     if ([bundle respondsToSelector:@selector(appStoreReceiptURL)]) {
+#if TARGET_OS_IPHONE
         // The general best practice of weak linking using the respondsToSelector: method
         // cannot be used here. Prior to iOS 7, the method was implemented as private SPI,
         // but that implementation called the doesNotRecognizeSelector: method.
         if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
             receiptURL = [bundle performSelector:@selector(appStoreReceiptURL)];
         }
+#else
+        receiptURL = [bundle appStoreReceiptURL];
+#endif
     }
 
     if (receiptURL != nil) {
@@ -570,14 +593,23 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         
         SKPaymentTransaction *transaction = download.transaction;
         NSString *transactionId = transaction.transactionIdentifier;
+#if TARGET_OS_IPHONE
         NSString *transactionReceipt = [[transaction transactionReceipt] base64EncodedStringWithOptions:0];
+#else
+        NSString *transactionReceipt = NULL;
+#endif
         SKPayment *payment = transaction.payment;
         NSString *productId = payment.productIdentifier;
         
         NSArray *callbackArgs;
         NSString *js;
         
-        switch (download.downloadState) {
+#if TARGET_OS_IPHONE
+        SKDownloadState downloadState = download.downloadState;
+#else
+        SKDownloadState downloadState = download.state;
+#endif
+        switch (downloadState) {
 
             case SKDownloadStateActive: {
                 // Add to current downloads

@@ -178,33 +178,40 @@ public class InAppBillingPlugin extends CordovaPlugin {
         Log.d(TAG, "Starting setup.");
 
         mHelper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
-            public void onIabSetupFinished(IabResult result) {
+            public void onIabSetupFinished(final IabResult result) {
                 Log.d(TAG, "Setup finished.");
 
-                if (!result.isSuccess()) {
-                    // Oh no, there was a problem.
-                    callbackContext.error(IabHelper.ERR_SETUP + "|Problem setting up in-app billing: " + result);
-                    return;
-                }
+                cordova.getActivity().runOnUiThread(new Runnable() {
+                        public void run() {
 
-                // Have we been disposed of in the meantime? If so, quit.
-                if (mHelper == null) {
-                	callbackContext.error(IabHelper.ERR_SETUP + "|The billing helper has been disposed");
-			return;
-                }
+                            if (!result.isSuccess()) {
+                                // Oh no, there was a problem.
+                                callbackContext.error(IabHelper.ERR_SETUP + "|Problem setting up in-app billing: " + result);
+                                return;
+                            }
 
-                // Hooray, IAB is fully set up. Now, let's get an inventory of stuff we own.
-                if(skus.size() <= 0){
-					Log.d(TAG, "Setup successful. Querying inventory.");
-                	mHelper.queryInventoryAsync(mGotInventoryListener);
-				}else{
-					Log.d(TAG, "Setup successful. Querying inventory w/ SKUs.");
-                    try{
-                        mHelper.queryInventoryAsync(true, skus, mGotInventoryListener);
-                    }catch(IllegalStateException ex){
-                        Log.d("Catch IllegalStateException", ex.getMessage());
-                    }
-				}
+                            // Have we been disposed of in the meantime? If so, quit.
+                            if (mHelper == null) {
+                                callbackContext.error(IabHelper.ERR_SETUP + "|The billing helper has been disposed");
+                                return;
+                            }
+
+                            // Hooray, IAB is fully set up. Now, let's get an inventory of stuff we own.
+                            if (skus.size() <= 0) {
+                                Log.d(TAG, "Setup successful. Querying inventory.");
+                                mHelper.queryInventoryAsync(mGotInventoryListener);
+                            }
+                            else {
+                                Log.d(TAG, "Setup successful. Querying inventory w/ SKUs.");
+                                try {
+                                    mHelper.queryInventoryAsync(true, skus, mGotInventoryListener);
+                                } catch (IllegalStateException ex) {
+                                    Log.d("Catch IllegalStateException", ex.getMessage());
+                                }
+                            }
+                        }
+                });
+
             }
         });
     }

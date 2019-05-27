@@ -1,0 +1,7 @@
+#!/bin/bash
+cd "$(dirname "$0")/.."
+echo
+echo '### Supported Platforms'
+echo
+cat .travis.yml |grep env | grep -vE '^[ ]*#' | grep CORDOVA | cut -d: -f2 | sed 's/PLATFORM=//'| sed 's/CORDOVA=/cordova@/' | sed s/CORDOVA_OSX=/cordova-osx@/ | sed s/CORDOVA_IOS=/cordova-ios@/ | sed s/CORDOVA_ANDROID=/cordova-android@/ | sed 's/ c/ + c/g' | sed 's/^/ */' | sort | uniq
+echo

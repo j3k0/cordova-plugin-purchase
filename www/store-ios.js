@@ -2287,6 +2287,10 @@ InAppPurchase.prototype.init = function (options, success, error) {
         exec('autoFinish', [], noop, noop);
     }
 
+    if (options.disableHostedContent) {
+        exec('disableHostedContent', [], noop, noop);
+    }
+
     var that = this;
     var setupOk = function () {
         log('setup ok');
@@ -2523,7 +2527,7 @@ InAppPurchase.prototype.processPendingUpdates = function() {
 //
 // Note that it may eventually be called before initialization... unfortunately.
 // In this case, we'll just keep pending updates in a list for later processing.
-InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt) {
+InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier) {
 
     if (!initialized) {
         var args = Array.prototype.slice.call(arguments);
@@ -2547,7 +2551,7 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
             protectCall(this.options.purchasing, 'options.purchasing', productId);
             return;
 		case "PaymentTransactionStatePurchased":
-            protectCall(this.options.purchase, 'options.purchase', transactionIdentifier, productId);
+            protectCall(this.options.purchase, 'options.purchase', transactionIdentifier, productId, originalTransactionIdentifier);
 			return;
 		case "PaymentTransactionStateFailed":
             protectCall(this.options.error, 'options.error', errorCode, errorText, {
@@ -2902,6 +2906,7 @@ function storekitInit() {
     storekit.init({
         debug:    store.verbosity >= store.DEBUG ? true : false,
         autoFinish: store.autoFinishTransactions,
+        disableHostedContent: store.disableHostedContent,
         error:    storekitError,
         purchase: storekitPurchased,
         purchasing: storekitPurchasing,
@@ -3071,7 +3076,7 @@ function storekitPurchasing(productId) {
 //! It will set the product state to `APPROVED` and associates the product
 //! with the order's transaction identifier.
 //!
-function storekitPurchased(transactionId, productId) {
+function storekitPurchased(transactionId, productId, originalTransactionId) {
     store.ready(function() {
         var product = store.get(productId);
         if (!product) {
@@ -3095,6 +3100,9 @@ function storekitPurchased(transactionId, productId) {
             type: 'ios-appstore',
             id:   transactionId
         };
+        if(originalTransactionId){
+            product.transaction.original_transaction_id = originalTransactionId;
+        }
         if (!product.transactions)
             product.transactions = [];
         product.transactions.push(transactionId);

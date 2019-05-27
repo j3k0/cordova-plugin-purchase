@@ -68,6 +68,10 @@ Demo application project
 - Edit [config.xml](https://github.com/dpa99c/cordova-plugin-purchase-demo/blob/master/config.xml) and set the `id` attribute in the `<widget>` element to that of your app Identifier
 - Edit [www/index.js](https://github.com/dpa99c/cordova-plugin-purchase-demo/blob/master/www/js/index.js) and set the `id` fields under `store.register` are for your IAP Identifiers.
 
+You can omit automatic downloading of hosted content by setting the `disableHostedContent` store flag, for example:
+
+    store.disableHostedContent = true;
+    store.refresh();
 
 ### <a name="non-renewing"></a>Non-Renewing iOS Subscriptions
 
