@@ -28,15 +28,15 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 
 ### Features
 
-|  | ios | android | win-8 | win-10/uwp |
-|--|--|--|--|--|
-| consumables | ✅ | ✅ | ✅ | ✅ |
-| non consumables | ✅ | ✅ | ✅ | ✅ |
-| subscriptions | ✅ | ✅ | ✅ | ✅ |
-| restore purchases | ✅ | ✅ | ✅ | ✅ |
-| receipt validations | ✅ | ✅ |  | ✅ |
-| downloadable content | ✅ |   |   |   |
-| introductory prices | ✅ | ✅ |   | ✅ |
+|  | ios | android | win-8 | win-10/uwp | mac |
+|--|--|--|--|--|--|
+| consumables | ✅ | ✅ | ✅ | ✅ | ✅ |
+| non consumables | ✅ | ✅ | ✅ | ✅ | ✅ |
+| subscriptions | ✅ | ✅ | ✅ | ✅ | ✅ |
+| restore purchases | ✅ | ✅ | ✅ | ✅ | ✅ |
+| receipt validations | ✅ | ✅ |  | ✅ | ✅ |
+| downloadable content | ✅ |   |   |   | ✅ |
+| introductory prices | ✅ | ✅ |   | ✅ | ✅ |
 
 ### Supported platforms
 
@@ -45,6 +45,7 @@ It lets you handle in-app purchases on many platforms with a single codebase.
    - with Google Play client version 3.9.16 or higher
  - **Windows** Store/Phone 8.1 or higher
  - **Windows 10 Mobile**
+ - **macOS** version 10
  - **Xbox One**
    - (and any platform supporting Microsoft's UWP)
 
