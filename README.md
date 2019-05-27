@@ -112,28 +112,32 @@ The [cordova-plugin-network-information](https://github.com/apache/cordova-plugi
 
 See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-ios-applications) and [Setup Android Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-android-applications).
 
-## Extensions
-
- * [Simple Non-Renewing Subscriptions](https://github.com/j3k0/cordova-non-renewing-subscription)
-   * The easiest way to integrate purchase into an app that only needs a non-renewing subscription.
-
 ## Getting Started
 
-If you don't know much about In-App Purchases, you'll find a good introduction
-on the subject here: [In-App Purchase Guidelines](https://developer.apple.com/in-app-purchase/).
-It's from Apple, but the exact same concepts apply to Android.
+If you don't know much about In-App Purchases, you'll find a good overview
+on the subject from those guys:
 
-You probably want to start by installing the plugin into your project.
-This is documented in the [Setup Guide](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup)
+ * [Apple's In-App Purchase Introduction](https://developer.apple.com/in-app-purchase/)
+ * [Google's In-App Billing Overview](https://developer.android.com/google/play/billing/billing_overview)
+ * [Microsoft's Monetization Documentation](https://docs.microsoft.com/en-us/windows/uwp/monetize/in-app-purchases-and-trials)
+ 
+They all share the same concepts, so they are a good reads in all cases.
 
-Once your project is setup properly, add the minimal initialization code in
-your project and check that it works. You'll find a [Minimal Example Here](doc/minimal-example.js).
+To ease the beggining of your journey into the intimidating world of In-App Purchase, we wrote a guide which hopefully will help you get things done: https://purchase.cordova.fovea.cc/
 
-Find a more [Complete Example Here](https://github.com/Fovea/cordova-plugin-purchase-demo).
+You'll have two main tasks to accomplish:
 
-If you can't get things to work, go through the [Troubleshooting Checklist](doc/troubleshooting.md).
+ 1. Setup your application and in-app products on AppStore, Play or Azure platforms. (using )
+ 2. Write the code in your application.
 
-You're all good? Time to read some more documentation. Hooray!
+For setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup) contains good information.
+
+ For the code itself, the [API Documentation](doc/api.md) is a recommended read.
+
+## Extensions
+
+* [Simple Non-Renewing Subscriptions](https://github.com/j3k0/cordova-non-renewing-subscription)
+* The easiest way to integrate purchase into an app that only needs a non-renewing subscription.
 
 ## Documentation
 
