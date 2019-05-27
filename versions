@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e
+VP="$(cat package.json | grep '"version"' | head -1 | cut -d\" -f4)"
+VPL="$(cat package-lock.json | grep '"version"' | head -1 | cut -d\" -f4)"
+VPP="$(cat plugin.xml | grep -E '^[ ]+version="' | head -1 | cut -d \" -f2)"
+
+if [ "x$VP" = "x$VPL" ] && [ "x$VP" = "x$VPP" ]; then
+  echo "All version numbers match: $VP"
+else
+  echo "Version numbers mismatch:"
+  echo "    package-lock.json: $VP"
+  echo "    plugin.xml: $VPL"
+  echo "    package.json: $VPP"
+  exit 1
+fi
