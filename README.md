@@ -63,11 +63,36 @@ cordova plugin add cordova-plugin-purchase [--variable BILLING_KEY="<BILLING_KEY
 
 Add the following to your `config.xml` file:
 
+<details>
+<summary>
+`phonegap cli-7.1.0`:
+</summary>
+
+
 ```xml
-<plugin name="cc.fovea.cordova.purchase" spec="^7.2.5" source="npm">
-    <variable name="BILLING_KEY" value="MIIB.....AB" />
+<gap:plugin name="cc.fovea.cordova.purchase" source="npm" version="6.0.0">
+<param name="BILLING_KEY" value="MIIB..."/>
+</gap:plugin>
+```
+---
+
+</details>
+
+<details>
+<summary>
+For `phonegap cli-8.0.0`:
+</summary>
+
+```xml
+<plugin spec="https://github.com/j3k0/cordova-plugin-purchase.git#phonegap-cli-8.0.0">
+    <param name="BILLING_KEY" value="MIIB..."/>
 </plugin>
 ```
+---
+
+</details>
+
+_`phonegap-cli-8.1.1`  is not supported if you need Android, because it ships with a buggy `cordova-android` version (`7.1.2`) that doesn't allow installation of .aidl files. If you don't need android, you can use the latest version of the plugin._
 
 ### Install recommended plugins
 
