@@ -6,13 +6,19 @@
 
 ---
 
-Need professional help and support? [Contact us](mailto:contact@fovea.cc)!
+Need professional help and support? [Contact Me](mailto:hoelt@fovea.cc).
 
-**Author**: Jean-Christophe Hoelt - <hoelt@fovea.cc>
+I dedicate a considerable amount of my free time to developing and maintaining
+this Cordova plugin, along with my other Open Source software. To help ensure
+this plugin is kept updated, new features are added and bugfixes are
+implemented quickly, please donate a couple of dollars (or a little more if you
+can stretch) as this will help me to afford to dedicate time to its
+maintenance. Please consider donating if you're using this plugin in an app
+that makes you money, if you're being paid to make the app, if you're asking
+for new features or priority bug fixes. Thank you!
 
-**Active Contributors**:
-
- * [Josef Fröhle](https://github.com/Dexus)
+ * [Patreon](https://www.patreon.com/join/2219243?)
+ * [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7A4826SH6RJSE&source=url)
 
 ## Summary
 
@@ -30,7 +36,7 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 | restore purchases | ✅ | ✅ | ✅ | ✅ |
 | receipt validations | ✅ | ✅ |  | ✅ |
 | downloadable content | ✅ |   |   |   |
-| introductory prices | ✅ | ✅ |   |   |
+| introductory prices | ✅ | ✅ |   | ✅ |
 
 ### Supported platforms
 
@@ -45,7 +51,7 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 
 ## Installation
 
-### Install the plugin (cordova)
+### Install the plugin (Cordova)
 
 ```sh
 cordova plugin add cordova-plugin-purchase [--variable BILLING_KEY="<BILLING_KEY>"]
@@ -53,10 +59,53 @@ cordova plugin add cordova-plugin-purchase [--variable BILLING_KEY="<BILLING_KEY
 
 `BILLING_KEY` is only required for Android. Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#add-android-billing-key) for details.
 
+### Install the plugin (PhoneGap)
+
+Add the following to your `config.xml` file:
+
+<details>
+<summary>phonegap cli-7.1.0</summary>
+
+
+```xml
+<gap:plugin name="cc.fovea.cordova.purchase" source="npm" version="6.0.0">
+<param name="BILLING_KEY" value="MIIB..."/>
+</gap:plugin>
+```
+---
+
+</details>
+
+<details>
+<summary>phonegap cli-8.0.0</summary>
+
+```xml
+<plugin spec="https://github.com/j3k0/cordova-plugin-purchase.git#phonegap-cli-8.0.0">
+    <param name="BILLING_KEY" value="MIIB..."/>
+</plugin>
+```
+---
+
+</details>
+
+_`phonegap-cli-8.1.1`  is not supported if you need Android, because it ships with a buggy `cordova-android` version (`7.1.2`) that doesn't allow installation of .aidl files. If you don't need android, you can use the latest version of the plugin._
+
 ### Install recommended plugins
 
-If the plugin cannot connect to the app store because it has no network connection, it will retry either periodically after a certain amount of time, or in case the device fires an ['online'](https://developer.mozilla.org/en-US/docs/Web/Events/online) event.
-In order for the 'online' event to be properly received in the Cordova application, the [cordova-plugin-network-information](https://github.com/apache/cordova-plugin-network-information) plugin is required as well. Without it, this plugin will only be able to use the periodic check to determine if the device is back online.
+<details>
+<summary>
+Install <strong>cordova-plugin-network-information</strong> (click for details).
+</summary>
+
+
+Sometimes, the plugin cannot connect to the app store because it has no network connection. It will then retry either:
+
+* periodically after a certain amount of time;
+* when the device fires an ['online'](https://developer.mozilla.org/en-US/docs/Web/Events/online) event.
+
+The [cordova-plugin-network-information](https://github.com/apache/cordova-plugin-network-information) plugin is required in order for the `'online'` event to be properly received in the Cordova application. Without it, this plugin will only be able to use the periodic check to determine if the device is back online.
+
+</details>
 
 ### Setup your Application
 
@@ -108,8 +157,8 @@ You're all good? Time to read some more documentation. Hooray!
 
 ### Contributors:
 
- * ![](https://avatars1.githubusercontent.com/u/191881?s=64&v=4) Jean-Christophe Hoelt, Author
-* ![](https://avatars3.githubusercontent.com/u/1674289?s=64&v=4) Josef Fröhle, Support
+ * ![](https://avatars1.githubusercontent.com/u/191881?s=64&v=4) [Jean-Christophe Hoelt](https://github.com/j3k0), Author
+ * ![](https://avatars3.githubusercontent.com/u/1674289?s=64&v=4) [Josef Fröhle](https://github.com/Dexus), Support 
  * Guillaume Charhon, initial Android code
  * Matt Kane, initial iOS code
  * Mohammad Naghavi, original unification attempt
