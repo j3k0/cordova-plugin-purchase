@@ -58,7 +58,7 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 cordova plugin add cordova-plugin-purchase [--variable BILLING_KEY="<BILLING_KEY>"]
 ```
 
-`BILLING_KEY` is only required for Android. Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#add-android-billing-key) for details.
+`BILLING_KEY` is only required for Android. Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup-for-Android-Google-Play#add-android-billing-key) for details.
 
 ### Install the plugin (PhoneGap)
 
@@ -110,34 +110,34 @@ The [cordova-plugin-network-information](https://github.com/apache/cordova-plugi
 
 ### Setup your Application
 
-See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-ios-applications) and [Setup Android Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-android-applications).
+See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup-for-iOS-and-macOS#setup-ios-applications) and [Setup Android Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup-for-Android-Google-Play#setup-android-applications).
 
 ## Getting Started
 
 If you don't know much about In-App Purchases, you'll find a good overview
 on the subject from those guys:
 
- * [Apple's In-App Purchase Introduction](https://developer.apple.com/in-app-purchase/)
- * [Google's In-App Billing Overview](https://developer.android.com/google/play/billing/billing_overview)
- * [Microsoft's Monetization Documentation](https://docs.microsoft.com/en-us/windows/uwp/monetize/in-app-purchases-and-trials)
- 
-They all share the same concepts, so they are a good reads in all cases.
+* Apple:
+   * [In-App Purchase Introduction](https://developer.apple.com/in-app-purchase/)
+   * [Auto-Renewable Subscriptions](https://developer.apple.com/app-store/subscriptions)
+* Google:
+   * [In-App Purchases Best Practices](https://developer.android.com/distribute/best-practices/earn/in-app-purchases)
+   * [Billing Overview](https://developer.android.com/google/play/billing/billing_overview)
+* Microsoft
+  * [Monetize with In-App Purchases](https://docs.microsoft.com/en-us/windows/uwp/monetize/in-app-purchases-and-trials)
 
-To ease the beggining of your journey into the intimidating world of In-App Purchase, we wrote a guide which hopefully will help you get things done: https://purchase.cordova.fovea.cc/
+They all share the same concepts, so they are a good reads in all cases, with some advice that apply to all platforms.
 
-You'll have two main tasks to accomplish:
+To ease the beggining of your journey into the intimidating world of In-App Purchase with Cordova, we wrote a guide which hopefully will help you get things done: https://purchase.cordova.fovea.cc/
 
- 1. Setup your application and in-app products on AppStore, Play or Azure platforms. (using )
- 2. Write the code in your application.
+In short, you'll have two main tasks to accomplish:
 
-For setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup) contains good information.
+ 1. Setup your application and In-App Products on AppStore, Play or Azure platforms using their respective web interfaces.
+ 2. Add In-App Purchase code to your application.
 
- For the code itself, the [API Documentation](doc/api.md) is a recommended read.
+For setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/wiki/Home) contains good information.
 
-## Extensions
-
-* [Simple Non-Renewing Subscriptions](https://github.com/j3k0/cordova-non-renewing-subscription)
-* The easiest way to integrate purchase into an app that only needs a non-renewing subscription.
+ For the code itself, the [API Documentation](doc/api.md) is a definitely a recommended read.
 
 ## Documentation
 
@@ -149,12 +149,18 @@ For setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup
 
 ## Extra Resources
 
-### for iOS
+### For iOS
 
- - [Getting Started with In-App Purchase on iOS](https://developer.apple.com/in-app-purchase/)
-   - Read about the business models supported by In-App Purchase and the types of items you can sell in your app.
- - [In-App Purchase Configuration Guide for iTunes Connect](https://developer.apple.com/library/ios/documentation/LanguagesUtilities/Conceptual/iTunesConnectInAppPurchase_Guide/Chapters/Introduction.html)
-   - Learn how to set up and manage In-App Purchases with iTunes Connect.
+ - [In-App Purchase Configuration Guide for AppStore Connect](https://developer.apple.com/support/app-store-connect/)
+   - Learn how to set up and manage In-App Purchases with AppStore Connect.
+
+### Extensions
+   
+Have a very simple need? Maybe this will help.
+
+   * [Simple Non-Renewing Subscriptions](https://github.com/j3k0/cordova-non-renewing-subscription)
+   * The easiest way to integrate purchase into an app that only needs a non-renewing subscription.
+   
 
 # Contribute
 
