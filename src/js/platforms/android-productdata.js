@@ -70,7 +70,7 @@
                         var purchase = purchases[i];
                         var p = store.get(purchase.productId);
                         if (!p) {
-                            store.log.warn("plugin -> user owns a non-registered product");
+                            store.log.warn("plugin -> user owns a non-registered product: " + purchase.productId);
                             continue;
                         }
                         store.setProductData(p, purchase);
