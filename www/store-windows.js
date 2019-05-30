@@ -2354,6 +2354,7 @@ function init() {
 function iabReady() {
     store.log.debug("plugin -> ready");
     store.inappbilling.getAvailableProducts(iabLoaded, function(err) {
+        retry(iabReady);
         store.error({
             code: store.ERR_LOAD,
             message: 'Loading product info failed - ' + err
