@@ -496,6 +496,7 @@ store.Product = function(options) {
     this.loaded = options.loaded;
 
     ///  - `product.valid` - Product has been loaded and is a valid product
+    ///    - when product definitions can't be loaded from the store, you should display instead a warning like: "You cannot make purchases at this stage. Try again in a moment. Make sure you didn't enable In-App-Purchases restrictions on your phone."
     this.valid  = options.valid;
 
     ///  - `product.canPurchase` - Product is in a state where it can be purchased
@@ -1291,10 +1292,7 @@ store.order = function(pid, additionalData) {
     ///
 };
 
-///
-/// As usual, you can unregister the callbacks by using [`store.off()`](#off).
-///
-
+//
 // Remove pending callbacks registered with `order`
 store.order.unregister = function(cb) {
     for (var i in callbacks) {
@@ -1631,11 +1629,9 @@ store.refresh = function() {
 })();
 
 ///
-/// ## <a name="refresh"></a>*store.manageSubscriptions()*
+/// ## <a name="manageSubscriptions"></a>*store.manageSubscriptions()*
 ///
-/// (iOS only)
-///
-/// Opens the Manage Subscription page in iTunes.
+/// Opens the Manage Subscription page (AppStore, Play, Microsoft, ...).
 ///
 /// ##### example usage
 ///

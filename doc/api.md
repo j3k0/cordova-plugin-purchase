@@ -359,6 +359,7 @@ Products object have the following fields and methods.
  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
  - `product.loaded` - Product has been loaded from server, however it can still be either `valid` or not
  - `product.valid` - Product has been loaded and is a valid product
+   - when product definitions can't be loaded from the store, you should display instead a warning like: "You cannot make purchases at this stage. Try again in a moment. Make sure you didn't enable In-App-Purchases restrictions on your phone."
  - `product.canPurchase` - Product is in a state where it can be purchased
  - `product.owned` - Product is owned
  - `product.downloading` - Product is downloading non-consumable content
@@ -687,9 +688,6 @@ the purchase process.
  - `then` - called when the order was successfully initiated
  - `error` - called if the order couldn't be initiated
 
-
-As usual, you can unregister the callbacks by using [`store.off()`](#off).
-
 ## <a name="ready"></a>*store.ready(callback)*
 Register the `callback` to be called when the store is ready to be used.
 
@@ -810,11 +808,9 @@ the "approved" event listener had be registered properly,
 and in the callback `product.finish()` should be called.
 
 
-## <a name="refresh"></a>*store.manageSubscriptions()*
+## <a name="manageSubscriptions"></a>*store.manageSubscriptions()*
 
-(iOS only)
-
-Opens the Manage Subscription page in iTunes.
+Opens the Manage Subscription page (AppStore, Play, Microsoft, ...).
 
 ##### example usage
 
