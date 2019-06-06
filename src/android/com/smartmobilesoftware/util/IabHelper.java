@@ -528,10 +528,11 @@ public class IabHelper {
 
         if (resultCode == Activity.RESULT_OK && responseCode == BILLING_RESPONSE_RESULT_OK) {
             logDebug("Successful resultcode from purchase activity.");
-            logDebug("Purchase data: " + purchaseData);
-            logDebug("Data signature: " + dataSignature);
-            logDebug("Extras: " + data.getExtras());
-            logDebug("Expected item type: " + mPurchasingItemType);
+            logDebug(" - Billing key: " + mSignatureBase64);
+            logDebug(" - Purchase data: " + purchaseData);
+            logDebug(" - Data signature: " + dataSignature);
+            logDebug(" - Extras: " + data.getExtras());
+            logDebug(" - Expected item type: " + mPurchasingItemType);
 
             if (purchaseData == null || dataSignature == null) {
                 logError("BUG: either purchaseData or dataSignature is null.");

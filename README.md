@@ -6,13 +6,19 @@
 
 ---
 
-Need professional help and support? [Contact us](mailto:contact@fovea.cc)!
+Need professional help and support? [Contact Me](mailto:hoelt@fovea.cc).
 
-**Author**: Jean-Christophe Hoelt - <hoelt@fovea.cc>
+I dedicate a considerable amount of my free time to developing and maintaining
+this Cordova plugin, along with my other Open Source software. To help ensure
+this plugin is kept updated, new features are added and bugfixes are
+implemented quickly, please donate a couple of dollars (or a little more if you
+can stretch) as this will help me to afford to dedicate time to its
+maintenance. Please consider donating if you're using this plugin in an app
+that makes you money, if you're being paid to make the app, if you're asking
+for new features or priority bug fixes. Thank you!
 
-**Active Contributors**:
-
- * [Josef Fröhle](https://github.com/Dexus)
+ * [Patreon](https://www.patreon.com/join/2219243?)
+ * [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7A4826SH6RJSE&source=url)
 
 ## Summary
 
@@ -22,15 +28,15 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 
 ### Features
 
-|  | ios | android | win-8 | win-10/uwp |
-|--|--|--|--|--|
-| consumables | ✅ | ✅ | ✅ | ✅ |
-| non consumables | ✅ | ✅ | ✅ | ✅ |
-| subscriptions | ✅ | ✅ | ✅ | ✅ |
-| restore purchases | ✅ | ✅ | ✅ | ✅ |
-| receipt validations | ✅ | ✅ |  | ✅ |
-| downloadable content | ✅ |   |   |   |
-| introductory prices | ✅ | ✅ |   |   |
+|  | ios | android | win-8 | win-10/uwp | mac |
+|--|--|--|--|--|--|
+| consumables | ✅ | ✅ | ✅ | ✅ | ✅ |
+| non consumables | ✅ | ✅ | ✅ | ✅ | ✅ |
+| subscriptions | ✅ | ✅ | ✅ | ✅ | ✅ |
+| restore purchases | ✅ | ✅ | ✅ | ✅ | ✅ |
+| receipt validations | ✅ | ✅ |  | ✅ | ✅ |
+| downloadable content | ✅ |   |   |   | ✅ |
+| introductory prices | ✅ | ✅ |   | ✅ | ✅ |
 
 ### Supported platforms
 
@@ -39,51 +45,99 @@ It lets you handle in-app purchases on many platforms with a single codebase.
    - with Google Play client version 3.9.16 or higher
  - **Windows** Store/Phone 8.1 or higher
  - **Windows 10 Mobile**
+ - **macOS** version 10
  - **Xbox One**
    - (and any platform supporting Microsoft's UWP)
 
 
 ## Installation
 
-### Install the plugin (cordova)
+### Install the plugin (Cordova)
 
 ```sh
 cordova plugin add cordova-plugin-purchase [--variable BILLING_KEY="<BILLING_KEY>"]
 ```
 
-`BILLING_KEY` is only required for Android. Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#add-android-billing-key) for details.
+`BILLING_KEY` is only required for Android. Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup-for-Android-Google-Play#add-android-billing-key) for details.
+
+### Install the plugin (PhoneGap)
+
+Add the following to your `config.xml` file:
+
+<details>
+<summary>phonegap cli-7.1.0</summary>
+
+
+```xml
+<gap:plugin name="cc.fovea.cordova.purchase" source="npm" version="6.0.0">
+<param name="BILLING_KEY" value="MIIB..."/>
+</gap:plugin>
+```
+---
+
+</details>
+
+<details>
+<summary>phonegap cli-8.0.0</summary>
+
+```xml
+<plugin spec="https://github.com/j3k0/cordova-plugin-purchase.git#phonegap-cli-8.0.0">
+    <param name="BILLING_KEY" value="MIIB..."/>
+</plugin>
+```
+---
+
+</details>
+
+_`phonegap-cli-8.1.1`  is not supported if you need Android, because it ships with a buggy `cordova-android` version (`7.1.2`) that doesn't allow installation of .aidl files. If you don't need android, you can use the latest version of the plugin._
 
 ### Install recommended plugins
 
-If the plugin cannot connect to the app store because it has no network connection, it will retry either periodically after a certain amount of time, or in case the device fires an ['online'](https://developer.mozilla.org/en-US/docs/Web/Events/online) event.
-In order for the 'online' event to be properly received in the Cordova application, the [cordova-plugin-network-information](https://github.com/apache/cordova-plugin-network-information) plugin is required as well. Without it, this plugin will only be able to use the periodic check to determine if the device is back online.
+<details>
+<summary>
+Install <strong>cordova-plugin-network-information</strong> (click for details).
+</summary>
+
+
+Sometimes, the plugin cannot connect to the app store because it has no network connection. It will then retry either:
+
+* periodically after a certain amount of time;
+* when the device fires an ['online'](https://developer.mozilla.org/en-US/docs/Web/Events/online) event.
+
+The [cordova-plugin-network-information](https://github.com/apache/cordova-plugin-network-information) plugin is required in order for the `'online'` event to be properly received in the Cordova application. Without it, this plugin will only be able to use the periodic check to determine if the device is back online.
+
+</details>
 
 ### Setup your Application
 
-See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-ios-applications) and [Setup Android Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO#setup-android-applications).
-
-## Extensions
-
- * [Simple Non-Renewing Subscriptions](https://github.com/j3k0/cordova-non-renewing-subscription)
-   * The easiest way to integrate purchase into an app that only needs a non-renewing subscription.
+See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup-for-iOS-and-macOS#setup-ios-applications) and [Setup Android Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup-for-Android-Google-Play#setup-android-applications).
 
 ## Getting Started
 
-If you don't know much about In-App Purchases, you'll find a good introduction
-on the subject here: [In-App Purchase Guidelines](https://developer.apple.com/in-app-purchase/).
-It's from Apple, but the exact same concepts apply to Android.
+If you don't know much about In-App Purchases, you'll find a good overview
+on the subject from those guys:
 
-You probably want to start by installing the plugin into your project.
-This is documented in the [Setup Guide](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup)
+* Apple:
+   * [In-App Purchase Introduction](https://developer.apple.com/in-app-purchase/)
+   * [Auto-Renewable Subscriptions](https://developer.apple.com/app-store/subscriptions)
+* Google:
+   * [In-App Purchases Best Practices](https://developer.android.com/distribute/best-practices/earn/in-app-purchases)
+   * [Billing Overview](https://developer.android.com/google/play/billing/billing_overview)
+* Microsoft
+  * [Monetize with In-App Purchases](https://docs.microsoft.com/en-us/windows/uwp/monetize/in-app-purchases-and-trials)
 
-Once your project is setup properly, add the minimal initialization code in
-your project and check that it works. You'll find a [Minimal Example Here](doc/minimal-example.js).
+They all share the same concepts, so they are a good reads in all cases, with some advice that apply to all platforms.
 
-Find a more [Complete Example Here](https://github.com/Fovea/cordova-plugin-purchase-demo).
+To ease the beggining of your journey into the intimidating world of In-App Purchase with Cordova, we wrote a guide which hopefully will help you get things done: https://purchase.cordova.fovea.cc/
 
-If you can't get things to work, go through the [Troubleshooting Checklist](doc/troubleshooting.md).
+In short, you'll have two main tasks to accomplish:
 
-You're all good? Time to read some more documentation. Hooray!
+ 1. Setup your application and In-App Products on AppStore, Play or Azure platforms using their respective web interfaces.
+ 2. Add In-App Purchase code to your application.
+
+For setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/wiki/Home) contains good information.
+
+ For the code itself, the [API Documentation](doc/api.md) is a definitely a recommended read.
 
 ## Documentation
 
@@ -95,12 +149,18 @@ You're all good? Time to read some more documentation. Hooray!
 
 ## Extra Resources
 
-### for iOS
+### For iOS
 
- - [Getting Started with In-App Purchase on iOS](https://developer.apple.com/in-app-purchase/)
-   - Read about the business models supported by In-App Purchase and the types of items you can sell in your app.
- - [In-App Purchase Configuration Guide for iTunes Connect](https://developer.apple.com/library/ios/documentation/LanguagesUtilities/Conceptual/iTunesConnectInAppPurchase_Guide/Chapters/Introduction.html)
-   - Learn how to set up and manage In-App Purchases with iTunes Connect.
+ - [In-App Purchase Configuration Guide for AppStore Connect](https://developer.apple.com/support/app-store-connect/)
+   - Learn how to set up and manage In-App Purchases with AppStore Connect.
+
+### Extensions
+   
+Have a very simple need? Maybe this will help.
+
+   * [Simple Non-Renewing Subscriptions](https://github.com/j3k0/cordova-non-renewing-subscription)
+   * The easiest way to integrate purchase into an app that only needs a non-renewing subscription.
+   
 
 # Contribute
 
@@ -108,8 +168,8 @@ You're all good? Time to read some more documentation. Hooray!
 
 ### Contributors:
 
- * ![](https://avatars1.githubusercontent.com/u/191881?s=64&v=4) Jean-Christophe Hoelt, Author
-* ![](https://avatars3.githubusercontent.com/u/1674289?s=64&v=4) Josef Fröhle, Support
+ * ![](https://avatars1.githubusercontent.com/u/191881?s=64&v=4) [Jean-Christophe Hoelt](https://github.com/j3k0), Author
+ * ![](https://avatars3.githubusercontent.com/u/1674289?s=64&v=4) [Josef Fröhle](https://github.com/Dexus), Support 
  * Guillaume Charhon, initial Android code
  * Matt Kane, initial iOS code
  * Mohammad Naghavi, original unification attempt

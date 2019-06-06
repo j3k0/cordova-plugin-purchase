@@ -475,6 +475,7 @@ store.Product = function(options) {
     this.loaded = options.loaded;
 
     ///  - `product.valid` - Product has been loaded and is a valid product
+    ///    - when product definitions can't be loaded from the store, you should display instead a warning like: "You cannot make purchases at this stage. Try again in a moment. Make sure you didn't enable In-App-Purchases restrictions on your phone."
     this.valid  = options.valid;
 
     ///  - `product.canPurchase` - Product is in a state where it can be purchased
@@ -1270,10 +1271,7 @@ store.order = function(pid, additionalData) {
     ///
 };
 
-///
-/// As usual, you can unregister the callbacks by using [`store.off()`](#off).
-///
-
+//
 // Remove pending callbacks registered with `order`
 store.order.unregister = function(cb) {
     for (var i in callbacks) {
@@ -1610,11 +1608,9 @@ store.refresh = function() {
 })();
 
 ///
-/// ## <a name="refresh"></a>*store.manageSubscriptions()*
+/// ## <a name="manageSubscriptions"></a>*store.manageSubscriptions()*
 ///
-/// (iOS only)
-///
-/// Opens the Manage Subscription page in iTunes.
+/// Opens the Manage Subscription page (AppStore, Play, Microsoft, ...).
 ///
 /// ##### example usage
 ///
@@ -2343,6 +2339,7 @@ function init() {
                 code: store.ERR_SETUP,
                 message: 'Init failed - ' + err
             });
+            retry(init);
         },
         {
             showLog: store.verbosity >= store.DEBUG ? true : false
@@ -2353,6 +2350,7 @@ function init() {
 function iabReady() {
     store.log.debug("plugin -> ready");
     store.inappbilling.getAvailableProducts(iabLoaded, function(err) {
+        retry(iabReady);
         store.error({
             code: store.ERR_LOAD,
             message: 'Loading product info failed - ' + err
@@ -2538,6 +2536,44 @@ store.when("product", "finished", function(product) {
         product.set('state', store.OWNED);
     }
 });
+
+//
+// ## Retry failed requests
+//
+// When setup and/or load failed, the plugin will retry over and over till it can connect
+// to the store.
+//
+// However, to be nice with the battery, it'll double the retry timeout each time.
+//
+// Special case, when the device goes online, it'll trigger all retry callback in the queue.
+var retryTimeout = 5000;
+var retries = [];
+function retry(fn) {
+
+    var tid = setTimeout(function() {
+        retries = retries.filter(function(o) {
+            return tid !== o.tid;
+        });
+        fn();
+    }, retryTimeout);
+
+    retries.push({ tid: tid, fn: fn });
+
+    retryTimeout *= 2;
+    // Max out the waiting time to 2 minutes.
+    if (retryTimeout > 120000)
+        retryTimeout = 120000;
+}
+
+document.addEventListener("online", function() {
+    var a = retries;
+    retries = [];
+    retryTimeout = 5000;
+    for (var i = 0; i < a.length; ++i) {
+        clearTimeout(a[i].tid);
+        a[i].fn.call(this);
+    }
+}, false);
 
 })();
 /* global Windows */

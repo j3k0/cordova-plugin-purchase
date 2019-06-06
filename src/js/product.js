@@ -88,6 +88,7 @@ store.Product = function(options) {
     this.loaded = options.loaded;
 
     ///  - `product.valid` - Product has been loaded and is a valid product
+    ///    - when product definitions can't be loaded from the store, you should display instead a warning like: "You cannot make purchases at this stage. Try again in a moment. Make sure you didn't enable In-App-Purchases restrictions on your phone."
     this.valid  = options.valid;
 
     ///  - `product.canPurchase` - Product is in a state where it can be purchased

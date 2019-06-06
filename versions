@@ -9,7 +9,7 @@ if [ "x$VP" = "x$VPL" ] && [ "x$VP" = "x$VPP" ]; then
 else
   echo "Version numbers mismatch:"
   echo "    package-lock.json: $VP"
-  echo "    plugin.xml: $VPL"
-  echo "    package.json: $VPP"
+  echo "    package.json: $VPL"
+  echo "    plugin.xml: $VPP"
   exit 1
 fi

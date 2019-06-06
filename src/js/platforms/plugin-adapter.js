@@ -46,6 +46,7 @@ function init() {
                 code: store.ERR_SETUP,
                 message: 'Init failed - ' + err
             });
+            retry(init);
         },
         {
             showLog: store.verbosity >= store.DEBUG ? true : false
@@ -56,6 +57,7 @@ function init() {
 function iabReady() {
     store.log.debug("plugin -> ready");
     store.inappbilling.getAvailableProducts(iabLoaded, function(err) {
+        retry(iabReady);
         store.error({
             code: store.ERR_LOAD,
             message: 'Loading product info failed - ' + err
@@ -241,5 +243,43 @@ store.when("product", "finished", function(product) {
         product.set('state', store.OWNED);
     }
 });
+
+//
+// ## Retry failed requests
+//
+// When setup and/or load failed, the plugin will retry over and over till it can connect
+// to the store.
+//
+// However, to be nice with the battery, it'll double the retry timeout each time.
+//
+// Special case, when the device goes online, it'll trigger all retry callback in the queue.
+var retryTimeout = 5000;
+var retries = [];
+function retry(fn) {
+
+    var tid = setTimeout(function() {
+        retries = retries.filter(function(o) {
+            return tid !== o.tid;
+        });
+        fn();
+    }, retryTimeout);
+
+    retries.push({ tid: tid, fn: fn });
+
+    retryTimeout *= 2;
+    // Max out the waiting time to 2 minutes.
+    if (retryTimeout > 120000)
+        retryTimeout = 120000;
+}
+
+document.addEventListener("online", function() {
+    var a = retries;
+    retries = [];
+    retryTimeout = 5000;
+    for (var i = 0; i < a.length; ++i) {
+        clearTimeout(a[i].tid);
+        a[i].fn.call(this);
+    }
+}, false);
 
 })();
