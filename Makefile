@@ -57,6 +57,12 @@ test-js-coverage: jshint eslint prepare-test-js
 	@${NODE_MODULES}/.bin/istanbul cover --root test/ test/js/run.js
 	@${NODE_MODULES}/.bin/coveralls < coverage/lcov.info
 
+.checkstyle.jar:
+	curl "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.23/checkstyle-8.23-all.jar" -o .checkstyle.jar -L
+
+javalint: .checkstyle.jar
+	java -jar .checkstyle.jar -c /sun_checks.xml src/android/cc/fovea/PurchasePlugin.java
+
 test-install: build
 	@./test/run.sh cc.fovea.babygoo babygooinapp1
 

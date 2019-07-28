@@ -111,8 +111,8 @@ store.Product = function(options) {
 
     ///  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
     ///  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
-    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows only)
-    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows only)
+    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows and android)
+    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows and android)
     ///  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
     ///  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
@@ -333,6 +333,8 @@ store.Product.prototype.verify = function() {
             that.expiryDate = new Date(t.expiryDate);
         if (t.lastRenewalDate)
             that.lastRenewalDate = new Date(t.lastRenewalDate);
+        if (t.renewalIntent)
+            that.renewalIntent = t.renewalIntent;
         return t;
     }
 };

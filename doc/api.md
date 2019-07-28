@@ -368,8 +368,8 @@ Products object have the following fields and methods.
  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
- - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows only)
- - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows only)
+ - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows and android)
+ - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows and android)
  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
@@ -785,6 +785,10 @@ One good way of doing it is to add a "Refresh Purchases" button in your
 applications settings. This way, if delivery of a purchase failed or
 if a user wants to restore purchases he made from another device, he'll
 have a way to do just that.
+
+_NOTE:_ It is a required by the Apple AppStore that a "Refresh Purchases"
+        button be visible in the UI.
+
 
 ##### example usage
 

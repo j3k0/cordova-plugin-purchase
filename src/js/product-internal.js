@@ -33,6 +33,8 @@ store.Product.prototype.stateChanged = function() {
     if (!this.state || this.state === store.REGISTERED)
         delete this.valid;
 
+    store.log.debug("state: " + this.id + " -> " + this.state);
+
     if (this.state)
         this.trigger(this.state);
 };

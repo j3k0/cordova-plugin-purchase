@@ -119,6 +119,8 @@ function oldApi() {
             win(true);
         },
 
+        setListener: function () {},
+
         getPurchases: function (win, fail, args) {
             var licenses = [];
             // now get a specific licenses.
@@ -278,6 +280,8 @@ function newApi () {
             }
             win(true);
         },
+
+        setListener: function () {},
 
         getPurchases: function (win, fail, args) {
             log('getPurchases()');
