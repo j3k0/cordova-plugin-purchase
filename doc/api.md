@@ -784,7 +784,8 @@ processing, so you'd better consider it twice.
 One good way of doing it is to add a "Refresh Purchases" button in your
 applications settings. This way, if delivery of a purchase failed or
 if a user wants to restore purchases he made from another device, he'll
-have a way to do just that.
+have a way to do just that. NOTE: the iOS App Store requires a
+restore/refresh button to be visible in the UI.
 
 ##### example usage
 
