@@ -59,9 +59,6 @@ public class PurchasePlugin
   /** A reference to BillingClient. */
   private BillingClient mBillingClient;
 
-  /** Application's public key. */
-  private String mBase64EncodedPublicKey;
-
   private List<String> mInAppSkus;
   private List<String> mSubsSkus;
   private final List<Purchase> mPurchases = new ArrayList<>();
@@ -200,30 +197,12 @@ public class PurchasePlugin
     return cordova.getActivity().getString(billingKeyIdentifier);
   }
 
-  private void handlePurchase(final Purchase purchase) {
-    Log.d(mTag, "handlePurchase()");
-    if (!verifySignature(purchase.getOriginalJson(), purchase.getSignature())) {
-      Log.w(mTag, "handlePurchase() -> Got a purchase: " + purchase
-          + "; but signature is bad. Skipping...");
-      return;
-    }
-    Log.d(mTag, "handlePurchase() -> Verified purchase: " + purchase);
-  }
-
   // Initialize the plugin
   private void init(
       final List<String> inAppSkus,
       final List<String> subsSkus) {
 
     Log.d(mTag, "init()");
-    // Some sanity checks to see if the developer (that's you!) really followed
-    // the instructions to run this plugin.
-    mBase64EncodedPublicKey = getPublicKey();
-    if (mBase64EncodedPublicKey == null
-        || mBase64EncodedPublicKey == ""
-        || mBase64EncodedPublicKey.contains("CONSTRUCT_YOUR")) {
-      throw new RuntimeException("Please configure your app's public key.");
-    }
     mInAppSkus = inAppSkus;
     mSubsSkus = subsSkus;
 
@@ -892,33 +871,6 @@ public class PurchasePlugin
       }
     }
     return ret;
-  }
-
-  /**
-   * Verifies that the purchase was signed correctly.
-   * <p>Note: It's strongly recommended to perform such check on your backend
-   * since hackers can replace this method with "constant true" if they
-   * decompile/rebuild your app.</p>
-   *
-   * @param signedData Data to verify
-   * @param signature Value for the signature
-   *
-   * @return true if the signature is valid.
-   */
-  private boolean verifySignature(
-      final String signedData,
-      final String signature) {
-
-    try {
-      return Security.verifyPurchaseSignature(
-          mBase64EncodedPublicKey,
-          signedData,
-          signature);
-    } catch (IOException e) {
-      Log.e(mTag, "verifyPurchaseSignature() -> "
-          + "Got an exception trying to validate a purchase: " + e);
-      return false;
-    }
   }
 
   private String format(final BillingResult result) {
