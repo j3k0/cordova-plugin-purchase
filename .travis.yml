@@ -279,10 +279,10 @@ script:
   - if [[ "$PLATFORM" =~ ios ]]; then cordova platform add ios@$CORDOVA_IOS; fi
   - if [[ "$PLATFORM" =~ osx ]]; then cordova platform add osx@$CORDOVA_OSX; fi
   - if [[ "$PLATFORM" =~ android ]]; then cordova platform add android@$CORDOVA_ANDROID; fi
-  - cordova plugin add "$ROOT_DIR" --variable BILLING_KEY=0123456789abcdef
-  - rsync -r "$ROOT_DIR"/src/android/ plugins/cc.fovea.cordova.purchase/src/android
-  - cp "$ROOT_DIR"/src/ios/*.[hm] plugins/cc.fovea.cordova.purchase/src/ios/
-  - cp "$ROOT_DIR"/www/*.js plugins/cc.fovea.cordova.purchase/www/
+  - cordova plugin add "$ROOT_DIR"
+  - rsync -r "$ROOT_DIR"/src/android/ plugins/cordova-plugin-purchase/src/android
+  - cp "$ROOT_DIR"/src/ios/*.[hm] plugins/cordova-plugin-purchase/src/ios/
+  - cp "$ROOT_DIR"/www/*.js plugins/cordova-plugin-purchase/www/
   - cordova plugin add https://github.com/apache/cordova-plugin-console.git
   - cordova build --debug 2>&1
   - if [[ "$PLATFORM" =~ ios ]]; then test -e platforms/ios/build/emulator/Test.app; fi

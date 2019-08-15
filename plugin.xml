@@ -24,7 +24,7 @@ SOFTWARE.
 -->
 
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-    id="cc.fovea.cordova.purchase"
+    id="cordova-plugin-purchase"
     xmlns:android="http://schemas.android.com/apk/res/android"
     version="9.0.0">
 

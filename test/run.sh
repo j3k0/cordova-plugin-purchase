@@ -64,9 +64,9 @@ echo Add Purchase plugin
 cordova plugin add "$PLUGIN_URL" --variable BILLING_KEY="$BILLING_KEY" || exit 1
 
 echo Copy non commited files
-rsync -r "$ROOT_DIR"/src/android/ plugins/cc.fovea.cordova.purchase/src/android
-cp "$ROOT_DIR"/src/ios/*.[hm] plugins/cc.fovea.cordova.purchase/src/ios/
-cp "$ROOT_DIR"/www/*.js plugins/cc.fovea.cordova.purchase/www/
+rsync -r "$ROOT_DIR"/src/android/ plugins/cordova-plugin-purchase/src/android
+cp "$ROOT_DIR"/src/ios/*.[hm] plugins/cordova-plugin-purchase/src/ios/
+cp "$ROOT_DIR"/www/*.js plugins/cordova-plugin-purchase/www/
 
 # Add console debug
 cordova plugin add https://github.com/apache/cordova-plugin-console.git || exit 1
@@ -102,8 +102,8 @@ case "$OSTYPE" in darwin*)
     find "$BUILD_DIR/platforms/ios/build"
 
     echo Check iOS installation
-    IOS_PLUGIN_DIR="$BUILD_DIR/platforms/ios/Test/Plugins/cc.fovea.cordova.purchase"
-    IOS_WWW_DIR="$BUILD_DIR/platforms/ios/www/plugins/cc.fovea.cordova.purchase/www"
+    IOS_PLUGIN_DIR="$BUILD_DIR/platforms/ios/Test/Plugins/cordova-plugin-purchase"
+    IOS_WWW_DIR="$BUILD_DIR/platforms/ios/www/plugins/cordova-plugin-purchase/www"
     IOS_PROJ="$BUILD_DIR/platforms/ios/Test.xcodeproj/project.pbxproj"
 
     hasFile "$IOS_PLUGIN_DIR/InAppPurchase.m"
@@ -131,8 +131,8 @@ case "$OSTYPE" in darwin*)
     tail -20 $BUILD_DIR/build-osx.txt
 
     echo Check OSX installation
-    OSX_PLUGIN_DIR="$BUILD_DIR/platforms/osx/Test/Plugins/cc.fovea.cordova.purchase"
-    OSX_WWW_DIR="$BUILD_DIR/platforms/osx/www/plugins/cc.fovea.cordova.purchase/www"
+    OSX_PLUGIN_DIR="$BUILD_DIR/platforms/osx/Test/Plugins/cordova-plugin-purchase"
+    OSX_WWW_DIR="$BUILD_DIR/platforms/osx/www/plugins/cordova-plugin-purchase/www"
     OSX_PROJ="$BUILD_DIR/platforms/osx/Test.xcodeproj/project.pbxproj"
 
     hasFile "$OSX_PLUGIN_DIR/InAppPurchase.m"

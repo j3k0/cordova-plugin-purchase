@@ -83,11 +83,9 @@ node_modules\.bin\uglifyjs www\store-android.js -b -o www\store-android.js
 
 ## Using the plugin with Visual Studio tools for Cordova
 
-After adding the plugin to the config.xml in Visual Studio. If you receive an error about a missing `BILLING_KEY` parameter.
-Add the following into your config.xml
+Add the following into your config.xml.
 
 ```
-<vs:plugin name="cc.fovea.cordova.purchase" version="4.0.0" src="https://github.com/j3k0/cordova-plugin-purchase.git">
-  <param name="BILLING_KEY" value="YOUR GOOGLE BILLING KEY HERE TO TARGET ANDROID" />
+<vs:plugin name="cordova-plugin-purchase" src="https://github.com/j3k0/cordova-plugin-purchase.git">
 </vs:plugin>
 ``` 
