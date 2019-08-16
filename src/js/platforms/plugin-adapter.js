@@ -387,7 +387,35 @@ store.extendAdditionalData = function(product) {
     if (!a.developerId && store.developerName) {
         a.developerId = store.utils.md5(store.developerName);
     }
+
+    // If we're ordering a subscription, check if another one in the
+    // same group is already purchased, set `oldSku` in that case (so
+    // it's replaced).
+    if (product.type === store.PAID_SUBSCRIPTION && !a.oldSku) {
+        var group = getGroup(product);
+        store.products.forEach(function(otherProduct) {
+            if (group === getGroup(otherProduct) && isPurchased(otherProduct)) {
+                a.oldSku = otherProduct.id;
+            }
+        });
+    }
 };
+
+function getGroup(product) {
+    if (product.type === store.PAID_SUBSCRIPTION)
+        return product.group || "default";
+    else
+        return "___" + product.id;
+}
+
+function isPurchased(product) {
+    return [
+        store.APPROVED,
+        store.FINISHED,
+        store.INITIATED,
+        store.OWNED,
+    ].indexOf(product.state) >= 0;
+}
 
 function getDeveloperPayload(product) {
     var ret = store._evaluateDeveloperPayload(product);

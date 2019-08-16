@@ -421,6 +421,9 @@ store.Product = function(options) {
     if (type !== store.CONSUMABLE && type !== store.NON_CONSUMABLE && type !== store.PAID_SUBSCRIPTION && type !== store.FREE_SUBSCRIPTION && type !== store.NON_RENEWING_SUBSCRIPTION)
         throw new TypeError("Invalid product type");
 
+    ///  - `product.group` - Name of the group your subscription product is a member of (default to `"default"`). If you don't set anything, all subscription will be members of the same group.
+    this.group = options.group || "default";
+
     ///  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
     this.state = options.state || "";
 
@@ -1204,7 +1207,9 @@ var callbackId = 0;
 /// The `additionalData` argument can be either:
 ///  - null
 ///  - object with attributes:
-///    - `oldSku`, a string with the old subscription to upgrade/downgrade on Android. See: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
+///    - `oldSku`, a string with the old subscription to upgrade/downgrade on Android.
+///      **Note**: if another subscription product is already owned that is member of
+///      the same group, `oldSku` will be set automatically for you (see `product.group`).
 ///
 /// See the ["Purchasing section"](#purchasing) to learn more about
 /// the purchase process.
@@ -1223,16 +1228,21 @@ store.order = function(pid, additionalData) {
             });
         }
     }
-    var a;
+
+    var a; // short name for additionalData
     if (additionalData) {
         a = p.additionalData = Object.assign({}, additionalData);
     }
     else {
         a = p.additionalData = {};
     }
+
+    // Associate the active user with the purchase
     if (!a.applicationUsername) {
         a.applicationUsername = store._evaluateApplicationUsername(p);
     }
+
+    // Let the platform extend additional data
     if (store.extendAdditionalData) {
         store.extendAdditionalData(p);
     }
@@ -2839,7 +2849,35 @@ store.extendAdditionalData = function(product) {
     if (!a.developerId && store.developerName) {
         a.developerId = store.utils.md5(store.developerName);
     }
+
+    // If we're ordering a subscription, check if another one in the
+    // same group is already purchased, set `oldSku` in that case (so
+    // it's replaced).
+    if (product.type === store.PAID_SUBSCRIPTION && !a.oldSku) {
+        var group = getGroup(product);
+        store.products.forEach(function(otherProduct) {
+            if (group === getGroup(otherProduct) && isPurchased(otherProduct)) {
+                a.oldSku = otherProduct.id;
+            }
+        });
+    }
 };
+
+function getGroup(product) {
+    if (product.type === store.PAID_SUBSCRIPTION)
+        return product.group || "default";
+    else
+        return "___" + product.id;
+}
+
+function isPurchased(product) {
+    return [
+        store.APPROVED,
+        store.FINISHED,
+        store.INITIATED,
+        store.OWNED,
+    ].indexOf(product.state) >= 0;
+}
 
 function getDeveloperPayload(product) {
     var ret = store._evaluateDeveloperPayload(product);
@@ -2847,8 +2885,8 @@ function getDeveloperPayload(product) {
         return ret;
     }
     // There is no developer payload but an applicationUsername, let's
-    // save it in there: can be used to compare the purchasing user with
-    // the active user.
+    // save it in there: it can be used to compare the purchasing user
+    // with the current user.
     var applicationUsername = store._evaluateApplicationUsername(product);
     if (!applicationUsername) {
         return "";
