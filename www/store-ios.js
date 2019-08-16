@@ -1482,10 +1482,25 @@ function runValidation() {
   // Run one validation request for each product.
   Object.keys(byProduct).forEach(function(productId) {
       var request = byProduct[productId];
+      var product = request.product;
+
+      // Ensure applicationUsername is sent with validation requests
+      if (!product.additionalData) {
+          product.additionalData = {};
+      }
+      if (!product.additionalData.applicationUsername) {
+          product.additionalData.applicationUsername =
+              store._evaluateApplicationUsername(product);
+      }
+      if (!product.additionalData.applicationUsername) {
+          delete product.additionalData.applicationUsername;
+      }
+
+      // Post
       store.utils.ajax({
           url: store.validator,
           method: 'POST',
-          data: request.product,
+          data: product,
           success: function(data) {
               store.log.debug("validator success, response: " + JSON.stringify(data));
               request.callbacks.forEach(function(callback) {

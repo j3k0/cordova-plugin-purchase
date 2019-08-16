@@ -1461,10 +1461,25 @@ function runValidation() {
   // Run one validation request for each product.
   Object.keys(byProduct).forEach(function(productId) {
       var request = byProduct[productId];
+      var product = request.product;
+
+      // Ensure applicationUsername is sent with validation requests
+      if (!product.additionalData) {
+          product.additionalData = {};
+      }
+      if (!product.additionalData.applicationUsername) {
+          product.additionalData.applicationUsername =
+              store._evaluateApplicationUsername(product);
+      }
+      if (!product.additionalData.applicationUsername) {
+          delete product.additionalData.applicationUsername;
+      }
+
+      // Post
       store.utils.ajax({
           url: store.validator,
           method: 'POST',
-          data: request.product,
+          data: product,
           success: function(data) {
               store.log.debug("validator success, response: " + JSON.stringify(data));
               request.callbacks.forEach(function(callback) {
@@ -2847,8 +2862,8 @@ function getDeveloperPayload(product) {
         return ret;
     }
     // There is no developer payload but an applicationUsername, let's
-    // save it in there: can be used to compare the purchasing user with
-    // the active user.
+    // save it in there: it can be used to compare the purchasing user
+    // with the current user.
     var applicationUsername = store._evaluateApplicationUsername(product);
     if (!applicationUsername) {
         return "";
