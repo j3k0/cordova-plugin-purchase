@@ -317,6 +317,7 @@ store.sandbox = false;
 ///
 
 // #include "log.js"
+// #include "metadata.js"
 
 /// # Random Tips
 ///
@@ -332,3 +333,4 @@ store.sandbox = false;
 // #include "trigger.js"
 // #include "error-callbacks.js"
 // #include "utils.js"
+

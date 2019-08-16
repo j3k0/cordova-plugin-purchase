@@ -150,10 +150,12 @@ public class PurchasePlugin
         getPurchases();
       } else if ("consumePurchase".equals(action)) {
         final String sku = data.getString(0);
-        consumePurchase(sku);
+        final String developerPayload = data.getString(2);
+        consumePurchase(sku, developerPayload);
       } else if ("acknowledgePurchase".equals(action)) {
         final String sku = data.getString(0);
-        acknowledgePurchase(sku);
+        final String developerPayload = data.getString(2);
+        acknowledgePurchase(sku, developerPayload);
       } else if ("buy".equals(action)) {
         buy(data);
       } else if ("subscribe".equals(action)) {
@@ -250,7 +252,7 @@ public class PurchasePlugin
           "Failed to query purchases: " + e.getMessage());
     }
   }
- 
+
   // Convert list of purchases to JSON
   private JSONArray toJSON(final List<Purchase> purchaseList) throws JSONException {
     // Convert the java list to json
@@ -471,12 +473,8 @@ public class PurchasePlugin
     final String skuId = data.getString(0);
     final JSONObject additionalData = data.getJSONObject(1);
 
-    // NOTE: DeveloperPayload isn't supported anymore.
-    //       See developerId and accountId for a replacement.
-    // final String developerPayload = additionalData.has("developerPayload")
-    //     ? additionalData.getString("developerPayload")
-    //     : "";
-    // Specify the SKU that the user is upgrading or downgrading from. 
+    // NOTE: developerPayload isn't supported anymore.
+    // Specify the SKU that the user is upgrading or downgrading from.
     String oldSku = null;
     if (additionalData.has("oldPurchasedSkus")) {
       final JSONArray list = new JSONArray(
@@ -492,7 +490,7 @@ public class PurchasePlugin
     // Specify an optional obfuscated string of developer profile name.  If
     // you pass this value, Google Play can use it for payment risk
     // evaluation. Do not use the account ID or the user's Google ID for this
-    // field. 
+    // field.
     final String developerId = additionalData.has("developerId")
       ? additionalData.getString("developerId")
       : null;
@@ -506,11 +504,9 @@ public class PurchasePlugin
     // Google ID for this field. In addition, this field should not contain
     // the user's ID in cleartext. We recommend that you use a one-way hash
     // to generate a string from the user's ID and store the hashed string in
-    // this field. 
+    // this field.
     final String accountId = additionalData.has("accountId")
       ? additionalData.getString("accountId")
-      : additionalData.has("applicationUsername")
-      ? additionalData.getString("applicationUsername")
       : null;
 
     BillingFlowParams.Builder params = BillingFlowParams.newBuilder();
@@ -536,7 +532,7 @@ public class PurchasePlugin
     }
     // (I did not find enough documentation to support this parameter)
     // if (replaceSkusProrationMode) { // int
-    //   params.setReplaceSkusProrationMode(replaceSkusProrationMode) 
+    //   params.setReplaceSkusProrationMode(replaceSkusProrationMode)
     // }
     return params.build();
   }
@@ -605,7 +601,7 @@ public class PurchasePlugin
   }
 
   // Consume a purchase
-  private void consumePurchase(final String sku) throws JSONException {
+  private void consumePurchase(final String sku, final String developerPayload) throws JSONException {
     Log.d(mTag, "consumePurchase(" + sku + ")");
     // Find the purchaseToken from sku
     final Purchase purchase = findPurchaseBySku(sku);
@@ -625,14 +621,14 @@ public class PurchasePlugin
     executeServiceRequest(() -> {
       final ConsumeParams params = ConsumeParams.newBuilder()
         .setPurchaseToken(purchaseToken)
-        // .setDeveloperPayload(developerPayload)
+        .setDeveloperPayload(developerPayload)
         .build();
       mBillingClient.consumeAsync(params, this);
     });
   }
 
   // Acknowledge a purchase
-  private void acknowledgePurchase(final String sku) throws JSONException {
+  private void acknowledgePurchase(final String sku, final String developerPayload) throws JSONException {
     Log.d(mTag, "acknowledgePurchase(" + sku + ")");
     // Find the purchaseToken from sku
     final Purchase purchase = findPurchaseBySku(sku);
@@ -645,7 +641,7 @@ public class PurchasePlugin
     executeServiceRequest(() -> {
       final AcknowledgePurchaseParams params = AcknowledgePurchaseParams.newBuilder()
         .setPurchaseToken(purchaseToken)
-        // .setDeveloperPayload(developerPayload)
+        .setDeveloperPayload(developerPayload)
         .build();
       mBillingClient.acknowledgePurchase(params, this);
     });

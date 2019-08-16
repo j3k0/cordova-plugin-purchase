@@ -153,7 +153,7 @@ function iabLoaded(validProducts) {
               return parseInt(period.slice(1).slice(-1));
             };
             introPriceSubscriptionPeriod = normalizeISOPeriodUnit(introPriceSubscriptionPeriod);
-            
+
             var parsedSubscriptionPeriod = {};
             if (subscriptionPeriod) {
               parsedSubscriptionPeriod.unit = normalizeISOPeriodUnit(subscriptionPeriod);
@@ -291,7 +291,8 @@ store.when("product", "finished", function(product) {
                 });
             },
             product.id,
-            id
+            id,
+            getDeveloperPayload(product)
         );
     }
     else if (store.requireAcknowledgment && !product.acknowledged) {
@@ -312,7 +313,8 @@ store.when("product", "finished", function(product) {
                 });
             },
             product.id,
-            id
+            id,
+            getDeveloperPayload(product)
         );
     }
     else {
@@ -357,5 +359,51 @@ document.addEventListener("online", function() {
         a[i].fn.call(this);
     }
 }, false);
+
+
+store.extendAdditionalData = function(product) {
+    var a = product.additionalData;
+
+    //  - `accountId` : **string**
+    //    - _Default_: `md5(applicationUsername)`
+    //    - An optional obfuscated string that is uniquely associated
+    //      with the user's account in your app.
+    //      If you pass this value, it can be used to detect irregular
+    //      activity, such as many devices making purchases on the same
+    //      account in a short period of time.
+    //    - _Do not use the developer ID for this field._
+    //    - In addition, this field should not contain the user's ID in
+    //      cleartext. We recommend that you use a one-way hash to
+    //      generate a string from the user's ID and store the hashed
+    //      string in this field.
+    if (!a.accountId && a.applicationUsername) {
+        a.accountId = store.utils.md5(a.applicationUsername);
+    }
+
+    //  - `developerId` : **string**
+    //     - An optional obfuscated string of developer profile name.
+    //       This value can be used for payment risk evaluation.
+    //     - _Do not use the user account ID for this field._
+    if (!a.developerId && store.developerName) {
+        a.developerId = store.utils.md5(store.developerName);
+    }
+};
+
+function getDeveloperPayload(product) {
+    var ret = store._evaluateDeveloperPayload(product);
+    if (ret) {
+        return ret;
+    }
+    // There is no developer payload but an applicationUsername, let's
+    // save it in there: it can be used to compare the purchasing user
+    // with the current user.
+    var applicationUsername = store._evaluateApplicationUsername(product);
+    if (!applicationUsername) {
+        return "";
+    }
+    return JSON.stringify({
+        applicationUsernameMD5: store.utils.md5(applicationUsername),
+    });
+}
 
 })();

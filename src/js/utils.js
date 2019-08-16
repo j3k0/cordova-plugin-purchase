@@ -99,12 +99,20 @@ store.utils = {
         };
     },
 
+    ///
+    /// ### store.utils.uuidv4()
+    /// Returns an UUID v4. Uses `window.crypto` internally to generate random values.
+    ///
     uuidv4: function () {
         return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, function (c) {
-            return (c ^ window.crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
+            return (c ^ (window.crypto || window.msCrypto).getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
         });
     },
 
+    ///
+    /// ### store.utils.md5(str)
+    /// Returns the MD5 hash-value of the passed string.
+    ///
     /* eslint-disable */ /* jshint ignore:start */
     // Based on the work of Jeff Mott, who did a pure JS implementation of the MD5 algorithm that was published by Ronald L. Rivest in 1991.
     // Code was imported from https://github.com/pvorb/node-md5

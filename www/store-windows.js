@@ -1203,8 +1203,8 @@ var callbackId = 0;
 ///
 /// The `additionalData` argument can be either:
 ///  - null
-///  - object with attribute `oldPurchasedSkus`, a string array with the old subscription to upgrade/downgrade on Android. See: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
-///  - object with attribute `developerPayload`, string representing the developer payload as described in [billing best practices](https://developer.android.com/google/play/billing/billing_best_practices.html)
+///  - object with attributes:
+///    - `oldSku`, a string with the old subscription to upgrade/downgrade on Android. See: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
 ///
 /// See the ["Purchasing section"](#purchasing) to learn more about
 /// the purchase process.
@@ -1223,8 +1223,18 @@ store.order = function(pid, additionalData) {
             });
         }
     }
+    var a;
     if (additionalData) {
-        p.additionalData = additionalData;
+        a = p.additionalData = Object.assign({}, additionalData);
+    }
+    else {
+        a = p.additionalData = {};
+    }
+    if (!a.applicationUsername) {
+        a.applicationUsername = store._evaluateApplicationUsername(p);
+    }
+    if (store.extendAdditionalData) {
+        store.extendAdditionalData(p);
     }
 
     var localCallbackId = callbackId++;
@@ -1667,6 +1677,84 @@ store.log = {
     /// Logs a debug message, only if `store.verbosity` >= store.DEBUG
     debug: function(o) { log(store.DEBUG, o); }
 };
+
+})();
+(function() {
+
+///
+/// ## `store.developerPayload`
+///
+/// An optional developer-specified string to attach to new orders, to
+/// provide supplemental information if required.
+///
+/// When it's a string, it contains the direct value to use. Example:
+/// ```js
+/// store.developerPayload = "some-value";
+/// ```
+///
+/// When it's a function, the payload will be the returned value. The
+/// function takes a product as argument and returns a string.
+///
+/// Example:
+/// ```js
+/// store.developerPayload = function(product) {
+///   return getInternalId(product.id);
+/// };
+/// ```
+
+store.developerPayload = "";
+
+///
+/// ## `store.applicationUsername`
+///
+/// An optional string that is uniquely associated with the
+/// user's account in your app.
+///
+/// This value can be used for payment risk evaluation, or to link
+/// a purchase with a user on a backend server.
+///
+/// When it's a string, it contains the direct value to use. Example:
+/// ```js
+/// store.applicationUsername = "user_id_1234567";
+/// ```
+///
+/// When it's a function, the `applicationUsername` will be the returned value.
+///
+/// Example:
+/// ```js
+/// store.applicationUsername = function() {
+///   return state.get(["session", "user_id"]);
+/// };
+/// ```
+///
+store.applicationUsername = "";
+
+///
+/// ## `store.developerName`
+///
+/// An optional string of developer profile name. This value can be
+/// used for payment risk evaluation.
+///
+/// _Do not use the user account ID for this field._
+///
+/// Example:
+/// ```js
+/// store.developerName = "billing.fovea.cc";
+/// ```
+///
+store.developerName = "";
+
+// For internal use.
+store._evaluateDeveloperPayload = stringOrFunction('developerPayload');
+store._evaluateApplicationUsername = stringOrFunction('applicationUsername');
+
+function stringOrFunction(key) {
+    return function (product) {
+        if (typeof store[key] === 'function')
+            return store[key](product);
+        return store[key] || "";
+    };
+}
 
 })();
 
@@ -2161,12 +2249,20 @@ store.utils = {
         };
     },
 
+    ///
+    /// ### store.utils.uuidv4()
+    /// Returns an UUID v4. Uses `window.crypto` internally to generate random values.
+    ///
     uuidv4: function () {
         return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, function (c) {
-            return (c ^ window.crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
+            return (c ^ (window.crypto || window.msCrypto).getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
         });
     },
 
+    ///
+    /// ### store.utils.md5(str)
+    /// Returns the MD5 hash-value of the passed string.
+    ///
     /* eslint-disable */ /* jshint ignore:start */
     // Based on the work of Jeff Mott, who did a pure JS implementation of the MD5 algorithm that was published by Ronald L. Rivest in 1991.
     // Code was imported from https://github.com/pvorb/node-md5
@@ -2178,6 +2274,7 @@ store.utils = {
 };
 
 })();
+
 /*
  * Copyright (C) 2012-2013 by Guillaume Charhon
  * Modifications 10/16/2013 by Brian Thurlow
@@ -2296,17 +2393,17 @@ InAppBilling.prototype.subscribe = function (success, fail, productId, additiona
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [
         productId, extendAdditionalData(additionalData) ]);
 };
-InAppBilling.prototype.consumePurchase = function (success, fail, productId, transactionId) {
+InAppBilling.prototype.consumePurchase = function (success, fail, productId, transactionId, developerPayload) {
 	if (this.options.showLog) {
 		log('consumePurchase()');
 	}
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "consumePurchase", [productId, transactionId]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "consumePurchase", [productId, transactionId, developerPayload]);
 };
-InAppBilling.prototype.acknowledgePurchase = function (success, fail, productId, transactionId) {
+InAppBilling.prototype.acknowledgePurchase = function (success, fail, productId, transactionId, developerPayload) {
 	if (this.options.showLog) {
 		log('acknowledgePurchase()');
 	}
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "acknowledgePurchase", [productId, transactionId]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "acknowledgePurchase", [productId, transactionId, developerPayload]);
 };
 InAppBilling.prototype.getAvailableProducts = function (success, fail) {
 	if (this.options.showLog) {
@@ -2508,7 +2605,7 @@ function iabLoaded(validProducts) {
               return parseInt(period.slice(1).slice(-1));
             };
             introPriceSubscriptionPeriod = normalizeISOPeriodUnit(introPriceSubscriptionPeriod);
-            
+
             var parsedSubscriptionPeriod = {};
             if (subscriptionPeriod) {
               parsedSubscriptionPeriod.unit = normalizeISOPeriodUnit(subscriptionPeriod);
@@ -2646,7 +2743,8 @@ store.when("product", "finished", function(product) {
                 });
             },
             product.id,
-            id
+            id,
+            getDeveloperPayload(product)
         );
     }
     else if (store.requireAcknowledgment && !product.acknowledged) {
@@ -2667,7 +2765,8 @@ store.when("product", "finished", function(product) {
                 });
             },
             product.id,
-            id
+            id,
+            getDeveloperPayload(product)
         );
     }
     else {
@@ -2712,6 +2811,52 @@ document.addEventListener("online", function() {
         a[i].fn.call(this);
     }
 }, false);
+
+
+store.extendAdditionalData = function(product) {
+    var a = product.additionalData;
+
+    //  - `accountId` : **string**
+    //    - _Default_: `md5(applicationUsername)`
+    //    - An optional obfuscated string that is uniquely associated
+    //      with the user's account in your app.
+    //      If you pass this value, it can be used to detect irregular
+    //      activity, such as many devices making purchases on the same
+    //      account in a short period of time.
+    //    - _Do not use the developer ID for this field._
+    //    - In addition, this field should not contain the user's ID in
+    //      cleartext. We recommend that you use a one-way hash to
+    //      generate a string from the user's ID and store the hashed
+    //      string in this field.
+    if (!a.accountId && a.applicationUsername) {
+        a.accountId = store.utils.md5(a.applicationUsername);
+    }
+
+    //  - `developerId` : **string**
+    //     - An optional obfuscated string of developer profile name.
+    //       This value can be used for payment risk evaluation.
+    //     - _Do not use the user account ID for this field._
+    if (!a.developerId && store.developerName) {
+        a.developerId = store.utils.md5(store.developerName);
+    }
+};
+
+function getDeveloperPayload(product) {
+    var ret = store._evaluateDeveloperPayload(product);
+    if (ret) {
+        return ret;
+    }
+    // There is no developer payload but an applicationUsername, let's
+    // save it in there: can be used to compare the purchasing user with
+    // the active user.
+    var applicationUsername = store._evaluateApplicationUsername(product);
+    if (!applicationUsername) {
+        return "";
+    }
+    return JSON.stringify({
+        applicationUsernameMD5: store.utils.md5(applicationUsername),
+    });
+}
 
 })();
 /* global Windows */
