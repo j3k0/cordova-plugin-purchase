@@ -344,6 +344,7 @@ Products object have the following fields and methods.
  - `product.id` - Identifier of the product on the store
  - `product.alias` - Alias that can be used for more explicit [queries](#queries)
  - `product.type` - Family of product, should be one of the defined [product types](#product-types).
+ - `product.group` - Name of the group your subscription product is a member of (default to `"default"`). If you don't set anything, all subscription will be members of the same group.
  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
  - `product.title` - Localized name or short description
  - `product.description` - Localized longer description
@@ -676,7 +677,9 @@ The `product` argument can be either:
 The `additionalData` argument can be either:
  - null
  - object with attributes:
-   - `oldSku`, a string with the old subscription to upgrade/downgrade on Android. See: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
+   - `oldSku`, a string with the old subscription to upgrade/downgrade on Android.
+     **Note**: if another subscription product is already owned that is member of
+     the same group, `oldSku` will be set automatically for you (see `product.group`).
 
 See the ["Purchasing section"](#purchasing) to learn more about
 the purchase process.

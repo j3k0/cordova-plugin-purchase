@@ -442,6 +442,9 @@ store.Product = function(options) {
     if (type !== store.CONSUMABLE && type !== store.NON_CONSUMABLE && type !== store.PAID_SUBSCRIPTION && type !== store.FREE_SUBSCRIPTION && type !== store.NON_RENEWING_SUBSCRIPTION)
         throw new TypeError("Invalid product type");
 
+    ///  - `product.group` - Name of the group your subscription product is a member of (default to `"default"`). If you don't set anything, all subscription will be members of the same group.
+    this.group = options.group || "default";
+
     ///  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
     this.state = options.state || "";
 
@@ -1225,7 +1228,9 @@ var callbackId = 0;
 /// The `additionalData` argument can be either:
 ///  - null
 ///  - object with attributes:
-///    - `oldSku`, a string with the old subscription to upgrade/downgrade on Android. See: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
+///    - `oldSku`, a string with the old subscription to upgrade/downgrade on Android.
+///      **Note**: if another subscription product is already owned that is member of
+///      the same group, `oldSku` will be set automatically for you (see `product.group`).
 ///
 /// See the ["Purchasing section"](#purchasing) to learn more about
 /// the purchase process.
@@ -1244,16 +1249,21 @@ store.order = function(pid, additionalData) {
             });
         }
     }
-    var a;
+
+    var a; // short name for additionalData
     if (additionalData) {
         a = p.additionalData = Object.assign({}, additionalData);
     }
     else {
         a = p.additionalData = {};
     }
+
+    // Associate the active user with the purchase
     if (!a.applicationUsername) {
         a.applicationUsername = store._evaluateApplicationUsername(p);
     }
+
+    // Let the platform extend additional data
     if (store.extendAdditionalData) {
         store.extendAdditionalData(p);
     }
