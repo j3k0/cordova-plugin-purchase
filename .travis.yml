@@ -12,7 +12,7 @@ matrix:
     # -------------
     #  osx
     # -------------
- 
+
     # base osx test
     - env: PLATFORM=osx CORDOVA=9.0.0 CORDOVA_OSX=5.0.0
       os: osx
@@ -33,7 +33,7 @@ matrix:
     #  ios
     # -------------
     #  note: the cordova build doesn't run when using cordova-ios@4
-    #        so we only test with cordova-ios@5               
+    #        so we only test with cordova-ios@5
 
     # up-to-date tools
     - env: PLATFORM=ios-12.1 CORDOVA=9.0.0 CORDOVA_IOS=5.0.1
@@ -105,14 +105,14 @@ matrix:
           - extra-android-m2repository
 
     # cordova-android@6.4.0
-    - env: PLATFORM=android-4.4 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
-      os: linux
-      jdk: openjdk8
-      language: android
-      android:
-        components:
-          - tools
-          - extra-android-m2repository
+    # - env: PLATFORM=android-4.4 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+    #   os: linux
+    #   jdk: openjdk8
+    #   language: android
+    #   android:
+    #     components:
+    #       - tools
+    #       - extra-android-m2repository
 
     #
     # android-5.1
@@ -150,27 +150,7 @@ matrix:
 
     # broken versions, see: https://github.com/j3k0/cordova-plugin-purchase/issues/762
     # cordova-android@7.1.2 (broken)
-    # - env: PLATFORM=android-5.1 CORDOVA=7.1.0 CORDOVA_ANDROID=7.1.2
-    #   os: linux
-    #   jdk: openjdk8
-    #   language: android
-    #   android:
-    #     components:
-    #       - tools
-    #       - extra-android-m2repository
-    #
-    # cordova-android@7.1.1 (broken)
-    # - env: PLATFORM=android-5.1 CORDOVA=7.1.0 CORDOVA_ANDROID=7.1.1
-    #   os: linux
-    #   jdk: openjdk8
-    #   language: android
-    #   android:
-    #     components:
-    #       - tools
-    #       - extra-android-m2repository
-
-    # cordova-android@6.4.0
-    - env: PLATFORM=android-5.1 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+    - env: PLATFORM=android-5.1 CORDOVA=7.1.0 CORDOVA_ANDROID=7.1.2
       os: linux
       jdk: openjdk8
       language: android
@@ -178,6 +158,26 @@ matrix:
         components:
           - tools
           - extra-android-m2repository
+    #
+    # cordova-android@7.1.1 (broken)
+    - env: PLATFORM=android-5.1 CORDOVA=7.1.0 CORDOVA_ANDROID=7.1.1
+      os: linux
+      jdk: openjdk8
+      language: android
+      android:
+        components:
+          - tools
+          - extra-android-m2repository
+
+    # cordova-android@6.4.0
+    # - env: PLATFORM=android-5.1 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+    #   os: linux
+    #   jdk: openjdk8
+    #   language: android
+    #   android:
+    #     components:
+    #       - tools
+    #       - extra-android-m2repository
 
     #
     # android-6.0
@@ -204,14 +204,14 @@ matrix:
           - extra-android-m2repository
 
     # cordova-android@6.4.0
-    - env: PLATFORM=android-6.0 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
-      os: linux
-      jdk: openjdk8
-      language: android
-      android:
-        components:
-          - tools
-          - extra-android-m2repository
+    # - env: PLATFORM=android-6.0 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+    #   os: linux
+    #   jdk: openjdk8
+    #   language: android
+    #   android:
+    #     components:
+    #       - tools
+    #       - extra-android-m2repository
 
     #
     # android-7.0
@@ -238,14 +238,14 @@ matrix:
           - extra-android-m2repository
 
     # cordova-android@6.4.0
-    - env: PLATFORM=android-7.0 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
-      os: linux
-      jdk: openjdk8
-      language: android
-      android:
-        components:
-          - tools
-          - extra-android-m2repository
+    # - env: PLATFORM=android-7.0 CORDOVA=7.1.0 CORDOVA_ANDROID=6.4.0
+    #   os: linux
+    #   jdk: openjdk8
+    #   language: android
+    #   android:
+    #     components:
+    #       - tools
+    #       - extra-android-m2repository
 
 before_install:
 - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
