@@ -890,6 +890,11 @@ Example:
 store.developerName = "billing.fovea.cc";
 ```
 
+
+#### <a name="getGroup"></a>`store.getGroup(groupId)` ##
+
+Return all products member of a given subscription group.
+
 # Random Tips
 
 - Sometimes during development, the queue of pending transactions fills up on your devices. Before doing anything else you can set `store.autoFinishTransactions` to `true` to clean up the queue. Beware: **this is not meant for production**.

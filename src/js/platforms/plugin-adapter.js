@@ -391,22 +391,13 @@ store.extendAdditionalData = function(product) {
     // If we're ordering a subscription, check if another one in the
     // same group is already purchased, set `oldSku` in that case (so
     // it's replaced).
-    if (product.type === store.PAID_SUBSCRIPTION && !a.oldSku) {
-        var group = getGroup(product);
-        store.products.forEach(function(otherProduct) {
-            if (group === getGroup(otherProduct) && isPurchased(otherProduct)) {
+    if (product.group && !a.oldSku) {
+        store.getGroup(product.group).forEach(function(otherProduct) {
+            if (isPurchased(otherProduct))
                 a.oldSku = otherProduct.id;
-            }
         });
     }
 };
-
-function getGroup(product) {
-    if (product.type === store.PAID_SUBSCRIPTION)
-        return product.group || "default";
-    else
-        return "___" + product.id;
-}
 
 function isPurchased(product) {
     return [

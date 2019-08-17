@@ -422,7 +422,8 @@ store.Product = function(options) {
         throw new TypeError("Invalid product type");
 
     ///  - `product.group` - Name of the group your subscription product is a member of (default to `"default"`). If you don't set anything, all subscription will be members of the same group.
-    this.group = options.group || "default";
+    var defaultGroup = this.type === store.PAID_SUBSCRIPTION ? "default" : "";
+    this.group = options.group || defaultGroup;
 
     ///  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
     this.state = options.state || "";
@@ -1783,6 +1784,18 @@ function stringOrFunction(key) {
 
 })();
 
+///
+/// #### <a name="getGroup"></a>`store.getGroup(groupId)` ##
+///
+/// Return all products member of a given subscription group.
+///
+store.getGroup = function(groupId) {
+    if (!groupId) return [];
+    return store.products.filter(function(product) {
+        return product.group === groupId;
+    });
+};
+
 /// # Random Tips
 ///
 /// - Sometimes during development, the queue of pending transactions fills up on your devices. Before doing anything else you can set `store.autoFinishTransactions` to `true` to clean up the queue. Beware: **this is not meant for production**.
@@ -1864,6 +1877,10 @@ store.Product.prototype.stateChanged = function() {
     // complex conditions.
 
     this.canPurchase = this.state === store.VALID;
+    store.getGroup(this.group).forEach(function(otherProduct) {
+        if (otherProduct.state === store.INITIATED)
+            this.canPurchase = false;
+    }.bind(this));
     this.loaded      = this.state && this.state !== store.REGISTERED;
     this.owned       = this.owned || this.state === store.OWNED;
     this.downloading = this.downloading || this.state === store.DOWNLOADING;
@@ -2868,22 +2885,13 @@ store.extendAdditionalData = function(product) {
     // If we're ordering a subscription, check if another one in the
     // same group is already purchased, set `oldSku` in that case (so
     // it's replaced).
-    if (product.type === store.PAID_SUBSCRIPTION && !a.oldSku) {
-        var group = getGroup(product);
-        store.products.forEach(function(otherProduct) {
-            if (group === getGroup(otherProduct) && isPurchased(otherProduct)) {
+    if (product.group && !a.oldSku) {
+        store.getGroup(product.group).forEach(function(otherProduct) {
+            if (isPurchased(otherProduct))
                 a.oldSku = otherProduct.id;
-            }
         });
     }
 };
-
-function getGroup(product) {
-    if (product.type === store.PAID_SUBSCRIPTION)
-        return product.group || "default";
-    else
-        return "___" + product.id;
-}
 
 function isPurchased(product) {
     return [
