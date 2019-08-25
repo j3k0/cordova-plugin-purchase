@@ -1,5 +1,5 @@
 (function () {
-    
+
 
     //   {
     //     "purchaseToken":"tokenabc",
@@ -77,13 +77,13 @@
                     }
                 }
 
-				//trigger unowned event for registered products without a purchase
-				store.products.forEach(product => {
-					//if product is not licensed
-					if(!product.license.isActive){
-						product.trigger('unowned');
-					}
-				});
+                //trigger unowned event for registered products without a purchase
+                store.products.forEach(function(product) {
+                    //if product is not licensed
+                    if(!product.license.isActive){
+                        product.trigger('unowned');
+                    }
+                });
 
                 store.ready(true);
                 if (callback) callback();
