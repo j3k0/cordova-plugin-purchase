@@ -50,6 +50,10 @@ store.when = function(query, once, callback) {
         ///    - The `err` parameter is an [error object](#errors)
         addPromise('error');
 
+        ///  - `unowned(product)`
+        ///    - Called when a product has no transactions
+        addPromise('unowned');
+
         ///  - `approved(product)`
         ///    - Called when a product [order](#order) is approved.
         addPromise('approved');
