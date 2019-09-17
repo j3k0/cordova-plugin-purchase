@@ -15,12 +15,15 @@ var InAppBilling = function () {
     this.options = {};
 };
 
-InAppBilling.prototype.init = function (success, fail, options, skus) {
+InAppBilling.prototype.init = function (success, fail, options, skus, inAppSkus, subsSkus) {
 	if (!options)
         options = {};
 
 	this.options = {
-		showLog: options.showLog !== false
+		showLog: options.showLog !== false,
+        onPurchaseConsumed: options.onPurchaseConsumed,
+        onPurchasesUpdated: options.onPurchasesUpdated,
+        onSetPurchases: options.onSetPurchases,
 	};
 
 	if (this.options.showLog) {
@@ -28,8 +31,8 @@ InAppBilling.prototype.init = function (success, fail, options, skus) {
 	}
 
 	var hasSKUs = false;
-	//Optional Load SKUs to Inventory.
-	if(typeof skus !== "undefined"){
+	// Optional Load SKUs to Inventory.
+	if (typeof skus !== "undefined"){
 		if (typeof skus === "string") {
 			skus = [skus];
 		}
@@ -49,48 +52,90 @@ InAppBilling.prototype.init = function (success, fail, options, skus) {
 		}
 	}
 
+    // Set a listener (see "listener()" function above)
+    var listener = this.listener.bind(this);
+    cordova.exec(listener, function(err) {}, "InAppBillingPlugin", "setListener", []);
+
 	if (hasSKUs) {
-		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", [skus]);
+		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", [skus, inAppSkus, subsSkus]);
     }
 	else {
         //No SKUs
 		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", []);
     }
 };
+InAppBilling.prototype.listener = function (msg) {
+    // Handle changes to purchase that are being notified
+    // through the PurchasesUpdatedListener on the native side (android)
+    if (this.options.showLog) {
+        log('listener: ' + JSON.stringify(msg));
+    }
+    if (!msg || !msg.type) {
+        return;
+    }
+    if (msg.type === "setPurchases" && this.options.onSetPurchases) {
+        this.options.onSetPurchases(msg.data.purchases);
+    }
+    if (msg.type === "purchasesUpdated" && this.options.onPurchasesUpdated) {
+        this.options.onPurchasesUpdated(msg.data.purchases);
+    }
+    if (msg.type === "purchaseConsumed" && this.options.onPurchaseConsumed) {
+        this.options.onPurchaseConsumed(msg.data.purchase);
+    }
+};
 InAppBilling.prototype.getPurchases = function (success, fail) {
 	if (this.options.showLog) {
-		log('getPurchases called!');
+		log('getPurchases()');
 	}
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getPurchases", ["null"]);
 };
+function ensureObject(obj) {
+    return !!obj && obj.constructor === Object ? obj : {};
+}
+function extendAdditionalData(ad) {
+    var additionalData = ensureObject(ad);
+    if (!additionalData.accountId && additionalData.applicationUsername) {
+        additionalData.accountId = store.utils.md5(additionalData.applicationUsername);
+    }
+    return additionalData;
+}
 InAppBilling.prototype.buy = function (success, fail, productId, additionalData) {
 	if (this.options.showLog) {
-		log('buy called!');
+		log('buy()');
 	}
-	additionalData = !!additionalData && additionalData.constructor === Object ? additionalData : {};
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId, additionalData]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [
+        productId, extendAdditionalData(additionalData) ]);
 };
 InAppBilling.prototype.subscribe = function (success, fail, productId, additionalData) {
 	if (this.options.showLog) {
-		log('subscribe called!');
+		log('subscribe()');
 	}
-	additionalData = !!additionalData && additionalData.constructor === Object ? additionalData : {};
 	if (additionalData.oldPurchasedSkus && this.options.showLog) {
-        log('subscribe called with upgrading of old SKUs!');
+        log('subscribe() -> upgrading of old SKUs!');
     }
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId, additionalData || {}]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [
+        productId, extendAdditionalData(additionalData) ]);
 };
-InAppBilling.prototype.consumePurchase = function (success, fail, productId, transactionId) {
+InAppBilling.prototype.consumePurchase = function (success, fail, productId, transactionId, developerPayload) {
 	if (this.options.showLog) {
-		log('consumePurchase called!');
+		log('consumePurchase()');
 	}
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "consumePurchase", [productId, transactionId]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "consumePurchase", [productId, transactionId, developerPayload]);
+};
+InAppBilling.prototype.acknowledgePurchase = function (success, fail, productId, transactionId, developerPayload) {
+	if (this.options.showLog) {
+		log('acknowledgePurchase()');
+	}
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "acknowledgePurchase", [productId, transactionId, developerPayload]);
 };
 InAppBilling.prototype.getAvailableProducts = function (success, fail) {
 	if (this.options.showLog) {
-		log('getAvailableProducts called!');
+		log('getAvailableProducts()');
 	}
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getAvailableProducts", ["null"]);
+};
+InAppBilling.prototype.manageSubscriptions = function () {
+  return cordova.exec(function(){}, function(){}, "InAppBillingPlugin", "manageSubscriptions", []);
 };
 
 // Generates a `fail` function that accepts an optional error code
@@ -126,4 +171,5 @@ try {
 catch (e) {
     log(e);
 }
+
 })();

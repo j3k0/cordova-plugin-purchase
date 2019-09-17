@@ -23,6 +23,10 @@ store.Product.prototype.stateChanged = function() {
     // complex conditions.
 
     this.canPurchase = this.state === store.VALID;
+    store.getGroup(this.group).forEach(function(otherProduct) {
+        if (otherProduct.state === store.INITIATED)
+            this.canPurchase = false;
+    }.bind(this));
     this.loaded      = this.state && this.state !== store.REGISTERED;
     this.owned       = this.owned || this.state === store.OWNED;
     this.downloading = this.downloading || this.state === store.DOWNLOADING;
@@ -32,6 +36,8 @@ store.Product.prototype.stateChanged = function() {
     this.valid       = this.state !== store.INVALID;
     if (!this.state || this.state === store.REGISTERED)
         delete this.valid;
+
+    store.log.debug("state: " + this.id + " -> " + this.state);
 
     if (this.state)
         this.trigger(this.state);

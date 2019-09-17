@@ -421,6 +421,10 @@ store.Product = function(options) {
     if (type !== store.CONSUMABLE && type !== store.NON_CONSUMABLE && type !== store.PAID_SUBSCRIPTION && type !== store.FREE_SUBSCRIPTION && type !== store.NON_RENEWING_SUBSCRIPTION)
         throw new TypeError("Invalid product type");
 
+    ///  - `product.group` - Name of the group your subscription product is a member of (default to `"default"`). If you don't set anything, all subscription will be members of the same group.
+    var defaultGroup = this.type === store.PAID_SUBSCRIPTION ? "default" : "";
+    this.group = options.group || defaultGroup;
+
     ///  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
     this.state = options.state || "";
 
@@ -498,8 +502,8 @@ store.Product = function(options) {
 
     ///  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
     ///  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
-    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows only)
-    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows only)
+    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows and android)
+    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows and android)
     ///  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
     ///  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
@@ -720,6 +724,8 @@ store.Product.prototype.verify = function() {
             that.expiryDate = new Date(t.expiryDate);
         if (t.lastRenewalDate)
             that.lastRenewalDate = new Date(t.lastRenewalDate);
+        if (t.renewalIntent)
+            that.renewalIntent = t.renewalIntent;
         return t;
     }
 };
@@ -1201,8 +1207,10 @@ var callbackId = 0;
 ///
 /// The `additionalData` argument can be either:
 ///  - null
-///  - object with attribute `oldPurchasedSkus`, a string array with the old subscription to upgrade/downgrade on Android. See: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
-///  - object with attribute `developerPayload`, string representing the developer payload as described in [billing best practices](https://developer.android.com/google/play/billing/billing_best_practices.html)
+///  - object with attributes:
+///    - `oldSku`, a string with the old subscription to upgrade/downgrade on Android.
+///      **Note**: if another subscription product is already owned that is member of
+///      the same group, `oldSku` will be set automatically for you (see `product.group`).
 ///
 /// See the ["Purchasing section"](#purchasing) to learn more about
 /// the purchase process.
@@ -1221,8 +1229,23 @@ store.order = function(pid, additionalData) {
             });
         }
     }
+
+    var a; // short name for additionalData
     if (additionalData) {
-        p.additionalData = additionalData;
+        a = p.additionalData = Object.assign({}, additionalData);
+    }
+    else {
+        a = p.additionalData = {};
+    }
+
+    // Associate the active user with the purchase
+    if (!a.applicationUsername) {
+        a.applicationUsername = store._evaluateApplicationUsername(p);
+    }
+
+    // Let the platform extend additional data
+    if (store.extendAdditionalData) {
+        store.extendAdditionalData(p);
     }
 
     var localCallbackId = callbackId++;
@@ -1449,10 +1472,25 @@ function runValidation() {
   // Run one validation request for each product.
   Object.keys(byProduct).forEach(function(productId) {
       var request = byProduct[productId];
+      var product = request.product;
+
+      // Ensure applicationUsername is sent with validation requests
+      if (!product.additionalData) {
+          product.additionalData = {};
+      }
+      if (!product.additionalData.applicationUsername) {
+          product.additionalData.applicationUsername =
+              store._evaluateApplicationUsername(product);
+      }
+      if (!product.additionalData.applicationUsername) {
+          delete product.additionalData.applicationUsername;
+      }
+
+      // Post
       store.utils.ajax({
           url: store.validator,
           method: 'POST',
-          data: request.product,
+          data: product,
           success: function(data) {
               store.log.debug("validator success, response: " + JSON.stringify(data));
               request.callbacks.forEach(function(callback) {
@@ -1549,6 +1587,10 @@ store._validator = function(product, callback, isPrepared) {
 /// applications settings. This way, if delivery of a purchase failed or
 /// if a user wants to restore purchases he made from another device, he'll
 /// have a way to do just that.
+///
+/// _NOTE:_ It is a required by the Apple AppStore that a "Refresh Purchases"
+///         button be visible in the UI.
+///
 ///
 /// ##### example usage
 ///
@@ -1663,6 +1705,96 @@ store.log = {
 };
 
 })();
+(function() {
+
+///
+/// ## `store.developerPayload`
+///
+/// An optional developer-specified string to attach to new orders, to
+/// provide supplemental information if required.
+///
+/// When it's a string, it contains the direct value to use. Example:
+/// ```js
+/// store.developerPayload = "some-value";
+/// ```
+///
+/// When it's a function, the payload will be the returned value. The
+/// function takes a product as argument and returns a string.
+///
+/// Example:
+/// ```js
+/// store.developerPayload = function(product) {
+///   return getInternalId(product.id);
+/// };
+/// ```
+
+store.developerPayload = "";
+
+///
+/// ## `store.applicationUsername`
+///
+/// An optional string that is uniquely associated with the
+/// user's account in your app.
+///
+/// This value can be used for payment risk evaluation, or to link
+/// a purchase with a user on a backend server.
+///
+/// When it's a string, it contains the direct value to use. Example:
+/// ```js
+/// store.applicationUsername = "user_id_1234567";
+/// ```
+///
+/// When it's a function, the `applicationUsername` will be the returned value.
+///
+/// Example:
+/// ```js
+/// store.applicationUsername = function() {
+///   return state.get(["session", "user_id"]);
+/// };
+/// ```
+///
+store.applicationUsername = "";
+
+///
+/// ## `store.developerName`
+///
+/// An optional string of developer profile name. This value can be
+/// used for payment risk evaluation.
+///
+/// _Do not use the user account ID for this field._
+///
+/// Example:
+/// ```js
+/// store.developerName = "billing.fovea.cc";
+/// ```
+///
+store.developerName = "";
+
+// For internal use.
+store._evaluateDeveloperPayload = stringOrFunction('developerPayload');
+store._evaluateApplicationUsername = stringOrFunction('applicationUsername');
+
+function stringOrFunction(key) {
+    return function (product) {
+        if (typeof store[key] === 'function')
+            return store[key](product);
+        return store[key] || "";
+    };
+}
+
+})();
+
+///
+/// #### <a name="getGroup"></a>`store.getGroup(groupId)` ##
+///
+/// Return all products member of a given subscription group.
+///
+store.getGroup = function(groupId) {
+    if (!groupId) return [];
+    return store.products.filter(function(product) {
+        return product.group === groupId;
+    });
+};
 
 /// # Random Tips
 ///
@@ -1745,6 +1877,10 @@ store.Product.prototype.stateChanged = function() {
     // complex conditions.
 
     this.canPurchase = this.state === store.VALID;
+    store.getGroup(this.group).forEach(function(otherProduct) {
+        if (otherProduct.state === store.INITIATED)
+            this.canPurchase = false;
+    }.bind(this));
     this.loaded      = this.state && this.state !== store.REGISTERED;
     this.owned       = this.owned || this.state === store.OWNED;
     this.downloading = this.downloading || this.state === store.DOWNLOADING;
@@ -1754,6 +1890,8 @@ store.Product.prototype.stateChanged = function() {
     this.valid       = this.state !== store.INVALID;
     if (!this.state || this.state === store.REGISTERED)
         delete this.valid;
+
+    store.log.debug("state: " + this.id + " -> " + this.state);
 
     if (this.state)
         this.trigger(this.state);
@@ -1839,7 +1977,7 @@ store._queries = {
                 this.byQuery[fullQuery].push({cb:cb, once:once});
             else
                 this.byQuery[fullQuery] = [{cb:cb, once:once}];
-            store.log.debug("queries ++ '" + fullQuery + "'");
+            // store.log.debug("queries ++ '" + fullQuery + "'");
         },
 
         unregister: function(cb) {
@@ -1860,7 +1998,7 @@ store._queries = {
     triggerAction: function(action, args) {
 
         var cbs = store._queries.callbacks.byQuery[action];
-        store.log.debug("queries !! '" + action + "'");
+        // store.log.debug("queries !! '" + action + "'");
         if (cbs) {
             ///  - Call the callbacks
             for (var j = 0; j < cbs.length; ++j) {
@@ -1916,7 +2054,7 @@ store._queries = {
         var i;
         for (i = 0; i < queries.length; ++i) {
             var q = queries[i];
-            store.log.debug("store.queries !! '" + q + "'");
+            // store.log.debug("store.queries !! '" + q + "'");
             var cbs = store._queries.callbacks.byQuery[q];
             if (cbs) {
                 ///  - Call the callbacks
@@ -2153,15 +2291,32 @@ store.utils = {
         };
     },
 
+    ///
+    /// ### store.utils.uuidv4()
+    /// Returns an UUID v4. Uses `window.crypto` internally to generate random values.
+    ///
     uuidv4: function () {
         return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, function (c) {
-            return (c ^ window.crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
+            return (c ^ (window.crypto || window.msCrypto).getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
         });
     },
+
+    ///
+    /// ### store.utils.md5(str)
+    /// Returns the MD5 hash-value of the passed string.
+    ///
+    /* eslint-disable */ /* jshint ignore:start */
+    // Based on the work of Jeff Mott, who did a pure JS implementation of the MD5 algorithm that was published by Ronald L. Rivest in 1991.
+    // Code was imported from https://github.com/pvorb/node-md5
+    md5: function md5(r) {
+        function n(o){if(t[o])return t[o].exports;var e=t[o]={i:o,l:!1,exports:{}};return r[o].call(e.exports,e,e.exports,n),e.l=!0,e.exports}var t={};return n.m=r,n.c=t,n.i=function(r){return r},n.d=function(r,t,o){n.o(r,t)||Object.defineProperty(r,t,{configurable:!1,enumerable:!0,get:o})},n.n=function(r){var t=r&&r.__esModule?function(){return r.default}:function(){return r};return n.d(t,"a",t),t},n.o=function(r,n){return Object.prototype.hasOwnProperty.call(r,n)},n.p="",n(n.s=4)
+    }([function(r,n){var t={utf8:{stringToBytes:function(r){return t.bin.stringToBytes(unescape(encodeURIComponent(r)))},bytesToString:function(r){return decodeURIComponent(escape(t.bin.bytesToString(r)))}},bin:{stringToBytes:function(r){for(var n=[],t=0;t<r.length;t++)n.push(255&r.charCodeAt(t));return n},bytesToString:function(r){for(var n=[],t=0;t<r.length;t++)n.push(String.fromCharCode(r[t]));return n.join("")}}};r.exports=t},function(r,n,t){!function(){var n=t(2),o=t(0).utf8,e=t(3),u=t(0).bin,i=function(r,t){r.constructor==String?r=t&&"binary"===t.encoding?u.stringToBytes(r):o.stringToBytes(r):e(r)?r=Array.prototype.slice.call(r,0):Array.isArray(r)||(r=r.toString());for(var f=n.bytesToWords(r),s=8*r.length,c=1732584193,a=-271733879,l=-1732584194,g=271733878,h=0;h<f.length;h++)f[h]=16711935&(f[h]<<8|f[h]>>>24)|4278255360&(f[h]<<24|f[h]>>>8);f[s>>>5]|=128<<s%32,f[14+(s+64>>>9<<4)]=s;for(var p=i._ff,y=i._gg,v=i._hh,d=i._ii,h=0;h<f.length;h+=16){var b=c,T=a,x=l,B=g;c=p(c,a,l,g,f[h+0],7,-680876936),g=p(g,c,a,l,f[h+1],12,-389564586),l=p(l,g,c,a,f[h+2],17,606105819),a=p(a,l,g,c,f[h+3],22,-1044525330),c=p(c,a,l,g,f[h+4],7,-176418897),g=p(g,c,a,l,f[h+5],12,1200080426),l=p(l,g,c,a,f[h+6],17,-1473231341),a=p(a,l,g,c,f[h+7],22,-45705983),c=p(c,a,l,g,f[h+8],7,1770035416),g=p(g,c,a,l,f[h+9],12,-1958414417),l=p(l,g,c,a,f[h+10],17,-42063),a=p(a,l,g,c,f[h+11],22,-1990404162),c=p(c,a,l,g,f[h+12],7,1804603682),g=p(g,c,a,l,f[h+13],12,-40341101),l=p(l,g,c,a,f[h+14],17,-1502002290),a=p(a,l,g,c,f[h+15],22,1236535329),c=y(c,a,l,g,f[h+1],5,-165796510),g=y(g,c,a,l,f[h+6],9,-1069501632),l=y(l,g,c,a,f[h+11],14,643717713),a=y(a,l,g,c,f[h+0],20,-373897302),c=y(c,a,l,g,f[h+5],5,-701558691),g=y(g,c,a,l,f[h+10],9,38016083),l=y(l,g,c,a,f[h+15],14,-660478335),a=y(a,l,g,c,f[h+4],20,-405537848),c=y(c,a,l,g,f[h+9],5,568446438),g=y(g,c,a,l,f[h+14],9,-1019803690),l=y(l,g,c,a,f[h+3],14,-187363961),a=y(a,l,g,c,f[h+8],20,1163531501),c=y(c,a,l,g,f[h+13],5,-1444681467),g=y(g,c,a,l,f[h+2],9,-51403784),l=y(l,g,c,a,f[h+7],14,1735328473),a=y(a,l,g,c,f[h+12],20,-1926607734),c=v(c,a,l,g,f[h+5],4,-378558),g=v(g,c,a,l,f[h+8],11,-2022574463),l=v(l,g,c,a,f[h+11],16,1839030562),a=v(a,l,g,c,f[h+14],23,-35309556),c=v(c,a,l,g,f[h+1],4,-1530992060),g=v(g,c,a,l,f[h+4],11,1272893353),l=v(l,g,c,a,f[h+7],16,-155497632),a=v(a,l,g,c,f[h+10],23,-1094730640),c=v(c,a,l,g,f[h+13],4,681279174),g=v(g,c,a,l,f[h+0],11,-358537222),l=v(l,g,c,a,f[h+3],16,-722521979),a=v(a,l,g,c,f[h+6],23,76029189),c=v(c,a,l,g,f[h+9],4,-640364487),g=v(g,c,a,l,f[h+12],11,-421815835),l=v(l,g,c,a,f[h+15],16,530742520),a=v(a,l,g,c,f[h+2],23,-995338651),c=d(c,a,l,g,f[h+0],6,-198630844),g=d(g,c,a,l,f[h+7],10,1126891415),l=d(l,g,c,a,f[h+14],15,-1416354905),a=d(a,l,g,c,f[h+5],21,-57434055),c=d(c,a,l,g,f[h+12],6,1700485571),g=d(g,c,a,l,f[h+3],10,-1894986606),l=d(l,g,c,a,f[h+10],15,-1051523),a=d(a,l,g,c,f[h+1],21,-2054922799),c=d(c,a,l,g,f[h+8],6,1873313359),g=d(g,c,a,l,f[h+15],10,-30611744),l=d(l,g,c,a,f[h+6],15,-1560198380),a=d(a,l,g,c,f[h+13],21,1309151649),c=d(c,a,l,g,f[h+4],6,-145523070),g=d(g,c,a,l,f[h+11],10,-1120210379),l=d(l,g,c,a,f[h+2],15,718787259),a=d(a,l,g,c,f[h+9],21,-343485551),c=c+b>>>0,a=a+T>>>0,l=l+x>>>0,g=g+B>>>0}return n.endian([c,a,l,g])};i._ff=function(r,n,t,o,e,u,i){var f=r+(n&t|~n&o)+(e>>>0)+i;return(f<<u|f>>>32-u)+n},i._gg=function(r,n,t,o,e,u,i){var f=r+(n&o|t&~o)+(e>>>0)+i;return(f<<u|f>>>32-u)+n},i._hh=function(r,n,t,o,e,u,i){var f=r+(n^t^o)+(e>>>0)+i;return(f<<u|f>>>32-u)+n},i._ii=function(r,n,t,o,e,u,i){var f=r+(t^(n|~o))+(e>>>0)+i;return(f<<u|f>>>32-u)+n},i._blocksize=16,i._digestsize=16,r.exports=function(r,t){if(void 0===r||null===r)throw new Error("Illegal argument "+r);var o=n.wordsToBytes(i(r,t));return t&&t.asBytes?o:t&&t.asString?u.bytesToString(o):n.bytesToHex(o)}}()},function(r,n){!function(){var n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",t={rotl:function(r,n){return r<<n|r>>>32-n},rotr:function(r,n){return r<<32-n|r>>>n},endian:function(r){if(r.constructor==Number)return 16711935&t.rotl(r,8)|4278255360&t.rotl(r,24);for(var n=0;n<r.length;n++)r[n]=t.endian(r[n]);return r},randomBytes:function(r){for(var n=[];r>0;r--)n.push(Math.floor(256*Math.random()));return n},bytesToWords:function(r){for(var n=[],t=0,o=0;t<r.length;t++,o+=8)n[o>>>5]|=r[t]<<24-o%32;return n},wordsToBytes:function(r){for(var n=[],t=0;t<32*r.length;t+=8)n.push(r[t>>>5]>>>24-t%32&255);return n},bytesToHex:function(r){for(var n=[],t=0;t<r.length;t++)n.push((r[t]>>>4).toString(16)),n.push((15&r[t]).toString(16));return n.join("")},hexToBytes:function(r){for(var n=[],t=0;t<r.length;t+=2)n.push(parseInt(r.substr(t,2),16));return n},bytesToBase64:function(r){for(var t=[],o=0;o<r.length;o+=3)for(var e=r[o]<<16|r[o+1]<<8|r[o+2],u=0;u<4;u++)8*o+6*u<=8*r.length?t.push(n.charAt(e>>>6*(3-u)&63)):t.push("=");return t.join("")},base64ToBytes:function(r){r=r.replace(/[^A-Z0-9+\/]/gi,"");for(var t=[],o=0,e=0;o<r.length;e=++o%4)0!=e&&t.push((n.indexOf(r.charAt(o-1))&Math.pow(2,-2*e+8)-1)<<2*e|n.indexOf(r.charAt(o))>>>6-2*e);return t}};r.exports=t}()},function(r,n){function t(r){return!!r.constructor&&"function"==typeof r.constructor.isBuffer&&r.constructor.isBuffer(r)}function o(r){return"function"==typeof r.readFloatLE&&"function"==typeof r.slice&&t(r.slice(0,0))}r.exports=function(r){return null!=r&&(t(r)||o(r)||!!r._isBuffer)}},function(r,n,t){r.exports=t(1)}]),
+    /* eslint-enable */ /* jshint ignore:end */
 
 };
 
 })();
+
 /*
  * Copyright (C) 2012-2013 by Guillaume Charhon
  * Modifications 10/16/2013 by Brian Thurlow
@@ -2179,12 +2334,15 @@ var InAppBilling = function () {
     this.options = {};
 };
 
-InAppBilling.prototype.init = function (success, fail, options, skus) {
+InAppBilling.prototype.init = function (success, fail, options, skus, inAppSkus, subsSkus) {
 	if (!options)
         options = {};
 
 	this.options = {
-		showLog: options.showLog !== false
+		showLog: options.showLog !== false,
+        onPurchaseConsumed: options.onPurchaseConsumed,
+        onPurchasesUpdated: options.onPurchasesUpdated,
+        onSetPurchases: options.onSetPurchases,
 	};
 
 	if (this.options.showLog) {
@@ -2192,8 +2350,8 @@ InAppBilling.prototype.init = function (success, fail, options, skus) {
 	}
 
 	var hasSKUs = false;
-	//Optional Load SKUs to Inventory.
-	if(typeof skus !== "undefined"){
+	// Optional Load SKUs to Inventory.
+	if (typeof skus !== "undefined"){
 		if (typeof skus === "string") {
 			skus = [skus];
 		}
@@ -2213,48 +2371,90 @@ InAppBilling.prototype.init = function (success, fail, options, skus) {
 		}
 	}
 
+    // Set a listener (see "listener()" function above)
+    var listener = this.listener.bind(this);
+    cordova.exec(listener, function(err) {}, "InAppBillingPlugin", "setListener", []);
+
 	if (hasSKUs) {
-		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", [skus]);
+		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", [skus, inAppSkus, subsSkus]);
     }
 	else {
         //No SKUs
 		cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", []);
     }
 };
+InAppBilling.prototype.listener = function (msg) {
+    // Handle changes to purchase that are being notified
+    // through the PurchasesUpdatedListener on the native side (android)
+    if (this.options.showLog) {
+        log('listener: ' + JSON.stringify(msg));
+    }
+    if (!msg || !msg.type) {
+        return;
+    }
+    if (msg.type === "setPurchases" && this.options.onSetPurchases) {
+        this.options.onSetPurchases(msg.data.purchases);
+    }
+    if (msg.type === "purchasesUpdated" && this.options.onPurchasesUpdated) {
+        this.options.onPurchasesUpdated(msg.data.purchases);
+    }
+    if (msg.type === "purchaseConsumed" && this.options.onPurchaseConsumed) {
+        this.options.onPurchaseConsumed(msg.data.purchase);
+    }
+};
 InAppBilling.prototype.getPurchases = function (success, fail) {
 	if (this.options.showLog) {
-		log('getPurchases called!');
+		log('getPurchases()');
 	}
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getPurchases", ["null"]);
 };
+function ensureObject(obj) {
+    return !!obj && obj.constructor === Object ? obj : {};
+}
+function extendAdditionalData(ad) {
+    var additionalData = ensureObject(ad);
+    if (!additionalData.accountId && additionalData.applicationUsername) {
+        additionalData.accountId = store.utils.md5(additionalData.applicationUsername);
+    }
+    return additionalData;
+}
 InAppBilling.prototype.buy = function (success, fail, productId, additionalData) {
 	if (this.options.showLog) {
-		log('buy called!');
+		log('buy()');
 	}
-	additionalData = !!additionalData && additionalData.constructor === Object ? additionalData : {};
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [productId, additionalData]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [
+        productId, extendAdditionalData(additionalData) ]);
 };
 InAppBilling.prototype.subscribe = function (success, fail, productId, additionalData) {
 	if (this.options.showLog) {
-		log('subscribe called!');
+		log('subscribe()');
 	}
-	additionalData = !!additionalData && additionalData.constructor === Object ? additionalData : {};
 	if (additionalData.oldPurchasedSkus && this.options.showLog) {
-        log('subscribe called with upgrading of old SKUs!');
+        log('subscribe() -> upgrading of old SKUs!');
     }
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [productId, additionalData || {}]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [
+        productId, extendAdditionalData(additionalData) ]);
 };
-InAppBilling.prototype.consumePurchase = function (success, fail, productId, transactionId) {
+InAppBilling.prototype.consumePurchase = function (success, fail, productId, transactionId, developerPayload) {
 	if (this.options.showLog) {
-		log('consumePurchase called!');
+		log('consumePurchase()');
 	}
-	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "consumePurchase", [productId, transactionId]);
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "consumePurchase", [productId, transactionId, developerPayload]);
+};
+InAppBilling.prototype.acknowledgePurchase = function (success, fail, productId, transactionId, developerPayload) {
+	if (this.options.showLog) {
+		log('acknowledgePurchase()');
+	}
+	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "acknowledgePurchase", [productId, transactionId, developerPayload]);
 };
 InAppBilling.prototype.getAvailableProducts = function (success, fail) {
 	if (this.options.showLog) {
-		log('getAvailableProducts called!');
+		log('getAvailableProducts()');
 	}
 	return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getAvailableProducts", ["null"]);
+};
+InAppBilling.prototype.manageSubscriptions = function () {
+  return cordova.exec(function(){}, function(){}, "InAppBillingPlugin", "manageSubscriptions", []);
 };
 
 // Generates a `fail` function that accepts an optional error code
@@ -2290,12 +2490,15 @@ try {
 catch (e) {
     log(e);
 }
+
 })();
 (function() {
 
 
 var initialized = false;
 var skus = [];
+var inAppSkus = [];
+var subsSkus = [];
 
 store.when("refreshed", function() {
     if (!initialized) init();
@@ -2329,8 +2532,13 @@ function init() {
     if (initialized) return;
     initialized = true;
 
-    for (var i = 0; i < store.products.length; ++i)
-        skus.push(store.products[i].id);
+    for (var i = 0; i < store.products.length; ++i) {
+      skus.push(store.products[i].id);
+      if (store.products[i].type === store.PAID_SUBSCRIPTION)
+        subsSkus.push(store.products[i].id);
+      else
+        inAppSkus.push(store.products[i].id);
+    }
 
     store.inappbilling.init(iabReady,
         function(err) {
@@ -2342,9 +2550,12 @@ function init() {
             retry(init);
         },
         {
+            onSetPurchases: iabSetPurchases,
+            onPurchasesUpdated: iabPurchasesUpdated,
+            onPurchaseConsumed: iabPurchaseConsumed,
             showLog: store.verbosity >= store.DEBUG ? true : false
         },
-        skus);
+        skus, inAppSkus, subsSkus);
 }
 
 function iabReady() {
@@ -2356,6 +2567,40 @@ function iabReady() {
             message: 'Loading product info failed - ' + err
         });
     });
+}
+
+function iabPurchaseConsumed(purchase) {
+  store.log.debug("iabPurchaseConsumed: " + JSON.stringify(purchase));
+  store.ready(function() {
+    if (purchase && purchase.productId) {
+      var product = store.get(purchase.productId);
+      if (product) {
+        store.setProductData(product, purchase);
+        product.set({
+          state: store.VALID,
+          transaction: null,
+        });
+      }
+    }
+  });
+}
+
+function iabPurchasesUpdated(purchases) {
+  store.log.debug("iabPurchasesUpdated: " + JSON.stringify(purchases));
+  store.ready(function() {
+    if (store.iabUpdatePurchases) {
+      store.iabUpdatePurchases(purchases);
+    }
+  });
+}
+
+function iabSetPurchases(purchases) {
+  store.log.debug("iabSetPurchases: " + JSON.stringify(purchases));
+  store.ready(function() {
+    if (store.iabSetPurchases) {
+      store.iabSetPurchases(purchases);
+    }
+  });
 }
 
 function iabLoaded(validProducts) {
@@ -2387,8 +2632,10 @@ function iabLoaded(validProducts) {
                 }
             }
 
-            var normalizeIntroPricePeriod = function (period) {
-                switch (period.slice(-1)) { // See https://en.wikipedia.org/wiki/ISO_8601#Time_intervals
+            // See https://en.wikipedia.org/wiki/ISO_8601#Time_intervals
+            // assuming simple periods (P1M, P6W, ...)
+            var normalizeISOPeriodUnit = function (period) {
+                switch (period.slice(-1)) {
                     case 'D': return 'Day';
                     case 'W': return 'Week';
                     case 'M': return 'Month';
@@ -2396,16 +2643,29 @@ function iabLoaded(validProducts) {
                     default:  return period;
                 }
             };
-            introPriceSubscriptionPeriod = normalizeIntroPricePeriod(introPriceSubscriptionPeriod);
+            var normalizeISOPeriodCount = function (period) {
+              return parseInt(period.slice(1).slice(-1));
+            };
+            introPriceSubscriptionPeriod = normalizeISOPeriodUnit(introPriceSubscriptionPeriod);
+
+            var parsedSubscriptionPeriod = {};
+            if (subscriptionPeriod) {
+              parsedSubscriptionPeriod.unit = normalizeISOPeriodUnit(subscriptionPeriod);
+              parsedSubscriptionPeriod.count = normalizeISOPeriodCount(subscriptionPeriod);
+            }
+
+            var trimTitle = function (title) {
+              return title.split('(').slice(0, -1).join('(').replace(/ $/, '');
+            };
 
             p.set({
-                title: vp.title || vp.name,
+                title: trimTitle(vp.title || vp.name),
                 price: vp.price || vp.formattedPrice,
                 priceMicros: vp.price_amount_micros,
                 trialPeriod: vp.trial_period || null,
                 trialPeriodUnit: vp.trial_period_unit || null,
-                billingPeriod: vp.billing_period || null,
-                billingPeriodUnit: vp.billing_period_unit || null,
+                billingPeriod: parsedSubscriptionPeriod.count || vp.billing_period || null,
+                billingPeriodUnit: parsedSubscriptionPeriod.unit || vp.billing_period_unit || null,
                 description: vp.description,
                 currency: vp.price_currency_code || "",
                 introPrice: vp.introductoryPrice ? vp.introductoryPrice : "",
@@ -2507,15 +2767,11 @@ store.when("requested", function(product) {
 /// When a consumable product enters the store.FINISHED state,
 /// `consume()` the product.
 store.when("product", "finished", function(product) {
+    var transaction = product.transaction;
+    var id = transaction && transaction.id || "";
     store.log.debug("plugin -> consumable finished");
     if (product.type === store.CONSUMABLE || product.type === store.NON_RENEWING_SUBSCRIPTION) {
-        var transaction = product.transaction;
         product.transaction = null;
-        var id;
-        if(transaction === null)
-            id = "";
-        else
-            id = transaction.id;
         store.inappbilling.consumePurchase(
             function() { // success
                 store.log.debug("plugin -> consumable consumed");
@@ -2529,7 +2785,30 @@ store.when("product", "finished", function(product) {
                 });
             },
             product.id,
-            id
+            id,
+            getDeveloperPayload(product)
+        );
+    }
+    else if (store.requireAcknowledgment && !product.acknowledged) {
+        product.transaction = null;
+        store.inappbilling.acknowledgePurchase(
+            function() { // success
+                store.log.debug("plugin -> purchase acknowledged");
+                product.set({
+                  acknowledged: true,
+                  state: store.OWNED,
+                });
+            },
+            function(err, code) { // error
+                // can't finish.
+                store.error({
+                    code: code || store.ERR_UNKNOWN,
+                    message: err
+                });
+            },
+            product.id,
+            id,
+            getDeveloperPayload(product)
         );
     }
     else {
@@ -2575,6 +2854,71 @@ document.addEventListener("online", function() {
     }
 }, false);
 
+
+store.extendAdditionalData = function(product) {
+    var a = product.additionalData;
+
+    //  - `accountId` : **string**
+    //    - _Default_: `md5(applicationUsername)`
+    //    - An optional obfuscated string that is uniquely associated
+    //      with the user's account in your app.
+    //      If you pass this value, it can be used to detect irregular
+    //      activity, such as many devices making purchases on the same
+    //      account in a short period of time.
+    //    - _Do not use the developer ID for this field._
+    //    - In addition, this field should not contain the user's ID in
+    //      cleartext. We recommend that you use a one-way hash to
+    //      generate a string from the user's ID and store the hashed
+    //      string in this field.
+    if (!a.accountId && a.applicationUsername) {
+        a.accountId = store.utils.md5(a.applicationUsername);
+    }
+
+    //  - `developerId` : **string**
+    //     - An optional obfuscated string of developer profile name.
+    //       This value can be used for payment risk evaluation.
+    //     - _Do not use the user account ID for this field._
+    if (!a.developerId && store.developerName) {
+        a.developerId = store.utils.md5(store.developerName);
+    }
+
+    // If we're ordering a subscription, check if another one in the
+    // same group is already purchased, set `oldSku` in that case (so
+    // it's replaced).
+    if (product.group && !a.oldSku) {
+        store.getGroup(product.group).forEach(function(otherProduct) {
+            if (isPurchased(otherProduct))
+                a.oldSku = otherProduct.id;
+        });
+    }
+};
+
+function isPurchased(product) {
+    return [
+        store.APPROVED,
+        store.FINISHED,
+        store.INITIATED,
+        store.OWNED,
+    ].indexOf(product.state) >= 0;
+}
+
+function getDeveloperPayload(product) {
+    var ret = store._evaluateDeveloperPayload(product);
+    if (ret) {
+        return ret;
+    }
+    // There is no developer payload but an applicationUsername, let's
+    // save it in there: it can be used to compare the purchasing user
+    // with the current user.
+    var applicationUsername = store._evaluateApplicationUsername(product);
+    if (!applicationUsername) {
+        return "";
+    }
+    return JSON.stringify({
+        applicationUsernameMD5: store.utils.md5(applicationUsername),
+    });
+}
+
 })();
 (function () {
     
@@ -2590,43 +2934,150 @@ document.addEventListener("online", function() {
     //   }
     store.setProductData = function(product, data) {
 
-        store.log.debug("android -> product data for " + product.id);
-        store.log.debug(data);
+        store.log.debug("product data -> for " + product.id);
+        store.log.debug("             -> " + JSON.stringify(data));
+        var productBefore = JSON.stringify(product);
 
         product.transaction = {
             type: 'android-playstore', //TODO - does this need to be here?
             id: data.orderId,
             purchaseToken: data.purchaseToken,
+            purchaseState: data.purchaseState,
             developerPayload: data.developerPayload,
             receipt: data.receipt,
             signature: data.signature
         };
 
-        // When the product is owned, adjust the state if necessary
-        if (product.state !== store.OWNED && product.state !== store.FINISHED &&
-            product.state !== store.APPROVED) {
+        var isInitiated = product.state === store.INITIATED;
+        var isPurchased = product.state === store.OWNED ||
+          product.state === store.FINISHED ||
+          product.state === store.APPROVED;
 
-            if (data.purchaseState === 0) {
-                product.set("state", store.APPROVED);
+        // For some reasons, client API and server API both expose a
+        // `purchaseState` field but with the meaning differ in both.
+
+        if (typeof data.getPurchaseState !== undefined && data.getPurchaseState > 0) {
+            // https://developer.android.com/reference/com/android/billingclient/api/Purchase.PurchaseState.html
+            switch (data.getPurchaseState) {
+                case 1: // purchased
+                    if (!isPurchased) {
+                        product.set("state", store.APPROVED);
+                    }
+                    break;
+                case 2: // pending
+                    if (!isInitiated) {
+                        window.setTimeout(checkPendingPurchase, 60000);
+                        product.set("state", store.INITIATED);
+                        product.trigger("pending");
+                    }
+                    break;
+            }
+        }
+        else if (typeof data.purchaseState !== 'undefined') {
+            // https://developers.google.com/android-publisher/api-ref/purchases/products
+            switch (data.purchaseState) {
+                case 0: // purchased
+                    if (!isPurchased) {
+                        product.set("state", store.APPROVED);
+                    }
+                    break;
+                case 1: // cancelled
+                    if (isInitiated || isPurchased) {
+                        product.set("state", store.VALID);
+                        product.trigger("cancelled");
+                    }
+                    break;
+                case 2: // pending or refunded
+                    if (data.acknowledged === false) {
+                        store.log.debug("Pending purchase: set to INITIATED");
+                        if (!isInitiated) {
+                            window.setTimeout(checkPendingPurchase, 60000);
+                            product.set("state", store.INITIATED);
+                            product.trigger("pending");
+                        }
+                    }
+                    else {
+                        if (isInitiated || isPurchased) {
+                            product.set("state", store.VALID);
+                            product.trigger("refunded");
+                        }
+                    }
+                    break;
             }
         }
 
-        // When the product is cancelled or refunded, adjust the state if necessary
-        if (product.state === store.OWNED || product.state === store.FINISHED ||
-            product.state === store.APPROVED) {
+        if (typeof data.acknowledged === 'boolean') {
+            product.set("acknowledged", data.acknowledged);
+        }
+        if (typeof data.autoRenewing === 'boolean') {
+            if (product.type === store.PAID_SUBSCRIPTION) {
+                if (product.state === store.OWNED || product.state === store.APPROVED || product.state === store.FINISHED) {
+                    product.set("renewalIntent", data.autoRenewing ? "Renew" : "Lapse");
+                }
+                else {
+                    product.set("renewalIntent", "");
+                }
+            }
+        }
 
-            if (data.purchaseState === 1) {
-                product.trigger("cancelled");
-                product.set("state", store.VALID);
+        // Check every minutes if something happened.
+        function checkPendingPurchase() {
+            if (product.state === store.INITIATED) {
+                store.iabGetPurchases();
+                window.setTimeout(checkPendingPurchase, 60000);
             }
-            else if (data.purchaseState === 2) {
-                product.trigger("refunded");
-                product.set("state", store.VALID);
-            }
+        }
+
+        var productAfter = JSON.stringify(product);
+        if (productBefore !== productAfter) {
+          product.trigger("updated");
         }
     };
 
+    store.iabUpdatePurchases = function(purchases) {
+      store.log.debug("iabUpdatePurchases: " + JSON.stringify(purchases));
+      if (!purchases || !purchases.length) {
+        purchases = [];
+      }
+      if (purchases && purchases.length) {
+        for (var i = 0; i < purchases.length; ++i) {
+          var purchase = purchases[i];
+          var p = store.get(purchase.productId);
+          if (!p) {
+            store.log.warn("plugin -> user owns a non-registered product: " + purchase.productId);
+            continue;
+          }
+          store.setProductData(p, purchase);
+        }
+      }
+    };
+    
+    store.iabSetPurchases = function(purchases) {
+      store.iabUpdatePurchases(purchases);
+      var hasPurchase = {};
+      if (purchases && purchases.length) {
+        for (var i = 0; i < purchases.length; ++i) {
+          var purchase = purchases[i];
+          hasPurchase[purchase.productId] = true;
+        }
+      }
+      store.products.forEach(function(product) {
+        if (!hasPurchase[product.id]) {
+          if ([ store.REGISTERED,
+                store.REQUESTED,
+                store.INITIATED,
+                store.APPROVED,
+                store.FINISHED,
+                store.OWNED ].indexOf(product.state) >= 0) {
+            product.set("state", store.VALID);
+            product.trigger("cancelled");
+          }
+        }
+      });
+    };
+
     store.iabGetPurchases = function(callback) {
+      store.log.debug("iabGetPurchases()");
         store.inappbilling.getPurchases(
             function(purchases) { // success
                 // example purchases data:
@@ -2643,17 +3094,10 @@ document.addEventListener("online", function() {
                 //   },
                 //   { ... }
                 // ]
-                if (purchases && purchases.length) {
-                    for (var i = 0; i < purchases.length; ++i) {
-                        var purchase = purchases[i];
-                        var p = store.get(purchase.productId);
-                        if (!p) {
-                            store.log.warn("plugin -> user owns a non-registered product: " + purchase.productId);
-                            continue;
-                        }
-                        store.setProductData(p, purchase);
-                    }
-                }
+                store.log.debug("inappbilling.getPurchases() -> Success");
+                store.log.debug("                            -> " + typeof purchases);
+                store.log.debug("                            -> " + JSON.stringify(purchases));
+                // store.iabUpdatePurchases(purchases); (sent to the setPurchases listener)
                 store.ready(true);
                 if (callback) callback();
             },
@@ -2663,6 +3107,12 @@ document.addEventListener("online", function() {
             }
         );
     };
+
+    store.manageSubscriptions = function() {
+      store.inappbilling.manageSubscriptions();
+    };
+
+    store.requireAcknowledgment = true;
 
 })();
 

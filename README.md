@@ -55,41 +55,16 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 ### Install the plugin (Cordova)
 
 ```sh
-cordova plugin add cordova-plugin-purchase [--variable BILLING_KEY="<BILLING_KEY>"]
+cordova plugin add cordova-plugin-purchase
 ```
-
-`BILLING_KEY` is only required for Android. Check [here](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup-for-Android-Google-Play#add-android-billing-key) for details.
 
 ### Install the plugin (PhoneGap)
 
 Add the following to your `config.xml` file:
 
-<details>
-<summary>phonegap cli-7.1.0</summary>
-
-
 ```xml
-<gap:plugin name="cc.fovea.cordova.purchase" source="npm" version="6.0.0">
-<param name="BILLING_KEY" value="MIIB..."/>
-</gap:plugin>
+<gap:plugin name="cordova-plugin-purchase" source="npm" version="9.0.0"></gap:plugin>
 ```
----
-
-</details>
-
-<details>
-<summary>phonegap cli-8.0.0</summary>
-
-```xml
-<plugin spec="https://github.com/j3k0/cordova-plugin-purchase.git#phonegap-cli-8.0.0">
-    <param name="BILLING_KEY" value="MIIB..."/>
-</plugin>
-```
----
-
-</details>
-
-_`phonegap-cli-8.1.1`  is not supported if you need Android, because it ships with a buggy `cordova-android` version (`7.1.2`) that doesn't allow installation of .aidl files. If you don't need android, you can use the latest version of the plugin._
 
 ### Install recommended plugins
 
@@ -135,9 +110,9 @@ In short, you'll have two main tasks to accomplish:
  1. Setup your application and In-App Products on AppStore, Play or Azure platforms using their respective web interfaces.
  2. Add In-App Purchase code to your application.
 
-For setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/wiki/Home) contains good information.
+For platform setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/wiki/Home) contains good information.
 
- For the code itself, the [API Documentation](doc/api.md) is a definitely a recommended read.
+For the code itself, the [API Documentation](doc/api.md) is a definitely a recommended read.
 
 ## Documentation
 
@@ -158,8 +133,8 @@ For setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/wiki/Home)
    
 Have a very simple need? Maybe this will help.
 
-   * [Simple Non-Renewing Subscriptions](https://github.com/j3k0/cordova-non-renewing-subscription)
-   * The easiest way to integrate purchase into an app that only needs a non-renewing subscription.
+ - [Simple Non-Renewing Subscriptions](https://github.com/j3k0/cordova-non-renewing-subscription)
+   - The easiest way to integrate purchase into an app that only needs a non-renewing subscription.
    
 
 # Contribute
@@ -170,7 +145,7 @@ Have a very simple need? Maybe this will help.
 
  * ![](https://avatars1.githubusercontent.com/u/191881?s=64&v=4) [Jean-Christophe Hoelt](https://github.com/j3k0), Author
  * ![](https://avatars3.githubusercontent.com/u/1674289?s=64&v=4) [Josef Fröhle](https://github.com/Dexus), Support 
- * Guillaume Charhon, initial Android code
+ * Guillaume Charhon, (now defunct) v1 for android
  * Matt Kane, initial iOS code
  * Mohammad Naghavi, original unification attempt
  * Dave Alden [@dpa99c](https://github.com/dpa99c) (Apple-hosted IAPs for iOS)

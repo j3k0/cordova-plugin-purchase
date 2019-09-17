@@ -3,6 +3,8 @@
 
 var initialized = false;
 var skus = [];
+var inAppSkus = [];
+var subsSkus = [];
 
 store.when("refreshed", function() {
     if (!initialized) init();
@@ -36,8 +38,13 @@ function init() {
     if (initialized) return;
     initialized = true;
 
-    for (var i = 0; i < store.products.length; ++i)
-        skus.push(store.products[i].id);
+    for (var i = 0; i < store.products.length; ++i) {
+      skus.push(store.products[i].id);
+      if (store.products[i].type === store.PAID_SUBSCRIPTION)
+        subsSkus.push(store.products[i].id);
+      else
+        inAppSkus.push(store.products[i].id);
+    }
 
     store.inappbilling.init(iabReady,
         function(err) {
@@ -49,9 +56,12 @@ function init() {
             retry(init);
         },
         {
+            onSetPurchases: iabSetPurchases,
+            onPurchasesUpdated: iabPurchasesUpdated,
+            onPurchaseConsumed: iabPurchaseConsumed,
             showLog: store.verbosity >= store.DEBUG ? true : false
         },
-        skus);
+        skus, inAppSkus, subsSkus);
 }
 
 function iabReady() {
@@ -63,6 +73,40 @@ function iabReady() {
             message: 'Loading product info failed - ' + err
         });
     });
+}
+
+function iabPurchaseConsumed(purchase) {
+  store.log.debug("iabPurchaseConsumed: " + JSON.stringify(purchase));
+  store.ready(function() {
+    if (purchase && purchase.productId) {
+      var product = store.get(purchase.productId);
+      if (product) {
+        store.setProductData(product, purchase);
+        product.set({
+          state: store.VALID,
+          transaction: null,
+        });
+      }
+    }
+  });
+}
+
+function iabPurchasesUpdated(purchases) {
+  store.log.debug("iabPurchasesUpdated: " + JSON.stringify(purchases));
+  store.ready(function() {
+    if (store.iabUpdatePurchases) {
+      store.iabUpdatePurchases(purchases);
+    }
+  });
+}
+
+function iabSetPurchases(purchases) {
+  store.log.debug("iabSetPurchases: " + JSON.stringify(purchases));
+  store.ready(function() {
+    if (store.iabSetPurchases) {
+      store.iabSetPurchases(purchases);
+    }
+  });
 }
 
 function iabLoaded(validProducts) {
@@ -94,8 +138,10 @@ function iabLoaded(validProducts) {
                 }
             }
 
-            var normalizeIntroPricePeriod = function (period) {
-                switch (period.slice(-1)) { // See https://en.wikipedia.org/wiki/ISO_8601#Time_intervals
+            // See https://en.wikipedia.org/wiki/ISO_8601#Time_intervals
+            // assuming simple periods (P1M, P6W, ...)
+            var normalizeISOPeriodUnit = function (period) {
+                switch (period.slice(-1)) {
                     case 'D': return 'Day';
                     case 'W': return 'Week';
                     case 'M': return 'Month';
@@ -103,16 +149,29 @@ function iabLoaded(validProducts) {
                     default:  return period;
                 }
             };
-            introPriceSubscriptionPeriod = normalizeIntroPricePeriod(introPriceSubscriptionPeriod);
+            var normalizeISOPeriodCount = function (period) {
+              return parseInt(period.slice(1).slice(-1));
+            };
+            introPriceSubscriptionPeriod = normalizeISOPeriodUnit(introPriceSubscriptionPeriod);
+
+            var parsedSubscriptionPeriod = {};
+            if (subscriptionPeriod) {
+              parsedSubscriptionPeriod.unit = normalizeISOPeriodUnit(subscriptionPeriod);
+              parsedSubscriptionPeriod.count = normalizeISOPeriodCount(subscriptionPeriod);
+            }
+
+            var trimTitle = function (title) {
+              return title.split('(').slice(0, -1).join('(').replace(/ $/, '');
+            };
 
             p.set({
-                title: vp.title || vp.name,
+                title: trimTitle(vp.title || vp.name),
                 price: vp.price || vp.formattedPrice,
                 priceMicros: vp.price_amount_micros,
                 trialPeriod: vp.trial_period || null,
                 trialPeriodUnit: vp.trial_period_unit || null,
-                billingPeriod: vp.billing_period || null,
-                billingPeriodUnit: vp.billing_period_unit || null,
+                billingPeriod: parsedSubscriptionPeriod.count || vp.billing_period || null,
+                billingPeriodUnit: parsedSubscriptionPeriod.unit || vp.billing_period_unit || null,
                 description: vp.description,
                 currency: vp.price_currency_code || "",
                 introPrice: vp.introductoryPrice ? vp.introductoryPrice : "",
@@ -214,15 +273,11 @@ store.when("requested", function(product) {
 /// When a consumable product enters the store.FINISHED state,
 /// `consume()` the product.
 store.when("product", "finished", function(product) {
+    var transaction = product.transaction;
+    var id = transaction && transaction.id || "";
     store.log.debug("plugin -> consumable finished");
     if (product.type === store.CONSUMABLE || product.type === store.NON_RENEWING_SUBSCRIPTION) {
-        var transaction = product.transaction;
         product.transaction = null;
-        var id;
-        if(transaction === null)
-            id = "";
-        else
-            id = transaction.id;
         store.inappbilling.consumePurchase(
             function() { // success
                 store.log.debug("plugin -> consumable consumed");
@@ -236,7 +291,30 @@ store.when("product", "finished", function(product) {
                 });
             },
             product.id,
-            id
+            id,
+            getDeveloperPayload(product)
+        );
+    }
+    else if (store.requireAcknowledgment && !product.acknowledged) {
+        product.transaction = null;
+        store.inappbilling.acknowledgePurchase(
+            function() { // success
+                store.log.debug("plugin -> purchase acknowledged");
+                product.set({
+                  acknowledged: true,
+                  state: store.OWNED,
+                });
+            },
+            function(err, code) { // error
+                // can't finish.
+                store.error({
+                    code: code || store.ERR_UNKNOWN,
+                    message: err
+                });
+            },
+            product.id,
+            id,
+            getDeveloperPayload(product)
         );
     }
     else {
@@ -281,5 +359,70 @@ document.addEventListener("online", function() {
         a[i].fn.call(this);
     }
 }, false);
+
+
+store.extendAdditionalData = function(product) {
+    var a = product.additionalData;
+
+    //  - `accountId` : **string**
+    //    - _Default_: `md5(applicationUsername)`
+    //    - An optional obfuscated string that is uniquely associated
+    //      with the user's account in your app.
+    //      If you pass this value, it can be used to detect irregular
+    //      activity, such as many devices making purchases on the same
+    //      account in a short period of time.
+    //    - _Do not use the developer ID for this field._
+    //    - In addition, this field should not contain the user's ID in
+    //      cleartext. We recommend that you use a one-way hash to
+    //      generate a string from the user's ID and store the hashed
+    //      string in this field.
+    if (!a.accountId && a.applicationUsername) {
+        a.accountId = store.utils.md5(a.applicationUsername);
+    }
+
+    //  - `developerId` : **string**
+    //     - An optional obfuscated string of developer profile name.
+    //       This value can be used for payment risk evaluation.
+    //     - _Do not use the user account ID for this field._
+    if (!a.developerId && store.developerName) {
+        a.developerId = store.utils.md5(store.developerName);
+    }
+
+    // If we're ordering a subscription, check if another one in the
+    // same group is already purchased, set `oldSku` in that case (so
+    // it's replaced).
+    if (product.group && !a.oldSku) {
+        store.getGroup(product.group).forEach(function(otherProduct) {
+            if (isPurchased(otherProduct))
+                a.oldSku = otherProduct.id;
+        });
+    }
+};
+
+function isPurchased(product) {
+    return [
+        store.APPROVED,
+        store.FINISHED,
+        store.INITIATED,
+        store.OWNED,
+    ].indexOf(product.state) >= 0;
+}
+
+function getDeveloperPayload(product) {
+    var ret = store._evaluateDeveloperPayload(product);
+    if (ret) {
+        return ret;
+    }
+    // There is no developer payload but an applicationUsername, let's
+    // save it in there: it can be used to compare the purchasing user
+    // with the current user.
+    var applicationUsername = store._evaluateApplicationUsername(product);
+    if (!applicationUsername) {
+        return "";
+    }
+    return JSON.stringify({
+        applicationUsernameMD5: store.utils.md5(applicationUsername),
+    });
+}
 
 })();

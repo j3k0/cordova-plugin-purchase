@@ -344,6 +344,7 @@ Products object have the following fields and methods.
  - `product.id` - Identifier of the product on the store
  - `product.alias` - Alias that can be used for more explicit [queries](#queries)
  - `product.type` - Family of product, should be one of the defined [product types](#product-types).
+ - `product.group` - Name of the group your subscription product is a member of (default to `"default"`). If you don't set anything, all subscription will be members of the same group.
  - `product.state` - Current state the product is in (see [life-cycle](#life-cycle) below). Should be one of the defined [product states](#product-states)
  - `product.title` - Localized name or short description
  - `product.description` - Localized longer description
@@ -368,8 +369,8 @@ Products object have the following fields and methods.
  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
- - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows only)
- - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows only)
+ - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows and android)
+ - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows and android)
  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
@@ -675,8 +676,10 @@ The `product` argument can be either:
 
 The `additionalData` argument can be either:
  - null
- - object with attribute `oldPurchasedSkus`, a string array with the old subscription to upgrade/downgrade on Android. See: [android developer](https://developer.android.com/google/play/billing/billing_reference.html#upgrade-getBuyIntentToReplaceSkus) for more info
- - object with attribute `developerPayload`, string representing the developer payload as described in [billing best practices](https://developer.android.com/google/play/billing/billing_best_practices.html)
+ - object with attributes:
+   - `oldSku`, a string with the old subscription to upgrade/downgrade on Android.
+     **Note**: if another subscription product is already owned that is member of
+     the same group, `oldSku` will be set automatically for you (see `product.group`).
 
 See the ["Purchasing section"](#purchasing) to learn more about
 the purchase process.
@@ -786,6 +789,10 @@ applications settings. This way, if delivery of a purchase failed or
 if a user wants to restore purchases he made from another device, he'll
 have a way to do just that.
 
+_NOTE:_ It is a required by the Apple AppStore that a "Refresh Purchases"
+        button be visible in the UI.
+
+
 ##### example usage
 
 ```js
@@ -827,6 +834,67 @@ Logs a warning message, only if `store.verbosity` >= store.WARNING
 Logs an info message, only if `store.verbosity` >= store.INFO
 ### `store.log.debug(message)`
 Logs a debug message, only if `store.verbosity` >= store.DEBUG
+
+## `store.developerPayload`
+
+An optional developer-specified string to attach to new orders, to
+provide supplemental information if required.
+
+When it's a string, it contains the direct value to use. Example:
+```js
+store.developerPayload = "some-value";
+```
+
+When it's a function, the payload will be the returned value. The
+function takes a product as argument and returns a string.
+
+Example:
+```js
+store.developerPayload = function(product) {
+  return getInternalId(product.id);
+};
+```
+
+## `store.applicationUsername`
+
+An optional string that is uniquely associated with the
+user's account in your app.
+
+This value can be used for payment risk evaluation, or to link
+a purchase with a user on a backend server.
+
+When it's a string, it contains the direct value to use. Example:
+```js
+store.applicationUsername = "user_id_1234567";
+```
+
+When it's a function, the `applicationUsername` will be the returned value.
+
+Example:
+```js
+store.applicationUsername = function() {
+  return state.get(["session", "user_id"]);
+};
+```
+
+
+## `store.developerName`
+
+An optional string of developer profile name. This value can be
+used for payment risk evaluation.
+
+_Do not use the user account ID for this field._
+
+Example:
+```js
+store.developerName = "billing.fovea.cc";
+```
+
+
+#### <a name="getGroup"></a>`store.getGroup(groupId)` ##
+
+Return all products member of a given subscription group.
+
 # Random Tips
 
 - Sometimes during development, the queue of pending transactions fills up on your devices. Before doing anything else you can set `store.autoFinishTransactions` to `true` to clean up the queue. Beware: **this is not meant for production**.
@@ -983,4 +1051,12 @@ Options:
 * `success`: callback(data)
 * `error`: callback(statusCode, statusText)
 * `data`: body of your request
+
+
+### store.utils.uuidv4()
+Returns an UUID v4. Uses `window.crypto` internally to generate random values.
+
+
+### store.utils.md5(str)
+Returns the MD5 hash-value of the passed string.
 

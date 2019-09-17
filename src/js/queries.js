@@ -63,7 +63,7 @@ store._queries = {
                 this.byQuery[fullQuery].push({cb:cb, once:once});
             else
                 this.byQuery[fullQuery] = [{cb:cb, once:once}];
-            store.log.debug("queries ++ '" + fullQuery + "'");
+            // store.log.debug("queries ++ '" + fullQuery + "'");
         },
 
         unregister: function(cb) {
@@ -84,7 +84,7 @@ store._queries = {
     triggerAction: function(action, args) {
 
         var cbs = store._queries.callbacks.byQuery[action];
-        store.log.debug("queries !! '" + action + "'");
+        // store.log.debug("queries !! '" + action + "'");
         if (cbs) {
             ///  - Call the callbacks
             for (var j = 0; j < cbs.length; ++j) {
@@ -140,7 +140,7 @@ store._queries = {
         var i;
         for (i = 0; i < queries.length; ++i) {
             var q = queries[i];
-            store.log.debug("store.queries !! '" + q + "'");
+            // store.log.debug("store.queries !! '" + q + "'");
             var cbs = store._queries.callbacks.byQuery[q];
             if (cbs) {
                 ///  - Call the callbacks
