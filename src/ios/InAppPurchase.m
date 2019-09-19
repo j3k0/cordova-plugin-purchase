@@ -324,8 +324,8 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
 - (void) pause: (CDVInvokedUrlCommand*)command {
 
     NSArray *dls = [self.currentDownloads allValues];
-    DLog(@"pause: Pausing %d active downloads...",[dls count]);
-    
+    DLog(@"pause: Pausing %lu active downloads...",[dls count]);
+
     [[SKPaymentQueue defaultQueue] pauseDownloads:dls];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -335,7 +335,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
 - (void) resume: (CDVInvokedUrlCommand*)command {
 
     NSArray *dls = [self.currentDownloads allValues];
-    DLog(@"resume: Resuming %d active downloads...",[dls count]);
+    DLog(@"resume: Resuming %lu active downloads...",[dls count]);
     [[SKPaymentQueue defaultQueue] resumeDownloads:[self.currentDownloads allValues]];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -345,7 +345,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
 - (void) cancel: (CDVInvokedUrlCommand*)command {
 
     NSArray *dls = [self.currentDownloads allValues];
-    DLog(@"cancel: Cancelling %d active downloads...",[dls count]);
+    DLog(@"cancel: Cancelling %lu active downloads...",[dls count]);
     [[SKPaymentQueue defaultQueue] cancelDownloads:[self.currentDownloads allValues]];
     if (command != nil) {
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
@@ -687,7 +687,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
                 state = @"DownloadStateFailed";
                 error = transaction.error.localizedDescription;
                 errorCode = transaction.error.code;
-                DLog(@"paymentQueue:updatedDownloads: Download error %d %@", errorCode, error);
+                DLog(@"paymentQueue:updatedDownloads: Download error %lu %@", errorCode, error);
                 [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
                 [self transactionFinished:download.transaction];
 
@@ -729,14 +729,14 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
                 return;
             }
         }
-        
-        DLog(@"paymentQueue:updatedDownloads: Number of currentDownloads: %d",[self.currentDownloads count]);
+
+        DLog(@"paymentQueue:updatedDownloads: Number of currentDownloads: %lu",[self.currentDownloads count]);
         DLog(@"paymentQueue:updatedDownloads: Product %@ in download state: %@", productId, state);
 
 
         callbackArgs = [NSArray arrayWithObjects:
             NILABLE(state),
-            [NSNumber numberWithInt:errorCode],
+            [NSNumber numberWithInt:(int)errorCode],
             NILABLE(error),
             NILABLE(transactionId),
             NILABLE(productId),
