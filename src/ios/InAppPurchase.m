@@ -233,7 +233,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
 #else
     [[NSWorkspace sharedWorkspace] openURL:URL];
 #endif
-    
+
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"manageSubscriptions"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
@@ -261,7 +261,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         return;
     }
-    
+
     NSSet *productIdentifiers = [NSSet setWithArray:inArray];
     DLog(@"load: Set has %li elements", (unsigned long)[productIdentifiers count]);
     for (NSString *item in productIdentifiers) {
@@ -303,7 +303,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
 - (void) canMakePayments: (CDVInvokedUrlCommand*)command {
 
   CDVPluginResult* pluginResult = nil;
-  
+
   if (![SKPaymentQueue canMakePayments]) {
       DLog(@"canMakePayments: Device can't make payments.");
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Can't make payments"];
@@ -312,7 +312,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
       DLog(@"canMakePayments: Device can make payments.");
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"Can make payments"];
   }
-  
+
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
@@ -593,7 +593,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
     receiptRefreshRequest.delegate = refreshReceiptDelegate;
     refreshReceiptDelegate.plugin  = self;
     refreshReceiptDelegate.command = command;
-    
+
 #if ARC_ENABLED
     self.retainer[@"receiptRefreshRequest"] = receiptRefreshRequest;
     self.retainer[@"receiptRefreshRequestDelegate"] = refreshReceiptDelegate;
@@ -626,14 +626,14 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
 // Download Queue
 - (void) paymentQueue:(SKPaymentQueue *)queue updatedDownloads:(NSArray *)downloads {
     DLog(@"paymentQueue:updatedDownloads:");
-    
+
     for (SKDownload *download in downloads) {
         NSString *state = @"";
         NSString *error = @"";
         NSInteger errorCode = 0;
         NSString *progress_s = 0;
         NSString *timeRemaining_s = 0;
-        
+
         SKPaymentTransaction *transaction = download.transaction;
         NSString *transactionId = transaction.transactionIdentifier;
 #if TARGET_OS_IPHONE
@@ -643,10 +643,10 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
 #endif
         SKPayment *payment = transaction.payment;
         NSString *productId = payment.productIdentifier;
-        
+
         NSArray *callbackArgs;
         NSString *js;
-        
+
 #if TARGET_OS_IPHONE
         SKDownloadState downloadState = download.downloadState;
 #else
@@ -657,73 +657,73 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
             case SKDownloadStateActive: {
                 // Add to current downloads
                 [self.currentDownloads setObject:download forKey:productId];
-                
+
                 state = @"DownloadStateActive";
-                
+
                 DLog(@"paymentQueue:updatedDownloads: Progress: %f", download.progress);
                 DLog(@"paymentQueue:updatedDownloads: Time remaining: %f", download.timeRemaining);
-                
+
                 progress_s = [NSString stringWithFormat:@"%d", (int) (download.progress*100)];
                 timeRemaining_s = [NSString stringWithFormat:@"%d", (int) download.timeRemaining];
-                
+
                 break;
             }
-                
+
             case SKDownloadStateCancelled: {
                 // Remove from current downloads
                 [self.currentDownloads removeObjectForKey:productId];
-                
+
                 state = @"DownloadStateCancelled";
                 [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
                 [self transactionFinished:download.transaction];
-                
+
                 break;
             }
 
             case SKDownloadStateFailed: {
                 // Remove from current downloads
                 [self.currentDownloads removeObjectForKey:productId];
-                
+
                 state = @"DownloadStateFailed";
                 error = transaction.error.localizedDescription;
                 errorCode = transaction.error.code;
                 DLog(@"paymentQueue:updatedDownloads: Download error %d %@", errorCode, error);
                 [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
                 [self transactionFinished:download.transaction];
-                
+
                 break;
             }
-                
+
             case SKDownloadStateFinished: {
                 // Remove from current downloads
                 [self.currentDownloads removeObjectForKey:productId];
-                
+
                 state = @"DownloadStateFinished";
                 [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
                 [self transactionFinished:download.transaction];
-                
+
                 [self copyDownloadToDocuments:download]; // Copy download content to Documnents folder
-                
+
                 break;
             }
-                
+
             case SKDownloadStatePaused: {
                 // Add to current downloads
                 [self.currentDownloads setObject:download forKey:productId];
-                
+
                 state = @"DownloadStatePaused";
-                
+
                 break;
             }
-                
+
             case SKDownloadStateWaiting: {
                 // Add to current downloads
                 [self.currentDownloads setObject:download forKey:productId];
                 state = @"DownloadStateWaiting";
-                
+
                 break;
             }
-                
+
             default: {
                 DLog(@"paymentQueue:updatedDownloads: Invalid Download State");
                 return;
@@ -732,8 +732,8 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
         
         DLog(@"paymentQueue:updatedDownloads: Number of currentDownloads: %d",[self.currentDownloads count]);
         DLog(@"paymentQueue:updatedDownloads: Product %@ in download state: %@", productId, state);
-        
-        
+
+
         callbackArgs = [NSArray arrayWithObjects:
             NILABLE(state),
             [NSNumber numberWithInt:errorCode],
@@ -748,7 +748,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
             stringWithFormat:@"window.storekit.updatedDownloadCallback.apply(window.storekit, %@)",
             [callbackArgs JSONSerialize]];
         [self.commandDelegate evalJs:js];
-        
+
     }
 }
 
@@ -759,13 +759,13 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
 - (void)copyDownloadToDocuments:(SKDownload *)download {
 
     DLog(@"copyDownloadToDocuments: Copying downloaded content to Documents...");
-    
+
     NSString *source = [download.contentURL relativePath];
     NSDictionary *dict = [[NSMutableDictionary alloc] initWithContentsOfFile:[source stringByAppendingPathComponent:@"ContentInfo.plist"]];
     NSString *targetFolder = [FileUtility getDocumentPath];
     NSString *content = [source stringByAppendingPathComponent:@"Contents"];
     NSArray *files;
-    
+
     // Use folder if specified in .plist
     if ([dict objectForKey:@"Folder"]) {
         targetFolder = [targetFolder stringByAppendingPathComponent:[dict objectForKey:@"Folder"]];
@@ -774,7 +774,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
             NSAssert([FileUtility createFolder:targetFolder], @"Failed to create Documents subfolder: %@", targetFolder);
         }
     }
-    
+
     if ([dict objectForKey:@"Files"]) {
         DLog(@"copyDownloadToDocuments: Found Files key in .plist");
         files =  [dict objectForKey:@"Files"];
@@ -783,24 +783,24 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
         DLog(@"copyDownloadToDocuments: No Files key found in .plist - copy all files in Content folder");
         files = [FileUtility listFiles:content extension:nil];
     }
-    
+
     for (NSString *file in files) {
         NSString *fcontent = [content stringByAppendingPathComponent:file];
         NSString *targetFile = [targetFolder stringByAppendingPathComponent:[file lastPathComponent]];
-        
+
         DLog(@"copyDownloadToDocuments: Content path: %@", fcontent);
-        
+
         NSAssert([FileUtility isFileExist:fcontent], @"Content path MUST be valid");
-        
+
         // Copy the content to the documents folder
         NSAssert([FileUtility copyFile:fcontent dst:targetFile], @"Failed to copy the content");
         DLog(@"copyDownloadToDocuments: Copied %@ to %@", fcontent, targetFile);
-        
+
         // Set flag so we don't backup on iCloud
         NSURL* url = [NSURL fileURLWithPath:targetFile];
         [url setResourceValue: [NSNumber numberWithBool: YES] forKey: NSURLIsExcludedFromBackupKey error: Nil];
     }
-    
+
 }
 
 //
@@ -834,7 +834,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
     // Only thing is: the developper needs to be sure to handle all types of IAP defines on the AppStore.
     // Which should be OK...
     //
-    
+
     // Let's check if we already loaded this product informations.
     // Since it's provided to us generously, let's store them here.
     NSString *productId = payment.productIdentifier;
@@ -894,7 +894,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
 
 #if ARC_DISABLED
 - (void) dealloc {
-    [plugin  release];   
+    [plugin  release];
     [command release];
     [super   dealloc];
 }
