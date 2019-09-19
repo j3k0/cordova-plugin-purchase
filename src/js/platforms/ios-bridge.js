@@ -485,16 +485,16 @@ InAppPurchase.prototype.loadReceipts = function (callback) {
 
 InAppPurchase.prototype.setAppStoreReceipt = function(base64) {
     this.appStoreReceipt = base64;
-    if (window.localStorage && base64) {
-        window.localStorage.sk_appStoreReceipt = base64;
-    }
+    // if (window.localStorage && base64) {
+    //     window.localStorage.sk_appStoreReceipt = base64;
+    // }
 };
 InAppPurchase.prototype.loadAppStoreReceipt = function() {
-    if (window.localStorage && window.localStorage.sk_appStoreReceipt) {
-        this.appStoreReceipt = window.localStorage.sk_appStoreReceipt;
-    }
-    if (this.appStoreReceipt === 'null')
-        this.appStoreReceipt = null;
+    // if (window.localStorage && window.localStorage.sk_appStoreReceipt) {
+    //     this.appStoreReceipt = window.localStorage.sk_appStoreReceipt;
+    // }
+    // if (this.appStoreReceipt === 'null')
+    //     this.appStoreReceipt = null;
 };
 
 /*
