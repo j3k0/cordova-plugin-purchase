@@ -291,10 +291,14 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
     DLog(@"purchase: About to do IAP");
     id identifier = [command.arguments objectAtIndex:0];
     id quantity =   [command.arguments objectAtIndex:1];
+    NSString *applicationUsername = (NSString*)[command.arguments objectAtIndex:2];
 
     SKMutablePayment *payment = [SKMutablePayment paymentWithProduct:[self.products objectForKey:identifier]];
     if ([quantity respondsToSelector:@selector(integerValue)]) {
         payment.quantity = [quantity integerValue];
+    }
+    if (applicationUsername != nil && applicationUsername.length > 0) {
+        payment.applicationUsername = applicationUsername;
     }
     [[SKPaymentQueue defaultQueue] addPayment:payment];
 }
