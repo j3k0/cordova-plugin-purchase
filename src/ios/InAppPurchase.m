@@ -76,6 +76,49 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     return @"ERR_NONE";
 }
 
+static NSString *productDiscountTypeToString(NSUInteger type) {
+    if (@available(iOS 12.2, macOS 10.14.4, *)) {
+        switch (type) {
+            case SKProductDiscountTypeIntroductory: return @"Introductory";
+            case SKProductDiscountTypeSubscription: return @"Subscription";
+        }
+    }
+    return nil;
+}
+
+// https://developer.apple.com/documentation/storekit/skproductdiscountpaymentmode?language=objc
+static NSString *productDiscountPaymentModeToString(NSUInteger mode) {
+    if (@available(iOS 11.2, macOS 10.13.2, *)) {
+        switch (mode) {
+            case SKProductDiscountPaymentModePayAsYouGo: return @"PayAsYouGo";
+            case SKProductDiscountPaymentModePayUpFront: return @"UpFront";
+            case SKProductDiscountPaymentModeFreeTrial:  return @"FreeTrial";
+        }
+    }
+    return nil;
+}
+
+static NSString *productDiscountUnitToString(NSUInteger unit) {
+    if (@available(iOS 11.2, macOS 10.13.2, *)) {
+        switch (unit) {
+            case SKProductPeriodUnitDay:   return @"Day";
+            case SKProductPeriodUnitMonth: return @"Month";
+            case SKProductPeriodUnitWeek:  return @"Week";
+            case SKProductPeriodUnitYear:  return @"Year";
+        }
+    }
+    return nil;
+}
+
+// Get the currency code from the NSLocale object
+static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
+    NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
+    // [numberFormatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
+    // [numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
+    [numberFormatter setLocale:priceLocale];
+    return [numberFormatter currencyCode];
+}
+
 @implementation NSArray (JSONSerialize)
 - (NSString *)JSONSerialize {
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:self options:0 error:nil];
@@ -873,12 +916,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     NSMutableArray *validProducts = [NSMutableArray array];
     DLog(@"BatchProductsRequestDelegate.productsRequest:didReceiveResponse: Has %li validProducts", (unsigned long)[response.products count]);
     for (SKProduct *product in response.products) {
-        // Get the currency code from the NSLocale object
-        NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
-        [numberFormatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
-        [numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
-        [numberFormatter setLocale:product.priceLocale];
-        NSString *currencyCode = [numberFormatter currencyCode];
+        NSString *currencyCode = priceLocaleCurrencyCode(product.priceLocale);
         NSString *countryCode = [product.priceLocale objectForKey: NSLocaleCountryCode];
         NSDecimalNumber *priceMicros = [product.price decimalNumberByMultiplyingByPowerOf10:6];
 
@@ -887,30 +925,39 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         NSString *introPricePaymentMode = nil;
         NSNumber *introPriceNumberOfPeriods = nil;
         NSString *introPriceSubscriptionPeriod  = nil;
-        // Introductory price are supported from iOS 11.2
-        if (@available(iOS 11.2, *)) {
+
+        // Introductory price are supported from those iOS and macOS versions
+        if (@available(iOS 11.2, macOS 10.13.2, *)) {
             SKProductDiscount *introPrice = product.introductoryPrice;
             if (introPrice != nil) {
                 introPriceMicros = [introPrice.price  decimalNumberByMultiplyingByPowerOf10:6];
-                // https://developer.apple.com/documentation/storekit/skproductdiscountpaymentmode?language=objc
-                if (introPrice.paymentMode == SKProductDiscountPaymentModePayAsYouGo)
-                    introPricePaymentMode = @"PayAsYouGo";
-                if (introPrice.paymentMode == SKProductDiscountPaymentModePayUpFront)
-                    introPricePaymentMode = @"UpFront";
-                if (introPrice.paymentMode == SKProductDiscountPaymentModeFreeTrial)
-                    introPricePaymentMode = @"FreeTrial";
-                introPriceNumberOfPeriods = [NSNumber numberWithUnsignedInt:introPrice.numberOfPeriods];
-                if (introPrice.subscriptionPeriod == SKProductPeriodUnitDay)
-                    introPriceSubscriptionPeriod = @"Day";
-                if (introPrice.subscriptionPeriod == SKProductPeriodUnitMonth)
-                    introPriceSubscriptionPeriod = @"Month";
-                if (introPrice.subscriptionPeriod == SKProductPeriodUnitWeek)
-                    introPriceSubscriptionPeriod = @"Week";
-                if (introPrice.subscriptionPeriod == SKProductPeriodUnitYear)
-                    introPriceSubscriptionPeriod = @"Year";
+                introPricePaymentMode = productDiscountPaymentModeToString(introPrice.paymentMode);
+                introPriceNumberOfPeriods = [NSNumber numberWithUnsignedLong:
+                  introPrice.numberOfPeriods * introPrice.subscriptionPeriod.numberOfUnits];
+                introPriceSubscriptionPeriod = productDiscountUnitToString(introPrice.subscriptionPeriod.unit);
             }
         }
-        
+
+        NSMutableArray *discounts = [NSMutableArray array];
+        // Subscription discounts are supported on recent iOS and macOS
+        if (@available(iOS 12.2, macOS 10.14.4, *)) {
+            for (SKProductDiscount *discount in product.discounts) {
+                NSNumber *numberOfPeriods = [NSNumber numberWithUnsignedLong:
+                  discount.numberOfPeriods * discount.subscriptionPeriod.numberOfUnits];
+                NSDecimalNumber *dPriceMicros = [discount.price decimalNumberByMultiplyingByPowerOf10:6];
+                [discounts addObject:
+                    [NSDictionary dictionaryWithObjectsAndKeys:
+                        NILABLE(discount.identifier),                        @"identifier",
+                        NILABLE(productDiscountTypeToString(discount.type)), @"type",
+                        NILABLE(discount.localizedPrice),                    @"price",
+                        NILABLE(dPriceMicros),                               @"priceMicros",
+                        numberOfPeriods,                                     @"period",
+                        NILABLE(productDiscountUnitToString(discount.subscriptionPeriod.unit)), @"periodUnit",
+                        NILABLE(productDiscountPaymentModeToString(discount.paymentMode)),      @"paymentMode",
+                        nil]];
+            }
+        }
+
         DLog(@"BatchProductsRequestDelegate.productsRequest:didReceiveResponse:  - %@: %@", product.productIdentifier, product.localizedTitle);
         [validProducts addObject:
             [NSDictionary dictionaryWithObjectsAndKeys:
@@ -923,9 +970,10 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
                 NILABLE(countryCode),                  @"countryCode",
                 NILABLE(product.localizedIntroPrice),  @"introPrice",
                 NILABLE(introPriceMicros),             @"introPriceMicros",
-                NILABLE(introPriceNumberOfPeriods),    @"introPriceNumberOfPeriods",
-                NILABLE(introPriceSubscriptionPeriod), @"introPriceSubscriptionPeriod",
+                NILABLE(introPriceNumberOfPeriods),    @"introPricePeriod",
+                NILABLE(introPriceSubscriptionPeriod), @"introPricePeriodUnit",
                 NILABLE(introPricePaymentMode),        @"introPricePaymentMode",
+                NILABLE(discounts),                    @"discounts",
                 nil]];
         [self.plugin.products setObject:product forKey:[NSString stringWithFormat:@"%@", product.productIdentifier]];
     }
