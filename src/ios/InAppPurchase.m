@@ -958,6 +958,18 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
             }
         }
 
+        NSString *group = nil;
+        if (@available(iOS 12.0, macOS 10.14, *)) {
+            group = product.subscriptionGroupIdentifier;
+        }
+
+        NSNumber *billingPeriod = nil;
+        NSString *billingPeriodUnit = nil;
+        if (@available(iOS 11.2, macOS 10.13.2, *)) {
+            billingPeriod = [NSNumber numberWithUnsignedLong:product.subscriptionPeriod.numberOfUnits];
+            billingPeriodUnit = productDiscountUnitToString(product.subscriptionPeriod.unit);
+        }
+
         DLog(@"BatchProductsRequestDelegate.productsRequest:didReceiveResponse:  - %@: %@", product.productIdentifier, product.localizedTitle);
         [validProducts addObject:
             [NSDictionary dictionaryWithObjectsAndKeys:
@@ -974,6 +986,9 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
                 NILABLE(introPriceSubscriptionPeriod), @"introPricePeriodUnit",
                 NILABLE(introPricePaymentMode),        @"introPricePaymentMode",
                 NILABLE(discounts),                    @"discounts",
+                NILABLE(group),                        @"group",
+                NILABLE(billingPeriod),                @"billingPeriod",
+                NILABLE(billingPeriodUnit),            @"billingPeriodUnit",
                 nil]];
         [self.plugin.products setObject:product forKey:[NSString stringWithFormat:@"%@", product.productIdentifier]];
     }

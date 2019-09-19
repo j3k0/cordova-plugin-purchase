@@ -3137,7 +3137,10 @@ function storekitLoaded(validProducts, invalidProductIds) {
             introPricePeriod: v.introPricePeriod,
             introPricePeriodUnit: v.introPricePeriodUnit,
             introPricePaymentMode: v.introPricePaymentMode,
+            billingPeriod: v.billingPeriod,
+            billingPeriodUnit: v.billingPeriodUnit,
             discounts: v.discounts,
+            group: v.group,
             state: store.VALID
         });
         p.trigger("loaded");
