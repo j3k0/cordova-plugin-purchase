@@ -35,10 +35,7 @@ var protectCall = function (callback, context) {
 var InAppPurchase = function () {
     this.options = {};
 
-    this.receiptForProduct = {};
     this.transactionForProduct = {};
-    if (window.localStorage && window.localStorage.sk_receiptForProduct)
-        this.receiptForProduct = JSON.parse(window.localStorage.sk_receiptForProduct);
     if (window.localStorage && window.localStorage.sk_transactionForProduct)
         this.transactionForProduct = JSON.parse(window.localStorage.sk_transactionForProduct);
 
@@ -351,12 +348,6 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
         this.transactionForProduct[productId] = transactionIdentifier;
     }
 
-    if (transactionReceipt) {
-        this.receiptForProduct[productId] = transactionReceipt;
-        if (window.localStorage) {
-            window.localStorage.sk_receiptForProduct = JSON.stringify(this.receiptForProduct);
-        }
-    }
 	switch(state) {
         case "PaymentTransactionStatePurchasing":
             protectCall(this.options.purchasing, 'options.purchasing', productId);
@@ -478,9 +469,6 @@ InAppPurchase.prototype.loadReceipts = function (callback) {
     function callCallback() {
         protectCall(callback, 'loadReceipts.callback', {
             appStoreReceipt: that.appStoreReceipt,
-            forProduct:     function (productId) {
-                return that.receiptForProduct[productId] || null;
-            }
         });
     }
 
