@@ -61,6 +61,8 @@ SOFTWARE.
         <source-file src="src/ios/InAppPurchase.m" />
         <header-file src="src/ios/SKProduct+LocalizedPrice.h" />
         <source-file src="src/ios/SKProduct+LocalizedPrice.m" />
+        <header-file src="src/ios/SKProductDiscount+LocalizedPrice.h" />
+        <source-file src="src/ios/SKProductDiscount+LocalizedPrice.m" />
         <header-file src="src/ios/FileUtility.h" />
         <source-file src="src/ios/FileUtility.m" />
 
@@ -88,6 +90,8 @@ SOFTWARE.
         <source-file src="src/ios/InAppPurchase.m" />
         <header-file src="src/ios/SKProduct+LocalizedPrice.h" />
         <source-file src="src/ios/SKProduct+LocalizedPrice.m" />
+        <header-file src="src/ios/SKProductDiscount+LocalizedPrice.h" />
+        <source-file src="src/ios/SKProductDiscount+LocalizedPrice.m" />
         <header-file src="src/ios/FileUtility.h" />
         <source-file src="src/ios/FileUtility.m" />
 

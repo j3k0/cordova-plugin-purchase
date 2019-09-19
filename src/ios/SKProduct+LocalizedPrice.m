@@ -1,4 +1,5 @@
 #import "SKProduct+LocalizedPrice.h"
+#import "SKProductDiscount+LocalizedPrice.h"
 
 @implementation SKProduct (LocalizedPrice)
 
@@ -17,19 +18,10 @@
 
 - (NSString *)localizedIntroPrice
 {
-    // Introductory price are supported from iOS 11.2
-    if (@available(iOS 11.2, *)) {
-        SKProductDiscount *intro = self.introductoryPrice;
-        if (intro != nil) {
-            NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
-            [numberFormatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
-            [numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
-            [numberFormatter setLocale:intro.priceLocale];
-            NSString *formattedString = [numberFormatter stringFromNumber:intro.price];
-#if ARC_DISABLED
-            [numberFormatter release];
-#endif
-            return formattedString;
+    // Introductory price are supported from iOS 11.2 and macOS 10.13.2
+    if (@available(iOS 11.2, macOS 10.13.2, *)) {
+        if (self.introductoryPrice != nil) {
+            return self.introductoryPrice.localizedPrice;
         }
     }
     return nil;
