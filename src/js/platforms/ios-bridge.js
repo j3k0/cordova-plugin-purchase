@@ -117,7 +117,6 @@ InAppPurchase.prototype.init = function (options, success, error) {
         protectCall(error, 'init.error');
     };
 
-    this.loadAppStoreReceipt();
     exec('setup', [], setupOk, setupFailed);
 };
 
@@ -418,24 +417,28 @@ InAppPurchase.prototype.restoreCompletedTransactionsFailed = function (errorCode
     protectCall(this.options.restoreFailed, 'options.restoreFailed', errorCode);
 };
 
+function parseReceiptArgs(args) {
+    var base64 = args[0];
+    var bundleIdentifier = args[1];
+    var bundleShortVersion = args[2];
+    var bundleNumericVersion = args[3];
+    var bundleSignature = args[4];
+    log('infoPlist: ' + bundleIdentifier + "," + bundleShortVersion + "," + bundleNumericVersion  + "," + bundleSignature);
+    return {
+        appStoreReceipt: base64,
+        bundleIdentifier: bundleIdentifier,
+        bundleShortVersion: bundleShortVersion,
+        bundleNumericVersion: bundleNumericVersion,
+        bundleSignature: bundleSignature
+    };
+}
+
 InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
     var that = this;
 
     var loaded = function (args) {
-        var base64 = args[0];
-        var bundleIdentifier = args[1];
-        var bundleShortVersion = args[2];
-        var bundleNumericVersion = args[3];
-        var bundleSignature = args[4];
-        log('infoPlist: ' + bundleIdentifier + "," + bundleShortVersion + "," + bundleNumericVersion  + "," + bundleSignature);
-        that.setAppStoreReceipt(base64);
-        var data = {
-            appStoreReceipt: base64,
-            bundleIdentifier: bundleIdentifier,
-            bundleShortVersion: bundleShortVersion,
-            bundleNumericVersion: bundleNumericVersion,
-            bundleSignature: bundleSignature
-        };
+        var data = parseReceiptArgs(args);
+        that.appStoreReceipt = data.appStoreReceipt;
         protectCall(that.options.receiptsRefreshed, 'options.receiptsRefreshed', data);
         protectCall(successCb, "refreshReceipts.success", data);
     };
@@ -446,55 +449,34 @@ InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
         protectCall(errorCb, "refreshReceipts.error", InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
     };
 
+    this.appStoreReceipt = null;
     log('refreshing appStoreReceipt');
     exec('appStoreRefreshReceipt', [], loaded, error);
 };
 
-InAppPurchase.prototype.loadReceipts = function (callback) {
+InAppPurchase.prototype.loadReceipts = function (callback, errorCb) {
 
     var that = this;
-    // that.appStoreReceipt = null;
+    var data;
 
-    var loaded = function (base64) {
-        // that.appStoreReceipt = base64;
-        that.setAppStoreReceipt(base64);
+    var loaded = function (args) {
+        data = parseReceiptArgs(args);
+        that.appStoreReceipt = data.appStoreReceipt;
         callCallback();
     };
 
     var error = function (errMessage) {
         log('load failed: ' + errMessage);
-        protectCall(that.options.error, 'options.error', InAppPurchase.prototype.ERR_LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
+        protectCall(that.options.error, 'options.error', store.ERR_LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
+        protectCall(errorCb, 'loadReceipts.error', store.ERR_LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
     };
 
     function callCallback() {
-        protectCall(callback, 'loadReceipts.callback', {
-            appStoreReceipt: that.appStoreReceipt,
-        });
+        protectCall(callback, 'loadReceipts.callback', data);
     }
 
-    if (that.appStoreReceipt) {
-        log('appStoreReceipt already loaded:');
-        log(that.appStoreReceipt);
-        callCallback();
-    }
-    else {
-        log('loading appStoreReceipt');
-        exec('appStoreReceipt', [], loaded, error);
-    }
-};
-
-InAppPurchase.prototype.setAppStoreReceipt = function(base64) {
-    this.appStoreReceipt = base64;
-    // if (window.localStorage && base64) {
-    //     window.localStorage.sk_appStoreReceipt = base64;
-    // }
-};
-InAppPurchase.prototype.loadAppStoreReceipt = function() {
-    // if (window.localStorage && window.localStorage.sk_appStoreReceipt) {
-    //     this.appStoreReceipt = window.localStorage.sk_appStoreReceipt;
-    // }
-    // if (this.appStoreReceipt === 'null')
-    //     this.appStoreReceipt = null;
+    log('loading appStoreReceipt');
+    exec('appStoreReceipt', [], loaded, error);
 };
 
 /*

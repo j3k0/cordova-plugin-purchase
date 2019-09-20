@@ -584,8 +584,16 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
     if (receiptData != nil) {
         base64 = [receiptData convertToBase64];
     }
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSArray *callbackArgs = [NSArray arrayWithObjects:
+        NILABLE(base64),
+        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleIdentifier"]),
+        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleShortVersionString"]),
+        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleNumericVersion"]),
+        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleSignature"]),
+        nil];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
-                                                      messageAsString:base64];
+                                                      messageAsArray:callbackArgs];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 

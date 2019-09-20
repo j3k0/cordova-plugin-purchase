@@ -449,31 +449,38 @@ store.manageSubscriptions = function() {
 // };
 store.when("re-refreshed", function() {
     storekit.restore();
-    storekit.refreshReceipts(function(data) {
-        // What the point of this?
-        // Why create a product whose ID equals the application bundle ID (?)
-        // Is it just to trigger force a validation of the appStoreReceipt?
-        if (data) {
-            var p = data.bundleIdentifier ? store.get(data.bundleIdentifier) : null;
-            if (!p) {
-                p = new store.Product({
-                    id:    data.bundleIdentifier || "application data",
-                    alias: "application data",
-                    type:  store.NON_CONSUMABLE
-                });
-                store.register(p);
-            }
-            p.version = data.bundleShortVersion;
-            p.transaction = {
-                type: 'ios-appstore',
-                appStoreReceipt: data.appStoreReceipt,
-                signature: data.signature
-            };
-            p.trigger("loaded");
-            p.set('state', store.APPROVED);
-        }
+    storekit.refreshReceipts(function(obj) {
+        storekitSetAppProductFromReceipt(obj);
     });
 });
+
+// What the point of this?
+// Why create a product whose ID equals the application bundle ID (?)
+// Is it just to trigger force a validation of the appStoreReceipt?
+function storekitSetAppProductFromReceipt(data) {
+    if (data) {
+        var p = data.bundleIdentifier ? store.get(data.bundleIdentifier) : null;
+        if (!p) {
+            p = new store.Product({
+                id:    data.bundleIdentifier || "_",
+                alias: "application",
+                type:  store.NON_CONSUMABLE
+            });
+            store.register(p);
+        }
+        p.transaction = {
+            type: 'ios-appstore',
+            appStoreReceipt: data.appStoreReceipt,
+            signature: data.signature
+        };
+        p.version = data.bundleShortVersion;
+        p.trigger("loaded");
+        if (p.state !== store.OWNED && p.state !== store.APPROVED) {
+            p.set('state', store.APPROVED);
+        }
+        return p;
+    }
+}
 
 function storekitRestored(originalTransactionId, productId) {
     store.log.info("ios -> restored purchase " + productId);
@@ -530,7 +537,6 @@ store._refreshForValidation = function(callback) {
 store._prepareForValidation = function(product, callback) {
     var nRetry = 0;
     function loadReceipts() {
-        storekit.setAppStoreReceipt(null);
         storekit.loadReceipts(function(r) {
             if (!product.transaction) {
                 product.transaction = {
@@ -545,6 +551,7 @@ store._prepareForValidation = function(product, callback) {
                     return;
                 }
                 else if (nRetry === 2) {
+                    // TODO: Should fail (with a special error), ask user to do "Restore Purchases" here.
                     storekit.refreshReceipts(loadReceipts);
                     return;
                 }
