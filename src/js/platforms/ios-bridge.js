@@ -109,7 +109,7 @@ InAppPurchase.prototype.init = function (options, success, error) {
  * @param {String} productId The product identifier. e.g. "com.example.MyApp.myproduct"
  * @param {int} quantity Quantity of product to purchase
  */
-InAppPurchase.prototype.purchase = function (productId, quantity, applicationUsername) {
+InAppPurchase.prototype.purchase = function (productId, quantity, applicationUsername, discount) {
 	quantity = quantity | 0 || 1;
     var options = this.options;
 
@@ -138,7 +138,7 @@ InAppPurchase.prototype.purchase = function (productId, quantity, applicationUse
             protectCall(options.error, 'options.error', store.ERR_PURCHASE, errmsg, productId, quantity);
         }
     };
-    exec('purchase', [productId, quantity, applicationUsername], purchaseOk, purchaseFailed);
+    exec('purchase', [productId, quantity, applicationUsername, discount || {}], purchaseOk, purchaseFailed);
 };
 
 /*

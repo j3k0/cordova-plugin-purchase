@@ -39,8 +39,9 @@ store.when("requested", function(product) {
             return;
         }
         var applicationUsername = store._evaluateApplicationUsername();
+        var a = product.additionalData || {};
         var hashedUsername = applicationUsername ? store.utils.md5(applicationUsername) : '';
-        storekit.purchase(product.id, 1, hashedUsername);
+        storekit.purchase(product.id, 1, hashedUsername, a.discount);
     });
 });
 

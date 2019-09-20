@@ -292,6 +292,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
     id identifier = [command.arguments objectAtIndex:0];
     id quantity =   [command.arguments objectAtIndex:1];
     NSString *applicationUsername = (NSString*)[command.arguments objectAtIndex:2];
+    id discountArg = [command.arguments objectAtIndex:3];
 
     SKMutablePayment *payment = [SKMutablePayment paymentWithProduct:[self.products objectForKey:identifier]];
     if ([quantity respondsToSelector:@selector(integerValue)]) {
@@ -299,6 +300,18 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
     }
     if (applicationUsername != nil && applicationUsername.length > 0) {
         payment.applicationUsername = applicationUsername;
+    }
+    if ([discountArg isKindOfClass:[NSDictionary class]]) {
+        NSDictionary *discount = (NSDictionary*)discountArg;
+        DLog(@"purchase with discount.");
+        if (@available(iOS 12.2, macOS 10.14.4, *)) {
+            payment.paymentDiscount = [[SKPaymentDiscount alloc]
+              initWithIdentifier: discount[@"id"]
+                   keyIdentifier: discount[@"key"]
+                           nonce: [[NSUUID alloc] initWithUUIDString:discount[@"nonce"]]
+                       signature: discount[@"signature"]
+                       timestamp: discount[@"timestamp"]];
+        }
     }
     [[SKPaymentQueue defaultQueue] addPayment:payment];
 }
