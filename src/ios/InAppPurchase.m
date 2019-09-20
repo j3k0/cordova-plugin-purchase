@@ -972,7 +972,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
                 NSDecimalNumber *dPriceMicros = [discount.price decimalNumberByMultiplyingByPowerOf10:6];
                 [discounts addObject:
                     [NSDictionary dictionaryWithObjectsAndKeys:
-                        NILABLE(discount.identifier),                        @"identifier",
+                        NILABLE(discount.identifier),                        @"id",
                         NILABLE(productDiscountTypeToString(discount.type)), @"type",
                         NILABLE(discount.localizedPrice),                    @"price",
                         NILABLE(dPriceMicros),                               @"priceMicros",

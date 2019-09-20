@@ -454,6 +454,7 @@ store.when("re-refreshed", function() {
     storekit.restore();
     storekit.refreshReceipts(function(obj) {
         storekitSetAppProductFromReceipt(obj);
+        store.validate();
     });
 });
 
