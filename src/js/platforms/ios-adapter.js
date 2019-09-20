@@ -51,7 +51,9 @@ store.when("requested", function(product) {
 //!
 store.when("finished", function(product) {
     store.log.debug("ios -> finishing " + product.id + " (a " + product.type + ")");
-    storekitFinish(product);
+    if (product.type !== store.APPLICATION) {
+        storekitFinish(product);
+    }
     if (product.type === store.CONSUMABLE || product.type === store.NON_RENEWING_SUBSCRIPTION || product.expired) {
         product.set("state", store.VALID);
         setOwned(product.id, false);
@@ -464,8 +466,8 @@ function storekitSetAppProductFromReceipt(data) {
         if (!p) {
             p = new store.Product({
                 id:    data.bundleIdentifier || "_",
-                alias: "application",
-                type:  store.NON_CONSUMABLE
+                alias: store.APPLICATION,
+                type:  store.APPLICATION
             });
             store.register(p);
         }
@@ -574,18 +576,24 @@ store.validate = function(successCb, errorCb) {
                 return;
             }
         }
-        errorCb(store.ERR_LOAD_RECEIPTS, 'No appStoreReceipt, Call store.refresh()');
+        if (errorCb) {
+            errorCb(store.ERR_LOAD_RECEIPTS, 'No appStoreReceipt, Call store.refresh()');
+        }
 
         function onVerified() {
             store.once.unregister(onUnverified);
             var lastTransactions = {};
             var isSubscriber = false;
+            var usedIntroOffer = false;
             p.transaction.in_app.forEach(function(transaction) {
                 lastTransactions[transaction.product_id] = transaction;
             });
             Object.values(lastTransactions).forEach(function(transaction) {
                 if (transaction.expires_date_ms) {
                     isSubscriber = true;
+                }
+                if (transaction.is_in_intro_offer_period === 'true') {
+                    usedIntroOffer = true;
                 }
                 var p = store.get(transaction.product_id);
                 if (!p) return;
@@ -595,13 +603,13 @@ store.validate = function(successCb, errorCb) {
             });
             store.products.forEach(function(product) {
                 if (product.type === store.PAID_SUBSCRIPTION) {
-                    if (isSubscriber) {
+                    if (isSubscriber && product.discounts) {
+                        product.discounts.forEach(function(discount) {
+                            discount.eligible = true;
+                        });
+                    }
+                    if (usedIntroOffer) {
                         product.set('ineligibleForIntroPrice', true);
-                        if (product.discounts) {
-                            product.discounts.forEach(function(discount) {
-                                discount.eligible = true;
-                            });
-                        }
                     }
                 }
             });

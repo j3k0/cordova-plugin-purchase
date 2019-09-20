@@ -31,7 +31,7 @@ store.Product = function(options) {
 
     ///  - `product.type` - Family of product, should be one of the defined [product types](#product-types).
     var type = this.type = options.type || null;
-    if (type !== store.CONSUMABLE && type !== store.NON_CONSUMABLE && type !== store.PAID_SUBSCRIPTION && type !== store.FREE_SUBSCRIPTION && type !== store.NON_RENEWING_SUBSCRIPTION)
+    if (type !== store.CONSUMABLE && type !== store.NON_CONSUMABLE && type !== store.PAID_SUBSCRIPTION && type !== store.FREE_SUBSCRIPTION && type !== store.NON_RENEWING_SUBSCRIPTION && type !== store.APPLICATION)
         throw new TypeError("Invalid product type");
 
     ///  - `product.group` - Name of the group your subscription product is a member of (default to `"default"`). If you don't set anything, all subscription will be members of the same group.

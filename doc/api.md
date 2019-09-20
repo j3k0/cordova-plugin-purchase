@@ -333,6 +333,10 @@ The `sandbox` property defines if you want to invoke the platform purchase sandb
     store.PURCHASE_CONSUMED = 6778004;
     store.INTERNAL_ERROR    = 6778005;
     store.NEED_MORE_DATA    = 6778006;
+
+### special purpose
+
+    store.APPLICATION = "application";
 ## <a name="product"></a>*store.Product* object ##
 
 Most events methods give you access to a `product` object.

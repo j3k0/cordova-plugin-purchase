@@ -77,4 +77,9 @@ var ERROR_CODES_BASE = 6777000;
 /*///*/     store.INTERNAL_ERROR    = 6778005;
 /*///*/     store.NEED_MORE_DATA    = 6778006;
 
+///
+/// ### special purpose
+///
+/*///*/     store.APPLICATION = "application";
+
 })();
