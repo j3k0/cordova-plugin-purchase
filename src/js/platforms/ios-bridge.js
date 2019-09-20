@@ -45,23 +45,6 @@ var InAppPurchase = function () {
         delete window.localStorage.sk_receiptForTransaction;
 };
 
-// Error codes
-// (keep synchronized with InAppPurchase.m)
-var ERROR_CODES_BASE = 6777000;
-InAppPurchase.prototype.ERR_SETUP               = ERROR_CODES_BASE + 1;
-InAppPurchase.prototype.ERR_LOAD                = ERROR_CODES_BASE + 2;
-InAppPurchase.prototype.ERR_PURCHASE            = ERROR_CODES_BASE + 3;
-InAppPurchase.prototype.ERR_LOAD_RECEIPTS       = ERROR_CODES_BASE + 4;
-InAppPurchase.prototype.ERR_CLIENT_INVALID      = ERROR_CODES_BASE + 5;
-InAppPurchase.prototype.ERR_PAYMENT_CANCELLED   = ERROR_CODES_BASE + 6; // now ERR_CANCELLED
-InAppPurchase.prototype.ERR_PAYMENT_INVALID     = ERROR_CODES_BASE + 7;
-InAppPurchase.prototype.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
-InAppPurchase.prototype.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
-InAppPurchase.prototype.ERR_REFRESH_RECEIPTS    = ERROR_CODES_BASE + 11;
-InAppPurchase.prototype.ERR_PAUSE_DOWNLOADS     = ERROR_CODES_BASE + 12;
-InAppPurchase.prototype.ERR_RESUME_DOWNLOADS    = ERROR_CODES_BASE + 13;
-InAppPurchase.prototype.ERR_CANCEL_DOWNLOADS    = ERROR_CODES_BASE + 14;
-
 var initialized = false;
 
 InAppPurchase.prototype.init = function (options, success, error) {
@@ -113,7 +96,7 @@ InAppPurchase.prototype.init = function (options, success, error) {
     };
     var setupFailed = function () {
         log('setup failed');
-        protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_SETUP, 'Setup failed');
+        protectCall(options.error, 'options.error', store.ERR_SETUP, 'Setup failed');
         protectCall(error, 'init.error');
     };
 
@@ -137,7 +120,7 @@ InAppPurchase.prototype.purchase = function (productId, quantity, applicationUse
         var msg = 'Purchasing ' + productId + ' failed.  Ensure the product was loaded first with storekit.load(...)!';
         log(msg);
         if (typeof options.error === 'function') {
-            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_PURCHASE, 'Trying to purchase a unknown product.', productId, quantity);
+            protectCall(options.error, 'options.error', store.ERR_PURCHASE, 'Trying to purchase a unknown product.', productId, quantity);
         }
         return;
     }
@@ -152,7 +135,7 @@ InAppPurchase.prototype.purchase = function (productId, quantity, applicationUse
         var errmsg = 'Purchasing ' + productId + ' failed';
         log(errmsg);
         if (typeof options.error === 'function') {
-            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_PURCHASE, errmsg, productId, quantity);
+            protectCall(options.error, 'options.error', store.ERR_PURCHASE, errmsg, productId, quantity);
         }
     };
     exec('purchase', [productId, quantity, applicationUsername], purchaseOk, purchaseFailed);
@@ -193,7 +176,7 @@ InAppPurchase.prototype.pause = function() {
         var errmsg = "Pausing active downloads failed";
         log(errmsg);
         if (typeof this.options.error === "function") {
-            protectCall(this.options.error, "options.error", InAppPurchase.prototype.ERR_PAUSE_DOWNLOADS, errmsg);
+            protectCall(this.options.error, "options.error", store.ERR_DOWNLOAD, errmsg);
         }
     };
     return exec('pause', [], ok, failed);
@@ -213,7 +196,7 @@ InAppPurchase.prototype.resume = function() {
         var errmsg = "Resuming active downloads failed";
         log(errmsg);
         if (typeof this.options.error === "function") {
-            protectCall(this.options.error, "options.error", InAppPurchase.prototype.ERR_RESUME_DOWNLOADS, errmsg);
+            protectCall(this.options.error, "options.error", store.ERR_DOWNLOAD, errmsg);
         }
     };
     return exec('resume', [], ok, failed);
@@ -233,7 +216,7 @@ InAppPurchase.prototype.cancel = function() {
         var errmsg = "Cancelling active downloads failed";
         log(errmsg);
         if (typeof this.options.error === "function") {
-            protectCall(this.options.error, "options.error", InAppPurchase.prototype.ERR_CANCEL_DOWNLOADS, errmsg);
+            protectCall(this.options.error, "options.error", store.ERR_DOWNLOAD, errmsg);
         }
     };
     return exec('cancel', [], ok, failed);
@@ -280,8 +263,8 @@ InAppPurchase.prototype.load = function (productIds, success, error) {
         if (typeof productIds[0] !== 'string') {
             var msg = 'invalid productIds given to store.load: ' + JSON.stringify(productIds);
             log(msg);
-            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_LOAD, msg);
-            protectCall(error, 'load.error', InAppPurchase.prototype.ERR_LOAD, msg);
+            protectCall(options.error, 'options.error', store.ERR_LOAD, msg);
+            protectCall(error, 'load.error', store.ERR_LOAD, msg);
             return;
         }
         log('load ' + JSON.stringify(productIds));
@@ -296,8 +279,8 @@ InAppPurchase.prototype.load = function (productIds, success, error) {
             log('load failed');
             log(errMessage);
             var message = 'Load failed: ' + errMessage;
-            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_LOAD, message);
-            protectCall(error, 'load.error', InAppPurchase.prototype.ERR_LOAD, message);
+            protectCall(options.error, 'options.error', store.ERR_LOAD, message);
+            protectCall(error, 'load.error', store.ERR_LOAD, message);
         };
 
         InAppPurchase._productIds = productIds;
@@ -445,8 +428,8 @@ InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
 
     var error = function(errMessage) {
         log('refresh receipt failed: ' + errMessage);
-        protectCall(that.options.error, 'options.error', InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
-        protectCall(errorCb, "refreshReceipts.error", InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
+        protectCall(that.options.error, 'options.error', store.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
+        protectCall(errorCb, "refreshReceipts.error", store.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
     };
 
     this.appStoreReceipt = null;
