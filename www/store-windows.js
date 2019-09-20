@@ -592,7 +592,7 @@ store.Product.prototype.verify = function() {
             var dataTransaction = getData(data, 'transaction');
             if (dataTransaction) {
                 that.transaction = Object.assign(that.transaction || {}, dataTransaction);
-                extractTransactionFields(that);
+                store._extractTransactionFields(that);
                 that.trigger("updated");
             }
             if (success) {
@@ -609,8 +609,9 @@ store.Product.prototype.verify = function() {
                          data.ineligible_for_intro_price.forEach) {
                     data.ineligible_for_intro_price.forEach(function(pid) {
                         var p = store.get(pid);
-                        if (p)
+                        if (p) {
                             p.set('ineligibleForIntroPrice', true);
+                        }
                     });
                 }
             }
@@ -707,27 +708,30 @@ store.Product.prototype.verify = function() {
     ///
 
     return ret;
+};
 
-    function extractTransactionFields(that) {
-        var t = that.transaction;
-        // using legacy transactions (platform specific)
-        if (t.type === 'ios-appstore' && t.expires_date_ms) {
-            that.lastRenewalDate = new Date(parseInt(t.purchase_date_ms));
-            that.expiryDate = new Date(parseInt(t.expires_date_ms));
-        }
-        else if (t.type === 'android-playstore' && t.expiryTimeMillis > 0) {
-            that.lastRenewalDate = new Date(parseInt(t.startTimeMillis));
-            that.expiryDate = new Date(parseInt(t.expiryTimeMillis));
-        }
-        // using unified transaction fields
-        if (t.expiryDate)
-            that.expiryDate = new Date(t.expiryDate);
-        if (t.lastRenewalDate)
-            that.lastRenewalDate = new Date(t.lastRenewalDate);
-        if (t.renewalIntent)
-            that.renewalIntent = t.renewalIntent;
-        return t;
+store._extractTransactionFields = function(that, t) {
+    t = t || that.transaction;
+    store.log.debug('transaction fields for ' + that.id);
+    // using legacy transactions (platform specific)
+    if (t.type === 'ios-appstore' && t.expires_date_ms) {
+        that.lastRenewalDate = new Date(parseInt(t.purchase_date_ms));
+        that.expiryDate = new Date(parseInt(t.expires_date_ms));
+        store.log.debug('expiryDate: ' + that.expiryDate.toISOString());
     }
+    else if (t.type === 'android-playstore' && t.expiryTimeMillis > 0) {
+        that.lastRenewalDate = new Date(parseInt(t.startTimeMillis));
+        that.expiryDate = new Date(parseInt(t.expiryTimeMillis));
+        store.log.debug('expiryDate: ' + that.expiryDate.toISOString());
+    }
+    // using unified transaction fields
+    if (t.expiryDate)
+        that.expiryDate = new Date(t.expiryDate);
+    if (t.lastRenewalDate)
+        that.lastRenewalDate = new Date(t.lastRenewalDate);
+    if (t.renewalIntent)
+        that.renewalIntent = t.renewalIntent;
+    return t;
 };
 
 ///
