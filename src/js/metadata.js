@@ -65,7 +65,7 @@ store.developerName = "";
 
 // For internal use.
 store._evaluateDeveloperPayload = stringOrFunction('developerPayload');
-store._evaluateApplicationUsername = stringOrFunction('applicationUsername');
+store.getApplicationUsername = stringOrFunction('applicationUsername');
 
 function stringOrFunction(key) {
     return function (product) {

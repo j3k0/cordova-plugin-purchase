@@ -76,7 +76,7 @@ function runValidation() {
       }
       if (!product.additionalData.applicationUsername) {
           product.additionalData.applicationUsername =
-              store._evaluateApplicationUsername(product);
+              store.getApplicationUsername(product);
       }
       if (!product.additionalData.applicationUsername) {
           delete product.additionalData.applicationUsername;

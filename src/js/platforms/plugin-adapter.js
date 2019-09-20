@@ -416,7 +416,7 @@ function getDeveloperPayload(product) {
     // There is no developer payload but an applicationUsername, let's
     // save it in there: it can be used to compare the purchasing user
     // with the current user.
-    var applicationUsername = store._evaluateApplicationUsername(product);
+    var applicationUsername = store.getApplicationUsername(product);
     if (!applicationUsername) {
         return "";
     }

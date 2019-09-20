@@ -53,7 +53,7 @@ store.order = function(pid, additionalData) {
 
     // Associate the active user with the purchase
     if (!a.applicationUsername) {
-        a.applicationUsername = store._evaluateApplicationUsername(p);
+        a.applicationUsername = store.getApplicationUsername(p);
     }
 
     // Let the platform extend additional data

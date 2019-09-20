@@ -38,8 +38,8 @@ store.when("requested", function(product) {
             }), product]);
             return;
         }
-        var applicationUsername = store._evaluateApplicationUsername();
         var a = product.additionalData || {};
+        var applicationUsername = a.applicationUsername || store.getApplicationUsername(product);
         var hashedUsername = applicationUsername ? store.utils.md5(applicationUsername) : '';
         storekit.purchase(product.id, 1, hashedUsername, a.discount);
     });
