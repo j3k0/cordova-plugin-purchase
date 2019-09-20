@@ -222,8 +222,9 @@ store.Product.prototype.verify = function() {
                          data.ineligible_for_intro_price.forEach) {
                     data.ineligible_for_intro_price.forEach(function(pid) {
                         var p = store.get(pid);
-                        if (p)
+                        if (p) {
                             p.set('ineligibleForIntroPrice', true);
+                        }
                     });
                 }
             }
