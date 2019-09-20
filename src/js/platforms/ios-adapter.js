@@ -562,6 +562,61 @@ store._prepareForValidation = function(product, callback) {
     loadReceipts();
 };
 
+store.validate = function(successCb, errorCb) {
+    storekit.loadReceipts(function(data) {
+        if (data && data.appStoreReceipt) {
+            var p = storekitSetAppProductFromReceipt(data);
+            if (p) {
+                store.once(p.id + ' verified', onVerified);
+                store.once(p.id + ' unverified', onUnverified);
+                p.verify();
+                return;
+            }
+        }
+        errorCb(store.ERR_LOAD_RECEIPTS, 'No appStoreReceipt, Call store.refresh()');
+
+        function onVerified() {
+            store.once.unregister(onUnverified);
+            var lastTransactions = {};
+            var isSubscriber = false;
+            p.transaction.in_app.forEach(function(transaction) {
+                lastTransactions[transaction.product_id] = transaction;
+            });
+            Object.values(lastTransactions).forEach(function(transaction) {
+                if (transaction.expires_date_ms) {
+                    isSubscriber = true;
+                }
+                var p = store.get(transaction.product_id);
+                if (!p) return;
+                transaction.type = 'ios-appstore';
+                store._extractTransactionFields(p, transaction);
+                p.trigger("updated");
+            });
+            store.products.forEach(function(product) {
+                if (product.type === store.PAID_SUBSCRIPTION) {
+                    if (isSubscriber) {
+                        product.set('ineligibleForIntroPrice', true);
+                        if (product.discounts) {
+                            product.discounts.forEach(function(discount) {
+                                discount.eligible = true;
+                            });
+                        }
+                    }
+                }
+            });
+            if (successCb) {
+                successCb();
+            }
+        }
+        function onUnverified() {
+            store.once.unregister(onVerified);
+            if (errorCb) {
+                errorCb(store.ERR_VERIFICATION_FAILED, 'Invalid appStoreReceipt');
+            }
+        }
+    }, errorCb);
+};
+
 //!
 //! ## Persistance of the *OWNED* status
 //!
