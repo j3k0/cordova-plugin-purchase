@@ -159,7 +159,18 @@ store._validator = function(product, callback, isPrepared) {
 ///
 /// Start [here for Android](https://developer.android.com/google/play/billing/billing_integrate.html#billing-security).
 ///
-/// Another option is to use [Fovea's reeceipt validation service](http://reeceipt.fovea.cc/) that implements all the best practices to secure your transactions.
+/// Another option is to use [Fovea's validation service](http://billing.fovea.cc/) that implements all the best practices to secure your transactions.
 ///
+
+///
+/// ## <a name="verifyPurchases"></a> *store.verifyPurchases*
+///
+/// Refresh the historical state of purchases. This is required to know if a
+/// user is eligible for promotions like introductory offers or subscription discount.
+///
+/// It is recommended to call this method right before entering your in-app
+/// purchases or subscriptions page.
+///
+store.verifyPurchases = function() {};
 
 })();

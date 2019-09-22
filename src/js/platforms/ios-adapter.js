@@ -273,6 +273,7 @@ function storekitLoaded(validProducts, invalidProductIds) {
         loading = false;
         loaded = true;
         store.ready(true);
+        store.verifyPurchases();
     }, 1);
 }
 
@@ -454,13 +455,12 @@ store.when("re-refreshed", function() {
     storekit.restore();
     storekit.refreshReceipts(function(obj) {
         storekitSetAppProductFromReceipt(obj);
-        store.validate();
+        store.verifyPurchases();
     });
 });
 
-// What the point of this?
-// Why create a product whose ID equals the application bundle ID (?)
-// Is it just to trigger force a validation of the appStoreReceipt?
+// Create a product whose ID equals the application bundle ID.
+// Use it to force a validation of the appStoreReceipt.
 function storekitSetAppProductFromReceipt(data) {
     if (data) {
         var p = data.bundleIdentifier ? store.get(data.bundleIdentifier) : null;
@@ -468,9 +468,10 @@ function storekitSetAppProductFromReceipt(data) {
             p = new store.Product({
                 id:    data.bundleIdentifier || "_",
                 alias: store.APPLICATION,
-                type:  store.APPLICATION
+                type:  store.APPLICATION,
             });
             store.register(p);
+            p.title = 'Application Bundle';
         }
         p.transaction = {
             type: 'ios-appstore',
@@ -537,17 +538,27 @@ store._refreshForValidation = function(callback) {
     storekitRefreshReceipts(callback);
 };
 
+var triggerLoadReceiptsError = store.utils.debounce(function() {
+    store.error(new store.Error({
+        code: store.ERR_LOAD_RECEIPTS,
+        message: "Cannot validate purchases." +
+            " Ask user to perform to restore purchases (you call store.refresh())." +
+            " This will probably ask user to enter appStore password."
+    }));
+}, 300);
+
 // Load receipts required by server-side validation of purchases.
 store._prepareForValidation = function(product, callback) {
     var nRetry = 0;
     function loadReceipts() {
-        storekit.loadReceipts(function(r) {
+        storekit.loadReceipts(function(data) {
             if (!product.transaction) {
                 product.transaction = {
                     type: 'ios-appstore'
                 };
             }
-            product.transaction.appStoreReceipt = r.appStoreReceipt;
+            storekitSetAppProductFromReceipt(data);
+            product.transaction.appStoreReceipt = data.appStoreReceipt;
             if (!product.transaction.appStoreReceipt) {
                 nRetry ++;
                 if (nRetry < 2) {
@@ -555,8 +566,8 @@ store._prepareForValidation = function(product, callback) {
                     return;
                 }
                 else if (nRetry === 2) {
-                    // TODO: Should fail (with a special error), ask user to do "Restore Purchases" here.
-                    storekit.refreshReceipts(loadReceipts);
+                    // Fail and ask user to do "Restore Purchases"
+                    triggerLoadReceiptsError();
                     return;
                 }
             }
@@ -566,13 +577,14 @@ store._prepareForValidation = function(product, callback) {
     loadReceipts();
 };
 
-store.validate = function(successCb, errorCb) {
+store.verifyPurchases = function(successCb, errorCb) {
     storekit.loadReceipts(function(data) {
         if (data && data.appStoreReceipt) {
             var p = storekitSetAppProductFromReceipt(data);
             if (p) {
                 store.once(p.id + ' verified', onVerified);
                 store.once(p.id + ' unverified', onUnverified);
+                p.set("state", store.APPROVED);
                 p.verify();
                 return;
             }
@@ -600,7 +612,6 @@ store.validate = function(successCb, errorCb) {
                 if (!p) return;
                 transaction.type = 'ios-appstore';
                 store._extractTransactionFields(p, transaction);
-                p.trigger("updated");
             });
             store.products.forEach(function(product) {
                 if (product.type === store.PAID_SUBSCRIPTION) {
@@ -612,6 +623,7 @@ store.validate = function(successCb, errorCb) {
                     if (usedIntroOffer) {
                         product.set('ineligibleForIntroPrice', true);
                     }
+                    product.trigger("updated");
                 }
             });
             if (successCb) {
