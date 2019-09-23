@@ -22,7 +22,7 @@
     mocha.addFile('test/js/test-android.js');
 
     mocha.run(function(){
-        console.log('done');
+        process.exit(0);
     }).on('pass', function(/*test*/){
         // console.log('... %s', test.title);
     });

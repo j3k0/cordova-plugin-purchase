@@ -28,7 +28,7 @@ preprocess:
 	@${NODE_MODULES}/.bin/preprocess src/js/store-ios.js src/js > www/store-ios.js
 	@${NODE_MODULES}/.bin/preprocess src/js/store-android.js src/js > www/store-android.js
 	@${NODE_MODULES}/.bin/preprocess src/js/store-windows.js src/js > www/store-windows.js
-	@echo "- Done"
+	@echo "  Done"
 	@echo ""
 
 prepare-test-js:
@@ -40,24 +40,33 @@ prepare-test-js:
 jshint: check-jshint
 	@echo "- JSHint"
 	@${NODE_MODULES}/.bin/jshint --config .jshintrc src/js/*.js src/js/platforms/*.js test/js/*.js src/windows/*.js
+	@echo "  Done"
+	@echo ""
 
 eslint: jshint
 	@echo "- ESLint"
 	@${NODE_MODULES}/.bin/eslint --config .eslintrc src/js/*.js src/js/platforms/*.js test/js/*.js src/windows/*.js
+	@echo "  Done"
+	@echo ""
 
 eslint-fix:
 	@echo "- ESLint Fix"
 	@${NODE_MODULES}/.bin/eslint --fix --config .eslintrc src/js/*.js src/js/platforms/*.js test/js/*.js
+	@echo "  Done"
+	@echo ""
 
 test-js: jshint eslint prepare-test-js
 	@echo "- Mocha"
 	@${NODE_MODULES}/.bin/istanbul test --root test/tmp test/js/run.js
-	@echo
+	@echo "  Done"
+	@echo ""
 
 test-js-coverage: jshint eslint prepare-test-js
 	@echo "- Mocha / Instanbul"
 	@${NODE_MODULES}/.bin/istanbul cover --root test/ test/js/run.js
 	@${NODE_MODULES}/.bin/coveralls < coverage/lcov.info
+	@echo "  Done"
+	@echo ""
 
 .checkstyle.jar:
 	curl "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.23/checkstyle-8.23-all.jar" -o .checkstyle.jar -L
