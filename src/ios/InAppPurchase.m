@@ -368,12 +368,14 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
         payment.quantity = [quantity integerValue];
     }
     if (applicationUsername != nil && applicationUsername.length > 0) {
+        DLog(@"purchase applicationUsername (%@).", applicationUsername);
         payment.applicationUsername = applicationUsername;
     }
     if ([discountArg isKindOfClass:[NSDictionary class]]) {
         NSDictionary *discount = (NSDictionary*)discountArg;
-        DLog(@"purchase with discount.");
+        DLog(@"purchase with discount (%@, %@, %@, %@, %@).", discount[@"id"], discount[@"key"], discount[@"nonce"], discount[@"signature"], discount[@"timestamp"]);
         if (@available(iOS 12.2, macOS 10.14.4, *)) {
+            DLog(@" + discounts API available");
             payment.paymentDiscount = [[SKPaymentDiscount alloc]
               initWithIdentifier: discount[@"id"]
                    keyIdentifier: discount[@"key"]
