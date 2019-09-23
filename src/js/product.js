@@ -346,6 +346,13 @@ store._extractTransactionFields = function(that, t) {
         that.lastRenewalDate = new Date(t.lastRenewalDate);
     if (t.renewalIntent)
         that.renewalIntent = t.renewalIntent;
+    // owned?
+    if (that.type === store.PAID_SUBSCRIPTION && +that.expiryDate) {
+        var now = +new Date();
+        if ((now > that.expiryDate.getTime() + 60000) && that.state === store.OWNED) {
+            defer(that, that.verify);
+        }
+    }
     return t;
 };
 
