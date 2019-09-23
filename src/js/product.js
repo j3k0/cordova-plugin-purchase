@@ -282,12 +282,14 @@ store.Product.prototype.verify = function() {
 
     defer(this, function() {
         if (that.state !== store.APPROVED) {
-            var err = new store.Error({
-                code: store.ERR_VERIFICATION_FAILED,
-                message: "Product isn't in the APPROVED state"
-            });
-            store.error(err);
-            store.utils.callExternal('verify.error', errorCb, err);
+            if (that.type !== store.APPLICATION) {
+                var err = new store.Error({
+                    code: store.ERR_VERIFICATION_FAILED,
+                    message: "Product isn't in the APPROVED state"
+                });
+                store.error(err);
+                store.utils.callExternal('verify.error', errorCb, err);
+            }
             store.utils.callExternal('verify.done', doneCb, that);
             return;
         }

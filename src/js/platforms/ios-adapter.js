@@ -618,12 +618,13 @@ store._prepareForValidation = function(product, callback) {
 };
 
 store.verifyPurchases = function(successCb, errorCb) {
+    store.log.debug("verifyPurchases()");
     storekit.loadReceipts(function(data) {
         if (data && data.appStoreReceipt) {
             var p = storekitSetAppProductFromReceipt(data);
             if (p) {
-                store.once(p.id + ' verified', onVerified);
-                store.once(p.id + ' unverified', onUnverified);
+                store.once(p.id, 'verified', onVerified);
+                store.once(p.id, 'unverified', onUnverified);
                 p.set("state", store.APPROVED);
                 p.verify();
                 return;
@@ -648,6 +649,16 @@ store.verifyPurchases = function(successCb, errorCb) {
         }
     }, errorCb);
 };
+
+setInterval(function() {
+    var now = +new Date();
+    var expired = store.products.find(function(product) {
+        return product.owned && now > +product.expiryDate + 60000;
+    });
+    if (expired) {
+        store.verifyPurchases();
+    }
+}, 60000);
 
 //!
 //! ## Persistance of the *OWNED* status
