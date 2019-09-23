@@ -489,6 +489,44 @@ function storekitSetAppProductFromReceipt(data) {
     }
 }
 
+function syncWithAppStoreReceipt(appStoreReceipt) {
+    store.log.debug("syncWithAppStoreReceipt");
+    store.log.debug(JSON.stringify(appStoreReceipt));
+    if (!appStoreReceipt)
+        return;
+    var lastTransactions = {};
+    var isSubscriber = false;
+    var usedIntroOffer = false;
+    appStoreReceipt.in_app.forEach(function(transaction) {
+        lastTransactions[transaction.product_id] = transaction;
+    });
+    Object.values(lastTransactions).forEach(function(transaction) {
+        if (transaction.expires_date_ms) {
+            isSubscriber = true;
+        }
+        if (transaction.is_in_intro_offer_period === 'true') {
+            usedIntroOffer = true;
+        }
+        var p = store.get(transaction.product_id);
+        if (!p) return;
+        transaction.type = 'ios-appstore';
+        store._extractTransactionFields(p, transaction);
+    });
+    store.products.forEach(function(product) {
+        if (product.type === store.PAID_SUBSCRIPTION) {
+            if (isSubscriber && product.discounts) {
+                product.discounts.forEach(function(discount) {
+                    discount.eligible = true;
+                });
+            }
+            if (usedIntroOffer) {
+                product.set('ineligibleForIntroPrice', true);
+            }
+            product.trigger("updated");
+        }
+    });
+}
+
 function storekitRestored(originalTransactionId, productId) {
     store.log.info("ios -> restored purchase " + productId);
     storekitPurchased(originalTransactionId, productId);
@@ -597,37 +635,7 @@ store.verifyPurchases = function(successCb, errorCb) {
 
         function onVerified() {
             store.once.unregister(onUnverified);
-            var lastTransactions = {};
-            var isSubscriber = false;
-            var usedIntroOffer = false;
-            p.transaction.in_app.forEach(function(transaction) {
-                lastTransactions[transaction.product_id] = transaction;
-            });
-            Object.values(lastTransactions).forEach(function(transaction) {
-                if (transaction.expires_date_ms) {
-                    isSubscriber = true;
-                }
-                if (transaction.is_in_intro_offer_period === 'true') {
-                    usedIntroOffer = true;
-                }
-                var p = store.get(transaction.product_id);
-                if (!p) return;
-                transaction.type = 'ios-appstore';
-                store._extractTransactionFields(p, transaction);
-            });
-            store.products.forEach(function(product) {
-                if (product.type === store.PAID_SUBSCRIPTION) {
-                    if (isSubscriber && product.discounts) {
-                        product.discounts.forEach(function(discount) {
-                            discount.eligible = true;
-                        });
-                    }
-                    if (usedIntroOffer) {
-                        product.set('ineligibleForIntroPrice', true);
-                    }
-                    product.trigger("updated");
-                }
-            });
+            syncWithAppStoreReceipt(p.transaction);
             if (successCb) {
                 successCb();
             }
