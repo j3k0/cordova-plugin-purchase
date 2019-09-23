@@ -407,15 +407,16 @@ function storekitError(errorCode, errorText, options) {
 
     // a purchase was cancelled by the user:
     // - trigger the "cancelled" event
-    // - set the product back to the VALID state
+    // - set the product back to its original state
     if (errorCode === storekit.ERR_PAYMENT_CANCELLED) {
         p = store.get(options.productId);
         if (p) {
             p.trigger("cancelled");
-            p.set({
-                transaction: null,
-                state: store.VALID
-            });
+            p.pop();
+            // p.set({
+            //     transaction: null,
+            //     state: store.VALID
+            // });
         }
         // but a cancelled order isn't an error.
         return;
@@ -432,10 +433,11 @@ function storekitError(errorCode, errorText, options) {
             code:    errorCode,
             message: errorText
         }), p]);
-        p.set({
-            transaction: null,
-            state: store.VALID
-        });
+        p.pop();
+        // p.set({
+        //     transaction: null,
+        //     state: store.VALID
+        // });
     }
 
     store.error({

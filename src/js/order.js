@@ -72,7 +72,9 @@ store.order = function(pid, additionalData) {
 
     // Request the purchase.
     store.ready(function() {
-        p.set("state", store.REQUESTED);
+        p.push({
+            state: store.REQUESTED
+        });
     });
 
     /// ### return value
