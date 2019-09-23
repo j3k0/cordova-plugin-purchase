@@ -32,17 +32,40 @@ static BOOL g_downloadHostedContent = YES;
 }
 
 #define ERROR_CODES_BASE 6777000
-#define ERR_SETUP         (ERROR_CODES_BASE + 1)
-#define ERR_LOAD          (ERROR_CODES_BASE + 2)
-#define ERR_PURCHASE      (ERROR_CODES_BASE + 3)
-#define ERR_LOAD_RECEIPTS (ERROR_CODES_BASE + 4)
+#define ERR_SETUP                             (ERROR_CODES_BASE + 1)
+#define ERR_LOAD                              (ERROR_CODES_BASE + 2)
+#define ERR_PURCHASE                          (ERROR_CODES_BASE + 3)
+#define ERR_LOAD_RECEIPTS                     (ERROR_CODES_BASE + 4)
 
-#define ERR_CLIENT_INVALID    (ERROR_CODES_BASE + 5)
-#define ERR_PAYMENT_CANCELLED (ERROR_CODES_BASE + 6)
-#define ERR_PAYMENT_INVALID   (ERROR_CODES_BASE + 7)
-#define ERR_PAYMENT_NOT_ALLOWED (ERROR_CODES_BASE + 8)
-#define ERR_UNKNOWN (ERROR_CODES_BASE + 10)
-#define ERR_REFRESH_RECEIPTS (ERROR_CODES_BASE + 11)
+#define ERR_CLIENT_INVALID                    (ERROR_CODES_BASE + 5)
+#define ERR_PAYMENT_CANCELLED                 (ERROR_CODES_BASE + 6)
+#define ERR_PAYMENT_INVALID                   (ERROR_CODES_BASE + 7)
+#define ERR_PAYMENT_NOT_ALLOWED               (ERROR_CODES_BASE + 8)
+#define ERR_UNKNOWN                           (ERROR_CODES_BASE + 10)
+#define ERR_REFRESH_RECEIPTS                  (ERROR_CODES_BASE + 11)
+
+#define ERR_INVALID_PRODUCT_ID                (ERROR_CODES_BASE + 12)
+#define ERR_FINISH                            (ERROR_CODES_BASE + 13)
+#define ERR_COMMUNICATION                     (ERROR_CODES_BASE + 14) // Error while communicating with the server.
+#define ERR_SUBSCRIPTIONS_NOT_AVAILABLE       (ERROR_CODES_BASE + 15) // Subscriptions are not available.
+#define ERR_MISSING_TOKEN                     (ERROR_CODES_BASE + 16) // Purchase information is missing token.
+#define ERR_VERIFICATION_FAILED               (ERROR_CODES_BASE + 17) // Verification of store data failed.
+#define ERR_BAD_RESPONSE                      (ERROR_CODES_BASE + 18) // Verification of store data failed.
+#define ERR_REFRESH                           (ERROR_CODES_BASE + 19) // Failed to refresh the store.
+#define ERR_PAYMENT_EXPIRED                   (ERROR_CODES_BASE + 20)
+#define ERR_DOWNLOAD                          (ERROR_CODES_BASE + 21)
+#define ERR_SUBSCRIPTION_UPDATE_NOT_AVAILABLE (ERROR_CODES_BASE + 22)
+
+#define ERR_PRODUCT_NOT_AVAILABLE             (ERROR_CODES_BASE + 23)
+#define ERR_CLOUD_SERVICE_PERMISSION_DENIED   (ERROR_CODES_BASE + 24)
+#define ERR_CLOUD_SERVICE_NETWORK_CONNECTION_FAILED (ERROR_CODES_BASE + 25)
+#define ERR_CLOUD_SERVICE_REVOKED             (ERROR_CODES_BASE + 26)
+#define ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED  (ERROR_CODES_BASE + 27)
+#define ERR_UNAUTHORIZED_REQUEST_DATA         (ERROR_CODES_BASE + 28)
+#define ERR_INVALID_OFFER_IDENTIFIER          (ERROR_CODES_BASE + 29)
+#define ERR_INVALID_OFFER_PRICE               (ERROR_CODES_BASE + 30)
+#define ERR_INVALID_SIGNATURE                 (ERROR_CODES_BASE + 31)
+#define ERR_MISSING_OFFER_PARAMS              (ERROR_CODES_BASE + 32)
 
 static NSInteger jsErrorCode(NSInteger storeKitErrorCode) {
     switch (storeKitErrorCode) {
@@ -57,6 +80,34 @@ static NSInteger jsErrorCode(NSInteger storeKitErrorCode) {
         case SKErrorPaymentNotAllowed:
             return ERR_PAYMENT_NOT_ALLOWED;
     }
+    if (@available(iOS 12.2, macOS 10.14.4, *)) {
+        if (storeKitErrorCode == SKErrorPrivacyAcknowledgementRequired)
+            return ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED;
+        if (storeKitErrorCode == SKErrorUnauthorizedRequestData)
+            return ERR_UNAUTHORIZED_REQUEST_DATA;
+        if (storeKitErrorCode == SKErrorInvalidOfferIdentifier)
+            return ERR_INVALID_OFFER_IDENTIFIER;
+        if (storeKitErrorCode == SKErrorInvalidOfferPrice)
+            return ERR_INVALID_OFFER_PRICE;
+        if (storeKitErrorCode == SKErrorInvalidSignature)
+            return ERR_INVALID_SIGNATURE;
+        if (storeKitErrorCode == SKErrorMissingOfferParams)
+            return ERR_MISSING_OFFER_PARAMS;
+    }
+#if TARGET_OS_IPHONE
+    if (@available(iOS 9.3, *)) {
+        if (storeKitErrorCode == SKErrorCloudServicePermissionDenied)
+            return ERR_CLOUD_SERVICE_PERMISSION_DENIED;
+        if (storeKitErrorCode == SKErrorCloudServiceNetworkConnectionFailed)
+            return ERR_CLOUD_SERVICE_NETWORK_CONNECTION_FAILED;
+        if (storeKitErrorCode == SKErrorCloudServiceRevoked)
+            return ERR_CLOUD_SERVICE_REVOKED;
+    }
+    if (@available(iOS 3.0, macOS 10.15, *)) {
+        if (storeKitErrorCode == SKErrorStoreProductNotAvailable)
+            return ERR_PRODUCT_NOT_AVAILABLE;
+    }
+#endif
     return ERR_UNKNOWN;
 }
 
@@ -73,6 +124,24 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         case ERR_PAYMENT_NOT_ALLOWED: return @"ERR_PAYMENT_NOT_ALLOWED";
         case ERR_UNKNOWN: return @"ERR_UNKNOWN";
     }
+    if (@available(iOS 12.2, macOS 10.14.4, *)) {
+        if (code == ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED) return @"ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED";
+        if (code == ERR_UNAUTHORIZED_REQUEST_DATA) return @"ERR_UNAUTHORIZED_REQUEST_DATA";
+        if (code == ERR_INVALID_OFFER_IDENTIFIER) return @"ERR_INVALID_OFFER_IDENTIFIER";
+        if (code == ERR_INVALID_OFFER_PRICE) return @"ERR_INVALID_OFFER_PRICE";
+        if (code == ERR_INVALID_SIGNATURE) return @"ERR_INVALID_SIGNATURE";
+        if (code == ERR_MISSING_OFFER_PARAMS) return @"ERR_MISSING_OFFER_PARAMS";
+    }
+#if TARGET_OS_IPHONE
+    if (@available(iOS 9.3, *)) {
+        if (code == ERR_CLOUD_SERVICE_PERMISSION_DENIED) return @"ERR_CLOUD_SERVICE_PERMISSION_DENIED";
+        if (code == ERR_CLOUD_SERVICE_NETWORK_CONNECTION_FAILED) return @"ERR_CLOUD_SERVICE_NETWORK_CONNECTION_FAILED";
+        if (code == ERR_CLOUD_SERVICE_REVOKED) return @"ERR_CLOUD_SERVICE_REVOKED";
+    }
+    if (@available(iOS 3.0, macOS 10.15, *)) {
+        if (ERR_PRODUCT_NOT_AVAILABLE == code) return @"ERR_PRODUCT_NOT_AVAILABLE";
+    }
+#endif
     return @"ERR_NONE";
 }
 
