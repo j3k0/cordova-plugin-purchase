@@ -21,7 +21,9 @@ help:
 
 all: build doc
 
-build: sync-android test-js
+build: preprocess test-js
+
+preprocess:
 	@echo "- Preprocess"
 	@${NODE_MODULES}/.bin/preprocess src/js/store-ios.js src/js > www/store-ios.js
 	@${NODE_MODULES}/.bin/preprocess src/js/store-android.js src/js > www/store-android.js
@@ -35,7 +37,7 @@ prepare-test-js:
 	@cp src/js/platforms/*-adapter.js test/tmp/
 	@#${NODE_MODULES}/.bin/istanbul instrument --no-compact --output test/tmp/store-test.js test/store-test-src.js
 
-jshint: check-jshint sync-android
+jshint: check-jshint
 	@echo "- JSHint"
 	@${NODE_MODULES}/.bin/jshint --config .jshintrc src/js/*.js src/js/platforms/*.js test/js/*.js src/windows/*.js
 
@@ -87,10 +89,6 @@ doc-contrib: test-js
 	@cat src/js/*.js src/js/platforms/*.js | grep "//!" | cut -d! -f2- | cut -d\  -f2- >> doc/contributor-guide.md
 
 doc: doc-api doc-contrib
-
-sync-android:
-	@#rsync -qrv git_modules/android_iap/v3/src/android/ src/android
-	@#cp git_modules/android_iap/v3/www/inappbilling.js src/js/platforms/android-bridge.js
 
 clean:
 	@find . -name '*~' -exec rm '{}' ';'
