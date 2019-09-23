@@ -109,7 +109,7 @@ function scheduleValidation() {
   store.log.debug('scheduleValidation()');
   if (timeout)
     clearTimeout(timeout);
-  timeout = setTimeout(runValidation, 500);
+  timeout = setTimeout(runValidation, 1500);
 }
 
 //
