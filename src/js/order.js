@@ -24,9 +24,18 @@ var callbackId = 0;
 ///    - `oldSku`, a string with the old subscription to upgrade/downgrade on Android.
 ///      **Note**: if another subscription product is already owned that is member of
 ///      the same group, `oldSku` will be set automatically for you (see `product.group`).
+///    - `discount`, a object that describes the discount to apply with the purchase (iOS only):
+///       - `id`, discount identifier
+///       - `key`, key identifier
+///       - `nonce`, uuid value for the nonce
+///       - `timestamp`, time at which the signature was generated (in milliseconds since epoch)
+///       - `signature`, cryptographic signature that unlock the discount
 ///
 /// See the ["Purchasing section"](#purchasing) to learn more about
 /// the purchase process.
+///
+/// See ["Subscriptions Offer Best Practices"](https://developer.apple.com/videos/play/wwdc2019/305/)
+/// for more details on subscription offers.
 ///
 store.order = function(pid, additionalData) {
 
