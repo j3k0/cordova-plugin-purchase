@@ -106,6 +106,7 @@ store.Product = function(options) {
     ///    - `period` - Number of subscription periods
     ///    - `periodUnit` - Unit of the subcription period ("Day", "Week", "Month" or "Year")
     ///    - `paymentMode` - "PayAsYouGo", "UpFront", or "FreeTrial"
+    ///    - `eligible` - True if the user is deemed eligible for this discount by the platform
     this.discounts = [];
 
     ///  - `product.downloading` - Product is downloading non-consumable content
