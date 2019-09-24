@@ -482,26 +482,6 @@ store.Product = function(options) {
     ///  - `product.countryCode` - Country code. Available only on iOS
     this.countryCode = options.countryCode || null;
 
-
-    ///  - `product.introPrice` - Localized introductory price, with currency symbol
-    this.introPrice = options.introPrice || null;
-
-    ///  - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price)
-    this.introPriceMicros = options.introPriceMicros || null;
-
-    ///  - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available
-    this.introPriceNumberOfPeriods = options.introPriceNumberOfPeriods || null;
-
-    ///  - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year")
-    this.introPriceSubscriptionPeriod = options.introPriceSubscriptionPeriod || null;
-
-    ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
-    this.introPricePaymentMode = options.introPricePaymentMode || null;
-
-    ///  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
-    this.ineligibleForIntroPrice = options.ineligibleForIntroPrice || null;
-
-
     //  - `product.localizedTitle` - Localized name or short description ready for display
     // this.localizedTitle = options.localizedTitle || options.title || null;
 
@@ -524,6 +504,33 @@ store.Product = function(options) {
     ///  - `product.owned` - Product is owned
     this.owned = options.owned;
 
+    ///  - `product.introPrice` - Localized introductory price, with currency symbol
+    this.introPrice = options.introPrice || null;
+
+    ///  - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price)
+    this.introPriceMicros = options.introPriceMicros || null;
+
+    ///  - `product.introPriceNumberOfPeriods` - Duraton the introductory price is available (in period-unit)
+    this.introPricePeriod = options.introPricePeriod || null;
+
+    ///  - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year")
+    this.introPricePeriodUnit = options.introPricePeriodUnit || null;
+
+    ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
+    this.introPricePaymentMode = options.introPricePaymentMode || null;
+
+    ///  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
+    this.ineligibleForIntroPrice = options.ineligibleForIntroPrice || null;
+
+    /// - `product.discounts` - Array of discounts available for the product. Each discount exposes the following fields:
+    ///    - `id` - The discount identifier
+    ///    - `price` - Localized price, with currency symbol
+    ///    - `priceMicros` - Price in micro-units (divide by 1000000 to get numeric price)
+    ///    - `period` - Number of subscription periods
+    ///    - `periodUnit` - Unit of the subcription period ("Day", "Week", "Month" or "Year")
+    ///    - `paymentMode` - "PayAsYouGo", "UpFront", or "FreeTrial"
+    this.discounts = [];
+
     ///  - `product.downloading` - Product is downloading non-consumable content
     this.downloading = options.downloading;
 
@@ -538,8 +545,8 @@ store.Product = function(options) {
 
     ///  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
     ///  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
-    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows and android)
-    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows and android)
+    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property.
+    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year.
     ///  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
     ///  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
@@ -772,8 +779,13 @@ store._extractTransactionFields = function(that, t) {
     // owned?
     if (that.type === store.PAID_SUBSCRIPTION && +that.expiryDate) {
         var now = +new Date();
-        if ((now > that.expiryDate.getTime() + 60000) && that.state === store.OWNED) {
-            defer(that, that.verify);
+        if (now > that.expiryDate.getTime() + 60000) {
+            window.setTimeout(function() {
+                if (that.state === store.OWNED) {
+                    that.set('state', store.APPROVED);
+                    that.verify();
+                }
+            }, 30000);
         }
     }
     return t;
@@ -1260,9 +1272,18 @@ var callbackId = 0;
 ///    - `oldSku`, a string with the old subscription to upgrade/downgrade on Android.
 ///      **Note**: if another subscription product is already owned that is member of
 ///      the same group, `oldSku` will be set automatically for you (see `product.group`).
+///    - `discount`, a object that describes the discount to apply with the purchase (iOS only):
+///       - `id`, discount identifier
+///       - `key`, key identifier
+///       - `nonce`, uuid value for the nonce
+///       - `timestamp`, time at which the signature was generated (in milliseconds since epoch)
+///       - `signature`, cryptographic signature that unlock the discount
 ///
 /// See the ["Purchasing section"](#purchasing) to learn more about
 /// the purchase process.
+///
+/// See ["Subscriptions Offer Best Practices"](https://developer.apple.com/videos/play/wwdc2019/305/)
+/// for more details on subscription offers.
 ///
 store.order = function(pid, additionalData) {
 

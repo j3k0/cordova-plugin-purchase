@@ -366,25 +366,32 @@ Products object have the following fields and methods.
  - `product.price` - Localized price, with currency symbol
  - `product.currency` - Currency code (optionaly)
  - `product.countryCode` - Country code. Available only on iOS
- - `product.introPrice` - Localized introductory price, with currency symbol
- - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price)
- - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available
- - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year")
- - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
- - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
  - `product.loaded` - Product has been loaded from server, however it can still be either `valid` or not
  - `product.valid` - Product has been loaded and is a valid product
    - when product definitions can't be loaded from the store, you should display instead a warning like: "You cannot make purchases at this stage. Try again in a moment. Make sure you didn't enable In-App-Purchases restrictions on your phone."
  - `product.canPurchase` - Product is in a state where it can be purchased
  - `product.owned` - Product is owned
+ - `product.introPrice` - Localized introductory price, with currency symbol
+ - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price)
+ - `product.introPriceNumberOfPeriods` - Duraton the introductory price is available (in period-unit)
+ - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year")
+ - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
+ - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
+- `product.discounts` - Array of discounts available for the product. Each discount exposes the following fields:
+   - `id` - The discount identifier
+   - `price` - Localized price, with currency symbol
+   - `priceMicros` - Price in micro-units (divide by 1000000 to get numeric price)
+   - `period` - Number of subscription periods
+   - `periodUnit` - Unit of the subcription period ("Day", "Week", "Month" or "Year")
+   - `paymentMode` - "PayAsYouGo", "UpFront", or "FreeTrial"
  - `product.downloading` - Product is downloading non-consumable content
  - `product.downloaded` - Non-consumable content has been successfully downloaded for this product
  - `product.additionalData` - additional data possibly required for product purchase
  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
- - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows and android)
- - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows and android)
+ - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property.
+ - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year.
  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
@@ -694,9 +701,18 @@ The `additionalData` argument can be either:
    - `oldSku`, a string with the old subscription to upgrade/downgrade on Android.
      **Note**: if another subscription product is already owned that is member of
      the same group, `oldSku` will be set automatically for you (see `product.group`).
+   - `discount`, a object that describes the discount to apply with the purchase (iOS only):
+      - `id`, discount identifier
+      - `key`, key identifier
+      - `nonce`, uuid value for the nonce
+      - `timestamp`, time at which the signature was generated (in milliseconds since epoch)
+      - `signature`, cryptographic signature that unlock the discount
 
 See the ["Purchasing section"](#purchasing) to learn more about
 the purchase process.
+
+See ["Subscriptions Offer Best Practices"](https://developer.apple.com/videos/play/wwdc2019/305/)
+for more details on subscription offers.
 
 ### return value
 
