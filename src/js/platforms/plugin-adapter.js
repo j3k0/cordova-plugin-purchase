@@ -176,8 +176,10 @@ function iabLoaded(validProducts) {
                 currency: vp.price_currency_code || "",
                 introPrice: vp.introductoryPrice ? vp.introductoryPrice : "",
                 introPriceMicros: vp.introductoryPriceAmountMicros ? vp.introductoryPriceAmountMicros : "",
-                introPriceNumberOfPeriods: introPriceNumberOfPeriods,
-                introPriceSubscriptionPeriod: introPriceSubscriptionPeriod,
+                introPricePeriod: introPriceNumberOfPeriods,
+                introPricePeriodUnit: introPriceSubscriptionPeriod,
+                introPriceNumberOfPeriods: introPriceNumberOfPeriods, // legacy props (deprecated)
+                introPriceSubscriptionPeriod: introPriceSubscriptionPeriod, // legacy props (deprecrated)
                 introPricePaymentMode: introPricePaymentMode,
                 state: store.VALID
             });
