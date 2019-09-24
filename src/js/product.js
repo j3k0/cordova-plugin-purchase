@@ -356,8 +356,13 @@ store._extractTransactionFields = function(that, t) {
     // owned?
     if (that.type === store.PAID_SUBSCRIPTION && +that.expiryDate) {
         var now = +new Date();
-        if ((now > that.expiryDate.getTime() + 60000) && that.state === store.OWNED) {
-            defer(that, that.verify);
+        if (now > that.expiryDate.getTime() + 60000) {
+            window.setTimeout(function() {
+                if (that.state === store.OWNED) {
+                    that.set('state', store.APPROVED);
+                    that.verify();
+                }
+            }, 30000);
         }
     }
     return t;
