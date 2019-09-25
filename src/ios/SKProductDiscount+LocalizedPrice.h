@@ -1,3 +1,5 @@
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
+
 #import <Foundation/Foundation.h>
 #import <StoreKit/StoreKit.h>
 
@@ -44,3 +46,5 @@
 @property (nonatomic, readonly) NSString *localizedPrice;
 
 @end
+
+#endif

@@ -18,12 +18,14 @@
 
 - (NSString *)localizedIntroPrice
 {
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
     // Introductory price are supported from iOS 11.2 and macOS 10.13.2
     if (@available(iOS 11.2, macOS 10.13.2, *)) {
         if (self.introductoryPrice != nil) {
             return self.introductoryPrice.localizedPrice;
         }
     }
+#endif
     return nil;
 }
 

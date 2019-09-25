@@ -80,6 +80,7 @@ static NSInteger jsErrorCode(NSInteger storeKitErrorCode) {
         case SKErrorPaymentNotAllowed:
             return ERR_PAYMENT_NOT_ALLOWED;
     }
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
     if (@available(iOS 12.2, macOS 10.14.4, *)) {
         if (storeKitErrorCode == SKErrorPrivacyAcknowledgementRequired)
             return ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED;
@@ -94,7 +95,9 @@ static NSInteger jsErrorCode(NSInteger storeKitErrorCode) {
         if (storeKitErrorCode == SKErrorMissingOfferParams)
             return ERR_MISSING_OFFER_PARAMS;
     }
+#endif
 #if TARGET_OS_IPHONE
+#if __IPHONE_OS_VERSION_MIN_REQUIRED >= 90300
     if (@available(iOS 9.3, *)) {
         if (storeKitErrorCode == SKErrorCloudServicePermissionDenied)
             return ERR_CLOUD_SERVICE_PERMISSION_DENIED;
@@ -103,6 +106,7 @@ static NSInteger jsErrorCode(NSInteger storeKitErrorCode) {
         if (storeKitErrorCode == SKErrorCloudServiceRevoked)
             return ERR_CLOUD_SERVICE_REVOKED;
     }
+#endif
     if (@available(iOS 3.0, macOS 10.15, *)) {
         if (storeKitErrorCode == SKErrorStoreProductNotAvailable)
             return ERR_PRODUCT_NOT_AVAILABLE;
@@ -124,6 +128,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         case ERR_PAYMENT_NOT_ALLOWED: return @"ERR_PAYMENT_NOT_ALLOWED";
         case ERR_UNKNOWN: return @"ERR_UNKNOWN";
     }
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
     if (@available(iOS 12.2, macOS 10.14.4, *)) {
         if (code == ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED) return @"ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED";
         if (code == ERR_UNAUTHORIZED_REQUEST_DATA) return @"ERR_UNAUTHORIZED_REQUEST_DATA";
@@ -132,7 +137,8 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         if (code == ERR_INVALID_SIGNATURE) return @"ERR_INVALID_SIGNATURE";
         if (code == ERR_MISSING_OFFER_PARAMS) return @"ERR_MISSING_OFFER_PARAMS";
     }
-#if TARGET_OS_IPHONE
+#endif
+#if TARGET_OS_IPHONE && __IPHONE_OS_VERSION_MIN_REQUIRED >= 90300
     if (@available(iOS 9.3, *)) {
         if (code == ERR_CLOUD_SERVICE_PERMISSION_DENIED) return @"ERR_CLOUD_SERVICE_PERMISSION_DENIED";
         if (code == ERR_CLOUD_SERVICE_NETWORK_CONNECTION_FAILED) return @"ERR_CLOUD_SERVICE_NETWORK_CONNECTION_FAILED";
@@ -146,17 +152,20 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 }
 
 static NSString *productDiscountTypeToString(NSUInteger type) {
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
     if (@available(iOS 12.2, macOS 10.14.4, *)) {
         switch (type) {
             case SKProductDiscountTypeIntroductory: return @"Introductory";
             case SKProductDiscountTypeSubscription: return @"Subscription";
         }
     }
+#endif
     return nil;
 }
 
 // https://developer.apple.com/documentation/storekit/skproductdiscountpaymentmode?language=objc
 static NSString *productDiscountPaymentModeToString(NSUInteger mode) {
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
     if (@available(iOS 11.2, macOS 10.13.2, *)) {
         switch (mode) {
             case SKProductDiscountPaymentModePayAsYouGo: return @"PayAsYouGo";
@@ -164,10 +173,12 @@ static NSString *productDiscountPaymentModeToString(NSUInteger mode) {
             case SKProductDiscountPaymentModeFreeTrial:  return @"FreeTrial";
         }
     }
+#endif
     return nil;
 }
 
 static NSString *productDiscountUnitToString(NSUInteger unit) {
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
     if (@available(iOS 11.2, macOS 10.13.2, *)) {
         switch (unit) {
             case SKProductPeriodUnitDay:   return @"Day";
@@ -176,6 +187,7 @@ static NSString *productDiscountUnitToString(NSUInteger unit) {
             case SKProductPeriodUnitYear:  return @"Year";
         }
     }
+#endif
     return nil;
 }
 
@@ -374,6 +386,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
     if ([discountArg isKindOfClass:[NSDictionary class]]) {
         NSDictionary *discount = (NSDictionary*)discountArg;
         DLog(@"purchase with discount (%@, %@, %@, %@, %@).", discount[@"id"], discount[@"key"], discount[@"nonce"], discount[@"signature"], discount[@"timestamp"]);
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
         if (@available(iOS 12.2, macOS 10.14.4, *)) {
             DLog(@" + discounts API available");
             payment.paymentDiscount = [[SKPaymentDiscount alloc]
@@ -383,6 +396,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
                        signature: discount[@"signature"]
                        timestamp: discount[@"timestamp"]];
         }
+#endif
     }
     [[SKPaymentQueue defaultQueue] addPayment:payment];
 }
@@ -1023,6 +1037,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
         NSString *introPriceSubscriptionPeriod  = nil;
 
         // Introductory price are supported from those iOS and macOS versions
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
         if (@available(iOS 11.2, macOS 10.13.2, *)) {
             SKProductDiscount *introPrice = product.introductoryPrice;
             if (introPrice != nil) {
@@ -1033,9 +1048,11 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
                 introPriceSubscriptionPeriod = productDiscountUnitToString(introPrice.subscriptionPeriod.unit);
             }
         }
+#endif
 
         NSMutableArray *discounts = [NSMutableArray array];
         // Subscription discounts are supported on recent iOS and macOS
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
         if (@available(iOS 12.2, macOS 10.14.4, *)) {
             for (SKProductDiscount *discount in product.discounts) {
                 NSNumber *numberOfPeriods = [NSNumber numberWithUnsignedLong:
@@ -1053,18 +1070,23 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
                         nil]];
             }
         }
+#endif
 
         NSString *group = nil;
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120000 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101400)
         if (@available(iOS 12.0, macOS 10.14, *)) {
             group = product.subscriptionGroupIdentifier;
         }
+#endif
 
         NSNumber *billingPeriod = nil;
         NSString *billingPeriodUnit = nil;
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
         if (@available(iOS 11.2, macOS 10.13.2, *)) {
             billingPeriod = [NSNumber numberWithUnsignedLong:product.subscriptionPeriod.numberOfUnits];
             billingPeriodUnit = productDiscountUnitToString(product.subscriptionPeriod.unit);
         }
+#endif
 
         DLog(@"BatchProductsRequestDelegate.productsRequest:didReceiveResponse:  - %@: %@", product.productIdentifier, product.localizedTitle);
         [validProducts addObject:
