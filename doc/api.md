@@ -357,7 +357,7 @@ Products object have the following fields and methods.
  - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available
  - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year")
  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
- - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
+ - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after [receipt validation](#validator). Available only on iOS
  - `product.loaded` - Product has been loaded from server, however it can still be either `valid` or not
  - `product.valid` - Product has been loaded and is a valid product
    - when product definitions can't be loaded from the store, you should display instead a warning like: "You cannot make purchases at this stage. Try again in a moment. Make sure you didn't enable In-App-Purchases restrictions on your phone."
@@ -724,13 +724,13 @@ Example use:
 Set this attribute to either:
 
  - the URL of your purchase validation service
-    - Fovea's [reeceipt](http://reeceipt.fovea.cc) or your own service.
+    - [Fovea's receipt validator](https://billing.fovea.cc) or your own service.
  - a custom validation callback method
 
 #### example usage
 
 ```js
-store.validator = "http://store.fovea.cc:1980/check-purchase";
+store.validator = "https://validator.fovea.cc";
 ```
 
 ```js
@@ -755,6 +755,8 @@ store.validator = function(product, callback) {
 });
 ```
 Validation error codes are [documented here](#validation-error-codes).
+
+Fovea's receipt validator is [available here](https://billing.fovea.cc).
 
 ## transactions
 

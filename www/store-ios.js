@@ -483,7 +483,7 @@ store.Product = function(options) {
     ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
     this.introPricePaymentMode = options.introPricePaymentMode || null;
 
-    ///  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
+    ///  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after [receipt validation](#validator). Available only on iOS
     this.ineligibleForIntroPrice = options.ineligibleForIntroPrice || null;
 
 
@@ -1430,13 +1430,13 @@ store.off = function(callback) {
 /// Set this attribute to either:
 ///
 ///  - the URL of your purchase validation service
-///     - Fovea's [reeceipt](http://reeceipt.fovea.cc) or your own service.
+///     - [Fovea's receipt validator](https://billing.fovea.cc) or your own service.
 ///  - a custom validation callback method
 ///
 /// #### example usage
 ///
 /// ```js
-/// store.validator = "http://store.fovea.cc:1980/check-purchase";
+/// store.validator = "https://validator.fovea.cc";
 /// ```
 ///
 /// ```js
@@ -1461,6 +1461,8 @@ store.off = function(callback) {
 /// });
 /// ```
 /// Validation error codes are [documented here](#validation-error-codes).
+///
+/// Fovea's receipt validator is [available here](https://billing.fovea.cc).
 store.validator = null;
 
 var validationRequests = [];
