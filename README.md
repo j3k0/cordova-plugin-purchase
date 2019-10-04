@@ -34,7 +34,7 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 | non consumables | ✅ | ✅ | ✅ | ✅ | ✅ |
 | subscriptions | ✅ | ✅ | ✅ | ✅ | ✅ |
 | restore purchases | ✅ | ✅ | ✅ | ✅ | ✅ |
-| receipt validations | ✅ | ✅ |  | ✅ | ✅ |
+| [receipt validations](https://billing.fovea.cc) | ✅ | ✅ |  | ✅ | ✅ |
 | downloadable content | ✅ |   |   |   | ✅ |
 | introductory prices | ✅ | ✅ |   | ✅ | ✅ |
 
@@ -130,12 +130,16 @@ For the code itself, the [API Documentation](doc/api.md) is a definitely a recom
    - Learn how to set up and manage In-App Purchases with AppStore Connect.
 
 ### Extensions
-   
+
 Have a very simple need? Maybe this will help.
 
  - [Simple Non-Renewing Subscriptions](https://github.com/j3k0/cordova-non-renewing-subscription)
    - The easiest way to integrate purchase into an app that only needs a non-renewing subscription.
-   
+
+### Subscriptions
+
+For proper subscription support, you need a receipt validation server. You can
+implement your own or use [Fovea's receipt validation service](https://billing.fovea.cc).
 
 # Contribute
 

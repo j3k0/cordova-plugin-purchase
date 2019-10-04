@@ -5,13 +5,13 @@
 /// Set this attribute to either:
 ///
 ///  - the URL of your purchase validation service
-///     - Fovea's [reeceipt](http://reeceipt.fovea.cc) or your own service.
+///     - [Fovea's receipt validator](https://billing.fovea.cc) or your own service.
 ///  - a custom validation callback method
 ///
 /// #### example usage
 ///
 /// ```js
-/// store.validator = "http://store.fovea.cc:1980/check-purchase";
+/// store.validator = "https://validator.fovea.cc";
 /// ```
 ///
 /// ```js
@@ -36,6 +36,8 @@
 /// });
 /// ```
 /// Validation error codes are [documented here](#validation-error-codes).
+///
+/// Fovea's receipt validator is [available here](https://billing.fovea.cc).
 store.validator = null;
 
 var validationRequests = [];

@@ -75,7 +75,7 @@ store.Product = function(options) {
     ///  - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
     this.introPricePaymentMode = options.introPricePaymentMode || null;
 
-    ///  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after receipt validation. Available only on iOS
+    ///  - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after [receipt validation](#validator). Available only on iOS
     this.ineligibleForIntroPrice = options.ineligibleForIntroPrice || null;
 
 
