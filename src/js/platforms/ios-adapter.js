@@ -497,9 +497,11 @@ function syncWithAppStoreReceipt(appStoreReceipt) {
     var lastTransactions = {};
     var isSubscriber = false;
     var usedIntroOffer = false;
-    appStoreReceipt.in_app.forEach(function(transaction) {
-        lastTransactions[transaction.product_id] = transaction;
-    });
+    if (appStoreReceipt && appStoreReceipt.in_app && appStoreReceipt.in_app.forEach) {
+        appStoreReceipt.in_app.forEach(function(transaction) {
+            lastTransactions[transaction.product_id] = transaction;
+        });
+    }
     Object.values(lastTransactions).forEach(function(transaction) {
         if (transaction.expires_date_ms) {
             isSubscriber = true;
