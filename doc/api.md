@@ -384,6 +384,7 @@ Products object have the following fields and methods.
    - `period` - Number of subscription periods
    - `periodUnit` - Unit of the subcription period ("Day", "Week", "Month" or "Year")
    - `paymentMode` - "PayAsYouGo", "UpFront", or "FreeTrial"
+   - `eligible` - True if the user is deemed eligible for this discount by the platform
  - `product.downloading` - Product is downloading non-consumable content
  - `product.downloaded` - Non-consumable content has been successfully downloaded for this product
  - `product.additionalData` - additional data possibly required for product purchase

@@ -529,6 +529,7 @@ store.Product = function(options) {
     ///    - `period` - Number of subscription periods
     ///    - `periodUnit` - Unit of the subcription period ("Day", "Week", "Month" or "Year")
     ///    - `paymentMode` - "PayAsYouGo", "UpFront", or "FreeTrial"
+    ///    - `eligible` - True if the user is deemed eligible for this discount by the platform
     this.discounts = [];
 
     ///  - `product.downloading` - Product is downloading non-consumable content
@@ -3497,9 +3498,11 @@ function syncWithAppStoreReceipt(appStoreReceipt) {
     var lastTransactions = {};
     var isSubscriber = false;
     var usedIntroOffer = false;
-    appStoreReceipt.in_app.forEach(function(transaction) {
-        lastTransactions[transaction.product_id] = transaction;
-    });
+    if (appStoreReceipt && appStoreReceipt.in_app && appStoreReceipt.in_app.forEach) {
+        appStoreReceipt.in_app.forEach(function(transaction) {
+            lastTransactions[transaction.product_id] = transaction;
+        });
+    }
     Object.values(lastTransactions).forEach(function(transaction) {
         if (transaction.expires_date_ms) {
             isSubscriber = true;
