@@ -183,7 +183,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 }
 
 -(void) manageSubscriptions: (CDVInvokedUrlCommand*)command {
-    NSURL *URL = [NSURL URLWithString:@"https://buy.itunes.apple.com/WebObjects/MZFinance.woa/wa/manageSubscriptions"];
+    NSURL *URL = [NSURL URLWithString:@"https://apps.apple.com/account/subscriptions"];
 
 #if TARGET_OS_IPHONE
     [[UIApplication sharedApplication] openURL:URL options:@{} completionHandler:nil];
