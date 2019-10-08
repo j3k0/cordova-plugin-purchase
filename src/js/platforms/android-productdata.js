@@ -1,5 +1,5 @@
 (function () {
-    
+
 
     //   {
     //     "purchaseToken":"tokenabc",
@@ -129,7 +129,7 @@
         }
       }
     };
-    
+
     store.iabSetPurchases = function(purchases) {
       store.iabUpdatePurchases(purchases);
       var hasPurchase = {};
@@ -188,6 +188,10 @@
 
     store.manageSubscriptions = function() {
       store.inappbilling.manageSubscriptions();
+    };
+
+    store.manageBilling = function() {
+      store.inappbilling.manageBilling();
     };
 
     store.requireAcknowledgment = true;

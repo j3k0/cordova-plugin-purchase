@@ -1719,12 +1719,26 @@ store.refresh = function() {
 ///
 /// ## <a name="manageSubscriptions"></a>*store.manageSubscriptions()*
 ///
-/// Opens the Manage Subscription page (AppStore, Play, Microsoft, ...).
+/// Opens the Manage Subscription page (AppStore, Play, Microsoft, ...),
+/// where the user can change his/her subscription settings or unsubscribe.
 ///
 /// ##### example usage
 ///
 /// ```js
 ///    store.manageSubscriptions();
+/// ```
+///
+
+///
+/// ## <a name="manageBilling"></a>*store.manageBilling()*
+///
+/// Opens the Manage Billing page (AppStore, Play, Microsoft, ...),
+/// where the user can update his/her payment methods.
+///
+/// ##### example usage
+///
+/// ```js
+///    store.manageBilling();
 /// ```
 ///
 
@@ -2612,6 +2626,9 @@ InAppBilling.prototype.getAvailableProducts = function (success, fail) {
 InAppBilling.prototype.manageSubscriptions = function () {
   return cordova.exec(function(){}, function(){}, "InAppBillingPlugin", "manageSubscriptions", []);
 };
+InAppBilling.prototype.manageBilling = function () {
+  return cordova.exec(function(){}, function(){}, "InAppBillingPlugin", "manageBilling", []);
+};
 
 // Generates a `fail` function that accepts an optional error code
 // in the first part of the error string.
@@ -3079,7 +3096,7 @@ function getDeveloperPayload(product) {
 
 })();
 (function () {
-    
+
 
     //   {
     //     "purchaseToken":"tokenabc",
@@ -3209,7 +3226,7 @@ function getDeveloperPayload(product) {
         }
       }
     };
-    
+
     store.iabSetPurchases = function(purchases) {
       store.iabUpdatePurchases(purchases);
       var hasPurchase = {};
@@ -3268,6 +3285,10 @@ function getDeveloperPayload(product) {
 
     store.manageSubscriptions = function() {
       store.inappbilling.manageSubscriptions();
+    };
+
+    store.manageBilling = function() {
+      store.inappbilling.manageBilling();
     };
 
     store.requireAcknowledgment = true;

@@ -307,12 +307,26 @@ store.sandbox = false;
 ///
 /// ## <a name="manageSubscriptions"></a>*store.manageSubscriptions()*
 ///
-/// Opens the Manage Subscription page (AppStore, Play, Microsoft, ...).
+/// Opens the Manage Subscription page (AppStore, Play, Microsoft, ...),
+/// where the user can change his/her subscription settings or unsubscribe.
 ///
 /// ##### example usage
 ///
 /// ```js
 ///    store.manageSubscriptions();
+/// ```
+///
+
+///
+/// ## <a name="manageBilling"></a>*store.manageBilling()*
+///
+/// Opens the Manage Billing page (AppStore, Play, Microsoft, ...),
+/// where the user can update his/her payment methods.
+///
+/// ##### example usage
+///
+/// ```js
+///    store.manageBilling();
 /// ```
 ///
 

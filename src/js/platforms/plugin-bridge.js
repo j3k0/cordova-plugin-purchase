@@ -137,6 +137,9 @@ InAppBilling.prototype.getAvailableProducts = function (success, fail) {
 InAppBilling.prototype.manageSubscriptions = function () {
   return cordova.exec(function(){}, function(){}, "InAppBillingPlugin", "manageSubscriptions", []);
 };
+InAppBilling.prototype.manageBilling = function () {
+  return cordova.exec(function(){}, function(){}, "InAppBillingPlugin", "manageBilling", []);
+};
 
 // Generates a `fail` function that accepts an optional error code
 // in the first part of the error string.

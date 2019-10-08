@@ -450,6 +450,10 @@ store.manageSubscriptions = function() {
     storekit.manageSubscriptions();
 };
 
+store.manageBilling = function() {
+    storekit.manageBilling();
+};
+
 // Restore purchases.
 // store.restore = function() {
 // };

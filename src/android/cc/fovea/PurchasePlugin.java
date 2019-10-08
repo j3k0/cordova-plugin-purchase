@@ -164,6 +164,10 @@ public class PurchasePlugin
         Intent browserIntent = new Intent(Intent.ACTION_VIEW,
             Uri.parse("http://play.google.com/store/account/subscriptions"));
         cordova.getActivity().startActivity(browserIntent);
+      } else if ("manageBilling".equals(action)) {
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW,
+            Uri.parse("http://play.google.com/store/paymentmethods"));
+        cordova.getActivity().startActivity(browserIntent);
       } else {
         // No handler for the action
         isValidAction = false;
