@@ -306,6 +306,19 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+-(void) manageBilling: (CDVInvokedUrlCommand*)command {
+    NSURL *URL = [NSURL URLWithString:@"https://apps.apple.com/account/billing"];
+
+#if TARGET_OS_IPHONE
+    [[UIApplication sharedApplication] openURL:URL options:@{} completionHandler:nil];
+#else
+    [[NSWorkspace sharedWorkspace] openURL:URL];
+#endif
+
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"manageBilling"];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
 -(void) manageSubscriptions: (CDVInvokedUrlCommand*)command {
     NSURL *URL = [NSURL URLWithString:@"https://apps.apple.com/account/subscriptions"];
 

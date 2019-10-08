@@ -162,6 +162,10 @@ InAppPurchase.prototype.manageSubscriptions = function () {
     exec('manageSubscriptions', []);
 };
 
+InAppPurchase.prototype.manageBilling = function () {
+    exec('manageBilling', []);
+};
+
 /*
  * Requests all active downloads be paused
  */
