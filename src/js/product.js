@@ -237,6 +237,14 @@ store.Product.prototype.verify = function() {
                         }
                     });
                 }
+                if (data && data.collection && data.collection.forEach) {
+                    data.collection.forEach(function(purchase) {
+                        var p = store.get(purchase.id);
+                        if (p) {
+                            p.set(purchase);
+                        }
+                    });
+                }
             }
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));
