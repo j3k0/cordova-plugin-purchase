@@ -176,8 +176,10 @@ function iabLoaded(validProducts) {
                 currency: vp.price_currency_code || "",
                 introPrice: vp.introductoryPrice ? vp.introductoryPrice : "",
                 introPriceMicros: vp.introductoryPriceAmountMicros ? vp.introductoryPriceAmountMicros : "",
-                introPriceNumberOfPeriods: introPriceNumberOfPeriods,
-                introPriceSubscriptionPeriod: introPriceSubscriptionPeriod,
+                introPricePeriod: introPriceNumberOfPeriods,
+                introPricePeriodUnit: introPriceSubscriptionPeriod,
+                introPriceNumberOfPeriods: introPriceNumberOfPeriods, // legacy props (deprecated)
+                introPriceSubscriptionPeriod: introPriceSubscriptionPeriod, // legacy props (deprecrated)
                 introPricePaymentMode: introPricePaymentMode,
                 state: store.VALID
             });
@@ -416,7 +418,7 @@ function getDeveloperPayload(product) {
     // There is no developer payload but an applicationUsername, let's
     // save it in there: it can be used to compare the purchasing user
     // with the current user.
-    var applicationUsername = store._evaluateApplicationUsername(product);
+    var applicationUsername = store.getApplicationUsername(product);
     if (!applicationUsername) {
         return "";
     }

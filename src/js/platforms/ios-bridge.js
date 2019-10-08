@@ -35,10 +35,7 @@ var protectCall = function (callback, context) {
 var InAppPurchase = function () {
     this.options = {};
 
-    this.receiptForProduct = {};
     this.transactionForProduct = {};
-    if (window.localStorage && window.localStorage.sk_receiptForProduct)
-        this.receiptForProduct = JSON.parse(window.localStorage.sk_receiptForProduct);
     if (window.localStorage && window.localStorage.sk_transactionForProduct)
         this.transactionForProduct = JSON.parse(window.localStorage.sk_transactionForProduct);
 
@@ -47,23 +44,6 @@ var InAppPurchase = function () {
     if (window.localStorage.sk_receiptForTransaction)
         delete window.localStorage.sk_receiptForTransaction;
 };
-
-// Error codes
-// (keep synchronized with InAppPurchase.m)
-var ERROR_CODES_BASE = 6777000;
-InAppPurchase.prototype.ERR_SETUP               = ERROR_CODES_BASE + 1;
-InAppPurchase.prototype.ERR_LOAD                = ERROR_CODES_BASE + 2;
-InAppPurchase.prototype.ERR_PURCHASE            = ERROR_CODES_BASE + 3;
-InAppPurchase.prototype.ERR_LOAD_RECEIPTS       = ERROR_CODES_BASE + 4;
-InAppPurchase.prototype.ERR_CLIENT_INVALID      = ERROR_CODES_BASE + 5;
-InAppPurchase.prototype.ERR_PAYMENT_CANCELLED   = ERROR_CODES_BASE + 6; // now ERR_CANCELLED
-InAppPurchase.prototype.ERR_PAYMENT_INVALID     = ERROR_CODES_BASE + 7;
-InAppPurchase.prototype.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8;
-InAppPurchase.prototype.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
-InAppPurchase.prototype.ERR_REFRESH_RECEIPTS    = ERROR_CODES_BASE + 11;
-InAppPurchase.prototype.ERR_PAUSE_DOWNLOADS     = ERROR_CODES_BASE + 12;
-InAppPurchase.prototype.ERR_RESUME_DOWNLOADS    = ERROR_CODES_BASE + 13;
-InAppPurchase.prototype.ERR_CANCEL_DOWNLOADS    = ERROR_CODES_BASE + 14;
 
 var initialized = false;
 
@@ -116,11 +96,10 @@ InAppPurchase.prototype.init = function (options, success, error) {
     };
     var setupFailed = function () {
         log('setup failed');
-        protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_SETUP, 'Setup failed');
+        protectCall(options.error, 'options.error', store.ERR_SETUP, 'Setup failed');
         protectCall(error, 'init.error');
     };
 
-    this.loadAppStoreReceipt();
     exec('setup', [], setupOk, setupFailed);
 };
 
@@ -130,7 +109,7 @@ InAppPurchase.prototype.init = function (options, success, error) {
  * @param {String} productId The product identifier. e.g. "com.example.MyApp.myproduct"
  * @param {int} quantity Quantity of product to purchase
  */
-InAppPurchase.prototype.purchase = function (productId, quantity) {
+InAppPurchase.prototype.purchase = function (productId, quantity, applicationUsername, discount) {
 	quantity = quantity | 0 || 1;
     var options = this.options;
 
@@ -141,7 +120,7 @@ InAppPurchase.prototype.purchase = function (productId, quantity) {
         var msg = 'Purchasing ' + productId + ' failed.  Ensure the product was loaded first with storekit.load(...)!';
         log(msg);
         if (typeof options.error === 'function') {
-            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_PURCHASE, 'Trying to purchase a unknown product.', productId, quantity);
+            protectCall(options.error, 'options.error', store.ERR_PURCHASE, 'Trying to purchase a unknown product.', productId, quantity);
         }
         return;
     }
@@ -156,10 +135,10 @@ InAppPurchase.prototype.purchase = function (productId, quantity) {
         var errmsg = 'Purchasing ' + productId + ' failed';
         log(errmsg);
         if (typeof options.error === 'function') {
-            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_PURCHASE, errmsg, productId, quantity);
+            protectCall(options.error, 'options.error', store.ERR_PURCHASE, errmsg, productId, quantity);
         }
     };
-    exec('purchase', [productId, quantity], purchaseOk, purchaseFailed);
+    exec('purchase', [productId, quantity, applicationUsername, discount || {}], purchaseOk, purchaseFailed);
 };
 
 /*
@@ -197,7 +176,7 @@ InAppPurchase.prototype.pause = function() {
         var errmsg = "Pausing active downloads failed";
         log(errmsg);
         if (typeof this.options.error === "function") {
-            protectCall(this.options.error, "options.error", InAppPurchase.prototype.ERR_PAUSE_DOWNLOADS, errmsg);
+            protectCall(this.options.error, "options.error", store.ERR_DOWNLOAD, errmsg);
         }
     };
     return exec('pause', [], ok, failed);
@@ -217,7 +196,7 @@ InAppPurchase.prototype.resume = function() {
         var errmsg = "Resuming active downloads failed";
         log(errmsg);
         if (typeof this.options.error === "function") {
-            protectCall(this.options.error, "options.error", InAppPurchase.prototype.ERR_RESUME_DOWNLOADS, errmsg);
+            protectCall(this.options.error, "options.error", store.ERR_DOWNLOAD, errmsg);
         }
     };
     return exec('resume', [], ok, failed);
@@ -237,7 +216,7 @@ InAppPurchase.prototype.cancel = function() {
         var errmsg = "Cancelling active downloads failed";
         log(errmsg);
         if (typeof this.options.error === "function") {
-            protectCall(this.options.error, "options.error", InAppPurchase.prototype.ERR_CANCEL_DOWNLOADS, errmsg);
+            protectCall(this.options.error, "options.error", store.ERR_DOWNLOAD, errmsg);
         }
     };
     return exec('cancel', [], ok, failed);
@@ -284,8 +263,8 @@ InAppPurchase.prototype.load = function (productIds, success, error) {
         if (typeof productIds[0] !== 'string') {
             var msg = 'invalid productIds given to store.load: ' + JSON.stringify(productIds);
             log(msg);
-            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_LOAD, msg);
-            protectCall(error, 'load.error', InAppPurchase.prototype.ERR_LOAD, msg);
+            protectCall(options.error, 'options.error', store.ERR_LOAD, msg);
+            protectCall(error, 'load.error', store.ERR_LOAD, msg);
             return;
         }
         log('load ' + JSON.stringify(productIds));
@@ -300,8 +279,8 @@ InAppPurchase.prototype.load = function (productIds, success, error) {
             log('load failed');
             log(errMessage);
             var message = 'Load failed: ' + errMessage;
-            protectCall(options.error, 'options.error', InAppPurchase.prototype.ERR_LOAD, message);
-            protectCall(error, 'load.error', InAppPurchase.prototype.ERR_LOAD, message);
+            protectCall(options.error, 'options.error', store.ERR_LOAD, message);
+            protectCall(error, 'load.error', store.ERR_LOAD, message);
         };
 
         InAppPurchase._productIds = productIds;
@@ -351,12 +330,6 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
         this.transactionForProduct[productId] = transactionIdentifier;
     }
 
-    if (transactionReceipt) {
-        this.receiptForProduct[productId] = transactionReceipt;
-        if (window.localStorage) {
-            window.localStorage.sk_receiptForProduct = JSON.stringify(this.receiptForProduct);
-        }
-    }
 	switch(state) {
         case "PaymentTransactionStatePurchasing":
             protectCall(this.options.purchasing, 'options.purchasing', productId);
@@ -427,86 +400,66 @@ InAppPurchase.prototype.restoreCompletedTransactionsFailed = function (errorCode
     protectCall(this.options.restoreFailed, 'options.restoreFailed', errorCode);
 };
 
+function parseReceiptArgs(args) {
+    var base64 = args[0];
+    var bundleIdentifier = args[1];
+    var bundleShortVersion = args[2];
+    var bundleNumericVersion = args[3];
+    var bundleSignature = args[4];
+    log('infoPlist: ' + bundleIdentifier + "," + bundleShortVersion + "," + bundleNumericVersion  + "," + bundleSignature);
+    return {
+        appStoreReceipt: base64,
+        bundleIdentifier: bundleIdentifier,
+        bundleShortVersion: bundleShortVersion,
+        bundleNumericVersion: bundleNumericVersion,
+        bundleSignature: bundleSignature
+    };
+}
+
 InAppPurchase.prototype.refreshReceipts = function(successCb, errorCb) {
     var that = this;
 
     var loaded = function (args) {
-        var base64 = args[0];
-        var bundleIdentifier = args[1];
-        var bundleShortVersion = args[2];
-        var bundleNumericVersion = args[3];
-        var bundleSignature = args[4];
-        log('infoPlist: ' + bundleIdentifier + "," + bundleShortVersion + "," + bundleNumericVersion  + "," + bundleSignature);
-        that.setAppStoreReceipt(base64);
-        var data = {
-            appStoreReceipt: base64,
-            bundleIdentifier: bundleIdentifier,
-            bundleShortVersion: bundleShortVersion,
-            bundleNumericVersion: bundleNumericVersion,
-            bundleSignature: bundleSignature
-        };
+        var data = parseReceiptArgs(args);
+        that.appStoreReceipt = data.appStoreReceipt;
         protectCall(that.options.receiptsRefreshed, 'options.receiptsRefreshed', data);
         protectCall(successCb, "refreshReceipts.success", data);
     };
 
     var error = function(errMessage) {
         log('refresh receipt failed: ' + errMessage);
-        protectCall(that.options.error, 'options.error', InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
-        protectCall(errorCb, "refreshReceipts.error", InAppPurchase.prototype.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
+        protectCall(that.options.error, 'options.error', store.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
+        protectCall(errorCb, "refreshReceipts.error", store.ERR_REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
     };
 
+    this.appStoreReceipt = null;
     log('refreshing appStoreReceipt');
     exec('appStoreRefreshReceipt', [], loaded, error);
 };
 
-InAppPurchase.prototype.loadReceipts = function (callback) {
+InAppPurchase.prototype.loadReceipts = function (callback, errorCb) {
 
     var that = this;
-    // that.appStoreReceipt = null;
+    var data;
 
-    var loaded = function (base64) {
-        // that.appStoreReceipt = base64;
-        that.setAppStoreReceipt(base64);
+    var loaded = function (args) {
+        data = parseReceiptArgs(args);
+        that.appStoreReceipt = data.appStoreReceipt;
         callCallback();
     };
 
     var error = function (errMessage) {
         log('load failed: ' + errMessage);
-        protectCall(that.options.error, 'options.error', InAppPurchase.prototype.ERR_LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
+        protectCall(that.options.error, 'options.error', store.ERR_LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
+        protectCall(errorCb, 'loadReceipts.error', store.ERR_LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
     };
 
     function callCallback() {
-        protectCall(callback, 'loadReceipts.callback', {
-            appStoreReceipt: that.appStoreReceipt,
-            forProduct:     function (productId) {
-                return that.receiptForProduct[productId] || null;
-            }
-        });
+        protectCall(callback, 'loadReceipts.callback', data);
     }
 
-    if (that.appStoreReceipt) {
-        log('appStoreReceipt already loaded:');
-        log(that.appStoreReceipt);
-        callCallback();
-    }
-    else {
-        log('loading appStoreReceipt');
-        exec('appStoreReceipt', [], loaded, error);
-    }
-};
-
-InAppPurchase.prototype.setAppStoreReceipt = function(base64) {
-    this.appStoreReceipt = base64;
-    if (window.localStorage && base64) {
-        window.localStorage.sk_appStoreReceipt = base64;
-    }
-};
-InAppPurchase.prototype.loadAppStoreReceipt = function() {
-    if (window.localStorage && window.localStorage.sk_appStoreReceipt) {
-        this.appStoreReceipt = window.localStorage.sk_appStoreReceipt;
-    }
-    if (this.appStoreReceipt === 'null')
-        this.appStoreReceipt = null;
+    log('loading appStoreReceipt');
+    exec('appStoreReceipt', [], loaded, error);
 };
 
 /*

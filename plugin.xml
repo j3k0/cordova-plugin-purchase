@@ -61,6 +61,8 @@ SOFTWARE.
         <source-file src="src/ios/InAppPurchase.m" />
         <header-file src="src/ios/SKProduct+LocalizedPrice.h" />
         <source-file src="src/ios/SKProduct+LocalizedPrice.m" />
+        <header-file src="src/ios/SKProductDiscount+LocalizedPrice.h" />
+        <source-file src="src/ios/SKProductDiscount+LocalizedPrice.m" />
         <header-file src="src/ios/FileUtility.h" />
         <source-file src="src/ios/FileUtility.m" />
 
@@ -74,7 +76,7 @@ SOFTWARE.
         </js-module>
         <js-module src="www/cordova-osx-polyfill.js" name="CordovaOSXPolyfill">
             <runs />
-        </js-module>        
+        </js-module>
 
         <!-- Cordova 2.5+ -->
         <config-file target="config.xml" parent="/*">
@@ -88,11 +90,13 @@ SOFTWARE.
         <source-file src="src/ios/InAppPurchase.m" />
         <header-file src="src/ios/SKProduct+LocalizedPrice.h" />
         <source-file src="src/ios/SKProduct+LocalizedPrice.m" />
+        <header-file src="src/ios/SKProductDiscount+LocalizedPrice.h" />
+        <source-file src="src/ios/SKProductDiscount+LocalizedPrice.m" />
         <header-file src="src/ios/FileUtility.h" />
         <source-file src="src/ios/FileUtility.m" />
 
         <framework src="StoreKit.framework" />
-    </platform>    
+    </platform>
 
     <!-- android -->
     <platform name="android">
@@ -120,7 +124,7 @@ SOFTWARE.
       <source-file src="src/android/cc/fovea/Constants.java" target-dir="src/cc/fovea" />
       <source-file src="src/android/cc/fovea/Security.java" target-dir="src/cc/fovea" />
     </platform>
-    
+
     <!-- windows -->
 	<platform name="windows">
 		<js-module src="www/store-windows.js" name="InAppPurchase">
@@ -129,7 +133,7 @@ SOFTWARE.
 		<js-module src="src/windows/InAppPurchaseProxy.js" name="InAppPurchaseProxy">
 			<merges target="" />
 		</js-module>
-		
+
 	</platform>
 <!--
 vim: ts=4:sw=4:et

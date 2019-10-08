@@ -39,18 +39,18 @@
   },
   "homepage": "https://github.com/j3k0/cordova-plugin-purchase",
   "devDependencies": {
-    "acorn": "^6.1.1",
-    "babel-eslint": "^10.0.1",
-    "coveralls": "^3.0.3",
-    "eslint": "^5.15.0",
+    "acorn": "^6.3.0",
+    "babel-eslint": "^10.0.3",
+    "coveralls": "^3.0.6",
+    "eslint": "^5.16.0",
     "eslint-config-defaults": "^9.0.0",
-    "eslint-plugin-import": "^2.16.0",
-    "eslint-plugin-react": "^7.12.4",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-react": "^7.14.3",
     "istanbul": "^0.4.5",
-    "jshint": "^2.10.1",
-    "mocha": "^6.0.2",
+    "jshint": "^2.10.2",
+    "mocha": "^6.2.0",
     "preprocessor": "^1.4.0",
-    "uglify-js": "^3.4.9"
+    "uglify-js": "^3.6.0"
   },
   "types": "./src/js/index.d.ts"
 }

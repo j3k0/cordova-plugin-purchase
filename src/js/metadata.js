@@ -49,6 +49,22 @@ store.developerPayload = "";
 store.applicationUsername = "";
 
 ///
+/// ## `store.getApplicationUsername()`
+///
+/// Evaluate and return the value from `store.applicationUsername`.
+///
+/// When its a string, the value is returned right away.
+///
+/// When its a function, the return value of the function is returned.
+///
+/// Example:
+/// ```js
+/// store.getApplicationUsername()
+/// ```
+///
+store.getApplicationUsername = stringOrFunction('applicationUsername');
+
+///
 /// ## `store.developerName`
 ///
 /// An optional string of developer profile name. This value can be
@@ -65,7 +81,6 @@ store.developerName = "";
 
 // For internal use.
 store._evaluateDeveloperPayload = stringOrFunction('developerPayload');
-store._evaluateApplicationUsername = stringOrFunction('applicationUsername');
 
 function stringOrFunction(key) {
     return function (product) {

@@ -16,6 +16,35 @@ store.Product.prototype.set = function(key, value) {
     }
 };
 
+var attributesStack = {};
+
+store.Product.prototype.push = function(key, value) {
+    // save attributes
+    var stack = attributesStack[this.id];
+    if (!stack) {
+        stack = attributesStack[this.id] = [];
+    }
+    stack.push(JSON.stringify(this));
+    // update attributes
+    this.set(key, value);
+};
+
+store.Product.prototype.pop = function() {
+    // restore attributes
+    var stack = attributesStack[this.id];
+    if (!stack) {
+        return;
+    }
+    var json = stack.pop();
+    if (!json) {
+        return;
+    }
+    var attributes = JSON.parse(json);
+    for (var key in attributes) {
+        this.set(key, attributes[key]);
+    }
+};
+
 store.Product.prototype.stateChanged = function() {
 
     // update some properties useful to the user

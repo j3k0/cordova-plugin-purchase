@@ -303,6 +303,16 @@ The `sandbox` property defines if you want to invoke the platform purchase sandb
     store.ERR_PAYMENT_EXPIRED     = ERROR_CODES_BASE + 20;
     store.ERR_DOWNLOAD            = ERROR_CODES_BASE + 21;
     store.ERR_SUBSCRIPTION_UPDATE_NOT_AVAILABLE = ERROR_CODES_BASE + 22;
+    store.ERR_PRODUCT_NOT_AVAILABLE = ERROR_CODES_BASE + 23; // Error code indicating that the requested product is not available in the store.
+    store.ERR_CLOUD_SERVICE_PERMISSION_DENIED = ERROR_CODES_BASE + 24; // Error code indicating that the user has not allowed access to Cloud service information.
+    store.ERR_CLOUD_SERVICE_NETWORK_CONNECTION_FAILED = ERROR_CODES_BASE + 25; // Error code indicating that the device could not connect to the network.
+    store.ERR_CLOUD_SERVICE_REVOKED = ERROR_CODES_BASE + 26; // Error code indicating that the user has revoked permission to use this cloud service.
+    store.ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED = ERROR_CODES_BASE + 27; // Error code indicating that the user has not yet acknowledged Apple’s privacy policy for Apple Music.
+    store.ERR_UNAUTHORIZED_REQUEST_DATA = ERROR_CODES_BASE + 28; // Error code indicating that the app is attempting to use a property for which it does not have the required entitlement.
+    store.ERR_INVALID_OFFER_IDENTIFIER = ERROR_CODES_BASE + 29; // Error code indicating that the offer identifier is invalid.
+    store.ERR_INVALID_OFFER_PRICE = ERROR_CODES_BASE + 30; // Error code indicating that the price you specified in App Store Connect is no longer valid.
+    store.ERR_INVALID_SIGNATURE = ERROR_CODES_BASE + 31; // Error code indicating that the signature in a payment discount is not valid.
+    store.ERR_MISSING_OFFER_PARAMS = ERROR_CODES_BASE + 32; // Error code indicating that parameters are missing in a payment discount.
 
 ### product states
 
@@ -333,6 +343,10 @@ The `sandbox` property defines if you want to invoke the platform purchase sandb
     store.PURCHASE_CONSUMED = 6778004;
     store.INTERNAL_ERROR    = 6778005;
     store.NEED_MORE_DATA    = 6778006;
+
+### special purpose
+
+    store.APPLICATION = "application";
 ## <a name="product"></a>*store.Product* object ##
 
 Most events methods give you access to a `product` object.
@@ -352,25 +366,33 @@ Products object have the following fields and methods.
  - `product.price` - Localized price, with currency symbol
  - `product.currency` - Currency code (optionaly)
  - `product.countryCode` - Country code. Available only on iOS
- - `product.introPrice` - Localized introductory price, with currency symbol
- - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price)
- - `product.introPriceNumberOfPeriods` - number of periods the introductory price is available
- - `product.introPriceSubscriptionPeriod` - Period for the introductory price ("Day", "Week", "Month" or "Year")
- - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
- - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after [receipt validation](#validator). Available only on iOS
  - `product.loaded` - Product has been loaded from server, however it can still be either `valid` or not
  - `product.valid` - Product has been loaded and is a valid product
    - when product definitions can't be loaded from the store, you should display instead a warning like: "You cannot make purchases at this stage. Try again in a moment. Make sure you didn't enable In-App-Purchases restrictions on your phone."
  - `product.canPurchase` - Product is in a state where it can be purchased
  - `product.owned` - Product is owned
+ - `product.introPrice` - Localized introductory price, with currency symbol
+ - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price)
+ - `product.introPricePeriod` - Duration the introductory price is available (in period-unit)
+ - `product.introPricePeriodUnit` - Period for the introductory price ("Day", "Week", "Month" or "Year")
+ - `product.introPricePaymentMode` - Payment mode for the introductory price ("PayAsYouGo", "UpFront", or "FreeTrial")
+ - `product.ineligibleForIntroPrice` - True when a trial or introductory price has been applied to a subscription. Only available after [receipt validation](#validator). Available only on iOS
+- `product.discounts` - Array of discounts available for the product. Each discount exposes the following fields:
+   - `id` - The discount identifier
+   - `price` - Localized price, with currency symbol
+   - `priceMicros` - Price in micro-units (divide by 1000000 to get numeric price)
+   - `period` - Number of subscription periods
+   - `periodUnit` - Unit of the subcription period ("Day", "Week", "Month" or "Year")
+   - `paymentMode` - "PayAsYouGo", "UpFront", or "FreeTrial"
+   - `eligible` - True if the user is deemed eligible for this discount by the platform
  - `product.downloading` - Product is downloading non-consumable content
  - `product.downloaded` - Non-consumable content has been successfully downloaded for this product
  - `product.additionalData` - additional data possibly required for product purchase
  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
- - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property (windows and android)
- - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (windows and android)
+ - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property.
+ - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year.
  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
@@ -680,9 +702,18 @@ The `additionalData` argument can be either:
    - `oldSku`, a string with the old subscription to upgrade/downgrade on Android.
      **Note**: if another subscription product is already owned that is member of
      the same group, `oldSku` will be set automatically for you (see `product.group`).
+   - `discount`, a object that describes the discount to apply with the purchase (iOS only):
+      - `id`, discount identifier
+      - `key`, key identifier
+      - `nonce`, uuid value for the nonce
+      - `timestamp`, time at which the signature was generated (in milliseconds since epoch)
+      - `signature`, cryptographic signature that unlock the discount
 
 See the ["Purchasing section"](#purchasing) to learn more about
 the purchase process.
+
+See ["Subscriptions Offer Best Practices"](https://developer.apple.com/videos/play/wwdc2019/305/)
+for more details on subscription offers.
 
 ### return value
 
@@ -771,7 +802,16 @@ Refer to [this documentation for iOS](https://developer.apple.com/library/ios/re
 
 Start [here for Android](https://developer.android.com/google/play/billing/billing_integrate.html#billing-security).
 
-Another option is to use [Fovea's reeceipt validation service](http://reeceipt.fovea.cc/) that implements all the best practices to secure your transactions.
+Another option is to use [Fovea's validation service](http://billing.fovea.cc/) that implements all the best practices to secure your transactions.
+
+
+## <a name="verifyPurchases"></a> *store.verifyPurchases*
+
+Refresh the historical state of purchases. This is required to know if a
+user is eligible for promotions like introductory offers or subscription discount.
+
+It is recommended to call this method right before entering your in-app
+purchases or subscriptions page.
 
 ## <a name="refresh"></a>*store.refresh()*
 
@@ -877,6 +917,20 @@ Example:
 store.applicationUsername = function() {
   return state.get(["session", "user_id"]);
 };
+```
+
+
+## `store.getApplicationUsername()`
+
+Evaluate and return the value from `store.applicationUsername`.
+
+When its a string, the value is returned right away.
+
+When its a function, the return value of the function is returned.
+
+Example:
+```js
+store.getApplicationUsername()
 ```
 
 

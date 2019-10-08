@@ -32,17 +32,40 @@ static BOOL g_downloadHostedContent = YES;
 }
 
 #define ERROR_CODES_BASE 6777000
-#define ERR_SETUP         (ERROR_CODES_BASE + 1)
-#define ERR_LOAD          (ERROR_CODES_BASE + 2)
-#define ERR_PURCHASE      (ERROR_CODES_BASE + 3)
-#define ERR_LOAD_RECEIPTS (ERROR_CODES_BASE + 4)
+#define ERR_SETUP                             (ERROR_CODES_BASE + 1)
+#define ERR_LOAD                              (ERROR_CODES_BASE + 2)
+#define ERR_PURCHASE                          (ERROR_CODES_BASE + 3)
+#define ERR_LOAD_RECEIPTS                     (ERROR_CODES_BASE + 4)
 
-#define ERR_CLIENT_INVALID    (ERROR_CODES_BASE + 5)
-#define ERR_PAYMENT_CANCELLED (ERROR_CODES_BASE + 6)
-#define ERR_PAYMENT_INVALID   (ERROR_CODES_BASE + 7)
-#define ERR_PAYMENT_NOT_ALLOWED (ERROR_CODES_BASE + 8)
-#define ERR_UNKNOWN (ERROR_CODES_BASE + 10)
-#define ERR_REFRESH_RECEIPTS (ERROR_CODES_BASE + 11)
+#define ERR_CLIENT_INVALID                    (ERROR_CODES_BASE + 5)
+#define ERR_PAYMENT_CANCELLED                 (ERROR_CODES_BASE + 6)
+#define ERR_PAYMENT_INVALID                   (ERROR_CODES_BASE + 7)
+#define ERR_PAYMENT_NOT_ALLOWED               (ERROR_CODES_BASE + 8)
+#define ERR_UNKNOWN                           (ERROR_CODES_BASE + 10)
+#define ERR_REFRESH_RECEIPTS                  (ERROR_CODES_BASE + 11)
+
+#define ERR_INVALID_PRODUCT_ID                (ERROR_CODES_BASE + 12)
+#define ERR_FINISH                            (ERROR_CODES_BASE + 13)
+#define ERR_COMMUNICATION                     (ERROR_CODES_BASE + 14) // Error while communicating with the server.
+#define ERR_SUBSCRIPTIONS_NOT_AVAILABLE       (ERROR_CODES_BASE + 15) // Subscriptions are not available.
+#define ERR_MISSING_TOKEN                     (ERROR_CODES_BASE + 16) // Purchase information is missing token.
+#define ERR_VERIFICATION_FAILED               (ERROR_CODES_BASE + 17) // Verification of store data failed.
+#define ERR_BAD_RESPONSE                      (ERROR_CODES_BASE + 18) // Verification of store data failed.
+#define ERR_REFRESH                           (ERROR_CODES_BASE + 19) // Failed to refresh the store.
+#define ERR_PAYMENT_EXPIRED                   (ERROR_CODES_BASE + 20)
+#define ERR_DOWNLOAD                          (ERROR_CODES_BASE + 21)
+#define ERR_SUBSCRIPTION_UPDATE_NOT_AVAILABLE (ERROR_CODES_BASE + 22)
+
+#define ERR_PRODUCT_NOT_AVAILABLE             (ERROR_CODES_BASE + 23)
+#define ERR_CLOUD_SERVICE_PERMISSION_DENIED   (ERROR_CODES_BASE + 24)
+#define ERR_CLOUD_SERVICE_NETWORK_CONNECTION_FAILED (ERROR_CODES_BASE + 25)
+#define ERR_CLOUD_SERVICE_REVOKED             (ERROR_CODES_BASE + 26)
+#define ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED  (ERROR_CODES_BASE + 27)
+#define ERR_UNAUTHORIZED_REQUEST_DATA         (ERROR_CODES_BASE + 28)
+#define ERR_INVALID_OFFER_IDENTIFIER          (ERROR_CODES_BASE + 29)
+#define ERR_INVALID_OFFER_PRICE               (ERROR_CODES_BASE + 30)
+#define ERR_INVALID_SIGNATURE                 (ERROR_CODES_BASE + 31)
+#define ERR_MISSING_OFFER_PARAMS              (ERROR_CODES_BASE + 32)
 
 static NSInteger jsErrorCode(NSInteger storeKitErrorCode) {
     switch (storeKitErrorCode) {
@@ -57,6 +80,38 @@ static NSInteger jsErrorCode(NSInteger storeKitErrorCode) {
         case SKErrorPaymentNotAllowed:
             return ERR_PAYMENT_NOT_ALLOWED;
     }
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
+    if (@available(iOS 12.2, macOS 10.14.4, *)) {
+        if (storeKitErrorCode == SKErrorPrivacyAcknowledgementRequired)
+            return ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED;
+        if (storeKitErrorCode == SKErrorUnauthorizedRequestData)
+            return ERR_UNAUTHORIZED_REQUEST_DATA;
+        if (storeKitErrorCode == SKErrorInvalidOfferIdentifier)
+            return ERR_INVALID_OFFER_IDENTIFIER;
+        if (storeKitErrorCode == SKErrorInvalidOfferPrice)
+            return ERR_INVALID_OFFER_PRICE;
+        if (storeKitErrorCode == SKErrorInvalidSignature)
+            return ERR_INVALID_SIGNATURE;
+        if (storeKitErrorCode == SKErrorMissingOfferParams)
+            return ERR_MISSING_OFFER_PARAMS;
+    }
+#endif
+#if TARGET_OS_IPHONE
+#if __IPHONE_OS_VERSION_MIN_REQUIRED >= 90300
+    if (@available(iOS 9.3, *)) {
+        if (storeKitErrorCode == SKErrorCloudServicePermissionDenied)
+            return ERR_CLOUD_SERVICE_PERMISSION_DENIED;
+        if (storeKitErrorCode == SKErrorCloudServiceNetworkConnectionFailed)
+            return ERR_CLOUD_SERVICE_NETWORK_CONNECTION_FAILED;
+        if (storeKitErrorCode == SKErrorCloudServiceRevoked)
+            return ERR_CLOUD_SERVICE_REVOKED;
+    }
+#endif
+    if (@available(iOS 3.0, macOS 10.15, *)) {
+        if (storeKitErrorCode == SKErrorStoreProductNotAvailable)
+            return ERR_PRODUCT_NOT_AVAILABLE;
+    }
+#endif
     return ERR_UNKNOWN;
 }
 
@@ -73,7 +128,76 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         case ERR_PAYMENT_NOT_ALLOWED: return @"ERR_PAYMENT_NOT_ALLOWED";
         case ERR_UNKNOWN: return @"ERR_UNKNOWN";
     }
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
+    if (@available(iOS 12.2, macOS 10.14.4, *)) {
+        if (code == ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED) return @"ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED";
+        if (code == ERR_UNAUTHORIZED_REQUEST_DATA) return @"ERR_UNAUTHORIZED_REQUEST_DATA";
+        if (code == ERR_INVALID_OFFER_IDENTIFIER) return @"ERR_INVALID_OFFER_IDENTIFIER";
+        if (code == ERR_INVALID_OFFER_PRICE) return @"ERR_INVALID_OFFER_PRICE";
+        if (code == ERR_INVALID_SIGNATURE) return @"ERR_INVALID_SIGNATURE";
+        if (code == ERR_MISSING_OFFER_PARAMS) return @"ERR_MISSING_OFFER_PARAMS";
+    }
+#endif
+#if TARGET_OS_IPHONE && __IPHONE_OS_VERSION_MIN_REQUIRED >= 90300
+    if (@available(iOS 9.3, *)) {
+        if (code == ERR_CLOUD_SERVICE_PERMISSION_DENIED) return @"ERR_CLOUD_SERVICE_PERMISSION_DENIED";
+        if (code == ERR_CLOUD_SERVICE_NETWORK_CONNECTION_FAILED) return @"ERR_CLOUD_SERVICE_NETWORK_CONNECTION_FAILED";
+        if (code == ERR_CLOUD_SERVICE_REVOKED) return @"ERR_CLOUD_SERVICE_REVOKED";
+    }
+    if (@available(iOS 3.0, macOS 10.15, *)) {
+        if (ERR_PRODUCT_NOT_AVAILABLE == code) return @"ERR_PRODUCT_NOT_AVAILABLE";
+    }
+#endif
     return @"ERR_NONE";
+}
+
+static NSString *productDiscountTypeToString(NSUInteger type) {
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
+    if (@available(iOS 12.2, macOS 10.14.4, *)) {
+        switch (type) {
+            case SKProductDiscountTypeIntroductory: return @"Introductory";
+            case SKProductDiscountTypeSubscription: return @"Subscription";
+        }
+    }
+#endif
+    return nil;
+}
+
+// https://developer.apple.com/documentation/storekit/skproductdiscountpaymentmode?language=objc
+static NSString *productDiscountPaymentModeToString(NSUInteger mode) {
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
+    if (@available(iOS 11.2, macOS 10.13.2, *)) {
+        switch (mode) {
+            case SKProductDiscountPaymentModePayAsYouGo: return @"PayAsYouGo";
+            case SKProductDiscountPaymentModePayUpFront: return @"UpFront";
+            case SKProductDiscountPaymentModeFreeTrial:  return @"FreeTrial";
+        }
+    }
+#endif
+    return nil;
+}
+
+static NSString *productDiscountUnitToString(NSUInteger unit) {
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
+    if (@available(iOS 11.2, macOS 10.13.2, *)) {
+        switch (unit) {
+            case SKProductPeriodUnitDay:   return @"Day";
+            case SKProductPeriodUnitMonth: return @"Month";
+            case SKProductPeriodUnitWeek:  return @"Week";
+            case SKProductPeriodUnitYear:  return @"Year";
+        }
+    }
+#endif
+    return nil;
+}
+
+// Get the currency code from the NSLocale object
+static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
+    NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
+    // [numberFormatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
+    // [numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
+    [numberFormatter setLocale:priceLocale];
+    return [numberFormatter currencyCode];
 }
 
 @implementation NSArray (JSONSerialize)
@@ -190,7 +314,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 #else
     [[NSWorkspace sharedWorkspace] openURL:URL];
 #endif
-    
+
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"manageSubscriptions"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
@@ -218,7 +342,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         return;
     }
-    
+
     NSSet *productIdentifiers = [NSSet setWithArray:inArray];
     DLog(@"load: Set has %li elements", (unsigned long)[productIdentifiers count]);
     for (NSString *item in productIdentifiers) {
@@ -248,10 +372,31 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     DLog(@"purchase: About to do IAP");
     id identifier = [command.arguments objectAtIndex:0];
     id quantity =   [command.arguments objectAtIndex:1];
+    NSString *applicationUsername = (NSString*)[command.arguments objectAtIndex:2];
+    id discountArg = [command.arguments objectAtIndex:3];
 
     SKMutablePayment *payment = [SKMutablePayment paymentWithProduct:[self.products objectForKey:identifier]];
     if ([quantity respondsToSelector:@selector(integerValue)]) {
         payment.quantity = [quantity integerValue];
+    }
+    if (applicationUsername != nil && applicationUsername.length > 0) {
+        DLog(@"purchase applicationUsername (%@).", applicationUsername);
+        payment.applicationUsername = applicationUsername;
+    }
+    if ([discountArg isKindOfClass:[NSDictionary class]]) {
+        NSDictionary *discount = (NSDictionary*)discountArg;
+        DLog(@"purchase with discount (%@, %@, %@, %@, %@).", discount[@"id"], discount[@"key"], discount[@"nonce"], discount[@"signature"], discount[@"timestamp"]);
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
+        if (@available(iOS 12.2, macOS 10.14.4, *)) {
+            DLog(@" + discounts API available");
+            payment.paymentDiscount = [[SKPaymentDiscount alloc]
+              initWithIdentifier: discount[@"id"]
+                   keyIdentifier: discount[@"key"]
+                           nonce: [[NSUUID alloc] initWithUUIDString:discount[@"nonce"]]
+                       signature: discount[@"signature"]
+                       timestamp: discount[@"timestamp"]];
+        }
+#endif
     }
     [[SKPaymentQueue defaultQueue] addPayment:payment];
 }
@@ -260,7 +405,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 - (void) canMakePayments: (CDVInvokedUrlCommand*)command {
 
   CDVPluginResult* pluginResult = nil;
-  
+
   if (![SKPaymentQueue canMakePayments]) {
       DLog(@"canMakePayments: Device can't make payments.");
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Can't make payments"];
@@ -269,7 +414,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
       DLog(@"canMakePayments: Device can make payments.");
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"Can make payments"];
   }
-  
+
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
@@ -281,8 +426,8 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 - (void) pause: (CDVInvokedUrlCommand*)command {
 
     NSArray *dls = [self.currentDownloads allValues];
-    DLog(@"pause: Pausing %d active downloads...",[dls count]);
-    
+    DLog(@"pause: Pausing %lu active downloads...",[dls count]);
+
     [[SKPaymentQueue defaultQueue] pauseDownloads:dls];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -292,7 +437,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 - (void) resume: (CDVInvokedUrlCommand*)command {
 
     NSArray *dls = [self.currentDownloads allValues];
-    DLog(@"resume: Resuming %d active downloads...",[dls count]);
+    DLog(@"resume: Resuming %lu active downloads...",[dls count]);
     [[SKPaymentQueue defaultQueue] resumeDownloads:[self.currentDownloads allValues]];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -302,7 +447,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 - (void) cancel: (CDVInvokedUrlCommand*)command {
 
     NSArray *dls = [self.currentDownloads allValues];
-    DLog(@"cancel: Cancelling %d active downloads...",[dls count]);
+    DLog(@"cancel: Cancelling %lu active downloads...",[dls count]);
     [[SKPaymentQueue defaultQueue] cancelDownloads:[self.currentDownloads allValues]];
     if (command != nil) {
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
@@ -537,8 +682,16 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     if (receiptData != nil) {
         base64 = [receiptData convertToBase64];
     }
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSArray *callbackArgs = [NSArray arrayWithObjects:
+        NILABLE(base64),
+        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleIdentifier"]),
+        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleShortVersionString"]),
+        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleNumericVersion"]),
+        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleSignature"]),
+        nil];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
-                                                      messageAsString:base64];
+                                                      messageAsArray:callbackArgs];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
@@ -550,7 +703,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     receiptRefreshRequest.delegate = refreshReceiptDelegate;
     refreshReceiptDelegate.plugin  = self;
     refreshReceiptDelegate.command = command;
-    
+
 #if ARC_ENABLED
     self.retainer[@"receiptRefreshRequest"] = receiptRefreshRequest;
     self.retainer[@"receiptRefreshRequestDelegate"] = refreshReceiptDelegate;
@@ -583,14 +736,14 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 // Download Queue
 - (void) paymentQueue:(SKPaymentQueue *)queue updatedDownloads:(NSArray *)downloads {
     DLog(@"paymentQueue:updatedDownloads:");
-    
+
     for (SKDownload *download in downloads) {
         NSString *state = @"";
         NSString *error = @"";
         NSInteger errorCode = 0;
         NSString *progress_s = 0;
         NSString *timeRemaining_s = 0;
-        
+
         SKPaymentTransaction *transaction = download.transaction;
         NSString *transactionId = transaction.transactionIdentifier;
 #if TARGET_OS_IPHONE
@@ -600,10 +753,10 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 #endif
         SKPayment *payment = transaction.payment;
         NSString *productId = payment.productIdentifier;
-        
+
         NSArray *callbackArgs;
         NSString *js;
-        
+
 #if TARGET_OS_IPHONE
         SKDownloadState downloadState = download.downloadState;
 #else
@@ -614,86 +767,86 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
             case SKDownloadStateActive: {
                 // Add to current downloads
                 [self.currentDownloads setObject:download forKey:productId];
-                
+
                 state = @"DownloadStateActive";
-                
+
                 DLog(@"paymentQueue:updatedDownloads: Progress: %f", download.progress);
                 DLog(@"paymentQueue:updatedDownloads: Time remaining: %f", download.timeRemaining);
-                
+
                 progress_s = [NSString stringWithFormat:@"%d", (int) (download.progress*100)];
                 timeRemaining_s = [NSString stringWithFormat:@"%d", (int) download.timeRemaining];
-                
+
                 break;
             }
-                
+
             case SKDownloadStateCancelled: {
                 // Remove from current downloads
                 [self.currentDownloads removeObjectForKey:productId];
-                
+
                 state = @"DownloadStateCancelled";
                 [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
                 [self transactionFinished:download.transaction];
-                
+
                 break;
             }
 
             case SKDownloadStateFailed: {
                 // Remove from current downloads
                 [self.currentDownloads removeObjectForKey:productId];
-                
+
                 state = @"DownloadStateFailed";
                 error = transaction.error.localizedDescription;
                 errorCode = transaction.error.code;
-                DLog(@"paymentQueue:updatedDownloads: Download error %d %@", errorCode, error);
+                DLog(@"paymentQueue:updatedDownloads: Download error %lu %@", errorCode, error);
                 [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
                 [self transactionFinished:download.transaction];
-                
+
                 break;
             }
-                
+
             case SKDownloadStateFinished: {
                 // Remove from current downloads
                 [self.currentDownloads removeObjectForKey:productId];
-                
+
                 state = @"DownloadStateFinished";
                 [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
                 [self transactionFinished:download.transaction];
-                
+
                 [self copyDownloadToDocuments:download]; // Copy download content to Documnents folder
-                
+
                 break;
             }
-                
+
             case SKDownloadStatePaused: {
                 // Add to current downloads
                 [self.currentDownloads setObject:download forKey:productId];
-                
+
                 state = @"DownloadStatePaused";
-                
+
                 break;
             }
-                
+
             case SKDownloadStateWaiting: {
                 // Add to current downloads
                 [self.currentDownloads setObject:download forKey:productId];
                 state = @"DownloadStateWaiting";
-                
+
                 break;
             }
-                
+
             default: {
                 DLog(@"paymentQueue:updatedDownloads: Invalid Download State");
                 return;
             }
         }
-        
-        DLog(@"paymentQueue:updatedDownloads: Number of currentDownloads: %d",[self.currentDownloads count]);
+
+        DLog(@"paymentQueue:updatedDownloads: Number of currentDownloads: %lu",[self.currentDownloads count]);
         DLog(@"paymentQueue:updatedDownloads: Product %@ in download state: %@", productId, state);
-        
-        
+
+
         callbackArgs = [NSArray arrayWithObjects:
             NILABLE(state),
-            [NSNumber numberWithInt:errorCode],
+            [NSNumber numberWithInt:(int)errorCode],
             NILABLE(error),
             NILABLE(transactionId),
             NILABLE(productId),
@@ -705,7 +858,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
             stringWithFormat:@"window.storekit.updatedDownloadCallback.apply(window.storekit, %@)",
             [callbackArgs JSONSerialize]];
         [self.commandDelegate evalJs:js];
-        
+
     }
 }
 
@@ -716,13 +869,13 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 - (void)copyDownloadToDocuments:(SKDownload *)download {
 
     DLog(@"copyDownloadToDocuments: Copying downloaded content to Documents...");
-    
+
     NSString *source = [download.contentURL relativePath];
     NSDictionary *dict = [[NSMutableDictionary alloc] initWithContentsOfFile:[source stringByAppendingPathComponent:@"ContentInfo.plist"]];
     NSString *targetFolder = [FileUtility getDocumentPath];
     NSString *content = [source stringByAppendingPathComponent:@"Contents"];
     NSArray *files;
-    
+
     // Use folder if specified in .plist
     if ([dict objectForKey:@"Folder"]) {
         targetFolder = [targetFolder stringByAppendingPathComponent:[dict objectForKey:@"Folder"]];
@@ -731,7 +884,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
             NSAssert([FileUtility createFolder:targetFolder], @"Failed to create Documents subfolder: %@", targetFolder);
         }
     }
-    
+
     if ([dict objectForKey:@"Files"]) {
         DLog(@"copyDownloadToDocuments: Found Files key in .plist");
         files =  [dict objectForKey:@"Files"];
@@ -740,24 +893,24 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         DLog(@"copyDownloadToDocuments: No Files key found in .plist - copy all files in Content folder");
         files = [FileUtility listFiles:content extension:nil];
     }
-    
+
     for (NSString *file in files) {
         NSString *fcontent = [content stringByAppendingPathComponent:file];
         NSString *targetFile = [targetFolder stringByAppendingPathComponent:[file lastPathComponent]];
-        
+
         DLog(@"copyDownloadToDocuments: Content path: %@", fcontent);
-        
+
         NSAssert([FileUtility isFileExist:fcontent], @"Content path MUST be valid");
-        
+
         // Copy the content to the documents folder
         NSAssert([FileUtility copyFile:fcontent dst:targetFile], @"Failed to copy the content");
         DLog(@"copyDownloadToDocuments: Copied %@ to %@", fcontent, targetFile);
-        
+
         // Set flag so we don't backup on iCloud
         NSURL* url = [NSURL fileURLWithPath:targetFile];
         [url setResourceValue: [NSNumber numberWithBool: YES] forKey: NSURLIsExcludedFromBackupKey error: Nil];
     }
-    
+
 }
 
 //
@@ -791,7 +944,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     // Only thing is: the developper needs to be sure to handle all types of IAP defines on the AppStore.
     // Which should be OK...
     //
-    
+
     // Let's check if we already loaded this product informations.
     // Since it's provided to us generously, let's store them here.
     NSString *productId = payment.productIdentifier;
@@ -851,7 +1004,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 
 #if ARC_DISABLED
 - (void) dealloc {
-    [plugin  release];   
+    [plugin  release];
     [command release];
     [super   dealloc];
 }
@@ -873,12 +1026,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
     NSMutableArray *validProducts = [NSMutableArray array];
     DLog(@"BatchProductsRequestDelegate.productsRequest:didReceiveResponse: Has %li validProducts", (unsigned long)[response.products count]);
     for (SKProduct *product in response.products) {
-        // Get the currency code from the NSLocale object
-        NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
-        [numberFormatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
-        [numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
-        [numberFormatter setLocale:product.priceLocale];
-        NSString *currencyCode = [numberFormatter currencyCode];
+        NSString *currencyCode = priceLocaleCurrencyCode(product.priceLocale);
         NSString *countryCode = [product.priceLocale objectForKey: NSLocaleCountryCode];
         NSDecimalNumber *priceMicros = [product.price decimalNumberByMultiplyingByPowerOf10:6];
 
@@ -887,30 +1035,59 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         NSString *introPricePaymentMode = nil;
         NSNumber *introPriceNumberOfPeriods = nil;
         NSString *introPriceSubscriptionPeriod  = nil;
-        // Introductory price are supported from iOS 11.2
-        if (@available(iOS 11.2, *)) {
+
+        // Introductory price are supported from those iOS and macOS versions
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
+        if (@available(iOS 11.2, macOS 10.13.2, *)) {
             SKProductDiscount *introPrice = product.introductoryPrice;
             if (introPrice != nil) {
                 introPriceMicros = [introPrice.price  decimalNumberByMultiplyingByPowerOf10:6];
-                // https://developer.apple.com/documentation/storekit/skproductdiscountpaymentmode?language=objc
-                if (introPrice.paymentMode == SKProductDiscountPaymentModePayAsYouGo)
-                    introPricePaymentMode = @"PayAsYouGo";
-                if (introPrice.paymentMode == SKProductDiscountPaymentModePayUpFront)
-                    introPricePaymentMode = @"UpFront";
-                if (introPrice.paymentMode == SKProductDiscountPaymentModeFreeTrial)
-                    introPricePaymentMode = @"FreeTrial";
-                introPriceNumberOfPeriods = [NSNumber numberWithUnsignedInt:introPrice.numberOfPeriods];
-                if (introPrice.subscriptionPeriod == SKProductPeriodUnitDay)
-                    introPriceSubscriptionPeriod = @"Day";
-                if (introPrice.subscriptionPeriod == SKProductPeriodUnitMonth)
-                    introPriceSubscriptionPeriod = @"Month";
-                if (introPrice.subscriptionPeriod == SKProductPeriodUnitWeek)
-                    introPriceSubscriptionPeriod = @"Week";
-                if (introPrice.subscriptionPeriod == SKProductPeriodUnitYear)
-                    introPriceSubscriptionPeriod = @"Year";
+                introPricePaymentMode = productDiscountPaymentModeToString(introPrice.paymentMode);
+                introPriceNumberOfPeriods = [NSNumber numberWithUnsignedLong:
+                  introPrice.numberOfPeriods * introPrice.subscriptionPeriod.numberOfUnits];
+                introPriceSubscriptionPeriod = productDiscountUnitToString(introPrice.subscriptionPeriod.unit);
             }
         }
-        
+#endif
+
+        NSMutableArray *discounts = [NSMutableArray array];
+        // Subscription discounts are supported on recent iOS and macOS
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
+        if (@available(iOS 12.2, macOS 10.14.4, *)) {
+            for (SKProductDiscount *discount in product.discounts) {
+                NSNumber *numberOfPeriods = [NSNumber numberWithUnsignedLong:
+                  discount.numberOfPeriods * discount.subscriptionPeriod.numberOfUnits];
+                NSDecimalNumber *dPriceMicros = [discount.price decimalNumberByMultiplyingByPowerOf10:6];
+                [discounts addObject:
+                    [NSDictionary dictionaryWithObjectsAndKeys:
+                        NILABLE(discount.identifier),                        @"id",
+                        NILABLE(productDiscountTypeToString(discount.type)), @"type",
+                        NILABLE(discount.localizedPrice),                    @"price",
+                        NILABLE(dPriceMicros),                               @"priceMicros",
+                        numberOfPeriods,                                     @"period",
+                        NILABLE(productDiscountUnitToString(discount.subscriptionPeriod.unit)), @"periodUnit",
+                        NILABLE(productDiscountPaymentModeToString(discount.paymentMode)),      @"paymentMode",
+                        nil]];
+            }
+        }
+#endif
+
+        NSString *group = nil;
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120000 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101400)
+        if (@available(iOS 12.0, macOS 10.14, *)) {
+            group = product.subscriptionGroupIdentifier;
+        }
+#endif
+
+        NSNumber *billingPeriod = nil;
+        NSString *billingPeriodUnit = nil;
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
+        if (@available(iOS 11.2, macOS 10.13.2, *)) {
+            billingPeriod = [NSNumber numberWithUnsignedLong:product.subscriptionPeriod.numberOfUnits];
+            billingPeriodUnit = productDiscountUnitToString(product.subscriptionPeriod.unit);
+        }
+#endif
+
         DLog(@"BatchProductsRequestDelegate.productsRequest:didReceiveResponse:  - %@: %@", product.productIdentifier, product.localizedTitle);
         [validProducts addObject:
             [NSDictionary dictionaryWithObjectsAndKeys:
@@ -923,9 +1100,13 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
                 NILABLE(countryCode),                  @"countryCode",
                 NILABLE(product.localizedIntroPrice),  @"introPrice",
                 NILABLE(introPriceMicros),             @"introPriceMicros",
-                NILABLE(introPriceNumberOfPeriods),    @"introPriceNumberOfPeriods",
-                NILABLE(introPriceSubscriptionPeriod), @"introPriceSubscriptionPeriod",
+                NILABLE(introPriceNumberOfPeriods),    @"introPricePeriod",
+                NILABLE(introPriceSubscriptionPeriod), @"introPricePeriodUnit",
                 NILABLE(introPricePaymentMode),        @"introPricePaymentMode",
+                NILABLE(discounts),                    @"discounts",
+                NILABLE(group),                        @"group",
+                NILABLE(billingPeriod),                @"billingPeriod",
+                NILABLE(billingPeriodUnit),            @"billingPeriodUnit",
                 nil]];
         [self.plugin.products setObject:product forKey:[NSString stringWithFormat:@"%@", product.productIdentifier]];
     }
