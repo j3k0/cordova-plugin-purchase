@@ -10,4 +10,5 @@ if (window) {
     store.android = store.inappbilling;
 }
 
+store.platform = 'google';
 module.exports = store;

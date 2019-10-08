@@ -8,4 +8,5 @@ if (window) {
     window.store = store;
 }
 
+store.platform = 'windows';
 module.exports = store;

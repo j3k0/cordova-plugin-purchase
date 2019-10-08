@@ -24,4 +24,5 @@
 // #include "platforms/ios-bridge.js"
 // #include "platforms/ios-adapter.js"
 
+store.platform = 'apple';
 module.exports = store;
