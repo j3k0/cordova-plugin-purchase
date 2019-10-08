@@ -272,8 +272,8 @@ function storekitLoaded(validProducts, invalidProductIds) {
     setTimeout(function() {
         loading = false;
         loaded = true;
-        store.ready(true);
-        store.verifyPurchases();
+        const ready = store.ready.bind(store, true);
+        store.verifyPurchases(ready, ready);
     }, 1);
 }
 
