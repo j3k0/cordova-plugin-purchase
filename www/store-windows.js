@@ -2773,7 +2773,6 @@ store.when("product", "finished", function(product) {
     var id = transaction && transaction.id || "";
     store.log.debug("plugin -> consumable finished");
     if (product.type === store.CONSUMABLE || product.type === store.NON_RENEWING_SUBSCRIPTION) {
-        product.transaction = null;
         store.inappbilling.consumePurchase(
             function() { // success
                 store.log.debug("plugin -> consumable consumed");
@@ -2792,7 +2791,6 @@ store.when("product", "finished", function(product) {
         );
     }
     else if (store.requireAcknowledgment && !product.acknowledged) {
-        product.transaction = null;
         store.inappbilling.acknowledgePurchase(
             function() { // success
                 store.log.debug("plugin -> purchase acknowledged");
