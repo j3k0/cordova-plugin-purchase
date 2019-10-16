@@ -130,6 +130,17 @@ store.Product = function(options) {
     ///  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
     ///  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
+	// Some more fields set by [Fovea.Billing](https://billing.fovea.cc) receipt validator.
+	//  - `product.isBillingRetryPeriod` -
+	//  - `product.isTrialPeriod` -
+	//  - `product.isIntroPeriod` -
+	//  - `product.discountId` -
+	//  - `product.priceConsentStatus` -
+	//  - `product.renewalIntent` -
+	//  - `product.renewalIntentChangeDate` -
+	//  - `product.purchaseDate` -
+	//  - `product.cancelationReason` -
+
     this.stateChanged();
 };
 

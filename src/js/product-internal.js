@@ -1,8 +1,15 @@
 (function() {
 
+var dateFields = ['expiryDate', 'purchaseDate', 'lastRenewalDate', 'renewalIntentChangeDate'];
 
 store.Product.prototype.set = function(key, value) {
     if (typeof key === 'string') {
+        if (dateFields.indexOf(key) >= 0 && !(value instanceof Date)) {
+            value = new Date(value);
+        }
+        if (key === 'isExpired' && value === true && this.owned) {
+            this.set('state', store.VALID);
+        }
         this[key] = value;
         if (key === 'state')
             this.stateChanged();
