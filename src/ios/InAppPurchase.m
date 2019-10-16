@@ -80,7 +80,7 @@ static NSInteger jsErrorCode(NSInteger storeKitErrorCode) {
         case SKErrorPaymentNotAllowed:
             return ERR_PAYMENT_NOT_ALLOWED;
     }
-#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || TARGET_OS_OSX)
     if (@available(iOS 12.2, macOS 10.14.4, *)) {
         if (storeKitErrorCode == SKErrorPrivacyAcknowledgementRequired)
             return ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED;
@@ -128,7 +128,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         case ERR_PAYMENT_NOT_ALLOWED: return @"ERR_PAYMENT_NOT_ALLOWED";
         case ERR_UNKNOWN: return @"ERR_UNKNOWN";
     }
-#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || TARGET_OS_OSX)
     if (@available(iOS 12.2, macOS 10.14.4, *)) {
         if (code == ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED) return @"ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED";
         if (code == ERR_UNAUTHORIZED_REQUEST_DATA) return @"ERR_UNAUTHORIZED_REQUEST_DATA";
@@ -152,7 +152,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
 }
 
 static NSString *productDiscountTypeToString(NSUInteger type) {
-#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || TARGET_OS_OSX)
     if (@available(iOS 12.2, macOS 10.14.4, *)) {
         switch (type) {
             case SKProductDiscountTypeIntroductory: return @"Introductory";
@@ -165,7 +165,7 @@ static NSString *productDiscountTypeToString(NSUInteger type) {
 
 // https://developer.apple.com/documentation/storekit/skproductdiscountpaymentmode?language=objc
 static NSString *productDiscountPaymentModeToString(NSUInteger mode) {
-#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || TARGET_OS_OSX)
     if (@available(iOS 11.2, macOS 10.13.2, *)) {
         switch (mode) {
             case SKProductDiscountPaymentModePayAsYouGo: return @"PayAsYouGo";
@@ -178,7 +178,7 @@ static NSString *productDiscountPaymentModeToString(NSUInteger mode) {
 }
 
 static NSString *productDiscountUnitToString(NSUInteger unit) {
-#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || TARGET_OS_OSX)
     if (@available(iOS 11.2, macOS 10.13.2, *)) {
         switch (unit) {
             case SKProductPeriodUnitDay:   return @"Day";
@@ -399,7 +399,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
     if ([discountArg isKindOfClass:[NSDictionary class]]) {
         NSDictionary *discount = (NSDictionary*)discountArg;
         DLog(@"purchase with discount (%@, %@, %@, %@, %@).", discount[@"id"], discount[@"key"], discount[@"nonce"], discount[@"signature"], discount[@"timestamp"]);
-#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || TARGET_OS_OSX)
         if (@available(iOS 12.2, macOS 10.14.4, *)) {
             DLog(@" + discounts API available");
             payment.paymentDiscount = [[SKPaymentDiscount alloc]
@@ -1050,7 +1050,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
         NSString *introPriceSubscriptionPeriod  = nil;
 
         // Introductory price are supported from those iOS and macOS versions
-#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || TARGET_OS_OSX)
         if (@available(iOS 11.2, macOS 10.13.2, *)) {
             SKProductDiscount *introPrice = product.introductoryPrice;
             if (introPrice != nil) {
@@ -1065,7 +1065,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
 
         NSMutableArray *discounts = [NSMutableArray array];
         // Subscription discounts are supported on recent iOS and macOS
-#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101404)
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || TARGET_OS_OSX)
         if (@available(iOS 12.2, macOS 10.14.4, *)) {
             for (SKProductDiscount *discount in product.discounts) {
                 NSNumber *numberOfPeriods = [NSNumber numberWithUnsignedLong:
@@ -1086,7 +1086,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
 #endif
 
         NSString *group = nil;
-#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120000 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101400)
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120000 || TARGET_OS_OSX)
         if (@available(iOS 12.0, macOS 10.14, *)) {
             group = product.subscriptionGroupIdentifier;
         }
@@ -1094,7 +1094,7 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
 
         NSNumber *billingPeriod = nil;
         NSString *billingPeriodUnit = nil;
-#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101302)
+#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || TARGET_OS_OSX)
         if (@available(iOS 11.2, macOS 10.13.2, *)) {
             billingPeriod = [NSNumber numberWithUnsignedLong:product.subscriptionPeriod.numberOfUnits];
             billingPeriodUnit = productDiscountUnitToString(product.subscriptionPeriod.unit);
