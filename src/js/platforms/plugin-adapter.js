@@ -298,7 +298,6 @@ store.when("product", "finished", function(product) {
         );
     }
     else if (store.requireAcknowledgment && !product.acknowledged) {
-        product.transaction = null;
         store.inappbilling.acknowledgePurchase(
             function() { // success
                 store.log.debug("plugin -> purchase acknowledged");
