@@ -395,6 +395,11 @@ public class PurchasePlugin
         sendToListener("purchasesUpdated", new JSONObject()
             .put("purchases", toJSON(purchases)));
       }
+      else if (code == BillingResponseCode.USER_CANCELED) {
+        Log.w(mTag, "onPurchasesUpdated() -> "
+            + "Cancelled: " + format(result));
+        callError(Constants.ERR_CANCELLED, codeToString(code));
+      }
       else {
         Log.w(mTag, "onPurchasesUpdated() -> "
             + "Failed: " + format(result));
