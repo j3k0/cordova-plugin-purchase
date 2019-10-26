@@ -24,10 +24,10 @@ matrix:
       osx_image: xcode10.2
       language: objective-c
     # older xcode (9.4)
-    - env: PLATFORM=osx CORDOVA=9.0.0 CORDOVA_OSX=5.0.0
-      os: osx
-      osx_image: xcode9.4
-      language: objective-c
+    # - env: PLATFORM=osx CORDOVA=9.0.0 CORDOVA_OSX=5.0.0
+    #   os: osx
+    #   osx_image: xcode9.4
+    #   language: objective-c
 
     # -------------
     #  ios
