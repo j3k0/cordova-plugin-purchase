@@ -359,4 +359,5 @@ store.getGroup = function(groupId) {
 // #include "trigger.js"
 // #include "error-callbacks.js"
 // #include "utils.js"
+// #include "polyfills.js"
 
