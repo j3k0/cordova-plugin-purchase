@@ -307,7 +307,7 @@ The `sandbox` property defines if you want to invoke the platform purchase sandb
     store.ERR_CLOUD_SERVICE_PERMISSION_DENIED = ERROR_CODES_BASE + 24; // Error code indicating that the user has not allowed access to Cloud service information.
     store.ERR_CLOUD_SERVICE_NETWORK_CONNECTION_FAILED = ERROR_CODES_BASE + 25; // Error code indicating that the device could not connect to the network.
     store.ERR_CLOUD_SERVICE_REVOKED = ERROR_CODES_BASE + 26; // Error code indicating that the user has revoked permission to use this cloud service.
-    store.ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED = ERROR_CODES_BASE + 27; // Error code indicating that the user has not yet acknowledged Apple’s privacy policy for Apple Music.
+    store.ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED = ERROR_CODES_BASE + 27; // Error code indicating that the user has not yet acknowledged Apple's privacy policy for Apple Music.
     store.ERR_UNAUTHORIZED_REQUEST_DATA = ERROR_CODES_BASE + 28; // Error code indicating that the app is attempting to use a property for which it does not have the required entitlement.
     store.ERR_INVALID_OFFER_IDENTIFIER = ERROR_CODES_BASE + 29; // Error code indicating that the offer identifier is invalid.
     store.ERR_INVALID_OFFER_PRICE = ERROR_CODES_BASE + 30; // Error code indicating that the price you specified in App Store Connect is no longer valid.
@@ -754,24 +754,103 @@ Example use:
 ## <a name="validator"></a> *store.validator*
 Set this attribute to either:
 
- - the URL of your purchase validation service
-    - [Fovea's receipt validator](https://billing.fovea.cc) or your own service.
- - a custom validation callback method
+ - The URL of your purchase validation service ([example](#validation-url-example))
+ - A validation callback method ([example](#validation-callback-example))
 
-#### example usage
-
+#### Validation URL Example
 ```js
-store.validator = "https://validator.fovea.cc";
+store.validator = "http://store.fovea.cc:1980/check-purchase";  // if you want to use Fovea **
+// Or
+store.validator = "http://your.own.url/your-check-purchase-path";
 ```
+
+** Fovea's receipt validator is [available here](https://billing.fovea.cc).
+
+* **URL**
+
+  /your-check-purchase-path
+
+* **Method:**
+  
+  `POST`
+
+* **Data Params**
+
+  The **product** object will be added as a json string.
+  
+  Example body
+  ```js
+  {
+    additionalData : null
+    alias : "monthly1"
+    currency : "USD"
+    description : "Monthly subscription"
+    downloaded : false
+    downloading : false
+    id : "com.mycompany.subscription.monthly"
+    loaded : true
+    owned : false
+    price : "$12.99"
+    priceMicros : 12990000
+    state : "approved"
+    title : "The Monthly Subscription Title"
+    transaction : { // Additional fields based on store type (see "transactions" below)  }
+    type : "paid subscription"
+    valid : true
+  }
+  ```
+  The `transaction` parameter is an object, see [transactions](#transactions).
+
+* **Success Response:**
+
+  * **Code:** 200 <br />
+    **Content:** 
+    ```
+    { 
+        ok : true,
+        data : {
+            transaction : { // Additional fields based on store type (see "transactions" below) }
+        }
+    }
+    ```
+    The `transaction` parameter is an object, see [transactions](#transactions).  Optional.  Will replace the product's transaction field with this.
+ 
+* **Error Response:**
+
+  * **Code:** 200 (for [validation error codes](#validation-error-codes))<br />
+    **Content:**     
+    ```
+    { 
+        ok : false,
+        data : {
+            code : 6778003 // Int. Corresponds to a validation error code, click above for options.
+        }
+        error : { // (optional)
+            message : "The subscription is expired."
+        }
+    }
+    ```
+
+  OR
+
+  * **Code:** non-200 <br />
+  The response's *status* and *statusText* will be displayed in an formatted error string.
+
+#### Validation Callback example
 
 ```js
 store.validator = function(product, callback) {
 
-    callback(true, { ... transaction details ... }); // success!
+    // Here, you will typically want to contact your own webservice
+    // where you check transaction receipts with either Apple or
+    // Google servers.
+
+    callback(true, { transaction: "your custom details" }); // success! 
+                                                            // your custom details will be merged into the product's transaction field
 
     // OR
     callback(false, {
-        code: store.PURCHASE_EXPIRED,
+        code: store.PURCHASE_EXPIRED, // **Validation error code
         error: {
             message: "XYZ"
         }
@@ -779,29 +858,54 @@ store.validator = function(product, callback) {
 
     // OR
     callback(false, "Impossible to proceed with validation");
-
-    // Here, you will typically want to contact your own webservice
-    // where you check transaction receipts with either Apple or
-    // Google servers.
 });
 ```
-Validation error codes are [documented here](#validation-error-codes).
+**Validation error codes are [documented here](#validation-error-codes).
 
-Fovea's receipt validator is [available here](https://billing.fovea.cc).
 
 ## transactions
 
-A purchased product will contain transaction information that can be
-sent to a remote server for validation. This information is stored
-in the `product.transaction` field. It has the following format:
+A purchased product will contain transaction information that can be sent to a remote server for validation.  
+This information is stored in the `product.transaction` field.  
+This field is an object with a different format depending on the store type.  
+
+The `product.transaction` field has the following format:
 
 - `type`: "ios-appstore" or "android-playstore"
 - store specific data
 
+### Store Specific Data - iOS
 Refer to [this documentation for iOS](https://developer.apple.com/library/ios/releasenotes/General/ValidateAppStoreReceipt/Chapters/ReceiptFields.html#//apple_ref/doc/uid/TP40010573-CH106-SW1).
 
+**Transaction Fields (Subscription)**
+```
+    appStoreReceipt:"appStoreReceiptString"
+    id : "idString"
+    original_transaction_id:"transactionIdString",
+    "type": "ios-appstore"
+```
+
+### Store Specific Data - Android
 Start [here for Android](https://developer.android.com/google/play/billing/billing_integrate.html#billing-security).
 
+**Transaction Fields (Subscription)**
+```
+developerPayload : undefined
+id : "idString"
+purchaseToken : "purchaseTokenString"
+receipt : '{                             // NOTE: receipt's value is string and will need to be parsed
+    "autoRenewing":true,
+    "orderId":"orderIdString",
+    "packageName":"com.mycompany",
+    "purchaseTime":1555217574101,
+    "purchaseState":0,
+    "purchaseToken":"purchaseTokenString"
+}'
+signature : "signatureString",
+"type": "android-playstore"
+```
+
+### Fovea
 Another option is to use [Fovea's validation service](http://billing.fovea.cc/) that implements all the best practices to secure your transactions.
 
 
