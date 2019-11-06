@@ -1,5 +1,3 @@
-#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 110200 || TARGET_OS_OSX)
-
 #import "SKProductDiscount+LocalizedPrice.h"
 
 @implementation SKProductDiscount (LocalizedPrice)
@@ -22,5 +20,3 @@
 }
 
 @end
-
-#endif
