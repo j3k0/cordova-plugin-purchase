@@ -647,6 +647,14 @@ store.Product.prototype.verify = function() {
                         var p = store.get(pid);
                         if (p) {
                             p.set('ineligibleForIntroPrice', true);
+                            store.log.debug('verify -> ' + pid + ' ineligibleForIntroPrice:true');
+                        }
+                    });
+                    store.products.forEach(function(p) {
+                        if (p.ineligibleForIntroPrice &&
+                            (data.ineligible_for_intro_price.indexOf(p.id) < 0)) {
+                            p.set('ineligibleForIntroPrice', false);
+                            store.log.debug('verify -> ' + p.id + ' ineligibleForIntroPrice:false');
                         }
                     });
                 }
@@ -1642,15 +1650,20 @@ store._validator = function(product, callback, isPrepared) {
 ///
 
 ///
-/// ## <a name="verifyPurchases"></a> *store.verifyPurchases*
+/// ## <a name="update"></a> *store.update*
 ///
-/// Refresh the historical state of purchases. This is required to know if a
-/// user is eligible for promotions like introductory offers or subscription discount.
+/// Refresh the historical state of purchases and price of items.
+/// This is required to know if a user is eligible for promotions like introductory
+/// offers or subscription discount.
 ///
 /// It is recommended to call this method right before entering your in-app
 /// purchases or subscriptions page.
 ///
-store.verifyPurchases = function() {};
+/// You can of `update()` as a light version of `refresh()` that won't ask for the
+/// user password. Note that this method is called automatically for you on a few
+/// useful occasions, like when a subscription expires.
+///
+store.update = function() {};
 
 })();
 (function() {
