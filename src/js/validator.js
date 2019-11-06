@@ -165,14 +165,19 @@ store._validator = function(product, callback, isPrepared) {
 ///
 
 ///
-/// ## <a name="verifyPurchases"></a> *store.verifyPurchases*
+/// ## <a name="update"></a> *store.update*
 ///
-/// Refresh the historical state of purchases. This is required to know if a
-/// user is eligible for promotions like introductory offers or subscription discount.
+/// Refresh the historical state of purchases and price of items.
+/// This is required to know if a user is eligible for promotions like introductory
+/// offers or subscription discount.
 ///
 /// It is recommended to call this method right before entering your in-app
 /// purchases or subscriptions page.
 ///
-store.verifyPurchases = function() {};
+/// You can of `update()` as a light version of `refresh()` that won't ask for the
+/// user password. Note that this method is called automatically for you on a few
+/// useful occasions, like when a subscription expires.
+///
+store.update = function() {};
 
 })();

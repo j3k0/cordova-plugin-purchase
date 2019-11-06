@@ -215,22 +215,10 @@ function storekitLoad() {
     storekit.load(products, storekitLoaded, storekitLoadFailed);
 }
 
-//! ### <a name="storekitLoaded"></a> *storekitLoaded()*
-//!
-//! Update the `store`'s product definitions when they have been loaded.
-//!
-//!  1. Set the products state to `VALID` or `INVALID`
-//!  2. Trigger the "loaded" event
-//!  3. Set the products state to `OWNED` (if it is so)
-//!  4. Set the store status to "ready".
-//!
-function storekitLoaded(validProducts, invalidProductIds) {
-    store.log.debug("ios -> products loaded");
+function updateValidProducts(validProducts) {
     var p;
     for (var i = 0; i < validProducts.length; ++i) {
         p = store.products.byId[validProducts[i].id];
-        store.log.debug("ios -> product " + p.id + " is valid (" + p.alias + ")");
-        store.log.debug("ios -> owned? " + p.owned);
         var v = validProducts[i];
         p.set({
             title: v.title,
@@ -250,8 +238,29 @@ function storekitLoaded(validProducts, invalidProductIds) {
             billingPeriodUnit: v.billingPeriodUnit,
             discounts: v.discounts,
             group: v.group,
-            state: store.VALID
         });
+        p.trigger("updated");
+    }
+}
+
+//! ### <a name="storekitLoaded"></a> *storekitLoaded()*
+//!
+//! Update the `store`'s product definitions when they have been loaded.
+//!
+//!  1. Set the products state to `VALID` or `INVALID`
+//!  2. Trigger the "loaded" event
+//!  3. Set the products state to `OWNED` (if it is so)
+//!  4. Set the store status to "ready".
+//!
+function storekitLoaded(validProducts, invalidProductIds) {
+    store.log.debug("ios -> products loaded");
+    updateValidProducts(validProducts);
+    var p;
+    for (var i = 0; i < validProducts.length; ++i) {
+        p = store.products.byId[validProducts[i].id];
+        store.log.debug("ios -> product " + p.id + " is valid (" + p.alias + ")");
+        store.log.debug("ios -> owned? " + p.owned);
+        p.set("state", store.VALID);
         p.trigger("loaded");
         if (isOwned(p.id)) {
             if (p.type === store.NON_CONSUMABLE)
@@ -273,7 +282,7 @@ function storekitLoaded(validProducts, invalidProductIds) {
         loading = false;
         loaded = true;
         var ready = store.ready.bind(store, true);
-        store.verifyPurchases(ready, ready);
+        store.update(ready, ready, true);
     }, 1);
 }
 
@@ -461,7 +470,7 @@ store.when("re-refreshed", function() {
     storekit.restore();
     storekit.refreshReceipts(function(obj) {
         storekitSetAppProductFromReceipt(obj);
-        store.verifyPurchases();
+        store.update();
     });
 });
 
@@ -623,8 +632,11 @@ store._prepareForValidation = function(product, callback) {
     loadReceipts();
 };
 
-store.verifyPurchases = function(successCb, errorCb) {
-    store.log.debug("verifyPurchases()");
+store.update = function(successCb, errorCb, skipLoad) {
+    store.log.debug("update()");
+    if (!skipLoad) {
+        storekit.load(store.products.map(function(p) { return p.id; }), updateValidProducts);
+    }
     storekit.loadReceipts(function(data) {
         if (data && data.appStoreReceipt) {
             var p = storekitSetAppProductFromReceipt(data);
@@ -662,7 +674,7 @@ setInterval(function() {
         return product.owned && now > +product.expiryDate + 60000;
     });
     if (expired) {
-        store.verifyPurchases();
+        store.update();
     }
 }, 60000);
 
