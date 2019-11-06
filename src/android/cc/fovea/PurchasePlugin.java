@@ -295,9 +295,13 @@ public class PurchasePlugin
           mBillingClient.queryPurchases(SkuType.SUBS);
         Log.i(mTag, "queryPurchases() -> Subscriptions elapsed time: "
             + (System.currentTimeMillis() - time) + "ms");
+        int purchasesListSize = -1;
+        if (subscriptionResult.getPurchasesList() != null) {
+            purchasesListSize = subscriptionResult.getPurchasesList().size();
+        }
         Log.i(mTag, "queryPurchases() -> Subscriptions result code: "
             + subscriptionResult.getResponseCode()
-            + " res: " + subscriptionResult.getPurchasesList().size());
+            + " res: " + purchasesListSize);
 
         if (subscriptionResult.getResponseCode() == BillingResponseCode.OK) {
           purchasesResult.getPurchasesList().addAll(
