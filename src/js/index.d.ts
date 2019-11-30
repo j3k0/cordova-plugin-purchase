@@ -110,6 +110,9 @@ declare namespace IapStore {
     ready(callback: () => void): void;
     ready(): boolean;
     refresh(): void;
+    update(): void;
+    manageSubscriptions(): void;
+    manageBilling(): void;
     off(callback: Function): void;
     order(id: string, additionalData?: null | { oldPurchasedSkus: string[] } | { developerPayload: string }): void;
   }
