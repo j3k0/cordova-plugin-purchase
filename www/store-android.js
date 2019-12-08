@@ -2850,9 +2850,31 @@ function iabLoaded(validProducts) {
             p = null;
 
         if (p) {
+            // See https://en.wikipedia.org/wiki/ISO_8601#Time_intervals
+            // assuming simple periods (P1M, P6W, ...)
+            var normalizeISOPeriodUnit = function (period) {
+                switch (period.slice(-1)) {
+                    case 'D': return 'Day';
+                    case 'W': return 'Week';
+                    case 'M': return 'Month';
+                    case 'Y': return 'Year';
+                    default:  return period;
+                }
+            };
+            var normalizeISOPeriodCount = function (period) {
+              return parseInt(period.replace(/[A-Z]+/g, ''));
+            };
+
+            var trimTitle = function (title) {
+              return title.split('(').slice(0, -1).join('(').replace(/ $/, '');
+            };
+
             var subscriptionPeriod = vp.subscriptionPeriod ? vp.subscriptionPeriod : "";
             var introPriceSubscriptionPeriod = vp.introductoryPricePeriod ? vp.introductoryPricePeriod : "";
             var introPriceNumberOfPeriods = vp.introductoryPriceCycles ? vp.introductoryPriceCycles : 0;
+            var introPricePeriodUnit = normalizeISOPeriodUnit(introPriceSubscriptionPeriod);
+            var introPricePeriodCount = normalizeISOPeriodCount(introPriceSubscriptionPeriod);
+            var introPricePeriod = (introPriceNumberOfPeriods || 1) * (introPricePeriodCount || 1);
 
             var introPricePaymentMode = null;
             if (vp.freeTrialPeriod) {
@@ -2867,31 +2889,16 @@ function iabLoaded(validProducts) {
                 }
             }
 
-            // See https://en.wikipedia.org/wiki/ISO_8601#Time_intervals
-            // assuming simple periods (P1M, P6W, ...)
-            var normalizeISOPeriodUnit = function (period) {
-                switch (period.slice(-1)) {
-                    case 'D': return 'Day';
-                    case 'W': return 'Week';
-                    case 'M': return 'Month';
-                    case 'Y': return 'Year';
-                    default:  return period;
-                }
-            };
-            var normalizeISOPeriodCount = function (period) {
-              return parseInt(period.slice(1).slice(-1));
-            };
-            introPriceSubscriptionPeriod = normalizeISOPeriodUnit(introPriceSubscriptionPeriod);
+            if (!introPricePaymentMode) {
+                introPricePeriod= null;
+                introPricePeriodUnit = null;
+            }
 
             var parsedSubscriptionPeriod = {};
             if (subscriptionPeriod) {
               parsedSubscriptionPeriod.unit = normalizeISOPeriodUnit(subscriptionPeriod);
               parsedSubscriptionPeriod.count = normalizeISOPeriodCount(subscriptionPeriod);
             }
-
-            var trimTitle = function (title) {
-              return title.split('(').slice(0, -1).join('(').replace(/ $/, '');
-            };
 
             p.set({
                 title: trimTitle(vp.title || vp.name),
@@ -2905,10 +2912,10 @@ function iabLoaded(validProducts) {
                 currency: vp.price_currency_code || "",
                 introPrice: vp.introductoryPrice ? vp.introductoryPrice : "",
                 introPriceMicros: vp.introductoryPriceAmountMicros ? vp.introductoryPriceAmountMicros : "",
-                introPricePeriod: introPriceNumberOfPeriods,
-                introPricePeriodUnit: introPriceSubscriptionPeriod,
-                introPriceNumberOfPeriods: introPriceNumberOfPeriods, // legacy props (deprecated)
-                introPriceSubscriptionPeriod: introPriceSubscriptionPeriod, // legacy props (deprecrated)
+                introPricePeriod: introPricePeriod,
+                introPricePeriodUnit: introPricePeriodUnit,
+                introPriceNumberOfPeriods: introPricePeriod, // legacy props (deprecated)
+                introPriceSubscriptionPeriod: introPricePeriodUnit, // legacy props (deprecrated)
                 introPricePaymentMode: introPricePaymentMode,
                 state: store.VALID
             });
