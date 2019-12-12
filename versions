@@ -3,13 +3,18 @@ set -e
 VP="$(cat package.json | grep '"version"' | head -1 | cut -d\" -f4)"
 VPL="$(cat package-lock.json | grep '"version"' | head -1 | cut -d\" -f4)"
 VPP="$(cat plugin.xml | grep -E '^[ ]+version="' | head -1 | cut -d \" -f2)"
+VJ="$(cat src/js/store.js | grep -E "^store.version = '" | head -1 | cut -d \' -f2)"
 
-if [ "x$VP" = "x$VPL" ] && [ "x$VP" = "x$VPP" ]; then
+echo
+echo "    package-lock.json: $VP"
+echo "    package.json:      $VPL"
+echo "    plugin.xml:        $VPP"
+echo "    src/js/store.js:   $VJ"
+echo
+
+if [ "x$VP" = "x$VPL" ] && [ "x$VP" = "x$VPP" ] && [ "x$VP" = "x$VJ" ]; then
   echo "All version numbers match: $VP"
 else
-  echo "Version numbers mismatch:"
-  echo "    package-lock.json: $VP"
-  echo "    package.json: $VPL"
-  echo "    plugin.xml: $VPP"
+  echo "VERSION NUMBERS MISMATCH"
   exit 1
 fi
