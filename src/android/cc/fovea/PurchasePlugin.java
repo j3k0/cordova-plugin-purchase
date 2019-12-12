@@ -289,6 +289,9 @@ public class PurchasePlugin
         mBillingClient.queryPurchases(SkuType.INAPP);
       List<Purchase> purchases = new ArrayList<Purchase>();
       BillingResult result = purchasesResult.getBillingResult();
+      if (result.getResponseCode() == BillingResponseCode.OK) {
+          purchases.addAll(purchasesResult.getPurchasesList());
+      }
       Log.i(mTag, "queryPurchases() -> Elapsed time: "
           + (System.currentTimeMillis() - time) + "ms");
       // If there are subscriptions supported, we add subscription rows as well
