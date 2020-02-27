@@ -81,6 +81,9 @@ store.Product = function(options) {
     ///  - `product.owned` - Product is owned
     this.owned = options.owned;
 
+    ///  - `product.deferred` - Purchase has been initiated but is waiting for external action (for example, Ask to Buy on iOS)
+    this.deferred = options.deferred;
+
     ///  - `product.introPrice` - Localized introductory price, with currency symbol
     this.introPrice = options.introPrice || null;
 

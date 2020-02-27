@@ -490,6 +490,12 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
                 }
                 break;
 
+            case SKPaymentTransactionStateDeferred:
+                DLog(@"paymentQueue:updatedTransactions: Deferred...");
+                state = "@PaymentTransactionStateDeferred";
+                productId = transaction.payment.productIdentifier;
+                break;
+
             case SKPaymentTransactionStateFailed:
                 state = @"PaymentTransactionStateFailed";
                 error = transaction.error.localizedDescription;
