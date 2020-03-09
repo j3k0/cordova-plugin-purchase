@@ -80,7 +80,6 @@ static NSInteger jsErrorCode(NSInteger storeKitErrorCode) {
         case SKErrorPaymentNotAllowed:
             return ERR_PAYMENT_NOT_ALLOWED;
     }
-#if (__IPHONE_OS_VERSION_MIN_REQUIRED >= 120200 || TARGET_OS_OSX)
     if (@available(iOS 12.2, macOS 10.14.4, *)) {
         if (storeKitErrorCode == SKErrorPrivacyAcknowledgementRequired)
             return ERR_PRIVACY_ACKNOWLEDGEMENT_REQUIRED;
@@ -95,7 +94,6 @@ static NSInteger jsErrorCode(NSInteger storeKitErrorCode) {
         if (storeKitErrorCode == SKErrorMissingOfferParams)
             return ERR_MISSING_OFFER_PARAMS;
     }
-#endif
 #if TARGET_OS_IPHONE
     if (@available(iOS 9.3, *)) {
         if (storeKitErrorCode == SKErrorCloudServicePermissionDenied)
