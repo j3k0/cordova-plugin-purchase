@@ -106,6 +106,12 @@ Called by `storekit` when a purchase have been approved.
 It will set the product state to `APPROVED` and associates the product
 with the order's transaction identifier.
 
+### <a name="storekitDeferred"></a> *storekitDeferred()*
+
+Called by `storekit` when a purchase is deferred.
+
+It will set the product state to `INITIATED` and product.deferred to true.
+
 ### <a name="storekitError"></a> *storekitError()*
 
 Called by `storekit` when an error happens in the storekit API.

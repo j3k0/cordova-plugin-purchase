@@ -371,6 +371,7 @@ Products object have the following fields and methods.
    - when product definitions can't be loaded from the store, you should display instead a warning like: "You cannot make purchases at this stage. Try again in a moment. Make sure you didn't enable In-App-Purchases restrictions on your phone."
  - `product.canPurchase` - Product is in a state where it can be purchased
  - `product.owned` - Product is owned
+ - `product.deferred` - Purchase has been initiated but is waiting for external action (for example, Ask to Buy on iOS)
  - `product.introPrice` - Localized introductory price, with currency symbol
  - `product.introPriceMicros` - Introductory price in micro-units (divide by 1000000 to get numeric price)
  - `product.introPricePeriod` - Duration the introductory price is available (in period-unit)

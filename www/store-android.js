@@ -483,6 +483,9 @@ store.Product = function(options) {
     ///  - `product.owned` - Product is owned
     this.owned = options.owned;
 
+    ///  - `product.deferred` - Purchase has been initiated but is waiting for external action (for example, Ask to Buy on iOS)
+    this.deferred = options.deferred;
+
     ///  - `product.introPrice` - Localized introductory price, with currency symbol
     this.introPrice = options.introPrice || null;
 
@@ -2159,6 +2162,7 @@ store.Product.prototype.stateChanged = function() {
     this.owned       = this.owned || this.state === store.OWNED;
     this.downloading = this.downloading || this.state === store.DOWNLOADING;
     this.downloaded  = this.downloaded || this.state === store.DOWNLOADED;
+    this.deferred    = this.deferred && this.state === store.INITIATED;
 
     // update validity
     this.valid       = this.state !== store.INVALID;
@@ -2659,6 +2663,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
+store.version = '10.0.1';
 /*
  * Copyright (C) 2012-2013 by Guillaume Charhon
  * Modifications 10/16/2013 by Brian Thurlow
