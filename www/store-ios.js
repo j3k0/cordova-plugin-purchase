@@ -504,6 +504,9 @@ store.Product = function(options) {
     ///  - `product.owned` - Product is owned
     this.owned = options.owned;
 
+    ///  - `product.deferred` - Purchase has been initiated but is waiting for external action (for example, Ask to Buy on iOS)
+    this.deferred = options.deferred;
+
     ///  - `product.introPrice` - Localized introductory price, with currency symbol
     this.introPrice = options.introPrice || null;
 
@@ -2180,6 +2183,7 @@ store.Product.prototype.stateChanged = function() {
     this.owned       = this.owned || this.state === store.OWNED;
     this.downloading = this.downloading || this.state === store.DOWNLOADING;
     this.downloaded  = this.downloaded || this.state === store.DOWNLOADED;
+    this.deferred    = this.deferred && this.state === store.INITIATED;
 
     // update validity
     this.valid       = this.state !== store.INVALID;
@@ -2680,6 +2684,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
+store.version = '10.0.1';
 /*
  * A plugin to enable iOS In-App Purchases.
  *
@@ -2736,6 +2741,7 @@ InAppPurchase.prototype.init = function (options, success, error) {
         purchase: options.purchase || noop,
         purchaseEnqueued: options.purchaseEnqueued || noop,
         purchasing: options.purchasing || noop,
+        deferred: options.deferred || noop,
         finish:   options.finish   || noop,
         restore:  options.restore  || noop,
         receiptsRefreshed: options.receiptsRefreshed || noop,
@@ -3023,6 +3029,9 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
 		case "PaymentTransactionStatePurchased":
             protectCall(this.options.purchase, 'options.purchase', transactionIdentifier, productId, originalTransactionIdentifier);
 			return;
+		case "PaymentTransactionStateDeferred":
+            protectCall(this.options.deferred, 'options.deferred', productId);
+            return;
 		case "PaymentTransactionStateFailed":
             protectCall(this.options.error, 'options.error', errorCode, errorText, {
                 productId: productId
@@ -3365,6 +3374,7 @@ function storekitInit() {
         error:    storekitError,
         purchase: storekitPurchased,
         purchasing: storekitPurchasing,
+        deferred: storekitDeferred,
         restore:    storekitRestored,
         restoreCompleted: storekitRestoreCompleted,
         restoreFailed:    storekitRestoreFailed,
@@ -3579,6 +3589,26 @@ function storekitPurchased(transactionId, productId, originalTransactionId) {
         product.transactions.push(transactionId);
         store.log.info("ios -> transaction " + transactionId + " purchased (" + product.transactions.length + " in the queue for " + productId + ")");
         product.set("state", store.APPROVED);
+    });
+}
+
+//! ### <a name="storekitDeferred"></a> *storekitDeferred()*
+//!
+//! Called by `storekit` when a purchase is deferred.
+//!
+//! It will set the product state to `INITIATED` and product.deferred to true.
+//!
+function storekitDeferred(productId) {
+    store.log.debug("ios -> purchase deferred " + productId);
+    store.ready(function() {
+        var product = store.get(productId);
+        if (!product) {
+            store.log.warn("ios -> Product '" + productId + "' purchase deferred. But this product is not registered anymore! How come?");
+            return;
+        }
+        if (product.state !== store.INITIATED)
+            product.set("state", store.INITIATED);
+        product.set("deferred", true);
     });
 }
 

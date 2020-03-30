@@ -54,6 +54,7 @@ InAppPurchase.prototype.init = function (options, success, error) {
         purchase: options.purchase || noop,
         purchaseEnqueued: options.purchaseEnqueued || noop,
         purchasing: options.purchasing || noop,
+        deferred: options.deferred || noop,
         finish:   options.finish   || noop,
         restore:  options.restore  || noop,
         receiptsRefreshed: options.receiptsRefreshed || noop,
@@ -341,6 +342,9 @@ InAppPurchase.prototype.updatedTransactionCallback = function (state, errorCode,
 		case "PaymentTransactionStatePurchased":
             protectCall(this.options.purchase, 'options.purchase', transactionIdentifier, productId, originalTransactionIdentifier);
 			return;
+		case "PaymentTransactionStateDeferred":
+            protectCall(this.options.deferred, 'options.deferred', productId);
+            return;
 		case "PaymentTransactionStateFailed":
             protectCall(this.options.error, 'options.error', errorCode, errorText, {
                 productId: productId

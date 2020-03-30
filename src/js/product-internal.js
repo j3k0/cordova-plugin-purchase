@@ -67,6 +67,7 @@ store.Product.prototype.stateChanged = function() {
     this.owned       = this.owned || this.state === store.OWNED;
     this.downloading = this.downloading || this.state === store.DOWNLOADING;
     this.downloaded  = this.downloaded || this.state === store.DOWNLOADED;
+    this.deferred    = this.deferred && this.state === store.INITIATED;
 
     // update validity
     this.valid       = this.state !== store.INVALID;

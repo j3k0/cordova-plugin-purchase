@@ -170,6 +170,7 @@ function storekitInit() {
         error:    storekitError,
         purchase: storekitPurchased,
         purchasing: storekitPurchasing,
+        deferred: storekitDeferred,
         restore:    storekitRestored,
         restoreCompleted: storekitRestoreCompleted,
         restoreFailed:    storekitRestoreFailed,
@@ -384,6 +385,26 @@ function storekitPurchased(transactionId, productId, originalTransactionId) {
         product.transactions.push(transactionId);
         store.log.info("ios -> transaction " + transactionId + " purchased (" + product.transactions.length + " in the queue for " + productId + ")");
         product.set("state", store.APPROVED);
+    });
+}
+
+//! ### <a name="storekitDeferred"></a> *storekitDeferred()*
+//!
+//! Called by `storekit` when a purchase is deferred.
+//!
+//! It will set the product state to `INITIATED` and product.deferred to true.
+//!
+function storekitDeferred(productId) {
+    store.log.debug("ios -> purchase deferred " + productId);
+    store.ready(function() {
+        var product = store.get(productId);
+        if (!product) {
+            store.log.warn("ios -> Product '" + productId + "' purchase deferred. But this product is not registered anymore! How come?");
+            return;
+        }
+        if (product.state !== store.INITIATED)
+            product.set("state", store.INITIATED);
+        product.set("deferred", true);
     });
 }
 
