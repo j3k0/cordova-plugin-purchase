@@ -637,7 +637,6 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
 }
 
 - (void) paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error {
-
     DLog(@"paymentQueue:restoreCompletedTransactionsFailedWithError:");
     NSString *js = [NSString stringWithFormat:
         @"window.storekit.restoreCompletedTransactionsFailed(%li)", (unsigned long)jsErrorCode(error.code)];

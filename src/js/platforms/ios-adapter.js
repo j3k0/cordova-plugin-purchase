@@ -573,11 +573,20 @@ function storekitRestoreCompleted() {
     store.trigger('refresh-completed');
 }
 
-function storekitRestoreFailed(/*errorCode*/) {
-    store.log.warn("ios -> restore failed");
+function storekitRestoreFailed(errorCode) {
+    store.log.warn("ios -> restore failed with code:" + errorCode);
+
+    // expected error codes:
+    // ---
+    // store.ERR_CLIENT_INVALID      = ERROR_CODES_BASE + 5; // Client is not allowed to issue the request.
+    // store.ERR_PAYMENT_CANCELLED   = ERROR_CODES_BASE + 6; // User cancelled the request.
+    // store.ERR_PAYMENT_INVALID     = ERROR_CODES_BASE + 7; // Purchase identifier was invalid.
+    // store.ERR_PAYMENT_NOT_ALLOWED = ERROR_CODES_BASE + 8; // This device is not allowed to make the payment
+    // store.ERR_UNKNOWN             = ERROR_CODES_BASE + 10;
+
     store.error({
         code: store.ERR_REFRESH,
-        message: "Failed to restore purchases during refresh"
+        message: "Failed to restore purchases during refresh (" + errorCode + ")"
     });
     store.trigger('refresh-failed');
 }
