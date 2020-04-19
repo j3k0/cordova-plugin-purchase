@@ -16,6 +16,12 @@ store.when("re-refreshed", function() {
     });
 });
 
+store.update = function(successCb, errorCb) {
+    store.iabGetPurchases(function() {
+        successCb();
+    });
+};
+
 // The following table lists all of the server response codes
 // that are sent from Google Play to your application.
 //
