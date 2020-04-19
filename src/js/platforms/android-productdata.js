@@ -179,7 +179,7 @@
                 store.ready(true);
                 if (callback) callback();
             },
-            function() { // error
+            function(err) { // error
                 // TODO
                 if (callback) callback();
             }
