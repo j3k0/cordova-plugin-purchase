@@ -979,10 +979,10 @@ store.error.unregister = function(cb) {
 store.register = function(product) {
     if (!product)
         return;
-    if (!product.length)
-        store.register([product]);
-    else
+    if (typeof product.length === 'number')
         registerProducts(product);
+    else
+        store.register([product]);
 };
 
 /// ##### example usage
@@ -1725,8 +1725,8 @@ function runValidation() {
 
     // the cordova-plugin-device global object
     var device = {};
-    if (isObject(window.device))
-      device = window.device;
+    if (isObject(this.device))
+      device = this.device;
 
     // Send the receipt validator information about the device.
     // This will allow to make vendor or device specific fixes and detect class
@@ -1735,7 +1735,7 @@ function runValidation() {
     // support requests.
     if (allowed('analytics') || allowed('support')) {
       // Version of ionic (if applicable)
-      var ionic = window.Ionic || window.ionic;
+      var ionic = this.Ionic || this.ionic;
       if (ionic && ionic.version)
         ret.ionic = ionic.version;
       // Information from the cordova-plugin-device (if installed)
@@ -3650,6 +3650,7 @@ function storekitPurchasing(productId) {
         }
         if (product.state !== store.INITIATED)
             product.set("state", store.INITIATED);
+        storekit.refreshReceipts(); // We've asked for user password already anyway.
     });
 }
 
@@ -3671,27 +3672,35 @@ function storekitPurchased(transactionId, productId, originalTransactionId) {
             return;
         }
 
-        // Check if processing of this transaction isn't already in progress
-        // Exit if so.
-        if (product.transactions) {
-            for (var i = 0; i < product.transactions.length; ++i) {
-                if (transactionId === product.transactions[i])
-                    return;
-            }
-        }
+        // Let's load the receipt in all cases (some people do receipt validation with their own logic)
+        storekit.loadReceipts(function(data) {
+            var appStoreReceipt = data && data.appStoreReceipt || undefined;
+            if (product.transaction)
+                product.transaction.appStoreReceipt = appStoreReceipt;
 
-        product.transaction = {
-            type: 'ios-appstore',
-            id:   transactionId
-        };
-        if(originalTransactionId){
-            product.transaction.original_transaction_id = originalTransactionId;
-        }
-        if (!product.transactions)
-            product.transactions = [];
-        product.transactions.push(transactionId);
-        store.log.info("ios -> transaction " + transactionId + " purchased (" + product.transactions.length + " in the queue for " + productId + ")");
-        product.set("state", store.APPROVED);
+            // Check if processing of this transaction isn't already in progress
+            // Exit if so.
+            if (product.transactions) {
+                for (var i = 0; i < product.transactions.length; ++i) {
+                    if (transactionId === product.transactions[i])
+                        return;
+                }
+            }
+
+            product.transaction = {
+                type: 'ios-appstore',
+                id:   transactionId,
+                appStoreReceipt: appStoreReceipt
+            };
+            if(originalTransactionId){
+                product.transaction.original_transaction_id = originalTransactionId;
+            }
+            if (!product.transactions)
+                product.transactions = [];
+            product.transactions.push(transactionId);
+            store.log.info("ios -> transaction " + transactionId + " purchased (" + product.transactions.length + " in the queue for " + productId + ")");
+            product.set("state", store.APPROVED);
+        });
     });
 }
 

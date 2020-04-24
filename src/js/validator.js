@@ -216,8 +216,8 @@ function runValidation() {
 
     // the cordova-plugin-device global object
     var device = {};
-    if (isObject(window.device))
-      device = window.device;
+    if (isObject(this.device))
+      device = this.device;
 
     // Send the receipt validator information about the device.
     // This will allow to make vendor or device specific fixes and detect class
@@ -226,7 +226,7 @@ function runValidation() {
     // support requests.
     if (allowed('analytics') || allowed('support')) {
       // Version of ionic (if applicable)
-      var ionic = window.Ionic || window.ionic;
+      var ionic = this.Ionic || this.ionic;
       if (ionic && ionic.version)
         ret.ionic = ionic.version;
       // Information from the cordova-plugin-device (if installed)

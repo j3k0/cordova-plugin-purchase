@@ -17,10 +17,10 @@
 store.register = function(product) {
     if (!product)
         return;
-    if (!product.length)
-        store.register([product]);
-    else
+    if (typeof product.length === 'number')
         registerProducts(product);
+    else
+        store.register([product]);
 };
 
 /// ##### example usage
