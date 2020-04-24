@@ -364,27 +364,35 @@ function storekitPurchased(transactionId, productId, originalTransactionId) {
             return;
         }
 
-        // Check if processing of this transaction isn't already in progress
-        // Exit if so.
-        if (product.transactions) {
-            for (var i = 0; i < product.transactions.length; ++i) {
-                if (transactionId === product.transactions[i])
-                    return;
-            }
-        }
+        // Let's load the receipt in all cases (some people do receipt validation with their own logic)
+        storekit.loadReceipts(function(data) {
+            var appStoreReceipt = data && data.appStoreReceipt || undefined;
+            if (product.transaction)
+                product.transaction.appStoreReceipt = appStoreReceipt;
 
-        product.transaction = {
-            type: 'ios-appstore',
-            id:   transactionId
-        };
-        if(originalTransactionId){
-            product.transaction.original_transaction_id = originalTransactionId;
-        }
-        if (!product.transactions)
-            product.transactions = [];
-        product.transactions.push(transactionId);
-        store.log.info("ios -> transaction " + transactionId + " purchased (" + product.transactions.length + " in the queue for " + productId + ")");
-        product.set("state", store.APPROVED);
+            // Check if processing of this transaction isn't already in progress
+            // Exit if so.
+            if (product.transactions) {
+                for (var i = 0; i < product.transactions.length; ++i) {
+                    if (transactionId === product.transactions[i])
+                        return;
+                }
+            }
+
+            product.transaction = {
+                type: 'ios-appstore',
+                id:   transactionId,
+                appStoreReceipt: appStoreReceipt
+            };
+            if(originalTransactionId){
+                product.transaction.original_transaction_id = originalTransactionId;
+            }
+            if (!product.transactions)
+                product.transactions = [];
+            product.transactions.push(transactionId);
+            store.log.info("ios -> transaction " + transactionId + " purchased (" + product.transactions.length + " in the queue for " + productId + ")");
+            product.set("state", store.APPROVED);
+        });
     });
 }
 
