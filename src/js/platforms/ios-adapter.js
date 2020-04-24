@@ -343,6 +343,7 @@ function storekitPurchasing(productId) {
         }
         if (product.state !== store.INITIATED)
             product.set("state", store.INITIATED);
+        storekit.refreshReceipts(); // We've asked for user password already anyway.
     });
 }
 
