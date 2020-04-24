@@ -697,6 +697,10 @@ store.Product.prototype.verify = function() {
                         });
                     }
                     else {
+                        err = new store.Error({
+                            code: store.ERR_PAYMENT_EXPIRED,
+                            message: "Transaction expired: " + msg
+                        });
                         that.set("expired", true);
                         store.error(err);
                         store.utils.callExternal('verify.error', errorCb, err);
