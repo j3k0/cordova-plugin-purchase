@@ -683,7 +683,7 @@ store.Product.prototype.verify = function() {
                     store.log.debug("verify -> server did use the latest_receipt, no retries");
                     nRetry = 999999;
                 }
-                if (data.code === store.PURCHASE_EXPIRED) {
+                if (data.code === store.ERR_PAYMENT_EXPIRED) {
                     err = new store.Error({
                         code: store.ERR_PAYMENT_EXPIRED,
                         message: "Transaction expired: " + msg
@@ -2766,7 +2766,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
-store.version = '10.1.0';
+store.version = '10.1.1';
 /*
  * Copyright (C) 2012-2013 by Guillaume Charhon
  * Modifications 10/16/2013 by Brian Thurlow

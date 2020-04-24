@@ -704,7 +704,7 @@ store.Product.prototype.verify = function() {
                     store.log.debug("verify -> server did use the latest_receipt, no retries");
                     nRetry = 999999;
                 }
-                if (data.code === store.PURCHASE_EXPIRED) {
+                if (data.code === store.ERR_PAYMENT_EXPIRED) {
                     err = new store.Error({
                         code: store.ERR_PAYMENT_EXPIRED,
                         message: "Transaction expired: " + msg
@@ -2787,7 +2787,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
-store.version = '10.1.0';
+store.version = '10.1.1';
 /*
  * A plugin to enable iOS In-App Purchases.
  *
