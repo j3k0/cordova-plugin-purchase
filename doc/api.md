@@ -950,6 +950,17 @@ have a way to do just that.
 _NOTE:_ It is a required by the Apple AppStore that a "Refresh Purchases"
         button be visible in the UI.
 
+##### return value
+
+This method returns a promise-like object with the following functions:
+
+- `.completed(fn)` - Calls `fn` when the queue of previous purchases have been processed.
+  At this point, all previously owned products should be in the approved state.
+- `.finished(fn)` - Calls `fn` when all purchased in the approved state have been finished
+  or expired.
+
+In the case of the restore purchases call, you will want to hide any progress bar when the
+`finished` callback is called.
 
 ##### example usage
 
@@ -966,11 +977,20 @@ _NOTE:_ It is a required by the Apple AppStore that a "Refresh Purchases"
 
 Add a "Refresh Purchases" button to call the `store.refresh()` method, like:
 
-`<button onclick="store.refresh()">Restore Purchases</button>`
+```html
+<button onclick="restorePurchases()">Restore Purchases</button>
+```
+
+```js
+function restorePurchases() {
+   showProgress();
+   store.refresh().finished(hideProgress);
+}
+```
 
 To make the restore purchases work as expected, please make sure that
-the "approved" event listener had be registered properly,
-and in the callback `product.finish()` should be called.
+the "approved" event listener had be registered properly
+and, in the callback, `product.finish()` is called after handling.
 
 
 ## <a name="manageSubscriptions"></a>*store.manageSubscriptions()*
