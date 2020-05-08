@@ -1866,7 +1866,7 @@ store._validator = function(product, callback, isPrepared) {
 ///
 
 ///
-/// ## <a name="update"></a> *store.update*
+/// ## <a name="update"></a> *store.update()*
 ///
 /// Refresh the historical state of purchases and price of items.
 /// This is required to know if a user is eligible for promotions like introductory
@@ -2766,7 +2766,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
-store.version = '10.1.0';
+store.version = '10.1.1';
 /*
  * Copyright (C) 2012-2013 by Guillaume Charhon
  * Modifications 10/16/2013 by Brian Thurlow

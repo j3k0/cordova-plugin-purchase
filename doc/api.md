@@ -916,7 +916,7 @@ Another option is to use [Fovea's validation service](http://billing.fovea.cc/) 
 all the best practices to enhance your subscriptions and secure your transactions.
 
 
-## <a name="update"></a> *store.update*
+## <a name="update"></a> *store.update()*
 
 Refresh the historical state of purchases and price of items.
 This is required to know if a user is eligible for promotions like introductory

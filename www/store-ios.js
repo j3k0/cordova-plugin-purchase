@@ -1887,7 +1887,7 @@ store._validator = function(product, callback, isPrepared) {
 ///
 
 ///
-/// ## <a name="update"></a> *store.update*
+/// ## <a name="update"></a> *store.update()*
 ///
 /// Refresh the historical state of purchases and price of items.
 /// This is required to know if a user is eligible for promotions like introductory
@@ -2787,7 +2787,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
-store.version = '10.1.0';
+store.version = '10.1.1';
 /*
  * A plugin to enable iOS In-App Purchases.
  *
