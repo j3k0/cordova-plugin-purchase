@@ -667,18 +667,26 @@ store.Product.prototype.verify = function() {
                 // for introductory prices.
                 if (data && data.ineligible_for_intro_price &&
                          data.ineligible_for_intro_price.forEach) {
+                    var ineligibleGroups = {};
                     data.ineligible_for_intro_price.forEach(function(pid) {
                         var p = store.get(pid);
-                        if (p) {
-                            p.set('ineligibleForIntroPrice', true);
-                            store.log.debug('verify -> ' + pid + ' ineligibleForIntroPrice:true');
-                        }
+                        if (p && p.group)
+                            ineligibleGroups[p.group] = true;
                     });
                     store.products.forEach(function(p) {
-                        if (p.ineligibleForIntroPrice &&
-                            (data.ineligible_for_intro_price.indexOf(p.id) < 0)) {
-                            p.set('ineligibleForIntroPrice', false);
-                            store.log.debug('verify -> ' + p.id + ' ineligibleForIntroPrice:false');
+                        if (data.ineligible_for_intro_price.indexOf(p.id) >= 0) {
+                            store.log.debug('verify -> ' + p.id + ' ineligibleForIntroPrice:true');
+                            p.set('ineligibleForIntroPrice', true);
+                        }
+                        else {
+                            if (p.group && ineligibleGroups[p.group]) {
+                                store.log.debug('verify -> ' + p.id + ' ineligibleForIntroPrice:true');
+                                p.set('ineligibleForIntroPrice', true);
+                            }
+                            else {
+                                store.log.debug('verify -> ' + p.id + ' ineligibleForIntroPrice:false');
+                                p.set('ineligibleForIntroPrice', false);
+                            }
                         }
                     });
                 }
