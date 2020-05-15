@@ -2833,7 +2833,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
-store.version = '10.1.1';
+store.version = '10.1.2';
 /*
  * Copyright (C) 2012-2013 by Guillaume Charhon
  * Modifications 10/16/2013 by Brian Thurlow
@@ -3032,7 +3032,8 @@ store.when("re-refreshed", function() {
 
 store.update = function(successCb, errorCb) {
     store.iabGetPurchases(function() {
-        successCb();
+        if (successCb)
+            successCb();
     });
 };
 

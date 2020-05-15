@@ -2854,7 +2854,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
-store.version = '10.1.1';
+store.version = '10.1.2';
 /*
  * A plugin to enable iOS In-App Purchases.
  *
