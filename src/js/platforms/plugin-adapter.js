@@ -18,7 +18,8 @@ store.when("re-refreshed", function() {
 
 store.update = function(successCb, errorCb) {
     store.iabGetPurchases(function() {
-        successCb();
+        if (successCb)
+            successCb();
     });
 };
 
