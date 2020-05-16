@@ -1656,7 +1656,7 @@ function runValidation() {
       }
 
       var data = JSON.parse(JSON.stringify(product));
-      data.device = getDeviceInfo();
+      data.device = Object.assign(data.device || {}, getDeviceInfo());
 
       // Post
       store.utils.ajax({
