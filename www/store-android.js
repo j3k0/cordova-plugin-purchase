@@ -2841,7 +2841,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
-store.version = '10.1.2';
+store.version = '10.2.0';
 /*
  * Copyright (C) 2012-2013 by Guillaume Charhon
  * Modifications 10/16/2013 by Brian Thurlow
