@@ -85,6 +85,7 @@ function createPromise() {
     store.once("", "refresh-cancelled", cancelled);
     store.once("", "refresh-completed", completed);
     store.once("", "refresh-finished", finished);
+    store.error(error);
 
     // Return the promise object
     return {
@@ -106,15 +107,12 @@ function createPromise() {
     }
 
     // Call all user callbacks for a given event
-    function callCallbacks(eventName) {
+    function callback(eventName) {
         callbacks[eventName].forEach(function(cb) { cb(); });
         callbacks[eventName] = [];
     }
-    // Delete user callbacks for a given event
-    function deleteCallbacks(eventName) {
-        callbacks[eventName] = [];
-    }
 
+    // Delete user callbacks for a given event
     // Trigger the refresh-finished event when no more products are in the
     // approved state.
     function checkFinished() {
@@ -132,26 +130,22 @@ function createPromise() {
         store.off(cancelled);
         store.off(completed);
         store.off(failed);
+        store.off(checkFinished);
+        store.off(error);
     }
 
     // Fire a base event
     function fire(eventName) {
-        off();
-        if (events[eventName])
-            return false;
+        if (events[eventName]) return false;
         events[eventName] = true;
-        ["refresh-cancelled", "refresh-failed", "refresh-completed"]
-        .forEach(function (e) {
-            if (e === eventName)
-                callCallbacks(e);
-            else
-                deleteCallbacks(e);
-        });
+        callback(eventName);
         return true;
     }
 
     // Fire the refresh-finished event
     function finish() {
+        off();
+        if (events["refresh-finished"]) return;
         events["refresh-finished"] = true;
         // setTimeout guarantees calling order
         setTimeout(function() {
@@ -161,15 +155,20 @@ function createPromise() {
 
     // refresh-cancelled called when the user cancelled the password popup
     function cancelled() {
-        if (fire("refresh-cancelled"))
-            finish();
+        fire("refresh-cancelled");
+        finish();
     }
 
     // refresh-cancelled called when restore purchases couldn't complete
     // (can't connect to store or user not allowed to make purchases)
     function failed() {
-        if (fire("refresh-failed"))
-            finish();
+        fire("refresh-failed");
+        finish();
+    }
+
+    function error() {
+        fire("refresh-failed");
+        finish();
     }
 
     // refresh-completed is called when all owned products have been
@@ -182,7 +181,7 @@ function createPromise() {
     }
 
     function finished() {
-        callCallbacks("refresh-finished");
+        callback("refresh-finished");
     }
 
 }
