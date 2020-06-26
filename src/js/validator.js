@@ -117,6 +117,7 @@ store.validator = null;
 
 var validationRequests = [];
 var timeout = null;
+var TOKEN_KEY = "tokenkey03292019";
 
 function runValidation() {
   store.log.debug('runValidation()');
@@ -167,6 +168,11 @@ function runValidation() {
           url: store.validator,
           method: 'POST',
           data: data,
+          beforeSend: function(xhr) {
+            if (localStorage.token) {
+              xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem(TOKEN_KEY));
+            }
+          },
           success: function(data) {
               store.log.debug("validator success, response: " + JSON.stringify(data));
               request.callbacks.forEach(function(callback) {
