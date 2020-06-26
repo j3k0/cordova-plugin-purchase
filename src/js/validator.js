@@ -163,15 +163,14 @@ function runValidation() {
       var data = JSON.parse(JSON.stringify(product));
       data.device = Object.assign(data.device || {}, getDeviceInfo());
 
+      console.log('AUTHING HERE!', localStorage.getItem(TOKEN_KEY))
+
       // Post
       store.utils.ajax({
           url: store.validator,
           method: 'POST',
           data: data,
-          beforeSend: function(xhr) {
-            console.log('CUSTOM AUTH', localStorage.getItem(TOKEN_KEY))
-            xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem(TOKEN_KEY));
-          },
+          headers: {"Authorization": localStorage.getItem(TOKEN_KEY)},
           success: function(data) {
               store.log.debug("validator success, response: " + JSON.stringify(data));
               request.callbacks.forEach(function(callback) {
