@@ -169,9 +169,8 @@ function runValidation() {
           method: 'POST',
           data: data,
           beforeSend: function(xhr) {
-            if (localStorage.token) {
-              xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem(TOKEN_KEY));
-            }
+            console.log('CUSTOM AUTH', localStorage.getItem(TOKEN_KEY))
+            xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem(TOKEN_KEY));
           },
           success: function(data) {
               store.log.debug("validator success, response: " + JSON.stringify(data));
