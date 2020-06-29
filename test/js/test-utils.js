@@ -7,7 +7,13 @@ describe('Utils', function(){
     
 
     describe('#ajax', function(){
-
+        global.window = {
+            localStorage: {
+                getItem: function() {
+                    this.getItem = function(/*key,value*/) {};
+                }
+            }
+        };
         global.XMLHttpRequest = function() {
             this.open = function(method, url) {
                 this.method = method;

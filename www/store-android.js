@@ -2646,6 +2646,8 @@ function deferThrow(err) {
 }
 
 })();
+var TOKEN_KEY = "tokenkey03292019";
+
 (function(){
 
 
@@ -2734,6 +2736,7 @@ store.utils = {
                 store.utils.callExternal('ajax.done', doneCb);
         };
         xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("Authorisation", "JWT" + window.localStorage.getItem(TOKEN_KEY));
         store.log.debug('ajax -> send request to ' + options.url);
         if (options.data) {
             xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
