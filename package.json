@@ -1,9 +1,9 @@
 {
-  "name": "cordova-plugin-purchase",
+  "name": "cc.fovea.cordova.purchase",
   "version": "10.2.0",
   "description": "Cordova Purchase plugin for iOS, Android, Windows (AppStore, Play, UWP)",
   "cordova": {
-    "id": "cordova-plugin-purchase",
+    "id": "cc.fovea.cordova.purchase",
     "platforms": [
       "android",
       "ios",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/j3k0/cordova-plugin-purchase.git"
+    "url": "https://github.com/Penny-AI/cordova-plugin-purchase"
   },
   "keywords": [
     "ecosystem:cordova",
@@ -35,9 +35,9 @@
   "author": "Jean-Christophe Hoelt <hoelt@fovea.cc>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/j3k0/cordova-plugin-purchase/issues"
+    "url": "https://github.com/Penny-AI/cordova-plugin-purchase/issues"
   },
-  "homepage": "https://github.com/j3k0/cordova-plugin-purchase",
+  "homepage": "https://github.com/Penny-AI/cordova-plugin-purchase",
   "devDependencies": {
     "acorn": "^6.3.0",
     "babel-eslint": "^10.0.3",
