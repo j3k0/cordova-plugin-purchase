@@ -157,6 +157,9 @@ function iabLoaded(validProducts) {
             var introPricePaymentMode = null;
             if (vp.freeTrialPeriod) {
                 introPricePaymentMode = 'FreeTrial';
+                introPriceSubscriptionPeriod = vp.freeTrialPeriod ? vp.freeTrialPeriod : "";
+                introPricePeriodUnit = normalizeISOPeriodUnit(introPriceSubscriptionPeriod);
+                introPricePeriod = normalizeISOPeriodCount(introPriceSubscriptionPeriod);
             }
             else if (vp.introductoryPrice) {
                 if (vp.introductoryPrice < vp.price && subscriptionPeriod === introPriceSubscriptionPeriod) {
