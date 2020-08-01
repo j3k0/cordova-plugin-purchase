@@ -551,10 +551,21 @@ public class PurchasePlugin
       Log.d(mTag, "buy() -> setDeveloperId");
       params.setDeveloperId(developerId);
     }
-    // (I did not find enough documentation to support this parameter)
-    // if (replaceSkusProrationMode) { // int
-    //   params.setReplaceSkusProrationMode(replaceSkusProrationMode)
-    // }
+
+    // See https://developer.android.com/google/play/billing/subs#change
+    final String prorationMode = additionalData.has("prorationMode")
+      ? additionalData.getString("prorationMode")
+      : null;
+    if (prorationMode != null) {
+      if ("IMMEDIATE_WITH_TIME_PRORATION".equals(prorationMode))
+        params.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION);
+      else if ("IMMEDIATE_AND_CHARGE_PRORATED_PRICE".equals(prorationMode))
+        params.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_AND_CHARGE_PRORATED_PRICE);
+      else if ("IMMEDIATE_WITHOUT_PRORATION".equals(prorationMode))
+        params.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITHOUT_PRORATION);
+      else if ("DEFERRED".equals("prorationMode"))
+        params.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.DEFERRED);
+    }
     return params.build();
   }
 
