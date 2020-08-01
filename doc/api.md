@@ -703,6 +703,12 @@ The `additionalData` argument can be either:
    - `oldSku`, a string with the old subscription to upgrade/downgrade on Android.
      **Note**: if another subscription product is already owned that is member of
      the same group, `oldSku` will be set automatically for you (see `product.group`).
+   - `prorationMode`, a string that describe the proration mode to apply when upgrading/downgrading a subscription (with `oldSku`) on Android. See https://developer.android.com/google/play/billing/subs#change
+     **Possible values:**
+      - `DEFERRED` - Replacement takes effect when the old plan expires, and the new price will be charged at the same time.
+      - `IMMEDIATE_AND_CHARGE_PRORATED_PRICE` - Replacement takes effect immediately, and the billing cycle remains the same.
+      - `IMMEDIATE_WITHOUT_PRORATION` - Replacement takes effect immediately, and the new price will be charged on next recurrence time.
+      - `IMMEDIATE_WITH_TIME_PRORATION` - Replacement takes effect immediately, and the remaining time will be prorated and credited to the user.
    - `discount`, a object that describes the discount to apply with the purchase (iOS only):
       - `id`, discount identifier
       - `key`, key identifier
