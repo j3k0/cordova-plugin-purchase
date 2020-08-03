@@ -122,7 +122,6 @@ SOFTWARE.
       <framework src="com.android.billingclient:billing:3.0.0" />
       <source-file src="src/android/cc/fovea/PurchasePlugin.java" target-dir="src/cc/fovea" />
       <source-file src="src/android/cc/fovea/Constants.java" target-dir="src/cc/fovea" />
-      <source-file src="src/android/cc/fovea/Security.java" target-dir="src/cc/fovea" />
     </platform>
 
     <!-- windows -->
