@@ -228,7 +228,7 @@ store.Product.prototype.verify = function() {
             }));
             var dataTransaction = getData(data, 'transaction');
             if (dataTransaction) {
-                that.transaction = Object.assign(that.transaction || {}, dataTransaction);
+                that.transaction = Object.assign({}, that.transaction || {}, dataTransaction);
                 store._extractTransactionFields(that);
                 that.trigger("updated");
             }
