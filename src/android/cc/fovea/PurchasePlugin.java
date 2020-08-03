@@ -508,13 +508,19 @@ public class PurchasePlugin
       oldSku = additionalData.getString("oldSku");
     }
 
+    String oldPurchaseToken = null;
+    if (additionalData.has("oldPurchaseToken")) {
+      oldPurchaseToken = additionalData.getString("oldPurchaseToken");
+    }
+
     // Specify an optional obfuscated string of developer profile name.  If
     // you pass this value, Google Play can use it for payment risk
     // evaluation. Do not use the account ID or the user's Google ID for this
     // field.
-    final String developerId = additionalData.has("developerId")
-      ? additionalData.getString("developerId")
-      : null;
+    // (removed from Google Play Billing library v3)
+    // final String developerId = additionalData.has("developerId")
+    //   ? additionalData.getString("developerId")
+    //   : null;
 
     // Specify an optional obfuscated string that is uniquely associated with
     // the user's account in your app.
@@ -530,6 +536,10 @@ public class PurchasePlugin
       ? additionalData.getString("accountId")
       : null;
 
+    final String profileId = additionalData.has("profileId")
+      ? additionalData.getString("profileId")
+      : null;
+
     BillingFlowParams.Builder params = BillingFlowParams.newBuilder();
     final SkuDetails skuDetails = mSkuDetails.get(skuId);
     if (skuDetails == null) {
@@ -539,18 +549,34 @@ public class PurchasePlugin
     }
     Log.d(mTag, "buy() -> setSkuDetails");
     params.setSkuDetails(skuDetails);
-    if (oldSku != null) {
+    if (oldSku != null && oldPurchaseToken != null) {
       Log.d(mTag, "buy() -> setOldSku");
-      params.setOldSku(oldSku);
+      params.setOldSku(oldSku, oldPurchaseToken);
     }
+
+    // accountId and profileId are used to detect fraud.
+    // see https://developer.android.com/google/play/billing/security#fraud
     if (accountId != null) {
-      Log.d(mTag, "buy() -> setAccountId");
-      params.setAccountId(accountId);
+      Log.d(mTag, "buy() -> setObfuscatedAccountId");
+      // Google renamed setAccountId to setObfuscatedAccountId.
+      // the plugin was already obfuscating the accountId
+      // as md5(applicationUsername) => we can keep the same parameter.
+      params.setObfuscatedAccountId(accountId);
     }
-    if (developerId != null) {
-      Log.d(mTag, "buy() -> setDeveloperId");
-      params.setDeveloperId(developerId);
+
+    // Some applications allow users to have multiple profiles within a single
+    // account. Use this method to send the user's profile identifier to
+    // Google.
+    if (profileId != null) {
+      Log.d(mTag, "buy() -> setObfuscatedProfileId");
+      params.setObfuscatedProfileId(profileId);
     }
+
+    // Google removed setDeveloperId
+    // if (developerId != null) {
+    //   Log.d(mTag, "buy() -> setDeveloperId");
+    //   params.setDeveloperId(developerId);
+    // }
 
     // See https://developer.android.com/google/play/billing/subs#change
     final String prorationMode = additionalData.has("prorationMode")
