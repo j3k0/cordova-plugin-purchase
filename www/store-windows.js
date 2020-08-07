@@ -1292,6 +1292,12 @@ var callbackId = 0;
 ///    - `oldSku`, a string with the old subscription to upgrade/downgrade on Android.
 ///      **Note**: if another subscription product is already owned that is member of
 ///      the same group, `oldSku` will be set automatically for you (see `product.group`).
+///    - `prorationMode`, a string that describe the proration mode to apply when upgrading/downgrading a subscription (with `oldSku`) on Android. See https://developer.android.com/google/play/billing/subs#change
+///      **Possible values:**
+///       - `DEFERRED` - Replacement takes effect when the old plan expires, and the new price will be charged at the same time.
+///       - `IMMEDIATE_AND_CHARGE_PRORATED_PRICE` - Replacement takes effect immediately, and the billing cycle remains the same.
+///       - `IMMEDIATE_WITHOUT_PRORATION` - Replacement takes effect immediately, and the new price will be charged on next recurrence time.
+///       - `IMMEDIATE_WITH_TIME_PRORATION` - Replacement takes effect immediately, and the remaining time will be prorated and credited to the user.
 ///    - `discount`, a object that describes the discount to apply with the purchase (iOS only):
 ///       - `id`, discount identifier
 ///       - `key`, key identifier
@@ -3428,11 +3434,40 @@ store.extendAdditionalData = function(product) {
     // If we're ordering a subscription, check if another one in the
     // same group is already purchased, set `oldSku` in that case (so
     // it's replaced).
-    if (product.group && !a.oldSku) {
-        store.getGroup(product.group).forEach(function(otherProduct) {
-            if (isPurchased(otherProduct))
-                a.oldSku = otherProduct.id;
-        });
+    if (product.group) {
+        if (!a.oldPurchaseToken && !a.oldSku) {
+            // If neither of the oldPurchaseToken and oldSku are specified,
+            // look in the product group for an owned product.
+            // Automatically set oldSku and oldPurchaseToken if one is found.
+            store.getGroup(product.group).forEach(function(otherProduct) {
+                if (isPurchased(otherProduct)) {
+                    a.oldSku = otherProduct.id;
+                    a.oldPurchaseToken =
+                        otherProduct.transaction ?
+                        otherProduct.transaction.purchaseToken :
+                        null;
+                }
+            });
+        }
+        else if (a.oldSku && !a.oldPurchaseToken) {
+            // If only oldSku is set, automatically set oldPurchaseToken.
+            var otherProduct = store.get(a.oldSku);
+            if (otherProduct && otherProduct.transaction) {
+                a.oldPurchaseToken = otherProduct.transaction.purchaseToken;
+            }
+        }
+        else if (a.oldPurchaseToken && !a.oldSku) {
+            // If only oldPurchaseToken is set, automatically set oldSku.
+            store.products.forEach(function(otherProduct) {
+                var otherPurchaseToken =
+                    otherProduct.transaction ?
+                    otherProduct.transaction.purchaseToken :
+                    null;
+                if (otherPurchaseToken == a.oldPurchaseToken) {
+                    a.oldSku = otherProduct.id;
+                }
+            });
+        }
     }
 };
 

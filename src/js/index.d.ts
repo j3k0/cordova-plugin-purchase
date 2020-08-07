@@ -43,6 +43,24 @@ declare namespace IapStore {
     (product: IStoreProduct, callback: IValidatorCallback): void;
   }
 
+  export type IAndroidProrationMode =
+    'IMMEDIATE_WITH_TIME_PRORATION'
+  | 'IMMEDIATE_AND_CHARGE_PRORATED_PRICE'
+  | 'IMMEDIATE_WITHOUT_PRORATION'
+  | 'DEFERRED';
+
+  export interface IAdditionalData {
+    oldSku?: string
+    oldPurchaseToken?: string;
+    prorationMode?: IAndroidProrationMode;
+    /** @deprecated
+     * use oldSku instead. */
+    oldPurchasedSkus?: string[];
+    /** @deprecated
+     * removed in Google Play Billing library v3 */
+    developerPayload?: string;
+  }
+
   export interface IStore {
     FREE_SUBSCRIPTION: StoreProductType;
     PAID_SUBSCRIPTION: StoreProductType;
@@ -114,7 +132,7 @@ declare namespace IapStore {
     manageSubscriptions(): void;
     manageBilling(): void;
     off(callback: Function): void;
-    order(id: string, additionalData?: null | { oldPurchasedSkus: string[] } | { developerPayload: string }): void;
+    order(id: string, additionalData?: null | IAdditionalData): void;
   }
 
   export type TransactionType = 'ios-appstore' | 'android-playstore' | 'windows-store-transaction';
