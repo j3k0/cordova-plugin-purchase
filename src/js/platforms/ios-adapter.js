@@ -709,9 +709,11 @@ store.update = function(successCb, errorCb, skipLoad) {
 
 setInterval(function() {
     var now = +new Date();
+    // finds a product that is both owned and expired more than 1 minute ago
     var expired = store.products.find(function(product) {
         return product.owned && now > +product.expiryDate + 60000;
     });
+    // if one is found, refresh purchases using the validator (if setup)
     if (expired) {
         store.update();
     }
