@@ -960,10 +960,12 @@ _NOTE:_ It is a required by the Apple AppStore that a "Refresh Purchases"
 
 This method returns a promise-like object with the following functions:
 
+- `.cancelled(fn)` - Calls `fn` when the user cancelled the refresh request.
+- `.failed(fn)` - Calls `fn` when restoring purchases failed.
 - `.completed(fn)` - Calls `fn` when the queue of previous purchases have been processed.
   At this point, all previously owned products should be in the approved state.
-- `.finished(fn)` - Calls `fn` when all purchased in the approved state have been finished
-  or expired.
+- `.finished(fn)` - Calls `fn` when the restore is finished, i.e. it has failed, been cancelled,
+  or all purchased in the approved state have been finished or expired.
 
 In the case of the restore purchases call, you will want to hide any progress bar when the
 `finished` callback is called.

@@ -597,7 +597,10 @@ function storekitRestoreFailed(errorCode) {
         code: store.ERR_REFRESH,
         message: "Failed to restore purchases during refresh (" + errorCode + ")"
     });
-    store.trigger('refresh-failed');
+    if (errorCode === store.ERR_PAYMENT_CANCELLED)
+        store.trigger('refresh-cancelled');
+    else
+        store.trigger('refresh-failed');
 }
 
 function storekitDownloadActive(transactionIdentifier, productId, progress, timeRemaining) {
