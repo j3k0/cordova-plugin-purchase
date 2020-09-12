@@ -392,8 +392,8 @@ Products object have the following fields and methods.
  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
- - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property.
- - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year.
+ - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property. (_not available on iOS < 11.2_)
+ - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (_not available on iOS < 11.2_)
  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 

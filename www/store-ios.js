@@ -551,8 +551,8 @@ store.Product = function(options) {
 
     ///  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
     ///  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
-    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property.
-    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year.
+    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property. (_not available on iOS < 11.2_)
+    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (_not available on iOS < 11.2_)
     ///  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
     ///  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
@@ -651,7 +651,7 @@ store.Product.prototype.verify = function() {
             }));
             var dataTransaction = getData(data, 'transaction');
             if (dataTransaction) {
-                that.transaction = Object.assign(that.transaction || {}, dataTransaction);
+                that.transaction = Object.assign({}, that.transaction || {}, dataTransaction);
                 store._extractTransactionFields(that);
                 that.trigger("updated");
             }
@@ -3805,7 +3805,7 @@ function storekitPurchasing(productId) {
         }
         if (product.state !== store.INITIATED)
             product.set("state", store.INITIATED);
-        storekit.refreshReceipts(); // We've asked for user password already anyway.
+        // storekit.refreshReceipts(); // We've asked for user password already anyway.
     });
 }
 
@@ -4174,9 +4174,11 @@ store.update = function(successCb, errorCb, skipLoad) {
 
 setInterval(function() {
     var now = +new Date();
+    // finds a product that is both owned and expired more than 1 minute ago
     var expired = store.products.find(function(product) {
         return product.owned && now > +product.expiryDate + 60000;
     });
+    // if one is found, refresh purchases using the validator (if setup)
     if (expired) {
         store.update();
     }

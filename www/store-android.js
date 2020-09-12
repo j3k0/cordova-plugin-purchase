@@ -530,8 +530,8 @@ store.Product = function(options) {
 
     ///  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
     ///  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
-    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property.
-    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year.
+    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property. (_not available on iOS < 11.2_)
+    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (_not available on iOS < 11.2_)
     ///  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
     ///  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
@@ -630,7 +630,7 @@ store.Product.prototype.verify = function() {
             }));
             var dataTransaction = getData(data, 'transaction');
             if (dataTransaction) {
-                that.transaction = Object.assign(that.transaction || {}, dataTransaction);
+                that.transaction = Object.assign({}, that.transaction || {}, dataTransaction);
                 store._extractTransactionFields(that);
                 that.trigger("updated");
             }
