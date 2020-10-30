@@ -715,8 +715,13 @@ store.update = function(successCb, errorCb, skipLoad) {
 setInterval(function() {
     var now = +new Date();
     // finds a product that is both owned and expired more than 1 minute ago
+    // but less that 1h ago (it's only meant for detecting interactive renewals)
     var expired = store.products.find(function(product) {
-        return product.owned && now > +product.expiryDate + 60000;
+        const ONE_MINUTE = 60000;
+        const ONE_HOUR = 3600000;
+        return product.owned
+            && (now > +product.expiryDate + ONE_MINUTE)
+            && (now < +product.expiryDate + ONE_HOUR);
     });
     // if one is found, refresh purchases using the validator (if setup)
     if (expired) {
