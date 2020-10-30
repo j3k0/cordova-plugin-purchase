@@ -233,12 +233,7 @@ store.Product.prototype.verify = function() {
                 that.trigger("updated");
             }
             if (success) {
-                if (that.expired)
-                    that.set("expired", false);
                 store.log.debug("verify -> success: " + JSON.stringify(data));
-                store.utils.callExternal('verify.success', successCb, that, data);
-                store.utils.callExternal('verify.done', doneCb, that);
-                that.trigger("verified");
 
                 // Process the list of products that are ineligible
                 // for introductory prices.
@@ -268,13 +263,24 @@ store.Product.prototype.verify = function() {
                     });
                 }
                 if (data && data.collection && data.collection.forEach) {
+                    // new behavior: the validator sets products state in the collection
+                    // (including expiry status)
                     data.collection.forEach(function(purchase) {
                         var p = store.get(purchase.id);
                         if (p) {
                             p.set(purchase);
                         }
                     });
+
                 }
+                else if (that.expired) {
+                    // old behavior: a valid receipt means the subscription isn't expired.
+                    that.set("expired", false);
+                }
+
+                store.utils.callExternal('verify.success', successCb, that, data);
+                store.utils.callExternal('verify.done', doneCb, that);
+                that.trigger("verified");
             }
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));
