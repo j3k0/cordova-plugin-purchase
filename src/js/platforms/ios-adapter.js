@@ -720,8 +720,8 @@ setInterval(function() {
     // finds a product that is both owned and expired more than 1 minute ago
     // but less that 1h ago (it's only meant for detecting interactive renewals)
     var expired = store.products.find(function(product) {
-        const ONE_MINUTE = 60000;
-        const ONE_HOUR = 3600000;
+        var ONE_MINUTE = 60000;
+        var ONE_HOUR = 3600000;
         return product.owned
             && (now > +product.expiryDate + ONE_MINUTE)
             && (now < +product.expiryDate + ONE_HOUR);
