@@ -656,12 +656,7 @@ store.Product.prototype.verify = function() {
                 that.trigger("updated");
             }
             if (success) {
-                if (that.expired)
-                    that.set("expired", false);
                 store.log.debug("verify -> success: " + JSON.stringify(data));
-                store.utils.callExternal('verify.success', successCb, that, data);
-                store.utils.callExternal('verify.done', doneCb, that);
-                that.trigger("verified");
 
                 // Process the list of products that are ineligible
                 // for introductory prices.
@@ -691,13 +686,24 @@ store.Product.prototype.verify = function() {
                     });
                 }
                 if (data && data.collection && data.collection.forEach) {
+                    // new behavior: the validator sets products state in the collection
+                    // (including expiry status)
                     data.collection.forEach(function(purchase) {
                         var p = store.get(purchase.id);
                         if (p) {
                             p.set(purchase);
                         }
                     });
+
                 }
+                else if (that.expired) {
+                    // old behavior: a valid receipt means the subscription isn't expired.
+                    that.set("expired", false);
+                }
+
+                store.utils.callExternal('verify.success', successCb, that, data);
+                store.utils.callExternal('verify.done', doneCb, that);
+                that.trigger("verified");
             }
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));
@@ -2366,7 +2372,18 @@ store.Product.prototype.set = function(key, value) {
             value = new Date(value);
         }
         if (key === 'isExpired' && value === true && this.owned) {
+            this.set('owned', false);
             this.set('state', store.VALID);
+            this.set('expired', true);
+            this.trigger('expired');
+        }
+        if (key === 'isExpired' && value === false && !this.owned) {
+            this.set('expired', false);
+            if (this.state !== store.APPROVED) {
+                // user have to "finish()" to own an approved transaction
+                // in other cases, we can safely set the OWNED state.
+                this.set('state', store.OWNED);
+            }
         }
         this[key] = value;
         if (key === 'state')
@@ -2926,7 +2943,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
-store.version = '10.3.0';
+store.version = '10.4.0';
 /*
  * A plugin to enable iOS In-App Purchases.
  *
@@ -3990,7 +4007,10 @@ function syncWithAppStoreReceipt(appStoreReceipt) {
     var usedIntroOffer = false;
     if (appStoreReceipt && appStoreReceipt.in_app && appStoreReceipt.in_app.forEach) {
         appStoreReceipt.in_app.forEach(function(transaction) {
-            lastTransactions[transaction.product_id] = transaction;
+            var existing = lastTransactions[transaction.product_id];
+            if (existing && +existing.purchase_date_ms < +transaction.purchase_date_ms) {
+                lastTransactions[transaction.product_id] = transaction;
+            }
         });
     }
     Object.values(lastTransactions).forEach(function(transaction) {
@@ -4161,8 +4181,13 @@ store.update = function(successCb, errorCb, skipLoad) {
 setInterval(function() {
     var now = +new Date();
     // finds a product that is both owned and expired more than 1 minute ago
+    // but less that 1h ago (it's only meant for detecting interactive renewals)
     var expired = store.products.find(function(product) {
-        return product.owned && now > +product.expiryDate + 60000;
+        var ONE_MINUTE = 60000;
+        var ONE_HOUR = 3600000;
+        return product.owned &&
+            (now > +product.expiryDate + ONE_MINUTE) &&
+            (now < +product.expiryDate + ONE_HOUR);
     });
     // if one is found, refresh purchases using the validator (if setup)
     if (expired) {
