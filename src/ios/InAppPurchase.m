@@ -386,15 +386,17 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
     }
     if ([discountArg isKindOfClass:[NSDictionary class]]) {
         NSDictionary *discount = (NSDictionary*)discountArg;
-        DLog(@"purchase with discount (%@, %@, %@, %@, %@).", discount[@"id"], discount[@"key"], discount[@"nonce"], discount[@"signature"], discount[@"timestamp"]);
-        if (@available(iOS 12.2, macOS 10.14.4, *)) {
-            DLog(@" + discounts API available");
-            payment.paymentDiscount = [[SKPaymentDiscount alloc]
-              initWithIdentifier: discount[@"id"]
-                   keyIdentifier: discount[@"key"]
-                           nonce: [[NSUUID alloc] initWithUUIDString:discount[@"nonce"]]
-                       signature: discount[@"signature"]
-                       timestamp: discount[@"timestamp"]];
+        if (discount[@"id"] != nil) {
+            DLog(@"purchase with discount (%@, %@, %@, %@, %@).", discount[@"id"], discount[@"key"], discount[@"nonce"], discount[@"signature"], discount[@"timestamp"]);
+            if (@available(iOS 12.2, macOS 10.14.4, *)) {
+                DLog(@" + discounts API available");
+                payment.paymentDiscount = [[SKPaymentDiscount alloc]
+                initWithIdentifier: discount[@"id"]
+                    keyIdentifier: discount[@"key"]
+                            nonce: [[NSUUID alloc] initWithUUIDString:discount[@"nonce"]]
+                        signature: discount[@"signature"]
+                        timestamp: discount[@"timestamp"]];
+            }
         }
     }
     [[SKPaymentQueue defaultQueue] addPayment:payment];
