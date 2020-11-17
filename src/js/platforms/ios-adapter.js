@@ -722,9 +722,9 @@ setInterval(function() {
     var expired = store.products.find(function(product) {
         var ONE_MINUTE = 60000;
         var ONE_HOUR = 3600000;
-        return product.owned
-            && (now > +product.expiryDate + ONE_MINUTE)
-            && (now < +product.expiryDate + ONE_HOUR);
+        return product.owned &&
+            (now > +product.expiryDate + ONE_MINUTE) &&
+            (now < +product.expiryDate + ONE_HOUR);
     });
     // if one is found, refresh purchases using the validator (if setup)
     if (expired) {
