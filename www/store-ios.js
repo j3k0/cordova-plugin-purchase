@@ -2156,6 +2156,21 @@ store.refresh = function() {
 /// ```
 ///
 
+///
+/// ## <a name="redeem"></a>*store.redeem()*
+///
+/// Redeems a promotional offer from within the app.
+///
+/// * On iOS, calling `store.redeem()` will open the Code Redemption Sheet.
+///   * See the [offer codes documentation](https://developer.apple.com/app-store/subscriptions/#offer-codes) for details.
+/// * This call does nothing on Android and Microsoft UWP.
+///
+/// ##### example usage
+///
+/// ```js
+///    store.redeem();
+/// ```
+
 (function(){
 
 
@@ -2943,7 +2958,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
-store.version = '10.4.0';
+store.version = '10.5.0';
 /*
  * A plugin to enable iOS In-App Purchases.
  *
@@ -3111,6 +3126,10 @@ InAppPurchase.prototype.manageSubscriptions = function () {
 
 InAppPurchase.prototype.manageBilling = function () {
     exec('manageBilling', []);
+};
+
+InAppPurchase.prototype.presentCodeRedemptionSheet = function () {
+    exec('presentCodeRedemptionSheet', []);
 };
 
 /*
@@ -3956,6 +3975,16 @@ store.manageSubscriptions = function() {
 
 store.manageBilling = function() {
     storekit.manageBilling();
+};
+
+/// store.redeemCode({ type: 'subscription_offer_code' });
+store.redeem = function() {
+    // By default, we call presentCodeRedemptionSheet.
+    // This is the only supported option at the moment.
+    // options might be used if multiple types of offer codes are available.
+    // options = options || {};
+    // if (options.type == 'offer code')
+    return storekit.presentCodeRedemptionSheet();
 };
 
 // Restore purchases.

@@ -2135,6 +2135,21 @@ store.refresh = function() {
 /// ```
 ///
 
+///
+/// ## <a name="redeem"></a>*store.redeem()*
+///
+/// Redeems a promotional offer from within the app.
+///
+/// * On iOS, calling `store.redeem()` will open the Code Redemption Sheet.
+///   * See the [offer codes documentation](https://developer.apple.com/app-store/subscriptions/#offer-codes) for details.
+/// * This call does nothing on Android and Microsoft UWP.
+///
+/// ##### example usage
+///
+/// ```js
+///    store.redeem();
+/// ```
+
 (function(){
 
 
@@ -2922,7 +2937,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
-store.version = '10.4.0';
+store.version = '10.5.0';
 /*
  * Copyright (C) 2012-2013 by Guillaume Charhon
  * Modifications 10/16/2013 by Brian Thurlow
@@ -3778,6 +3793,9 @@ function getDeveloperPayload(product) {
         }
     });
 
+    store.manageSubscriptions = function() {};
+    store.manageBilling = function() {};
+    store.redeem = function() {};
 })();
 
 if (window) {
