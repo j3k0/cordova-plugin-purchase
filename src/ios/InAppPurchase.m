@@ -320,6 +320,16 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+-(void) presentCodeRedemptionSheet: (CDVInvokedUrlCommand*)command {
+#if TARGET_OS_IPHONE
+    if (@available(iOS 14.0, *)) {
+        [[SKPaymentQueue defaultQueue] presentCodeRedemptionSheet];
+    }
+#endif
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"presentCodeRedemptionSheet"];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
 /**
  * Request product data for the given productIds.
  * See js for further documentation.

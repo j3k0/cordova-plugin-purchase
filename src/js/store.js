@@ -330,6 +330,21 @@ store.sandbox = false;
 /// ```
 ///
 
+///
+/// ## <a name="redeem"></a>*store.redeem()*
+///
+/// Redeems a promotional offer from within the app.
+///
+/// * On iOS, calling `store.redeem()` will open the Code Redemption Sheet.
+///   * See the [offer codes documentation](https://developer.apple.com/app-store/subscriptions/#offer-codes) for details.
+/// * This call does nothing on Android and Microsoft UWP.
+///
+/// ##### example usage
+///
+/// ```js
+///    store.redeem();
+/// ```
+
 // #include "log.js"
 // #include "metadata.js"
 

@@ -495,6 +495,16 @@ store.manageBilling = function() {
     storekit.manageBilling();
 };
 
+/// store.redeemCode({ type: 'subscription_offer_code' });
+store.redeem = function() {
+    // By default, we call presentCodeRedemptionSheet.
+    // This is the only supported option at the moment.
+    // options might be used if multiple types of offer codes are available.
+    // options = options || {};
+    // if (options.type == 'offer code')
+    return storekit.presentCodeRedemptionSheet();
+};
+
 // Restore purchases.
 // store.restore = function() {
 // };
