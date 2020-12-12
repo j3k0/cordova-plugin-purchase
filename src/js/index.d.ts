@@ -134,7 +134,7 @@ declare namespace IapStore {
     redeem(): void;
     off(callback: Function): void;
     order(id: string, additionalData?: null | IAdditionalData): void;
-    applicationUsername?: string | () => string;
+    applicationUsername?: string | (() => string);
   }
 
   export type TransactionType = 'ios-appstore' | 'android-playstore' | 'windows-store-transaction';
