@@ -59,7 +59,7 @@ store.order = function(pid, additionalData) {
     }
 
     var a; // short name for additionalData
-    if (additionalData) {
+    if (additionalData && typeof additionalData === 'object') {
         a = p.additionalData = Object.assign({}, additionalData);
     }
     else {
