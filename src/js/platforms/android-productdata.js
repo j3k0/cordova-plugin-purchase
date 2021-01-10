@@ -194,6 +194,8 @@
       store.inappbilling.manageBilling();
     };
 
+    store.redeem = function() {};
+
     store.requireAcknowledgment = true;
 
 })();

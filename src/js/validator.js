@@ -160,7 +160,7 @@ function runValidation() {
       }
 
       var data = JSON.parse(JSON.stringify(product));
-      data.device = getDeviceInfo();
+      data.device = Object.assign(data.device || {}, getDeviceInfo());
 
       // Post
       store.utils.ajax({
@@ -378,7 +378,7 @@ store._validator = function(product, callback, isPrepared) {
 ///
 
 ///
-/// ## <a name="update"></a> *store.update*
+/// ## <a name="update"></a> *store.update()*
 ///
 /// Refresh the historical state of purchases and price of items.
 /// This is required to know if a user is eligible for promotions like introductory

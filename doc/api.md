@@ -392,8 +392,8 @@ Products object have the following fields and methods.
  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
- - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property.
- - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year.
+ - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property. (_not available on iOS < 11.2_)
+ - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (_not available on iOS < 11.2_)
  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
@@ -703,6 +703,12 @@ The `additionalData` argument can be either:
    - `oldSku`, a string with the old subscription to upgrade/downgrade on Android.
      **Note**: if another subscription product is already owned that is member of
      the same group, `oldSku` will be set automatically for you (see `product.group`).
+   - `prorationMode`, a string that describe the proration mode to apply when upgrading/downgrading a subscription (with `oldSku`) on Android. See https://developer.android.com/google/play/billing/subs#change
+     **Possible values:**
+      - `DEFERRED` - Replacement takes effect when the old plan expires, and the new price will be charged at the same time.
+      - `IMMEDIATE_AND_CHARGE_PRORATED_PRICE` - Replacement takes effect immediately, and the billing cycle remains the same.
+      - `IMMEDIATE_WITHOUT_PRORATION` - Replacement takes effect immediately, and the new price will be charged on next recurrence time.
+      - `IMMEDIATE_WITH_TIME_PRORATION` - Replacement takes effect immediately, and the remaining time will be prorated and credited to the user.
    - `discount`, a object that describes the discount to apply with the purchase (iOS only):
       - `id`, discount identifier
       - `key`, key identifier
@@ -916,7 +922,7 @@ Another option is to use [Fovea's validation service](http://billing.fovea.cc/) 
 all the best practices to enhance your subscriptions and secure your transactions.
 
 
-## <a name="update"></a> *store.update*
+## <a name="update"></a> *store.update()*
 
 Refresh the historical state of purchases and price of items.
 This is required to know if a user is eligible for promotions like introductory
@@ -950,6 +956,19 @@ have a way to do just that.
 _NOTE:_ It is a required by the Apple AppStore that a "Refresh Purchases"
         button be visible in the UI.
 
+##### return value
+
+This method returns a promise-like object with the following functions:
+
+- `.cancelled(fn)` - Calls `fn` when the user cancelled the refresh request.
+- `.failed(fn)` - Calls `fn` when restoring purchases failed.
+- `.completed(fn)` - Calls `fn` when the queue of previous purchases have been processed.
+  At this point, all previously owned products should be in the approved state.
+- `.finished(fn)` - Calls `fn` when the restore is finished, i.e. it has failed, been cancelled,
+  or all purchased in the approved state have been finished or expired.
+
+In the case of the restore purchases call, you will want to hide any progress bar when the
+`finished` callback is called.
 
 ##### example usage
 
@@ -966,11 +985,20 @@ _NOTE:_ It is a required by the Apple AppStore that a "Refresh Purchases"
 
 Add a "Refresh Purchases" button to call the `store.refresh()` method, like:
 
-`<button onclick="store.refresh()">Restore Purchases</button>`
+```html
+<button onclick="restorePurchases()">Restore Purchases</button>
+```
+
+```js
+function restorePurchases() {
+   showProgress();
+   store.refresh().finished(hideProgress);
+}
+```
 
 To make the restore purchases work as expected, please make sure that
-the "approved" event listener had be registered properly,
-and in the callback `product.finish()` should be called.
+the "approved" event listener had be registered properly
+and, in the callback, `product.finish()` is called after handling.
 
 
 ## <a name="manageSubscriptions"></a>*store.manageSubscriptions()*
@@ -996,6 +1024,20 @@ where the user can update his/her payment methods.
    store.manageBilling();
 ```
 
+
+## <a name="redeem"></a>*store.redeem()*
+
+Redeems a promotional offer from within the app.
+
+* On iOS, calling `store.redeem()` will open the Code Redemption Sheet.
+  * See the [offer codes documentation](https://developer.apple.com/app-store/subscriptions/#offer-codes) for details.
+* This call does nothing on Android and Microsoft UWP.
+
+##### example usage
+
+```js
+   store.redeem();
+```
 ## *store.log* object
 ### `store.log.error(message)`
 Logs an error message, only if `store.verbosity` >= store.ERROR

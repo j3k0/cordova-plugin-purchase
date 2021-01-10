@@ -282,7 +282,9 @@ function storekitLoaded(validProducts, invalidProductIds) {
     setTimeout(function() {
         loading = false;
         loaded = true;
-        var ready = store.ready.bind(store, true);
+        var ready = function() {
+            store.ready(true);
+        };
         store.update(ready, ready, true);
     }, 1);
 }
@@ -343,7 +345,7 @@ function storekitPurchasing(productId) {
         }
         if (product.state !== store.INITIATED)
             product.set("state", store.INITIATED);
-        storekit.refreshReceipts(); // We've asked for user password already anyway.
+        // storekit.refreshReceipts(); // We've asked for user password already anyway.
     });
 }
 
@@ -434,7 +436,7 @@ function storekitError(errorCode, errorText, options) {
 
     // when loading failed, trigger "error" for each of
     // the registered products.
-    if (errorCode === storekit.ERR_LOAD) {
+    if (errorCode === store.ERR_LOAD) {
         for (i = 0; i < store.products.length; ++i) {
             p = store.products[i];
             p.trigger("error", [new store.Error({
@@ -447,7 +449,7 @@ function storekitError(errorCode, errorText, options) {
     // a purchase was cancelled by the user:
     // - trigger the "cancelled" event
     // - set the product back to its original state
-    if (errorCode === storekit.ERR_PAYMENT_CANCELLED) {
+    if (errorCode === store.ERR_PAYMENT_CANCELLED) {
         p = store.get(options.productId);
         if (p) {
             p.trigger("cancelled");
@@ -491,6 +493,16 @@ store.manageSubscriptions = function() {
 
 store.manageBilling = function() {
     storekit.manageBilling();
+};
+
+/// store.redeemCode({ type: 'subscription_offer_code' });
+store.redeem = function() {
+    // By default, we call presentCodeRedemptionSheet.
+    // This is the only supported option at the moment.
+    // options might be used if multiple types of offer codes are available.
+    // options = options || {};
+    // if (options.type == 'offer code')
+    return storekit.presentCodeRedemptionSheet();
 };
 
 // Restore purchases.
@@ -542,7 +554,10 @@ function syncWithAppStoreReceipt(appStoreReceipt) {
     var usedIntroOffer = false;
     if (appStoreReceipt && appStoreReceipt.in_app && appStoreReceipt.in_app.forEach) {
         appStoreReceipt.in_app.forEach(function(transaction) {
-            lastTransactions[transaction.product_id] = transaction;
+            var existing = lastTransactions[transaction.product_id];
+            if (existing && +existing.purchase_date_ms < +transaction.purchase_date_ms) {
+                lastTransactions[transaction.product_id] = transaction;
+            }
         });
     }
     Object.values(lastTransactions).forEach(function(transaction) {
@@ -597,7 +612,10 @@ function storekitRestoreFailed(errorCode) {
         code: store.ERR_REFRESH,
         message: "Failed to restore purchases during refresh (" + errorCode + ")"
     });
-    store.trigger('refresh-failed');
+    if (errorCode === store.ERR_PAYMENT_CANCELLED)
+        store.trigger('refresh-cancelled');
+    else
+        store.trigger('refresh-failed');
 }
 
 function storekitDownloadActive(transactionIdentifier, productId, progress, timeRemaining) {
@@ -709,9 +727,16 @@ store.update = function(successCb, errorCb, skipLoad) {
 
 setInterval(function() {
     var now = +new Date();
+    // finds a product that is both owned and expired more than 1 minute ago
+    // but less that 1h ago (it's only meant for detecting interactive renewals)
     var expired = store.products.find(function(product) {
-        return product.owned && now > +product.expiryDate + 60000;
+        var ONE_MINUTE = 60000;
+        var ONE_HOUR = 3600000;
+        return product.owned &&
+            (now > +product.expiryDate + ONE_MINUTE) &&
+            (now < +product.expiryDate + ONE_HOUR);
     });
+    // if one is found, refresh purchases using the validator (if setup)
     if (expired) {
         store.update();
     }

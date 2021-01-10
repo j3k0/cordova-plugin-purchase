@@ -8,7 +8,18 @@ store.Product.prototype.set = function(key, value) {
             value = new Date(value);
         }
         if (key === 'isExpired' && value === true && this.owned) {
+            this.set('owned', false);
             this.set('state', store.VALID);
+            this.set('expired', true);
+            this.trigger('expired');
+        }
+        if (key === 'isExpired' && value === false && !this.owned) {
+            this.set('expired', false);
+            if (this.state !== store.APPROVED) {
+                // user have to "finish()" to own an approved transaction
+                // in other cases, we can safely set the OWNED state.
+                this.set('state', store.OWNED);
+            }
         }
         this[key] = value;
         if (key === 'state')

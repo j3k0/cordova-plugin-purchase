@@ -167,6 +167,10 @@ InAppPurchase.prototype.manageBilling = function () {
     exec('manageBilling', []);
 };
 
+InAppPurchase.prototype.presentCodeRedemptionSheet = function () {
+    exec('presentCodeRedemptionSheet', []);
+};
+
 /*
  * Requests all active downloads be paused
  */

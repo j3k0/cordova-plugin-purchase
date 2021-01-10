@@ -26,7 +26,7 @@ SOFTWARE.
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     id="cc.fovea.cordova.purchase"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    version="10.1.1">
+    version="10.5.1">
 
     <name>Purchase</name>
 	<description>Cordova Purchase plugin for iOS (AppStore), Android (PlayStore) and Windows</description>
@@ -119,10 +119,9 @@ SOFTWARE.
 
       <!-- To ensure we're using the latest version, see here:
         https://developer.android.com/google/play/billing/billing_library_releases_notes -->
-      <framework src="com.android.billingclient:billing:2.0.3" />
+      <framework src="com.android.billingclient:billing:3.0.0" />
       <source-file src="src/android/cc/fovea/PurchasePlugin.java" target-dir="src/cc/fovea" />
       <source-file src="src/android/cc/fovea/Constants.java" target-dir="src/cc/fovea" />
-      <source-file src="src/android/cc/fovea/Security.java" target-dir="src/cc/fovea" />
     </platform>
 
     <!-- windows -->

@@ -203,4 +203,7 @@
         }
     });
 
+    store.manageSubscriptions = function() {};
+    store.manageBilling = function() {};
+    store.redeem = function() {};
 })();

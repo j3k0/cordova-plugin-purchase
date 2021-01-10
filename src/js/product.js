@@ -128,8 +128,8 @@ store.Product = function(options) {
 
     ///  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
     ///  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
-    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property.
-    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year.
+    ///  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property. (_not available on iOS < 11.2_)
+    ///  - `product.billingPeriodUnit` - Units of the billing period for a subscription. Possible values: Minute, Hour, Day, Week, Month, Year. (_not available on iOS < 11.2_)
     ///  - `product.trialPeriod` - Duration of the trial period for the subscription, in the units specified by the `trialPeriodUnit` property (windows only)
     ///  - `product.trialPeriodUnit` - Units of the trial period for a subscription (windows only)
 
@@ -228,45 +228,59 @@ store.Product.prototype.verify = function() {
             }));
             var dataTransaction = getData(data, 'transaction');
             if (dataTransaction) {
-                that.transaction = Object.assign(that.transaction || {}, dataTransaction);
+                that.transaction = Object.assign({}, that.transaction || {}, dataTransaction);
                 store._extractTransactionFields(that);
                 that.trigger("updated");
             }
             if (success) {
-                if (that.expired)
-                    that.set("expired", false);
                 store.log.debug("verify -> success: " + JSON.stringify(data));
-                store.utils.callExternal('verify.success', successCb, that, data);
-                store.utils.callExternal('verify.done', doneCb, that);
-                that.trigger("verified");
 
                 // Process the list of products that are ineligible
                 // for introductory prices.
                 if (data && data.ineligible_for_intro_price &&
                          data.ineligible_for_intro_price.forEach) {
+                    var ineligibleGroups = {};
                     data.ineligible_for_intro_price.forEach(function(pid) {
                         var p = store.get(pid);
-                        if (p) {
-                            p.set('ineligibleForIntroPrice', true);
-                            store.log.debug('verify -> ' + pid + ' ineligibleForIntroPrice:true');
-                        }
+                        if (p && p.group)
+                            ineligibleGroups[p.group] = true;
                     });
                     store.products.forEach(function(p) {
-                        if (p.ineligibleForIntroPrice &&
-                            (data.ineligible_for_intro_price.indexOf(p.id) < 0)) {
-                            p.set('ineligibleForIntroPrice', false);
-                            store.log.debug('verify -> ' + p.id + ' ineligibleForIntroPrice:false');
+                        if (data.ineligible_for_intro_price.indexOf(p.id) >= 0) {
+                            store.log.debug('verify -> ' + p.id + ' ineligibleForIntroPrice:true');
+                            p.set('ineligibleForIntroPrice', true);
+                        }
+                        else {
+                            if (p.group && ineligibleGroups[p.group]) {
+                                store.log.debug('verify -> ' + p.id + ' ineligibleForIntroPrice:true');
+                                p.set('ineligibleForIntroPrice', true);
+                            }
+                            else {
+                                store.log.debug('verify -> ' + p.id + ' ineligibleForIntroPrice:false');
+                                p.set('ineligibleForIntroPrice', false);
+                            }
                         }
                     });
                 }
                 if (data && data.collection && data.collection.forEach) {
+                    // new behavior: the validator sets products state in the collection
+                    // (including expiry status)
                     data.collection.forEach(function(purchase) {
                         var p = store.get(purchase.id);
                         if (p) {
                             p.set(purchase);
                         }
                     });
+
                 }
+                else if (that.expired) {
+                    // old behavior: a valid receipt means the subscription isn't expired.
+                    that.set("expired", false);
+                }
+
+                store.utils.callExternal('verify.success', successCb, that, data);
+                store.utils.callExternal('verify.done', doneCb, that);
+                that.trigger("verified");
             }
             else {
                 store.log.debug("verify -> error: " + JSON.stringify(data));
@@ -275,39 +289,23 @@ store.Product.prototype.verify = function() {
                     code: store.ERR_VERIFICATION_FAILED,
                     message: "Transaction verification failed: " + msg
                 });
-                if (getData(data, "latest_receipt")) {
-                    // when the server is making use of the latest_receipt,
-                    // there is no need to retry
-                    store.log.debug("verify -> server did use the latest_receipt, no retries");
-                    nRetry = 999999;
-                }
                 if (data.code === store.PURCHASE_EXPIRED) {
                     err = new store.Error({
                         code: store.ERR_PAYMENT_EXPIRED,
                         message: "Transaction expired: " + msg
                     });
-                }
-                if (data.code === store.PURCHASE_EXPIRED) {
-                    if (nRetry < 2 && store._refreshForValidation) {
-                        nRetry += 1;
-                        store._refreshForValidation(function() {
-                            delay(that, tryValidation, 300);
-                        });
-                    }
-                    else {
-                        that.set("expired", true);
-                        store.error(err);
-                        store.utils.callExternal('verify.error', errorCb, err);
-                        store.utils.callExternal('verify.done', doneCb, that);
-                        that.trigger("expired");
-                        that.set("state", store.VALID);
-                        store.utils.callExternal('verify.expired', expiredCb, that);
-                    }
+                    that.set("expired", true);
+                    store.error(err);
+                    store.utils.callExternal('verify.error', errorCb, err);
+                    store.utils.callExternal('verify.done', doneCb, that);
+                    that.trigger("expired");
+                    that.set("state", store.VALID);
+                    store.utils.callExternal('verify.expired', expiredCb, that);
                 }
                 else if (nRetry < 4) {
                     // It failed... let's try one more time. Maybe the appStoreReceipt wasn't updated yet.
                     nRetry += 1;
-                    delay(this, tryValidation, 1000 * nRetry * nRetry);
+                    delay(this, tryValidation, 1500 * nRetry * nRetry);
                 }
                 else {
                     store.log.debug("validation failed, no retrying, trigger an error");

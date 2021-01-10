@@ -18,7 +18,8 @@ store.when("re-refreshed", function() {
 
 store.update = function(successCb, errorCb) {
     store.iabGetPurchases(function() {
-        successCb();
+        if (successCb)
+            successCb();
     });
 };
 
@@ -405,11 +406,40 @@ store.extendAdditionalData = function(product) {
     // If we're ordering a subscription, check if another one in the
     // same group is already purchased, set `oldSku` in that case (so
     // it's replaced).
-    if (product.group && !a.oldSku) {
-        store.getGroup(product.group).forEach(function(otherProduct) {
-            if (isPurchased(otherProduct))
-                a.oldSku = otherProduct.id;
-        });
+    if (product.group) {
+        if (!a.oldPurchaseToken && !a.oldSku) {
+            // If neither of the oldPurchaseToken and oldSku are specified,
+            // look in the product group for an owned product.
+            // Automatically set oldSku and oldPurchaseToken if one is found.
+            store.getGroup(product.group).forEach(function(otherProduct) {
+                if (isPurchased(otherProduct)) {
+                    a.oldSku = otherProduct.id;
+                    a.oldPurchaseToken =
+                        otherProduct.transaction ?
+                        otherProduct.transaction.purchaseToken :
+                        null;
+                }
+            });
+        }
+        else if (a.oldSku && !a.oldPurchaseToken) {
+            // If only oldSku is set, automatically set oldPurchaseToken.
+            var otherProduct = store.get(a.oldSku);
+            if (otherProduct && otherProduct.transaction) {
+                a.oldPurchaseToken = otherProduct.transaction.purchaseToken;
+            }
+        }
+        else if (a.oldPurchaseToken && !a.oldSku) {
+            // If only oldPurchaseToken is set, automatically set oldSku.
+            store.products.forEach(function(otherProduct) {
+                var otherPurchaseToken =
+                    otherProduct.transaction ?
+                    otherProduct.transaction.purchaseToken :
+                    null;
+                if (otherPurchaseToken == a.oldPurchaseToken) {
+                    a.oldSku = otherProduct.id;
+                }
+            });
+        }
     }
 };
 
