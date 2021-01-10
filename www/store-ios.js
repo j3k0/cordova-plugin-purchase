@@ -3918,7 +3918,7 @@ function storekitError(errorCode, errorText, options) {
 
     // when loading failed, trigger "error" for each of
     // the registered products.
-    if (errorCode === storekit.ERR_LOAD) {
+    if (errorCode === store.ERR_LOAD) {
         for (i = 0; i < store.products.length; ++i) {
             p = store.products[i];
             p.trigger("error", [new store.Error({
@@ -3931,7 +3931,7 @@ function storekitError(errorCode, errorText, options) {
     // a purchase was cancelled by the user:
     // - trigger the "cancelled" event
     // - set the product back to its original state
-    if (errorCode === storekit.ERR_PAYMENT_CANCELLED) {
+    if (errorCode === store.ERR_PAYMENT_CANCELLED) {
         p = store.get(options.productId);
         if (p) {
             p.trigger("cancelled");
