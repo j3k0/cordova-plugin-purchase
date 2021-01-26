@@ -1,5 +1,12 @@
 # Cordova Purchase Plugin
 
+### DEPRECATED
+
+The `cc.fovea.cordova.purchase` package is deprecated.
+Please use the [cordova-plugin-purchase](https://www.npmjs.com/package/cordova-plugin-purchase) package instead.
+
+### README
+
 > In-App Purchases for Cordova
 
 [![Build Status](https://travis-ci.org/j3k0/cordova-plugin-purchase.svg)](https://travis-ci.org/j3k0/cordova-plugin-purchase)
