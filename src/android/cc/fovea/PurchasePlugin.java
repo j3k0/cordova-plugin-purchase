@@ -589,7 +589,7 @@ public class PurchasePlugin
         params.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_AND_CHARGE_PRORATED_PRICE);
       else if ("IMMEDIATE_WITHOUT_PRORATION".equals(prorationMode))
         params.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITHOUT_PRORATION);
-      else if ("DEFERRED".equals("prorationMode"))
+      else if ("DEFERRED".equals(prorationMode))
         params.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.DEFERRED);
     }
     return params.build();
