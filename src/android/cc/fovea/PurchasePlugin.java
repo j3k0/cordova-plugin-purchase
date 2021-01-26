@@ -27,6 +27,7 @@ import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -731,12 +732,20 @@ public class PurchasePlugin
     Log.d(mTag, "onStop()");
   }
 
+  // Last time the app queried for purchases when onStart was triggered.
+  // We make sure to refresh every 24h (but not more).
+  private long mLastQueryOnStart = 0;
+
   // Called when the activity is becoming visible to the user.
   @Override
   public void onStart() {
     Log.d(mTag, "onStart()");
     if (mBillingClient != null) {
-        queryPurchases();
+        long now = Calendar.getInstance().getTimeInMillis();
+        if (now - mLastQueryOnStart > 24 * 60 * 60 * 1000) {
+            mLastQueryOnStart = Calendar.getInstance().getTimeInMillis();
+            queryPurchases();
+        }
     }
   }
 
