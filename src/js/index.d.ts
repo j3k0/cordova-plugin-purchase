@@ -127,7 +127,7 @@ declare namespace IapStore {
     when(query: string, action: string, callback: (product: IStoreProduct) => void): IWhen;
     ready(callback: () => void): void;
     ready(): boolean;
-    refresh(): void;
+    refresh(): IRefreshPromise;
     update(): void;
     manageSubscriptions(): void;
     manageBilling(): void;
@@ -188,6 +188,31 @@ declare namespace IapStore {
     countryCode: string;
     additionalData: any;
     priceMicros: number;
+  }
+
+  /**
+   * The store.refresh() method returns a promise-like object with the following functions
+   */
+  export interface IRefreshPromise {
+
+    /** Calls `fn` when restoring purchases failed. */
+    failed(callback: () => void): IRefreshPromise;
+
+    /**
+     * Calls `fn` when the queue of previous purchases have been processed.
+     *
+     * At this point, all previously owned products should be in the approved state.
+     */
+    completed(callback: () => void): IRefreshPromise;
+
+    /** Calls `fn` when the user cancelled the refresh request. */
+    cancelled(callback: () => void): IRefreshPromise;
+
+    /**
+     * Calls `fn` when the restore is finished, i.e. it has failed, been cancelled,
+     * or all purchased in the approved state have been finished or expired.
+     */
+    finished(callback: () => void): IRefreshPromise;
   }
 }
 
