@@ -1606,7 +1606,6 @@ store.off = function(callback) {
 /// ** Validation error codes are [documented here](#validation-error-codes).
 ///
 store.validator = null;
-store.validatorCustomHeaders = null;
 
 var validationRequests = [];
 var timeout = null;
