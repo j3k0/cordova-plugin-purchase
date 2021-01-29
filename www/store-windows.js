@@ -1606,6 +1606,7 @@ store.off = function(callback) {
 /// ** Validation error codes are [documented here](#validation-error-codes).
 ///
 store.validator = null;
+store.validatorCustomHeaders = null;
 
 var validationRequests = [];
 var timeout = null;
@@ -1656,8 +1657,9 @@ function runValidation() {
 
       // Post
       store.utils.ajax({
-          url: store.validator,
+          url: (typeof store.validator === 'string') ? store.validator : store.validator.url,
           method: 'POST',
+          customHeaders: (typeof store.validator === 'string') ? null : store.validator.headers,
           data: data,
           success: function(data) {
               store.log.debug("validator success, response: " + JSON.stringify(data));
@@ -1805,7 +1807,7 @@ store._validator = function(product, callback, isPrepared) {
         return;
     }
 
-    if (typeof store.validator === 'string') {
+    if (typeof store.validator === 'string' || typeof store.validator === 'object') {
         validationRequests.push({
             product: product,
             callback: callback
@@ -2829,6 +2831,12 @@ store.utils = {
             if (xhr.readyState === 4)
                 store.utils.callExternal('ajax.done', doneCb);
         };
+        if (options.customHeaders) {
+            Object.keys(options.customHeaders).forEach(function (header) {
+                store.log.debug('ajax -> adding custom header: ' + header );
+                xhr.setRequestHeader( header, options.customHeaders[header]);
+            });
+        }
         xhr.setRequestHeader("Accept", "application/json");
         store.log.debug('ajax -> send request to ' + options.url);
         if (options.data) {
