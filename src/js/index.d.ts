@@ -74,6 +74,11 @@ declare namespace IapStore {
     (product: IStoreProduct, callback: IValidatorCallback): void;
   }
 
+  export interface IValidatorTarget {
+    url: string;
+    headers?: { [token: string]: string };
+  }
+
   /** See https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#storeorderproduct-additionaldata for details */
   export type IAndroidProrationMode =
     'IMMEDIATE_WITH_TIME_PRORATION'
@@ -269,13 +274,14 @@ declare namespace IapStore {
      * Set this attribute to either:
      *   - the URL of your purchase validation service: Fovea's receipt validator (https://billing.fovea.cc) or your own service.
      *   - a custom validation callback method.
+     *   - an object contaning url and headers { url: 'https//...', headers: { Authorization: 'Bearer ' + authToken } }
      *
      * Note that a receipt validation server is required to properly handle subscriptions and refunds.
      *
      * See https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#-storevalidator
      */
-    validator: string | IValidator;
-
+    validator: string | IValidator | IValidatorTarget;
+    
     /**
      * Set to true to automatically clean up the queue of transactions.
      *

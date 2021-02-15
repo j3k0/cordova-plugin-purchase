@@ -85,6 +85,12 @@ store.utils = {
             if (xhr.readyState === 4)
                 store.utils.callExternal('ajax.done', doneCb);
         };
+        if (options.customHeaders) {
+            Object.keys(options.customHeaders).forEach(function (header) {
+                store.log.debug('ajax -> adding custom header: ' + header );
+                xhr.setRequestHeader( header, options.customHeaders[header]);
+            });
+        }
         xhr.setRequestHeader("Accept", "application/json");
         store.log.debug('ajax -> send request to ' + options.url);
         if (options.data) {

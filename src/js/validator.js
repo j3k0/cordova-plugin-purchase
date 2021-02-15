@@ -164,8 +164,9 @@ function runValidation() {
 
       // Post
       store.utils.ajax({
-          url: store.validator,
+          url: (typeof store.validator === 'string') ? store.validator : store.validator.url,
           method: 'POST',
+          customHeaders: (typeof store.validator === 'string') ? null : store.validator.headers,
           data: data,
           success: function(data) {
               store.log.debug("validator success, response: " + JSON.stringify(data));
@@ -313,7 +314,7 @@ store._validator = function(product, callback, isPrepared) {
         return;
     }
 
-    if (typeof store.validator === 'string') {
+    if (typeof store.validator === 'string' || typeof store.validator === 'object') {
         validationRequests.push({
             product: product,
             callback: callback
