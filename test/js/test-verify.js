@@ -5,7 +5,7 @@ var store = require("../tmp/store-test");
 var helper = require("./helper");
 
 describe('Verify', function() {
-    
+
 
     var ajaxCopy = store.utils.ajax;
     before(function() {
