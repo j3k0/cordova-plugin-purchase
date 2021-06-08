@@ -83,6 +83,15 @@ The [cordova-plugin-network-information](https://github.com/apache/cordova-plugi
 
 </details>
 
+<details>
+<summary>
+Install <strong>cordova-plugin-advanced-http</strong> (click for details).
+</summary>
+
+
+When making receipt validation requests, the purchase plugin uses by default the browser's ajax capabilities. This sometime causes issues with CORS restriction. CORS also imposes an extra back-and-forth with the server (the CORS preflight request) to ensure the server allows for such request to be made. By installing the [advanced-http plugin](https://github.com/silkimen/cordova-plugin-advanced-http), you get rid of those issue and benefit from the extra feature of this plugin (like advanced authentication option). Read the [advanced-http](https://github.com/silkimen/cordova-plugin-advanced-http) plugin documentation for details.
+</details>
+
 ### Setup your Application
 
 See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup-for-iOS-and-macOS#setup-ios-applications) and [Setup Android Applications](https://github.com/j3k0/cordova-plugin-purchase/wiki/Setup-for-Android-Google-Play#setup-android-applications).
