@@ -63,6 +63,9 @@ store.utils = {
     /// * `data`: body of your request
     ///
     ajax: function(options) {
+        if (typeof window !== 'undefined' && window.cordova && window.cordova.plugin && window.cordova.plugin.http) {
+            return store.utils.ajaxWithHttpPlugin(options);
+        }
         var doneCb = function(){};
         var xhr = new XMLHttpRequest();
         xhr.open(options.method || 'POST', options.url, true);
@@ -103,6 +106,41 @@ store.utils = {
         return {
             done: function(cb) { doneCb = cb; return this; }
         };
+    },
+
+    ajaxWithHttpPlugin: function(options) {
+        var doneCb = function(){};
+        var ajaxOptions = {
+            method: (options.method || 'get').toLowerCase(),
+            data: options.data,
+            serializer: 'json',
+            // responseType: 'json',
+        };
+        if (options.customHeaders) {
+            store.log.debug('ajax[http] -> adding custom headers: ' + JSON.stringify(options.customHeaders));
+            ajaxOptions.headers = options.customHeaders;
+        }
+        store.log.debug('ajax[http] -> send request to ' + options.url);
+        cordova.plugin.http.sendRequest(options.url, ajaxOptions, ajaxDone, ajaxDone);
+        return {
+            done: function(cb) { doneCb = cb; return this; }
+        };
+        function ajaxDone(response) {
+            try {
+                if (response.status == 200) {
+                    store.utils.callExternal('ajax.success', options.success, JSON.parse(response.data));
+                }
+                else {
+                    store.log.warn("ajax[http] -> request to " + options.url + " failed with status " + response.status + " (" + response.error + ")");
+                    store.utils.callExternal('ajax.error', options.error, response.status, response.error);
+                }
+            }
+            catch (e) {
+                store.log.warn("ajax[http] -> request to " + options.url + " failed with an exception: " + e.message);
+                if (options.error) store.utils.callExternal('ajax.error', options.error, 417, e.message);
+            }
+            store.utils.callExternal('ajax.done', doneCb);
+        }
     },
 
     ///
