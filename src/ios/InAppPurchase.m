@@ -386,7 +386,12 @@ static NSString *priceLocaleCurrencyCode(NSLocale *priceLocale) {
     NSString *applicationUsername = (NSString*)[command.arguments objectAtIndex:2];
     id discountArg = [command.arguments objectAtIndex:3];
 
-    SKMutablePayment *payment = [SKMutablePayment paymentWithProduct:[self.products objectForKey:identifier]];
+    SKProduct *product = [self.products objectForKey:identifier];
+    if (product == nil) {
+        DLog(@"Product (%@) does not exist or is not sucessfully initialized.", identifier);
+        return;
+    }
+    SKMutablePayment *payment = [SKMutablePayment paymentWithProduct:product];
     if ([quantity respondsToSelector:@selector(integerValue)]) {
         payment.quantity = [quantity integerValue];
     }
