@@ -3320,6 +3320,14 @@ function iabLoaded(validProducts) {
             var introPricePaymentMode = null;
             if (vp.freeTrialPeriod) {
                 introPricePaymentMode = 'FreeTrial';
+                try {
+                    introPricePeriodUnit = normalizeISOPeriodUnit(vp.freeTrialPeriod);
+                    introPricePeriodCount = normalizeISOPeriodCount(vp.freeTrialPeriod);
+                    introPricePeriod = introPricePeriodCount;
+                }
+                catch (e) {
+                    store.log.warn('Failed to parse free trial period: ' + vp.freeTrialPeriod);
+                }
             }
             else if (vp.introductoryPrice) {
                 if (vp.introductoryPrice < vp.price && subscriptionPeriod === introPriceSubscriptionPeriod) {
