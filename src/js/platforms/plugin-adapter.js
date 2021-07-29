@@ -385,7 +385,7 @@ document.addEventListener("online", function() {
 
 
 store.extendAdditionalData = function(product) {
-    var a = product.additionalData;
+    var a = product.additionalData || {};
 
     //  - `accountId` : **string**
     //    - _Default_: `md5(applicationUsername)`
