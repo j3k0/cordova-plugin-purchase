@@ -319,7 +319,7 @@ declare namespace IapStore {
      * var product = store.get("cc.fovea.product1");
      * ```
      */
-    get(id: string): IStoreProduct;
+    get(id: string): IStoreProduct | undefined;
 
     /** Return all products member of a given subscription group. */
     getGroup(groupId: string): IStoreProduct[];
