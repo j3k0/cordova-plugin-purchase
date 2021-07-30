@@ -144,6 +144,7 @@ function iabLoaded(validProducts) {
             };
 
             var trimTitle = function (title) {
+              if (!title) return 'Invalid product';
               return title.split('(').slice(0, -1).join('(').replace(/ $/, '');
             };
 
