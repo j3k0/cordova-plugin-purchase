@@ -228,7 +228,7 @@ store.Product.prototype.verify = function() {
             }));
             var dataTransaction = getData(data, 'transaction');
             if (dataTransaction) {
-                that.transaction = Object.assign(that.transaction || {}, dataTransaction);
+                that.transaction = Object.assign({}, that.transaction || {}, dataTransaction);
                 store._extractTransactionFields(that);
                 that.trigger("updated");
             }
@@ -283,39 +283,23 @@ store.Product.prototype.verify = function() {
                     code: store.ERR_VERIFICATION_FAILED,
                     message: "Transaction verification failed: " + msg
                 });
-                if (getData(data, "latest_receipt")) {
-                    // when the server is making use of the latest_receipt,
-                    // there is no need to retry
-                    store.log.debug("verify -> server did use the latest_receipt, no retries");
-                    nRetry = 999999;
-                }
                 if (data.code === store.PURCHASE_EXPIRED) {
                     err = new store.Error({
                         code: store.ERR_PAYMENT_EXPIRED,
                         message: "Transaction expired: " + msg
                     });
-                }
-                if (data.code === store.PURCHASE_EXPIRED) {
-                    if (nRetry < 2 && store._refreshForValidation) {
-                        nRetry += 1;
-                        store._refreshForValidation(function() {
-                            delay(that, tryValidation, 300);
-                        });
-                    }
-                    else {
-                        that.set("expired", true);
-                        store.error(err);
-                        store.utils.callExternal('verify.error', errorCb, err);
-                        store.utils.callExternal('verify.done', doneCb, that);
-                        that.trigger("expired");
-                        that.set("state", store.VALID);
-                        store.utils.callExternal('verify.expired', expiredCb, that);
-                    }
+                    that.set("expired", true);
+                    store.error(err);
+                    store.utils.callExternal('verify.error', errorCb, err);
+                    store.utils.callExternal('verify.done', doneCb, that);
+                    that.trigger("expired");
+                    that.set("state", store.VALID);
+                    store.utils.callExternal('verify.expired', expiredCb, that);
                 }
                 else if (nRetry < 4) {
                     // It failed... let's try one more time. Maybe the appStoreReceipt wasn't updated yet.
                     nRetry += 1;
-                    delay(this, tryValidation, 1000 * nRetry * nRetry);
+                    delay(this, tryValidation, 1500 * nRetry * nRetry);
                 }
                 else {
                     store.log.debug("validation failed, no retrying, trigger an error");

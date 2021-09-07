@@ -282,7 +282,9 @@ function storekitLoaded(validProducts, invalidProductIds) {
     setTimeout(function() {
         loading = false;
         loaded = true;
-        var ready = store.ready.bind(store, true);
+        var ready = function() {
+            store.ready(true);
+        };
         store.update(ready, ready, true);
     }, 1);
 }
@@ -343,7 +345,7 @@ function storekitPurchasing(productId) {
         }
         if (product.state !== store.INITIATED)
             product.set("state", store.INITIATED);
-        storekit.refreshReceipts(); // We've asked for user password already anyway.
+        // storekit.refreshReceipts(); // We've asked for user password already anyway.
     });
 }
 
@@ -597,7 +599,11 @@ function storekitRestoreFailed(errorCode) {
         code: store.ERR_REFRESH,
         message: "Failed to restore purchases during refresh (" + errorCode + ")"
     });
-    store.trigger('refresh-failed');
+    // store.trigger('refresh-failed');
+    if (errorCode === store.ERR_PAYMENT_CANCELLED)
+        store.trigger('refresh-cancelled');
+    else
+        store.trigger('refresh-failed');
 }
 
 function storekitDownloadActive(transactionIdentifier, productId, progress, timeRemaining) {
