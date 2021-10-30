@@ -183,7 +183,7 @@ store.Product.prototype.finish = function() {
     store.log.debug("product -> defer finishing " + this.id);
     defer(this, function() {
         store.log.debug("product -> finishing " + this.id);
-        if (this.state !== store.FINISHED && this.id) {
+        if (this.state !== store.FINISHED) {
             this.set('state', store.FINISHED);
             // The platform store should now handle the FINISHED event
             // and change the product status to VALID or OWNED.
