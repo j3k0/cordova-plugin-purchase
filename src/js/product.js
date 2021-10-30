@@ -183,7 +183,7 @@ store.Product.prototype.finish = function() {
     store.log.debug("product -> defer finishing " + this.id);
     defer(this, function() {
         store.log.debug("product -> finishing " + this.id);
-        if (this.state !== store.FINISHED) {
+        if (this.state !== store.FINISHED && this.id) {
             this.set('state', store.FINISHED);
             // The platform store should now handle the FINISHED event
             // and change the product status to VALID or OWNED.
@@ -218,6 +218,10 @@ store.Product.prototype.verify = function() {
         // No need to verify a which status isn't approved
         // It means it already has been
         if (that.state !== store.APPROVED)
+            return;
+
+        // no need to verify an actual application
+        if (that.type === store.APPLICATION)
             return;
 
         store._validator(that, function(success, data) {
