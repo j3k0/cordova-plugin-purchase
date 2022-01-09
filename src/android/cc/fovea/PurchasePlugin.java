@@ -167,6 +167,8 @@ public class PurchasePlugin
         Intent browserIntent = new Intent(Intent.ACTION_VIEW,
             Uri.parse("http://play.google.com/store/paymentmethods"));
         cordova.getActivity().startActivity(browserIntent);
+      } else if ("launchPriceChangeConfirmationFlow".equals(action)) {
+        launchPriceChangeConfirmationFlow();
       } else {
         // No handler for the action
         isValidAction = false;
@@ -718,6 +720,27 @@ public class PurchasePlugin
           + format(result));
       callError(Constants.ERR_FINISH, format(result));
     }
+  }
+
+  public void launchPriceChangeConfirmationFlow() {
+    PriceChangeFlowParams priceChangeFlowParams = PriceChangeFlowParams.newBuilder()
+      .setSkuDetails(changedPriceSubscriptionSkuDetails)
+      .build();
+    billingClient.launchPriceChangeConfirmationFlow(activity,
+      priceChangeFlowParams,
+      new PriceChangeConfirmationListener() {
+        @Override
+        public void onPriceChangeConfirmationResult(int responseCode) {
+          if (responseCode == BillingResponseCode.OK) {
+            // User has confirmed the price change.
+            sendToListener("onPriceChangeConfirmationResultOK", new JSONObject());
+          } else if (responseCode == BillingResponseCode.USER_CANCELED) {
+            // User hasn't confirmed the price change and should retain
+            // access until the end of the current billing cycle.
+            sendToListener("onPriceChangeConfirmationResultUserCanceled", new JSONObject());
+          }
+        }
+      });
   }
 
   // Called when the activity receives a new intent.

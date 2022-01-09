@@ -411,6 +411,12 @@ declare namespace IapStore {
     manageSubscriptions(): void;
     /** Opens the Manage Billing page (AppStore, Play, Microsoft, ...), where the user can update his/her payment methods. */
     manageBilling(): void;
+    /** Display a generic dialog notifying the user of a subscription price change.
+     *
+     * See https://developer.android.com/google/play/billing/subscriptions#price-change-communicate
+     *
+     * Note: This call does nothing on iOS and Microsoft UWP. */
+    launchPriceChangeConfirmationFlow(callback: (status: 'UserCanceled' | 'OK') => void): void;
     /** Redeems a promotional offer from within the app.
      *
      * - On iOS, calling store.redeem() will open the Code Redemption Sheet. See the "offer codes" documentation for details.

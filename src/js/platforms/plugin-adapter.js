@@ -478,4 +478,10 @@ function getDeveloperPayload(product) {
     });
 }
 
+// callback: function(status: "UserCanceled" | "OK")
+store.launchPriceChangeConfirmationFlow = function(callback) {
+    store.inappbilling.onPriceChangeConfirmationResult = callback;
+    store.inappbilling.launchPriceChangeConfirmationFlow();
+};
+
 })();
