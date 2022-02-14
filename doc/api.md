@@ -1038,6 +1038,23 @@ Redeems a promotional offer from within the app.
 ```js
    store.redeem();
 ```
+
+## <a name="launchPriceChangeConfirmationFlow"></a>*store.launchPriceChangeConfirmationFlow(callback)*
+
+Android only: display a generic dialog notifying the user of a subscription price change.
+
+See https://developer.android.com/google/play/billing/subscriptions#price-change-communicate
+
+* This call does nothing on iOS and Microsoft UWP.
+
+##### example usage
+
+```js
+   store.launchPriceChangeConfirmationFlow(function(status) {
+     if (status === "OK") { /* approved */ }
+     if (status === "UserCanceled") { /* dialog canceled by user */ }
+   }));
+```
 ## *store.log* object
 ### `store.log.error(message)`
 Logs an error message, only if `store.verbosity` >= store.ERROR
