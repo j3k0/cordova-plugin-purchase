@@ -353,10 +353,14 @@ public class PurchasePlugin
         public void onSkuDetailsResponse(
             final BillingResult result,
             final List<SkuDetails> skuDetailsList) {
-          if (result.getResponseCode() != BillingResponseCode.OK) {
+          int responseCode = result.getResponseCode();
+          String debugMessage = result.getDebugMessage();
+          Log.d(mTag, "onSkuDetailsResponse: " + responseCode + " " + debugMessage);
+
+          if (responseCode != BillingResponseCode.OK) {
             Log.d(mTag, "getAvailableProducts() -> Failed: " + format(result));
             callError(Constants.ERR_LOAD, "Failed to load SKUs, code: "
-                + result.getResponseCode());
+                + responseCode);
             return;
           }
           JSONArray jsonSkuList = new JSONArray();

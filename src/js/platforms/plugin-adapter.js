@@ -46,11 +46,13 @@ function init() {
     initialized = true;
 
     for (var i = 0; i < store.products.length; ++i) {
-      skus.push(store.products[i].id);
-      if (store.products[i].type === store.PAID_SUBSCRIPTION)
-        subsSkus.push(store.products[i].id);
-      else
-        inAppSkus.push(store.products[i].id);
+      var product = store.products[i];
+      if(!skus.includes(product.id)) skus.push(product.id);
+      if(product.type === store.PAID_SUBSCRIPTION && !subsSkus.includes(product.id)) {
+          subsSkus.push(product.id);
+      } else if(!inAppSkus.includes(product.id)) {
+          inAppSkus.push(product.id);
+      }
     }
 
     store.inappbilling.init(iabReady,
