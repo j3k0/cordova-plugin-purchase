@@ -495,7 +495,9 @@ store.manageBilling = function() {
     storekit.manageBilling();
 };
 
-store.launchPriceChangeConfirmationFlow = function(callback) {};
+store.launchPriceChangeConfirmationFlow = function(productId, callback) {
+    callback('UserCanceled');
+};
 
 /// store.redeemCode({ type: 'subscription_offer_code' });
 store.redeem = function() {

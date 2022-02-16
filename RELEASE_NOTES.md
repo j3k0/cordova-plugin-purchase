@@ -47,6 +47,46 @@ See 68a6c3f
  * 98f7323 (android) Fix #1201: Parsing of free trial periods
 
 
+## 10.5.4
+
+#### Add support for custom headers to validator call
+
+`store.validatorCustomHeaders` can be set to an object containing keys and values of headers to be sent to the receipt validation server.
+
+See 256a10e baae021
+
+#### Minor changes
+
+ * fb249b6 Adjust validator retry delay
+    * When the request to the receipt validator fails, we now increase the retry delay to less agressive values.
+ * 91489a4 (android) Query purchase on start every 24h only
+    * The plugin used to query for purchases each time the app was sent to foreground.
+    * No need to query more often than every 24h, to frequent calls used to causes issues (especially overlapping calls).
+    * Ref #1110
+
+#### Chores
+
+ * 7be2fe6 Upgrade Google Billing Library to v3.0.3
+ * eda72d7 (typescript) Integrate the documentation
+ * f8bd21d (typescript) Add typings for refresh() return value
+
+#### Bug fixes
+
+ * ad70db7 (android) Fix #1126 - DEFERRED prorationMode typo
+
+
+## 10.5.2
+
+ * 7e9d58b (ios) Fix #1142 - Wrong references to `storekit.ERR_*`
+
+
+## 10.5.1
+
+ * c98817e Fix type chek error on tsc `^4.0.5`
+   * Contributed by @caiiiycuk
+ * 08e271d Minor improvement to `store.order()`
+
+
 ## 10.5.0
 
 **XCode 12** (with support for iOS 14.0 new APIs) **is required to use this version of the plugin for iOS**.
