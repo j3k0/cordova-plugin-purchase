@@ -1288,6 +1288,7 @@ var callbackId = 0;
 ///       - `IMMEDIATE_AND_CHARGE_PRORATED_PRICE` - Replacement takes effect immediately, and the billing cycle remains the same.
 ///       - `IMMEDIATE_WITHOUT_PRORATION` - Replacement takes effect immediately, and the new price will be charged on next recurrence time.
 ///       - `IMMEDIATE_WITH_TIME_PRORATION` - Replacement takes effect immediately, and the remaining time will be prorated and credited to the user.
+///       - `IMMEDIATE_AND_CHARGE_FULL_PRICE` - The subscription is upgraded or downgraded and the user is charged full price for the new entitlement immediately. The remaining value from the previous subscription is either carried over for the same entitlement, or prorated for time when switching to a different entitlement.
 ///    - `discount`, a object that describes the discount to apply with the purchase (iOS only):
 ///       - `id`, discount identifier
 ///       - `key`, key identifier
@@ -3000,7 +3001,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
-store.version = '10.6.1';
+store.version = '11.0.0';
 /*
  * Copyright (C) 2012-2013 by Guillaume Charhon
  * Modifications 10/16/2013 by Brian Thurlow
@@ -3091,6 +3092,9 @@ InAppBilling.prototype.listener = function (msg) {
     if (msg.type === "onPriceChangeConfirmationResultUserCanceled" && this.options.onPriceChangeConfirmationResult) {
         this.options.onPriceChangeConfirmationResult("UserCanceled");
     }
+    if (msg.type === "onPriceChangeConfirmationResultUnknownSku" && this.options.onPriceChangeConfirmationResult) {
+        this.options.onPriceChangeConfirmationResult("UnknownProduct");
+    }
 };
 InAppBilling.prototype.getPurchases = function (success, fail) {
 	if (this.options.showLog) {
@@ -3149,8 +3153,8 @@ InAppBilling.prototype.manageSubscriptions = function () {
 InAppBilling.prototype.manageBilling = function () {
   return cordova.exec(function(){}, function(){}, "InAppBillingPlugin", "manageBilling", []);
 };
-InAppBilling.prototype.launchPriceChangeConfirmationFlow = function() {
-  return cordova.exec(function(){}, function(){}, "InAppBillingPlugin", "launchPriceChangeConfirmationFlow", []);
+InAppBilling.prototype.launchPriceChangeConfirmationFlow = function(productId) {
+  return cordova.exec(function(){}, function(){}, "InAppBillingPlugin", "launchPriceChangeConfirmationFlow", [productId]);
 };
 
 // Generates a `fail` function that accepts an optional error code
@@ -3668,10 +3672,10 @@ function getDeveloperPayload(product) {
     });
 }
 
-// callback: function(status: "UserCanceled" | "OK")
-store.launchPriceChangeConfirmationFlow = function(callback) {
+// callback: function(status: "UserCanceled" | "OK" | "UnknownProduct")
+store.launchPriceChangeConfirmationFlow = function(productId, callback) {
     store.inappbilling.onPriceChangeConfirmationResult = callback;
-    store.inappbilling.launchPriceChangeConfirmationFlow();
+    store.inappbilling.launchPriceChangeConfirmationFlow(productId);
 };
 
 })();
