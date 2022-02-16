@@ -82,6 +82,15 @@ InAppBilling.prototype.listener = function (msg) {
     if (msg.type === "purchaseConsumed" && this.options.onPurchaseConsumed) {
         this.options.onPurchaseConsumed(msg.data.purchase);
     }
+    if (msg.type === "onPriceChangeConfirmationResultOK" && this.options.onPriceChangeConfirmationResult) {
+        this.options.onPriceChangeConfirmationResult("OK");
+    }
+    if (msg.type === "onPriceChangeConfirmationResultUserCanceled" && this.options.onPriceChangeConfirmationResult) {
+        this.options.onPriceChangeConfirmationResult("UserCanceled");
+    }
+    if (msg.type === "onPriceChangeConfirmationResultUnknownSku" && this.options.onPriceChangeConfirmationResult) {
+        this.options.onPriceChangeConfirmationResult("UnknownProduct");
+    }
 };
 InAppBilling.prototype.getPurchases = function (success, fail) {
 	if (this.options.showLog) {
@@ -139,6 +148,9 @@ InAppBilling.prototype.manageSubscriptions = function () {
 };
 InAppBilling.prototype.manageBilling = function () {
   return cordova.exec(function(){}, function(){}, "InAppBillingPlugin", "manageBilling", []);
+};
+InAppBilling.prototype.launchPriceChangeConfirmationFlow = function(productId) {
+  return cordova.exec(function(){}, function(){}, "InAppBillingPlugin", "launchPriceChangeConfirmationFlow", [productId]);
 };
 
 // Generates a `fail` function that accepts an optional error code

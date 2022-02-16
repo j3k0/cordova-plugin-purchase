@@ -495,6 +495,8 @@ store.manageBilling = function() {
     storekit.manageBilling();
 };
 
+store.launchPriceChangeConfirmationFlow = function(callback) {};
+
 /// store.redeemCode({ type: 'subscription_offer_code' });
 store.redeem = function() {
     // By default, we call presentCodeRedemptionSheet.

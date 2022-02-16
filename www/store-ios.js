@@ -2172,6 +2172,24 @@ store.refresh = function() {
 ///    store.redeem();
 /// ```
 
+///
+/// ## <a name="launchPriceChangeConfirmationFlow"></a>*store.launchPriceChangeConfirmationFlow(callback)*
+///
+/// Android only: display a generic dialog notifying the user of a subscription price change.
+///
+/// See https://developer.android.com/google/play/billing/subscriptions#price-change-communicate
+///
+/// * This call does nothing on iOS and Microsoft UWP.
+///
+/// ##### example usage
+///
+/// ```js
+///    store.launchPriceChangeConfirmationFlow(function(status) {
+///      if (status === "OK") { /* approved */ }
+///      if (status === "UserCanceled") { /* dialog canceled by user */ }
+///    }));
+/// ```
+
 (function(){
 
 
@@ -3003,7 +3021,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
-store.version = '10.5.4';
+store.version = '10.6.1';
 /*
  * A plugin to enable iOS In-App Purchases.
  *
@@ -4021,6 +4039,8 @@ store.manageSubscriptions = function() {
 store.manageBilling = function() {
     storekit.manageBilling();
 };
+
+store.launchPriceChangeConfirmationFlow = function(callback) {};
 
 /// store.redeemCode({ type: 'subscription_offer_code' });
 store.redeem = function() {

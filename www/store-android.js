@@ -2151,6 +2151,24 @@ store.refresh = function() {
 ///    store.redeem();
 /// ```
 
+///
+/// ## <a name="launchPriceChangeConfirmationFlow"></a>*store.launchPriceChangeConfirmationFlow(callback)*
+///
+/// Android only: display a generic dialog notifying the user of a subscription price change.
+///
+/// See https://developer.android.com/google/play/billing/subscriptions#price-change-communicate
+///
+/// * This call does nothing on iOS and Microsoft UWP.
+///
+/// ##### example usage
+///
+/// ```js
+///    store.launchPriceChangeConfirmationFlow(function(status) {
+///      if (status === "OK") { /* approved */ }
+///      if (status === "UserCanceled") { /* dialog canceled by user */ }
+///    }));
+/// ```
+
 (function(){
 
 
@@ -2982,7 +3000,7 @@ if (typeof Object.assign != 'function') {
     };
 }
 
-store.version = '10.5.4';
+store.version = '10.6.1';
 /*
  * Copyright (C) 2012-2013 by Guillaume Charhon
  * Modifications 10/16/2013 by Brian Thurlow
@@ -3067,6 +3085,12 @@ InAppBilling.prototype.listener = function (msg) {
     if (msg.type === "purchaseConsumed" && this.options.onPurchaseConsumed) {
         this.options.onPurchaseConsumed(msg.data.purchase);
     }
+    if (msg.type === "onPriceChangeConfirmationResultOK" && this.options.onPriceChangeConfirmationResult) {
+        this.options.onPriceChangeConfirmationResult("OK");
+    }
+    if (msg.type === "onPriceChangeConfirmationResultUserCanceled" && this.options.onPriceChangeConfirmationResult) {
+        this.options.onPriceChangeConfirmationResult("UserCanceled");
+    }
 };
 InAppBilling.prototype.getPurchases = function (success, fail) {
 	if (this.options.showLog) {
@@ -3124,6 +3148,9 @@ InAppBilling.prototype.manageSubscriptions = function () {
 };
 InAppBilling.prototype.manageBilling = function () {
   return cordova.exec(function(){}, function(){}, "InAppBillingPlugin", "manageBilling", []);
+};
+InAppBilling.prototype.launchPriceChangeConfirmationFlow = function() {
+  return cordova.exec(function(){}, function(){}, "InAppBillingPlugin", "launchPriceChangeConfirmationFlow", []);
 };
 
 // Generates a `fail` function that accepts an optional error code
@@ -3640,6 +3667,12 @@ function getDeveloperPayload(product) {
         applicationUsernameMD5: store.utils.md5(applicationUsername),
     });
 }
+
+// callback: function(status: "UserCanceled" | "OK")
+store.launchPriceChangeConfirmationFlow = function(callback) {
+    store.inappbilling.onPriceChangeConfirmationResult = callback;
+    store.inappbilling.launchPriceChangeConfirmationFlow();
+};
 
 })();
 (function () {
