@@ -5,22 +5,34 @@
 
 ### Upgrade to Google Play Billing library v4.0
 
-With the upgrade to the Billing Library v4, the main change was the way
-subscriptions are upgraded / downgraded. However, as this plugin offers a more
-high level interface, we were able to implement this migration in a non
-breaking way.
+With the upgrade to the Billing Library v4, the main change was the way subscriptions are upgraded / downgraded. However, as this plugin offers a more high level interface, we were able to implement this migration in a non breaking way.
 
 There are 2 noticeable additions to the API:
 
-####  Add `store.launchPriceChangeConfirmationFlow(productId, callback)`
+####  `store.launchPriceChangeConfirmationFlow(productId, callback)`
+
+Android only: display a generic dialog notifying the user of a subscription price change.
+
+See https://developer.android.com/google/play/billing/subscriptions#price-change-communicate
+
+* This call does nothing on iOS and Microsoft UWP.
+
+##### example usage
+
+```js
+   store.launchPriceChangeConfirmationFlow('my_product_id', function(status) {
+     if (status === "OK") { /* approved */ }
+     if (status === "UserCanceled") { /* dialog canceled by user */ }
+     if (status === "UnknownProduct") { /* trying to update price of an unregistered product */ }
+   }));
+```
+
 
 #### `"IMMEDIATE_AND_CHARGE_FULL_PRICE"` proration mode
 
-New proration mode that can be used when upgrading / downgrading a subscription.
+The proration mode is passed to `store.order()`, in the `additionalData.prorationMode` field.
 
-The replacement takes effect immediately, and the user is charged full price of
-new plan and is given a full billing cycle of subscription, plus remaining
-prorated time from the old plan.
+If `IMMEDIATE_AND_CHARGE_FULL_PRICE` proration mode is used when upgrading / downgrading a subscription, the replacement takes effect immediately, and the user is charged full price of new plan and is given a full billing cycle of subscription, plus remaining prorated time from the old plan.
 
 
 ## 10.6.1

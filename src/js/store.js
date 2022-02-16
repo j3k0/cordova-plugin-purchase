@@ -346,7 +346,7 @@ store.sandbox = false;
 /// ```
 
 ///
-/// ## <a name="launchPriceChangeConfirmationFlow"></a>*store.launchPriceChangeConfirmationFlow(callback)*
+/// ## <a name="launchPriceChangeConfirmationFlow"></a>*store.launchPriceChangeConfirmationFlow(productId, callback)*
 ///
 /// Android only: display a generic dialog notifying the user of a subscription price change.
 ///
@@ -357,9 +357,10 @@ store.sandbox = false;
 /// ##### example usage
 ///
 /// ```js
-///    store.launchPriceChangeConfirmationFlow(function(status) {
+///    store.launchPriceChangeConfirmationFlow(function('product_id', status) {
 ///      if (status === "OK") { /* approved */ }
 ///      if (status === "UserCanceled") { /* dialog canceled by user */ }
+///      if (status === "UnknownProduct") { /* trying to update price of an unregistered product */ }
 ///    }));
 /// ```
 
