@@ -84,7 +84,8 @@ declare namespace IapStore {
     'IMMEDIATE_WITH_TIME_PRORATION'
   | 'IMMEDIATE_AND_CHARGE_PRORATED_PRICE'
   | 'IMMEDIATE_WITHOUT_PRORATION'
-  | 'DEFERRED';
+  | 'DEFERRED'
+  | 'IMMEDIATE_AND_CHARGE_FULL_PRICE';
 
   export interface IAdditionalData {
     /** A string with the old subscription to upgrade/downgrade on Android.
@@ -281,7 +282,7 @@ declare namespace IapStore {
      * See https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#-storevalidator
      */
     validator: string | IValidator | IValidatorTarget;
-    
+
     /**
      * Set to true to automatically clean up the queue of transactions.
      *
@@ -416,7 +417,7 @@ declare namespace IapStore {
      * See https://developer.android.com/google/play/billing/subscriptions#price-change-communicate
      *
      * Note: This call does nothing on iOS and Microsoft UWP. */
-    launchPriceChangeConfirmationFlow(callback: (status: 'UserCanceled' | 'OK') => void): void;
+    launchPriceChangeConfirmationFlow(productId: string, callback: (status: 'UserCanceled' | 'OK' | 'UnknownProduct') => void): void;
     /** Redeems a promotional offer from within the app.
      *
      * - On iOS, calling store.redeem() will open the Code Redemption Sheet. See the "offer codes" documentation for details.

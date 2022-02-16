@@ -478,10 +478,10 @@ function getDeveloperPayload(product) {
     });
 }
 
-// callback: function(status: "UserCanceled" | "OK")
-store.launchPriceChangeConfirmationFlow = function(callback) {
+// callback: function(status: "UserCanceled" | "OK" | "UnknownProduct")
+store.launchPriceChangeConfirmationFlow = function(productId, callback) {
     store.inappbilling.onPriceChangeConfirmationResult = callback;
-    store.inappbilling.launchPriceChangeConfirmationFlow();
+    store.inappbilling.launchPriceChangeConfirmationFlow(productId);
 };
 
 })();
