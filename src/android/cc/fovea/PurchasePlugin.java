@@ -12,22 +12,30 @@ import com.android.billingclient.api.AcknowledgePurchaseParams;
 import com.android.billingclient.api.AcknowledgePurchaseResponseListener;
 import com.android.billingclient.api.BillingClient.BillingResponseCode;
 import com.android.billingclient.api.BillingClient.FeatureType;
-import com.android.billingclient.api.BillingClient.SkuType;
+import com.android.billingclient.api.BillingClient.ProductType;
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
+import com.android.billingclient.api.BillingFlowParams.ProductDetailsParams;
 import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.ConsumeParams;
 import com.android.billingclient.api.ConsumeResponseListener;
 import com.android.billingclient.api.PriceChangeConfirmationListener;
 import com.android.billingclient.api.PriceChangeFlowParams;
-import com.android.billingclient.api.Purchase.PurchasesResult;
 import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.PurchasesResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
-import com.android.billingclient.api.SkuDetails;
-import com.android.billingclient.api.SkuDetailsParams;
-import com.android.billingclient.api.SkuDetailsResponseListener;
+import com.android.billingclient.api.ProductDetails;
+import com.android.billingclient.api.ProductDetails.PricingPhases;
+import com.android.billingclient.api.ProductDetails.PricingPhase;
+import com.android.billingclient.api.ProductDetails.SubscriptionOfferDetails;
+import com.android.billingclient.api.ProductDetails.OneTimePurchaseOfferDetails;
+import com.android.billingclient.api.ProductDetailsResponseListener;
+import com.android.billingclient.api.QueryPurchasesParams;
+import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.QueryProductDetailsParams.Product;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -62,8 +70,8 @@ public class PurchasePlugin
   /** A reference to BillingClient. */
   private BillingClient mBillingClient;
 
-  private List<String> mInAppSkus;
-  private List<String> mSubsSkus;
+  private List<String> mInAppProductIds;
+  private List<String> mSubsProductIds;
   private final List<Purchase> mPurchases = new ArrayList<>();
 
   /** True if billing service is connected now. */
@@ -93,8 +101,8 @@ public class PurchasePlugin
       .build();
   }
 
-  private final HashMap<String, SkuDetails> mSkuDetails =
-    new HashMap<String, SkuDetails>();
+  private final HashMap<String, ProductDetails> mProductDetails =
+    new HashMap<String, ProductDetails>();
 
   /** List of purchase tokens being consumed. */
   private Set<String> mTokensToBeConsumed = new HashSet<>();
@@ -170,8 +178,11 @@ public class PurchasePlugin
             Uri.parse("http://play.google.com/store/paymentmethods"));
         cordova.getActivity().startActivity(browserIntent);
       } else if ("launchPriceChangeConfirmationFlow".equals(action)) {
-        final String sku = data.getString(0);
-        launchPriceChangeConfirmationFlow(sku);
+        // final String sku = data.getString(0);
+        // launchPriceChangeConfirmationFlow(sku);
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW,
+            Uri.parse("http://play.google.com/store/account/subscriptions"));
+        cordova.getActivity().startActivity(browserIntent);
       } else {
         // No handler for the action
         isValidAction = false;
@@ -209,12 +220,12 @@ public class PurchasePlugin
 
   // Initialize the plugin
   private void init(
-      final List<String> inAppSkus,
-      final List<String> subsSkus) {
+      final List<String> inAppProductIds,
+      final List<String> subsProductIds) {
 
     Log.d(mTag, "init()");
-    mInAppSkus = inAppSkus;
-    mSubsSkus = subsSkus;
+    mInAppProductIds = inAppProductIds;
+    mSubsProductIds = subsProductIds;
 
     mBillingClient = BillingClient
       .newBuilder(cordova.getActivity())
@@ -240,15 +251,15 @@ public class PurchasePlugin
     queryPurchases();
   }
 
-  private void onQueryPurchasesFinished(PurchasesResult result) {
+  private void onQueryPurchasesFinished(BillingResult result, List<Purchase> purchases) {
     try {
       if (result.getResponseCode() == BillingResponseCode.OK) {
-        for (Purchase p : result.getPurchasesList()) {
+        for (Purchase p : purchases) {
           mPurchases.add(0, p);
         }
         sendToListener("setPurchases", new JSONObject()
-            .put("purchases", toJSON(result.getPurchasesList())));
-        callSuccess(toJSON(result.getPurchasesList()));
+            .put("purchases", toJSON(purchases)));
+        callSuccess(toJSON(purchases));
       }
       else {
         callError(Constants.ERR_LOAD, "Failed to query purchases: "
@@ -281,6 +292,9 @@ public class PurchasePlugin
       .put("receipt", p.getOriginalJson().toString());
   }
 
+  BillingResult mInAppResult;
+  BillingResult mSubsResult;
+
   /**
    * Query purchases across various use cases and deliver the result in a
    * formalized way through a listener.
@@ -289,47 +303,77 @@ public class PurchasePlugin
     Log.d(mTag, "queryPurchases()");
     executeServiceRequest(() -> {
       long time = System.currentTimeMillis();
-      PurchasesResult purchasesResult =
-        mBillingClient.queryPurchases(SkuType.INAPP);
-      List<Purchase> purchases = new ArrayList<Purchase>();
-      BillingResult result = purchasesResult.getBillingResult();
-      if (result.getResponseCode() == BillingResponseCode.OK) {
-          purchases.addAll(purchasesResult.getPurchasesList());
-      }
-      Log.i(mTag, "queryPurchases() -> Elapsed time: "
-          + (System.currentTimeMillis() - time) + "ms");
-      // If there are subscriptions supported, we add subscription rows as well
-      if (areSubscriptionsSupported()) {
-        PurchasesResult subscriptionResult =
-          mBillingClient.queryPurchases(SkuType.SUBS);
-        Log.i(mTag, "queryPurchases() -> Subscriptions elapsed time: "
-            + (System.currentTimeMillis() - time) + "ms");
-        int purchasesListSize = -1;
-        if (subscriptionResult.getPurchasesList() != null) {
-            purchasesListSize = subscriptionResult.getPurchasesList().size();
-        }
-        Log.i(mTag, "queryPurchases() -> Subscriptions result code: "
-            + subscriptionResult.getResponseCode()
-            + " res: " + purchasesListSize);
 
-        if (subscriptionResult.getResponseCode() == BillingResponseCode.OK
-                && subscriptionResult.getPurchasesList() != null) {
-          // if purchases failed but subs succeed, better return a success anyway.
-          // (so the app has something to show)
-          result = subscriptionResult.getBillingResult();
-          purchases.addAll(subscriptionResult.getPurchasesList());
-        } else {
-          Log.e(mTag, "queryPurchases() -> "
-              + "Error trying to query subscription purchases.");
+      List<Purchase> allPurchases = new ArrayList<Purchase>();
+      mInAppResult = null;
+      mSubsResult = null;
+
+      mBillingClient.queryPurchasesAsync(
+        QueryPurchasesParams.newBuilder().setProductType(ProductType.INAPP).build(),
+        new PurchasesResponseListener() {
+          public void onQueryPurchasesResponse(BillingResult billingResult, List<Purchase> purchases) {
+            mInAppResult = billingResult;
+            Log.i(mTag, "queryPurchases(INAPP) -> Elapsed time: " + (System.currentTimeMillis() - time) + "ms");
+            if (billingResult.getResponseCode() == BillingResponseCode.OK)
+              allPurchases.addAll(purchases);
+            if (mInAppResult != null && (mSubsResult != null || !areSubscriptionsSupported()))
+              onQueryPurchasesFinished(mInAppResult.getResponseCode() == BillingResponseCode.OK ? mInAppResult : mSubsResult, allPurchases);
+          }
         }
-      } else if (purchasesResult.getResponseCode() == BillingResponseCode.OK) {
-        Log.i(mTag, "queryPurchases() -> "
-            + "Subscriptions are not supported, skipped.");
-      } else {
-        Log.w(mTag, "queryPurchases() -> Error response code: "
-            + purchasesResult.getResponseCode());
+      );
+
+      if (areSubscriptionsSupported()) {
+        mBillingClient.queryPurchasesAsync(
+          QueryPurchasesParams.newBuilder().setProductType(ProductType.SUBS).build(),
+          new PurchasesResponseListener() {
+            public void onQueryPurchasesResponse(BillingResult billingResult, List<Purchase> purchases) {
+              mSubsResult = billingResult;
+              Log.i(mTag, "queryPurchases(SUBS) -> Elapsed time: " + (System.currentTimeMillis() - time) + "ms");
+              if (billingResult.getResponseCode() == BillingResponseCode.OK)
+                allPurchases.addAll(purchases);
+              if (mInAppResult != null && (mSubsResult != null || !areSubscriptionsSupported()))
+                onQueryPurchasesFinished(mInAppResult.getResponseCode() == BillingResponseCode.OK ? mInAppResult : mSubsResult, allPurchases);
+            }
+          }
+        );
       }
-      onQueryPurchasesFinished(new PurchasesResult(result, purchases));
+      else {
+        Log.i(mTag, "queryPurchases() -> "
+          + "Subscriptions are not supported, skipped.");
+      }
+
+      // Log.i(mTag, "queryPurchases() -> Elapsed time: "
+          // + (System.currentTimeMillis() - time) + "ms");
+      // If there are subscriptions supported, we add subscription rows as well
+      // if (areSubscriptionsSupported()) {
+      // PurchasesResult subscriptionResult =
+      //   mBillingClient.queryPurchases(ProductType.SUBS);
+      // Log.i(mTag, "queryPurchases() -> Subscriptions elapsed time: "
+          // + (System.currentTimeMillis() - time) + "ms");
+      // int purchasesListSize = -1;
+      // if (subscriptionResult.getPurchasesList() != null) {
+          // purchasesListSize = subscriptionResult.getPurchasesList().size();
+      // }
+      // Log.i(mTag, "queryPurchases() -> Subscriptions result code: "
+          // + subscriptionResult.getResponseCode()
+          // + " res: " + purchasesListSize);
+      // if (subscriptionResult.getResponseCode() == BillingResponseCode.OK && subscriptionResult.getPurchasesList() != null) {
+        // if purchases failed but subs succeed, better return a success anyway.
+        // (so the app has something to show)
+      //   result = subscriptionResult.getBillingResult();
+      //   allPurchases.addAll(subscriptionResult.getPurchasesList());
+      // } else {
+      //   Log.e(mTag, "queryPurchases() -> "
+          //   + "Error trying to query subscription purchases.");
+      // }
+      //   } else if (purchasesResult.getResponseCode() == BillingResponseCode.OK) {
+      //     Log.i(mTag, "queryPurchases() -> "
+      //         + "Subscriptions are not supported, skipped.");
+      //   } else {
+      //     Log.w(mTag, "queryPurchases() -> Error response code: "
+      //         + purchasesResult.getResponseCode());
+      //   }
+      // onQueryPurchasesFinished(result, allPurchases);
     });
   }
 
@@ -351,26 +395,107 @@ public class PurchasePlugin
     return true;
   }
 
+  private JSONObject productDetailsToJson(ProductDetails product) throws JSONException {
+    JSONObject ret = new JSONObject()
+      .put("productId", product.getProductId())
+      .put("title", product.getTitle())
+      .put("name", product.getName())
+      .put("description", product.getDescription());
+    if (product.getProductType().equals(ProductType.INAPP)) {
+      final OneTimePurchaseOfferDetails details = product.getOneTimePurchaseOfferDetails();
+      ret
+        .put("product_type", "inapp")
+        .put("product_format", "v11.0")
+        .put("formatted_price", details.getFormattedPrice())
+        .put("price_amount_micros", details.getPriceAmountMicros())
+        .put("price_currency_code", details.getPriceCurrencyCode());
+    }
+    else if (product.getProductType().equals(ProductType.SUBS)) {
+      // Subscription are now described in v12.0 product format.
+      ret
+        .put("product_format", "v12.0")
+        .put("product_type", "subs");
+      JSONArray offers = new JSONArray();
+      // let's add in the array of offers.
+      List<SubscriptionOfferDetails> subscriptionOfferDetailsList = product.getSubscriptionOfferDetails();
+      for (SubscriptionOfferDetails details: subscriptionOfferDetailsList) {
+        JSONObject offer = new JSONObject()
+          .put("token", details.getOfferToken())
+          .put("tags", new JSONArray(details.getOfferTags()));
+        JSONArray pricingPhases = new JSONArray();
+        if (details.getPricingPhases() != null) {
+          for (PricingPhase pricing: details.getPricingPhases().getPricingPhaseList()) {
+            JSONObject pricingPhase = new JSONObject()
+              .put("billing_cycle_count", pricing.getBillingCycleCount())
+              .put("billing_period", pricing.getBillingPeriod())
+              .put("formatted_price", pricing.getFormattedPrice())
+              .put("price_amount_micros", pricing.getPriceAmountMicros())
+              .put("price_currency_code", pricing.getPriceCurrencyCode());
+            if (pricing.getRecurrenceMode() == ProductDetails.RecurrenceMode.FINITE_RECURRING) {
+              // The billing plan payment recurs for a fixed number of billing period set in billingCycleCount.
+              pricingPhase.put("recurrence_mode", "FINITE_RECURRING");
+            }
+            else if (pricing.getRecurrenceMode() == ProductDetails.RecurrenceMode.INFINITE_RECURRING) {
+              // The billing plan payment recurs for infinite billing periods unless cancelled.
+              pricingPhase.put("recurrence_mode", "INFINITE_RECURRING");
+            }
+            else if (pricing.getRecurrenceMode() == ProductDetails.RecurrenceMode.NON_RECURRING) {
+              // The billing plan payment is a one time charge that does not repeat.
+              pricingPhase.put("recurrence_mode", "NON_RECURRING");
+            }
+            pricingPhases.put(pricingPhase);
+          }
+        }
+        else {
+            ret.put("product_format", "unknown");
+        }
+        offer.put("pricing_phases", pricingPhases);
+        offers.put(offer);
+      }
+      ret.put("offers", offers);
+    }
+
+    // productId: string;
+    // title: string;
+    // name: string;
+    // * billing_period: string;
+    // * billing_period_unit: string;
+    // description: string;
+    // * formatted_price: string;
+    // * price_amount_micros: string;
+    // * price_currency_code: string;
+    // * trial_period: string;
+    // * trial_period_unit: string;
+    // * freeTrialPeriod: string;
+    // * introductoryPrice: string;
+    // * introductoryPriceAmountMicros: string;
+    // * introductoryPriceCycles: string;
+    // * introductoryPricePeriod: string;
+    // * subscriptionPeriod: string;
+    return ret;
+  }
+
   private void getAvailableProducts() {
     Log.d(mTag, "getAvailableProducts()");
-    queryAllSkuDetails(new SkuDetailsResponseListener() {
+    queryAllProductDetails(new ProductDetailsResponseListener() {
       @Override
-        public void onSkuDetailsResponse(
+        public void onProductDetailsResponse(
             final BillingResult result,
-            final List<SkuDetails> skuDetailsList) {
+            final List<ProductDetails> productDetailsList) {
           if (result.getResponseCode() != BillingResponseCode.OK) {
             Log.d(mTag, "getAvailableProducts() -> Failed: " + format(result));
-            callError(Constants.ERR_LOAD, "Failed to load SKUs, code: "
+            callError(Constants.ERR_LOAD, "Failed to load Products, code: "
                 + result.getResponseCode());
             return;
           }
-          JSONArray jsonSkuList = new JSONArray();
+          JSONArray jsonProductList = new JSONArray();
           try {
-            for (SkuDetails sku : skuDetailsList) {
-              jsonSkuList.put(new JSONObject(sku.getOriginalJson()));
+            for (ProductDetails product : productDetailsList) {
+              Log.d(mTag, "getAvailableProducts() -> productDetails: " + product.toString());
+              jsonProductList.put(productDetailsToJson(product));
             }
             Log.d(mTag, "getAvailableProducts() -> Success");
-            callSuccess(jsonSkuList);
+            callSuccess(jsonProductList);
           } catch (JSONException e) {
             Log.d(mTag, "getAvailableProducts() -> Failed: " + e.getMessage());
             callError(Constants.ERR_LOAD, e.getMessage());
@@ -387,9 +512,9 @@ public class PurchasePlugin
     return null;
   }
 
-  private Purchase findPurchaseBySku(final String sku) {
+  private Purchase findPurchaseByProductId(final String productId) {
     for (Purchase p : mPurchases) {
-      if (p.getSkus().contains(sku))
+      if (p.getSkus().contains(productId))
         return p;
     }
     return null;
@@ -495,8 +620,24 @@ public class PurchasePlugin
   }
 
   private BillingFlowParams parseBillingFlowParams(JSONArray data) throws JSONException {
-    final String skuId = data.getString(0);
+    final String productIdAndOfferIndex = data.getString(0);
     final JSONObject additionalData = data.getJSONObject(1);
+
+    final String[] productIdAndOfferIndexArray = productIdAndOfferIndex.split("@", 2);
+    String productId = null;
+    String offerToken = null;
+    // first option to pass-in the selected offer index is to use the "productId@offerIndex" syntax.
+    if (productIdAndOfferIndexArray.length == 2) {
+      productId = productIdAndOfferIndexArray[0];
+      offerToken = productIdAndOfferIndexArray[1];
+    }
+    else {
+      productId = productIdAndOfferIndex;
+    }
+
+    if (offerToken == null && additionalData.has("offerToken")) {
+      offerToken = additionalData.getString("offerToken");
+    }
 
     // NOTE: developerPayload isn't supported anymore.
     // https://developer.android.com/google/play/billing/developer-payload
@@ -547,20 +688,33 @@ public class PurchasePlugin
       ? additionalData.getString("profileId")
       : null;
 
+    final ProductDetails productDetails = mProductDetails.get(productId);
+    if (productDetails == null) {
+      Log.d(mTag, "buy() -> Failed: Product not registered: " + productId);
+      callError(Constants.ERR_PURCHASE, "Product not registered: " + productId);
+      return null;
+    }
+
     BillingFlowParams.Builder params = BillingFlowParams.newBuilder();
+
+    // If not passed in additionalData, use the offer token based on the selected offer index.
+    if (offerToken == null) {
+      offerToken = productDetails.getSubscriptionOfferDetails().get(0).getOfferToken();
+    }
+
+    List<ProductDetailsParams> productDetailsParamsList = new ArrayList<ProductDetailsParams>();
+    productDetailsParamsList.add(ProductDetailsParams.newBuilder()
+      .setProductDetails(productDetails)
+      .setOfferToken(offerToken)
+      .build());
 
     BillingFlowParams.SubscriptionUpdateParams.Builder subscriptionUpdateParams =
       BillingFlowParams.SubscriptionUpdateParams.newBuilder();
     Boolean hasSubscriptionUpdateParams = false;
 
-    final SkuDetails skuDetails = mSkuDetails.get(skuId);
-    if (skuDetails == null) {
-      Log.d(mTag, "buy() -> Failed: Product not registered: " + skuId);
-      callError(Constants.ERR_PURCHASE, "Product not registered: " + skuId);
-      return null;
-    }
-    Log.d(mTag, "buy() -> setSkuDetails");
-    params.setSkuDetails(skuDetails);
+    Log.d(mTag, "buy() -> setProductDetailsParamsList");
+    params.setProductDetailsParamsList(productDetailsParamsList);
+    // params.setProductDetails(productDetails);
     // NOTE: This has been removed in billing library v4, use oldPurchaseToken now.
     // if (oldSku != null && oldPurchaseToken != null) {
     //   Log.d(mTag, "buy() -> setOldSku");
@@ -684,10 +838,10 @@ public class PurchasePlugin
   }
 
   // Consume a purchase
-  private void consumePurchase(final String sku) throws JSONException {
-    Log.d(mTag, "consumePurchase(" + sku + ")");
+  private void consumePurchase(final String productId) throws JSONException {
+    Log.d(mTag, "consumePurchase(" + productId + ")");
     // Find the purchaseToken from sku
-    final Purchase purchase = findPurchaseBySku(sku);
+    final Purchase purchase = findPurchaseByProductId(productId);
     if (purchase == null) {
       Log.w(mTag, "consumePurchase() -> No such purchase");
       callError(Constants.ERR_PURCHASE, "ITEM_NOT_OWNED");
@@ -714,7 +868,7 @@ public class PurchasePlugin
   private void acknowledgePurchase(final String sku) throws JSONException {
     Log.d(mTag, "acknowledgePurchase(" + sku + ")");
     // Find the purchaseToken from sku
-    final Purchase purchase = findPurchaseBySku(sku);
+    final Purchase purchase = findPurchaseByProductId(sku);
     if (purchase == null) {
       Log.w(mTag, "acknowledgePurchase() -> No such purchase");
       callError(Constants.ERR_PURCHASE, "ITEM_NOT_OWNED");
@@ -744,16 +898,21 @@ public class PurchasePlugin
     }
   }
 
+  /*
+  Deprecated by Google (and not supported when using ProductDetails instead of SkuDetails)
+  We should use the "manageSubscription" deep-link instead. See
+  https://developer.android.com/reference/com/android/billingclient/api/PriceChangeFlowParams.Builder
+
   public void launchPriceChangeConfirmationFlow(String skuId) {
     Log.d(mTag, "launchPriceChangeConfirmationFlow(" + skuId + ")");
-    final SkuDetails skuDetails = mSkuDetails.get(skuId);
-    if (skuDetails == null) {
+    final ProductDetails productDetails = mProductDetails.get(skuId);
+    if (productDetails == null) {
       Log.d(mTag, "launchPriceChangeConfirmationFlow() -> Failed: Product not registered: " + skuId);
       sendToListener("onPriceChangeConfirmationResultUnknownSku", new JSONObject());
       return;
     }
     PriceChangeFlowParams priceChangeFlowParams = PriceChangeFlowParams.newBuilder()
-      .setSkuDetails(skuDetails)
+      .setProductDetails(productDetails)
       .build();
     mBillingClient.launchPriceChangeConfirmationFlow(cordova.getActivity(),
       priceChangeFlowParams,
@@ -772,6 +931,7 @@ public class PurchasePlugin
         }
       });
   }
+  */
 
   // Called when the activity receives a new intent.
   @Override
@@ -828,79 +988,102 @@ public class PurchasePlugin
     super.onDestroy();
   }
 
-  private int nSkuDetailsQuerySuccessful = 0;
+  private int nProductDetailsQuerySuccessful = 0;
   /**
    * Load in-app products information.
    *
    * @param listener Code to run once data has been loaded
    */
-  private void queryAllSkuDetails(final SkuDetailsResponseListener listener) {
-    Log.d(mTag, "queryAllSkuDetails()");
-    ArrayList<SkuDetails> allSkus = new ArrayList<SkuDetails>();
+  private void queryAllProductDetails(final ProductDetailsResponseListener listener) {
+    Log.d(mTag, "queryAllProductDetails()");
+    ArrayList<ProductDetails> allProducts = new ArrayList<ProductDetails>();
+
     final int nRequests =
-      (mSubsSkus.size() > 0 ? 1 : 0)
-      + (mInAppSkus.size() > 0 ? 1 : 0);
-    nSkuDetailsQuerySuccessful = 0;
-    final SkuDetailsResponseListener queryListener =
-      new SkuDetailsResponseListener() {
+      (mSubsProductIds.size() > 0 ? 1 : 0)
+      + (mInAppProductIds.size() > 0 ? 1 : 0);
+    nProductDetailsQuerySuccessful = 0;
+
+    final ProductDetailsResponseListener queryListener =
+      new ProductDetailsResponseListener() {
         @Override
-        public void onSkuDetailsResponse(
+        public void onProductDetailsResponse(
             final BillingResult result,
-            final List<SkuDetails> skuDetailsList) {
+            final List<ProductDetails> productDetailsList) {
           mBillingClientResult = result;
           if (result.getResponseCode() != BillingResponseCode.OK) {
-            Log.w(mTag, "queryAllSkuDetails() -> Failed: Unsuccessful query. "
+            Log.w(mTag, "queryAllProductDetails() -> Failed: Unsuccessful query. "
                 + format(result));
             callError(Constants.ERR_LOAD, "Error. " + format(result));
           } else {
-            if (skuDetailsList != null && skuDetailsList.size() > 0) {
+            if (productDetailsList != null && productDetailsList.size() > 0) {
               // Then fill all the other rows
-              for (SkuDetails sku : skuDetailsList) {
-                Log.d(mTag, "queryAllSkuDetails() -> SKUDetails: Title: "
-                    + sku.getTitle());
-                mSkuDetails.put(sku.getSku(), sku);
-                allSkus.add(sku);
+              for (ProductDetails product : productDetailsList) {
+                Log.d(mTag, "queryAllProductDetails() -> ProductDetails: Title: "
+                    + product.getTitle());
+                mProductDetails.put(product.getProductId(), product);
+                allProducts.add(product);
               }
             } else {
-              Log.w(mTag, "queryAllSkuDetails() -> Query returned nothing.");
+              Log.w(mTag, "queryAllProductDetails() -> Query returned nothing.");
             }
-            nSkuDetailsQuerySuccessful++;
-            if (nSkuDetailsQuerySuccessful == nRequests && listener != null) {
-              Log.d(mTag, "queryAllSkuDetails() -> Calling listener.");
-              listener.onSkuDetailsResponse(result, allSkus);
+            nProductDetailsQuerySuccessful++;
+            if (nProductDetailsQuerySuccessful == nRequests && listener != null) {
+              Log.d(mTag, "queryAllProductDetails() -> Calling listener.");
+              listener.onProductDetailsResponse(result, allProducts);
             }
           }
         }
       };
-    if (mInAppSkus.size() > 0) {
-      Log.d(mTag, "queryAllSkuDetails() -> Query INAPP.");
-      querySkuDetailsAsync(SkuType.INAPP, mInAppSkus, queryListener);
+
+    List<Product> subsList = new ArrayList<Product>();
+    for (int i = 0; i < mSubsProductIds.size(); ++i) {
+      subsList.add(Product.newBuilder()
+        .setProductId(mSubsProductIds.get(i))
+        .setProductType(ProductType.SUBS)
+        .build());
     }
-    if (mSubsSkus.size() > 0) {
-      Log.d(mTag, "queryAllSkuDetails() -> Query SUBS.");
-      querySkuDetailsAsync(SkuType.SUBS, mSubsSkus, queryListener);
+
+    List<Product> inAppList = new ArrayList<Product>();
+    for (int i = 0; i < mInAppProductIds.size(); ++i) {
+      inAppList.add(Product.newBuilder()
+        .setProductId(mInAppProductIds.get(i))
+        .setProductType(ProductType.INAPP)
+        .build());
     }
-    if (nRequests == 0 && listener != null) {
-      Log.d(mTag, "queryAllSkuDetails() -> Calling listener (0 requests).");
-      listener.onSkuDetailsResponse(getLastResult(), allSkus);
+
+    if (subsList.size() > 0) {
+      Log.d(mTag, "queryAllProductDetails() -> Query SUBS.");
+      queryProductDetailsAsync(subsList, queryListener);
+    }
+
+    if (inAppList.size() > 0) {
+      Log.d(mTag, "queryAllProductDetails() -> Query INAPP.");
+      queryProductDetailsAsync(inAppList, queryListener);
+    }
+
+    if (inAppList.size() == 0 && subsList.size() == 0) {
+      Log.d(mTag, "queryAllProductDetails() -> Calling listener (0 requests).");
+      if (listener != null) {
+        listener.onProductDetailsResponse(getLastResult(), allProducts);
+      }
     }
   }
 
-  public void querySkuDetailsAsync(
-      @SkuType final String itemType,
-      final List<String> skuList,
-      final SkuDetailsResponseListener listener) {
-    Log.d(mTag, "querySkuDetailsAsync()");
+  public void queryProductDetailsAsync(
+      // @ProductType final String itemType,
+      final List<Product> productList,
+      final ProductDetailsResponseListener listener) {
+    Log.d(mTag, "queryProductDetailsAsync()");
     executeServiceRequest(() -> {
       if (getLastResponseCode() != BillingResponseCode.OK) {
-        Log.d(mTag, "querySkuDetailsAsync() -> Failed: "
+        Log.d(mTag, "queryProductDetailsAsync() -> Failed: "
             + format(getLastResult()));
-        listener.onSkuDetailsResponse(getLastResult(), null);
+        listener.onProductDetailsResponse(getLastResult(), null);
       } else {
-        Log.d(mTag, "querySkuDetailsAsync() -> Success");
-        SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
-        params.setSkusList(skuList).setType(itemType);
-        mBillingClient.querySkuDetailsAsync(params.build(), listener);
+        Log.d(mTag, "queryProductDetailsAsync() -> Success");
+        QueryProductDetailsParams.Builder params = QueryProductDetailsParams.newBuilder();
+        params.setProductList(productList)/* .setType(itemType) */;
+        mBillingClient.queryProductDetailsAsync(params.build(), listener);
       }
     });
   }

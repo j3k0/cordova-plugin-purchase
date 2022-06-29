@@ -1,5 +1,10 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 12.0.0
+
+### Upgrade to Google Play Billing library v5.0
+
+With Google Play, `store.launchPriceChangeConfirmationFlow(productId, callback)` is now the same as calling `store.manageSubscription()`. The underlying method provided by Google has been removed: https://developer.android.com/reference/com/android/billingclient/api/PriceChangeFlowParams - A deep link to the subscription management page on Google Play is now the newly recommended method.
 
 ## 11.0.0
 

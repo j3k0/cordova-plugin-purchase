@@ -225,8 +225,8 @@ function oldApi() {
                             break;
                         case fulfillmentResult.purchaseReverted:
                             fail("Your purchase has been reverted..", fulfillmentResult.purchaseReverted);
-                            // Since the user's purchase was revoked, they got their money back. 
-                            // You may want to revoke the user's access to the consumable content that was granted. 
+                            // Since the user's purchase was revoked, they got their money back.
+                            // You may want to revoke the user's access to the consumable content that was granted.
                             break;
                         case fulfillmentResult.serverError:
                             fail("There was an error when fulfilling.", fulfillmentResult.serverError);
