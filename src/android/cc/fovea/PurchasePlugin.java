@@ -698,15 +698,23 @@ public class PurchasePlugin
     BillingFlowParams.Builder params = BillingFlowParams.newBuilder();
 
     // If not passed in additionalData, use the offer token based on the selected offer index.
-    if (offerToken == null) {
-      offerToken = productDetails.getSubscriptionOfferDetails().get(0).getOfferToken();
+    final List<SubscriptionOfferDetails> subscriptionOfferDetails = productDetails.getSubscriptionOfferDetails();
+    if (offerToken == null && subscriptionOfferDetails != null) {
+      offerToken = subscriptionOfferDetails.get(0).getOfferToken();
     }
-
     List<ProductDetailsParams> productDetailsParamsList = new ArrayList<ProductDetailsParams>();
-    productDetailsParamsList.add(ProductDetailsParams.newBuilder()
-      .setProductDetails(productDetails)
-      .setOfferToken(offerToken)
-      .build());
+
+    if (offerToken != null) {
+      productDetailsParamsList.add(ProductDetailsParams.newBuilder()
+        .setProductDetails(productDetails)
+        .setOfferToken(offerToken)
+        .build());
+    }
+    else {
+      productDetailsParamsList.add(ProductDetailsParams.newBuilder()
+        .setProductDetails(productDetails)
+        .build());
+    }
 
     BillingFlowParams.SubscriptionUpdateParams.Builder subscriptionUpdateParams =
       BillingFlowParams.SubscriptionUpdateParams.newBuilder();
