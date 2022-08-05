@@ -116,100 +116,301 @@ function iabSetPurchases(purchases) {
   });
 }
 
+/** type ValidProductV11 = {
+ * productId: string;
+ * title: string;
+ * name: string;
+ * billing_period: string;
+ * billing_period_unit: string;
+ * description: string;
+ * price: string;
+ * price_amount_micros: string;
+ * price_currency_code: string;
+ * trial_period: string;
+ * trial_period_unit: string;
+ * formatted_price: string;
+ * freeTrialPeriod: string;
+ * introductoryPrice: string;
+ * introductoryPriceAmountMicros: string;
+ * introductoryPriceCycles: string;
+ * introductoryPricePeriod: string;
+ * subscriptionPeriod: string;
+ * }
+ */
+
+/** type ValidProductV12 = {
+ * product_format: "v12.0";
+ * productId: string;
+ * name: string;
+ * title: string;
+ * product_type: "inapp" | "subs";
+ * description: string;
+ * offers: {
+ *   token: string;
+ *   tags: string[];
+ *   pricing_phases: {
+ *     recurrence_mode: "FINITE_RECURRING" | "INFINITE_RECURRING" | "NON_RECURRING"
+ *     billing_period: string;
+ *     billing_cycle_count: string;
+ *     formatted_price: string;
+ *     price_amount_micros: string;
+ *     price_currency_code: string;
+ *   }[];
+ * }[]
+ * }
+ */
+
+function iabSubsOfferV12Loaded(vp, productOffer) {
+    var offerAttributes = {
+        id: vp.productId + '@' + productOffer.token,
+        parentId: vp.productId,
+        group: vp.productId,
+        type: store.get(vp.productId).type,
+        state: store.VALID,
+        title: vp.name,
+        description: vp.description,
+        tags: productOffer.tags,
+        pricingPhases: productOffer.pricing_phases.map(iabPricingPhaseToAttribute)
+    };
+    // Backward compatibility (might be incomplete if user have complex pricing models, but might as well be complete...)
+    if (productOffer.pricing_phases.length > 0) {
+        iabSubsAddV12Attributes(offerAttributes, productOffer);
+    }
+    var offerP = store.get(offerAttributes.id);
+    if (!offerP) {
+        store.register(offerAttributes);
+        offerP = store.get(offerAttributes.id);
+    }
+    offerP.set(offerAttributes);
+    offerP.trigger("loaded");
+}
+
+function iabPaymentMode (phase) {
+    return phase.price_amount_micros === 0 ? 'FreeTrial' : phase.recurrenceMode === store.NON_RECURRING ? 'UpFront' : 'PayAsYouGo';
+}
+
+function iabPricingPhaseToAttribute(phase) {
+    return {
+        price: phase.formatted_price,
+        priceMicros: phase.price_amount_micros,
+        currency: phase.price_currency_code,
+        billingPeriod: phase.billing_period,
+        billingCycles: phase.billing_cycle_count,
+        recurrenceMode: phase.recurrence_mode,
+        paymentMode: iabPaymentMode(phase),
+    };
+}
+
+function iabSubsAddV12Attributes(attributes, offer) {
+    if (offer && offer.pricing_phases.length > 0) {
+        var firstPhase = offer.pricing_phases[0];
+        var lastPhase = offer.pricing_phases[offer.pricing_phases.length - 1];
+        attributes.price = lastPhase.formatted_price;
+        attributes.priceMicros = lastPhase.price_amount_micros;
+        attributes.currency = lastPhase.price_currency_code;
+        attributes.billingPeriodISO = lastPhase.billing_period;
+        attributes.billingCycles = lastPhase.billing_cycle_count;
+        attributes.paymentMode = iabPaymentMode(lastPhase);
+        attributes.recurrenceMode = lastPhase.recurrenceMode;
+        attributes.billingPeriodUnit = normalizeISOPeriodUnit(lastPhase.billing_period);
+        attributes.billingPeriod = normalizeISOPeriodCount(lastPhase.billing_period);
+
+        if (offer.pricing_phases == 2) {
+            attributes.introPrice = firstPhase.formatted_price;
+            attributes.introPriceMicros = firstPhase.price_amount_micros;
+            attributes.introPeriodISO = firstPhase.billing_period;
+            attributes.introCycles = firstPhase.billing_cycle_count;
+            attributes.introPaymentMode = iabPaymentMode(firstPhase);
+            attributes.introRecurrenceMode = firstPhase.recurrenceMode;
+            attributes.introPricePeriod = normalizeISOPeriodCount(firstPhase.billing_period);
+            attributes.introPricePeriodUnit = normalizeISOPeriodUnit(firstPhase.billing_period);
+        }
+    }
+}
+
+function iabSubsV12Loaded(vp) {
+    // console.log('iabSubsV12Loaded: ' + JSON.stringify(vp));
+    vp.offers.forEach(function (productOffer) {
+        iabSubsOfferV12Loaded(vp, productOffer);
+    });
+    var firstOffer = vp.offers[0];
+    if (firstOffer && firstOffer.pricing_phases.length > 0) {
+        var attributes = {
+            state: store.VALID,
+            title: vp.name,
+            description: vp.description,
+            offers: vp.offers.map(function(offer) {
+                return vp.productId + '@' + offer.token;
+            }),
+        };
+        iabSubsAddV12Attributes(attributes, firstOffer);
+        var p = store.products.byId[vp.productId];
+        p.set(attributes);
+        p.trigger("loaded");
+    }
+}
+
+function iabSubsV11Loaded(vp) {
+    // console.log('iabSubsV11Loaded: ' + JSON.stringify(vp));
+    var p = store.products.byId[vp.productId];
+    var attributes = {
+        state: store.VALID,
+        title: vp.name || trimTitle(vp.title),
+        description: vp.description,
+    };
+    var currency = vp.price_currency_code || "";
+    var price = vp.formatted_price || vp.price;
+    var priceMicros = vp.price_amount_micros;
+    var subscriptionPeriod = vp.subscriptionPeriod ? vp.subscriptionPeriod : "";
+    var introPriceSubscriptionPeriod = vp.introductoryPricePeriod ? vp.introductoryPricePeriod : "";
+    var introPriceNumberOfPeriods = vp.introductoryPriceCycles ? vp.introductoryPriceCycles : 0;
+    var introPricePeriodUnit = normalizeISOPeriodUnit(introPriceSubscriptionPeriod);
+    var introPricePeriodCount = normalizeISOPeriodCount(introPriceSubscriptionPeriod);
+    var introPricePeriod = (introPriceNumberOfPeriods || 1) * (introPricePeriodCount || 1);
+    var introPriceMicros = vp.introductoryPriceAmountMicros ? vp.introductoryPriceAmountMicros : "";
+    var introPrice = vp.introductoryPrice ? vp.introductoryPrice : "";
+    var introPricePaymentMode;
+
+    if (vp.freeTrialPeriod) {
+        introPricePaymentMode = 'FreeTrial';
+        try {
+            introPricePeriodUnit = normalizeISOPeriodUnit(vp.freeTrialPeriod);
+            introPricePeriodCount = normalizeISOPeriodCount(vp.freeTrialPeriod);
+            introPricePeriod = introPricePeriodCount;
+        }
+        catch (e) {
+            store.log.warn('Failed to parse free trial period: ' + vp.freeTrialPeriod);
+        }
+    }
+    else if (vp.introductoryPrice) {
+        if (vp.introductoryPrice < vp.price && subscriptionPeriod === introPriceSubscriptionPeriod) {
+            introPricePaymentMode = 'PayAsYouGo';
+        }
+        else if (introPriceNumberOfPeriods === 1) {
+            introPricePaymentMode = 'UpFront';
+        }
+    }
+
+    if (!introPricePaymentMode) {
+        introPricePeriod = null;
+        introPricePeriodUnit = null;
+    }
+
+    var parsedSubscriptionPeriod = {};
+    if (subscriptionPeriod) {
+        parsedSubscriptionPeriod.unit = normalizeISOPeriodUnit(subscriptionPeriod);
+        parsedSubscriptionPeriod.count = normalizeISOPeriodCount(subscriptionPeriod);
+    }
+
+    var trialPeriod = vp.trial_period || null;
+    var trialPeriodUnit = vp.trial_period_unit || null;
+    var billingPeriod = parsedSubscriptionPeriod.count || vp.billing_period || null;
+    var billingPeriodUnit = parsedSubscriptionPeriod.unit || vp.billing_period_unit || null;
+
+    var pricingPhases = [];
+    if (trialPeriod) {
+        pricingPhases.push({
+            paymentMode: 'FreeTrial',
+            recurrenceMode: store.FINITE_RECURRING,
+            period: vp.freeTrialPeriod || toISO8601Duration(trialPeriodUnit, trialPeriod),
+            cycles: 1,
+            price: null,
+            priceMicros: 0,
+            currency: currency,
+        });
+    }
+    else if (introPricePeriod) {
+        pricingPhases.push({
+            paymentMode: 'PayAsYouGo',
+            recurrenceMode: store.FINITE_RECURRING,
+            period: vp.introPriceSubscriptionPeriod || toISO8601Duration(introPricePeriodUnit, introPricePeriodCount),
+            cycles: vp.introductoryPriceCycles || 1,
+            price: null, // formatted price not available
+            priceMicros: introPriceMicros,
+            currency: currency,
+        });
+    }
+
+    pricingPhases.push({
+        paymentMode: 'PayAsYouGo',
+        recurrenceMode: store.INFINITE_RECURRING,
+        period: vp.subscriptionPeriod || toISO8601Duration(billingPeriodUnit, billingPeriod), // ISO8601 duration
+        cycles: 0,
+        price: price,
+        priceMicros: priceMicros,
+        currency: currency,
+    });
+    attributes.pricingPhases = pricingPhases;
+
+    if (store.compatibility > 0 && store.compatibility < 10.999) {
+        Object.assign(attributes, {
+            price: price,
+            priceMicros: priceMicros,
+            currency: currency,
+            trialPeriod: trialPeriod,
+            trialPeriodUnit: trialPeriodUnit,
+            billingPeriod: billingPeriod,
+            billingPeriodUnit: billingPeriodUnit,
+            introPrice: introPrice,
+            introPriceMicros: introPriceMicros,
+            introPricePeriod: introPricePeriod,
+            introPricePeriodUnit: introPricePeriodUnit,
+            introPricePaymentMode: introPricePaymentMode,
+        });
+    }
+
+    if (store.compatibility > 0 && store.compatibility < 9.999) {
+        Object.assign(attributes, {
+            introPriceNumberOfPeriods: introPricePeriod,
+            introPriceSubscriptionPeriod: introPricePeriodUnit,
+        });
+    }
+
+    p.set(attributes);
+    p.trigger("loaded");
+}
+
+function iabInAppLoaded(vp) {
+    // console.log('iabInAppLoaded: ' + JSON.stringify(vp));
+    var p = store.products.byId[vp.productId];
+    p.set({
+        state: store.VALID,
+        title: vp.name || trimTitle(vp.title),
+        description: vp.description,
+        currency: vp.price_currency_code || "",
+        price: vp.formatted_price || vp.price,
+        priceMicros: vp.price_amount_micros,
+    });
+    p.trigger("loaded");
+}
+
+function iabValidProductLoaded(vp) {
+    if (!vp.productId) return;
+    var p = store.products.byId[vp.productId];
+    if (!p) return;
+    if (vp.product_format === "v12.0") {
+        if (vp.product_type === "subs")
+            iabSubsV12Loaded(vp);
+        else
+            iabInAppLoaded(vp);
+    }
+    else if (p.type === store.PAID_SUBSCRIPTION) {
+        iabSubsV11Loaded(vp);
+    }
+    else {
+        iabInAppLoaded(vp);
+    }
+}
+
+// validProducts: Array<ValidProductV11 | ValidProductV12>
 function iabLoaded(validProducts) {
     store.log.debug("plugin -> loaded - " + JSON.stringify(validProducts));
     var p, i, vp;
     for (i = 0; i < validProducts.length; ++i) {
         vp = validProducts[i];
-
-        if (vp.productId)
-            p = store.products.byId[vp.productId];
-        else
-            p = null;
-
-        if (p) {
-            // See https://en.wikipedia.org/wiki/ISO_8601#Time_intervals
-            // assuming simple periods (P1M, P6W, ...)
-            var normalizeISOPeriodUnit = function (period) {
-                switch (period.slice(-1)) {
-                    case 'D': return 'Day';
-                    case 'W': return 'Week';
-                    case 'M': return 'Month';
-                    case 'Y': return 'Year';
-                    default:  return period;
-                }
-            };
-            var normalizeISOPeriodCount = function (period) {
-              return parseInt(period.replace(/[A-Z]+/g, ''));
-            };
-
-            var trimTitle = function (title) {
-              if (!title) return 'Invalid product';
-              return title.split('(').slice(0, -1).join('(').replace(/ $/, '');
-            };
-
-            var subscriptionPeriod = vp.subscriptionPeriod ? vp.subscriptionPeriod : "";
-            var introPriceSubscriptionPeriod = vp.introductoryPricePeriod ? vp.introductoryPricePeriod : "";
-            var introPriceNumberOfPeriods = vp.introductoryPriceCycles ? vp.introductoryPriceCycles : 0;
-            var introPricePeriodUnit = normalizeISOPeriodUnit(introPriceSubscriptionPeriod);
-            var introPricePeriodCount = normalizeISOPeriodCount(introPriceSubscriptionPeriod);
-            var introPricePeriod = (introPriceNumberOfPeriods || 1) * (introPricePeriodCount || 1);
-
-            var introPricePaymentMode = null;
-            if (vp.freeTrialPeriod) {
-                introPricePaymentMode = 'FreeTrial';
-                try {
-                    introPricePeriodUnit = normalizeISOPeriodUnit(vp.freeTrialPeriod);
-                    introPricePeriodCount = normalizeISOPeriodCount(vp.freeTrialPeriod);
-                    introPricePeriod = introPricePeriodCount;
-                }
-                catch (e) {
-                    store.log.warn('Failed to parse free trial period: ' + vp.freeTrialPeriod);
-                }
-            }
-            else if (vp.introductoryPrice) {
-                if (vp.introductoryPrice < vp.price && subscriptionPeriod === introPriceSubscriptionPeriod) {
-                    introPricePaymentMode = 'PayAsYouGo';
-                }
-                else if (introPriceNumberOfPeriods === 1) {
-                    introPricePaymentMode = 'UpFront';
-                }
-            }
-
-            if (!introPricePaymentMode) {
-                introPricePeriod= null;
-                introPricePeriodUnit = null;
-            }
-
-            var parsedSubscriptionPeriod = {};
-            if (subscriptionPeriod) {
-              parsedSubscriptionPeriod.unit = normalizeISOPeriodUnit(subscriptionPeriod);
-              parsedSubscriptionPeriod.count = normalizeISOPeriodCount(subscriptionPeriod);
-            }
-
-            p.set({
-                title: trimTitle(vp.title || vp.name),
-                price: vp.price || vp.formattedPrice,
-                priceMicros: vp.price_amount_micros,
-                trialPeriod: vp.trial_period || null,
-                trialPeriodUnit: vp.trial_period_unit || null,
-                billingPeriod: parsedSubscriptionPeriod.count || vp.billing_period || null,
-                billingPeriodUnit: parsedSubscriptionPeriod.unit || vp.billing_period_unit || null,
-                description: vp.description,
-                currency: vp.price_currency_code || "",
-                introPrice: vp.introductoryPrice ? vp.introductoryPrice : "",
-                introPriceMicros: vp.introductoryPriceAmountMicros ? vp.introductoryPriceAmountMicros : "",
-                introPricePeriod: introPricePeriod,
-                introPricePeriodUnit: introPricePeriodUnit,
-                introPriceNumberOfPeriods: introPricePeriod, // legacy props (deprecated)
-                introPriceSubscriptionPeriod: introPricePeriodUnit, // legacy props (deprecrated)
-                introPricePaymentMode: introPricePaymentMode,
-                state: store.VALID
-            });
-
-            p.trigger("loaded");
-        }
+        if (vp.productId) iabValidProductLoaded(vp);
     }
+
     for (i = 0; i < skus.length; ++i) {
         p = store.products.byId[skus[i]];
         if (p && !p.valid) {
@@ -483,5 +684,42 @@ store.launchPriceChangeConfirmationFlow = function(productId, callback) {
     store.inappbilling.onPriceChangeConfirmationResult = callback;
     store.inappbilling.launchPriceChangeConfirmationFlow(productId);
 };
+
+// See https://en.wikipedia.org/wiki/ISO_8601#Time_intervals
+// assuming simple periods (P1M, P6W, ...)
+function normalizeISOPeriodUnit(period) {
+    switch (period.slice(-1)) {
+        case 'D': return 'Day';
+        case 'W': return 'Week';
+        case 'M': return 'Month';
+        case 'Y': return 'Year';
+        default:  return period;
+    }
+}
+
+function normalizeISOPeriodCount(period) {
+    return parseInt(period.replace(/[A-Z]+/g, ''));
+}
+
+function trimTitle(title) {
+    if (!title) return 'Invalid product';
+    return title.split('(').slice(0, -1).join('(').replace(/ $/, '');
+}
+
+function toISO8601Duration(unit, count) {
+    var PERIOD_UNIT = {
+        'Day': 'D',
+        'Week': 'W',
+        'Month': 'M',
+        'Year': 'Y'
+    };
+    if (PERIOD_UNIT[unit]) return 'P' + count + PERIOD_UNIT[unit];
+    var TIME_UNIT = {
+        'Minute': 'M',
+        'Hour': 'H'
+    };
+    if (TIME_UNIT[unit]) return 'T' + count + TIME_UNIT[unit];
+    return null;
+}
 
 })();

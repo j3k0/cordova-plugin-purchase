@@ -420,6 +420,13 @@ var ERROR_CODES_BASE = 6777000;
 ///
 /*///*/     store.APPLICATION = "application";
 
+///
+/// ### recurrence modes
+///
+/*///*/     store.NON_RECURRING = "NON_RECURRING";
+/*///*/     store.FINITE_RECURRING = "FINITE_RECURRING";
+/*///*/     store.INFINITE_RECURRING = "INFINITE_RECURRING";
+
 })();
 (function() {
 
@@ -2174,7 +2181,7 @@ store.refresh = function() {
 /// ```
 
 ///
-/// ## <a name="launchPriceChangeConfirmationFlow"></a>*store.launchPriceChangeConfirmationFlow(callback)*
+/// ## <a name="launchPriceChangeConfirmationFlow"></a>*store.launchPriceChangeConfirmationFlow(productId, callback)*
 ///
 /// Android only: display a generic dialog notifying the user of a subscription price change.
 ///
@@ -2185,9 +2192,10 @@ store.refresh = function() {
 /// ##### example usage
 ///
 /// ```js
-///    store.launchPriceChangeConfirmationFlow(function(status) {
+///    store.launchPriceChangeConfirmationFlow(function('product_id', status) {
 ///      if (status === "OK") { /* approved */ }
 ///      if (status === "UserCanceled") { /* dialog canceled by user */ }
+///      if (status === "UnknownProduct") { /* trying to update price of an unregistered product */ }
 ///    }));
 /// ```
 
@@ -4041,7 +4049,9 @@ store.manageBilling = function() {
     storekit.manageBilling();
 };
 
-store.launchPriceChangeConfirmationFlow = function(callback) {};
+store.launchPriceChangeConfirmationFlow = function(productId, callback) {
+    callback('UserCanceled');
+};
 
 /// store.redeemCode({ type: 'subscription_offer_code' });
 store.redeem = function() {

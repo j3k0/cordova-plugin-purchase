@@ -108,6 +108,9 @@ declare namespace IapStore {
     developerPayload?: string;
     /** A object that describes the discount to apply with the purchase (iOS only):  */
     discount: IDiscount;
+
+    /** A string with the offer token, as found `product.offers[].token` */
+    offerToken?: string;
   }
 
   export interface IDiscount {
@@ -245,6 +248,13 @@ declare namespace IapStore {
     /** Validation Error: More data is needed from the app to complete the validation request */
     NEED_MORE_DATA: number;
 
+    /** Payment recurs for a fixed number of billing period set in `paymentPhase.cycles`. */
+    FINITE_RECURRING: RecurrenceMode;
+    /** Payment recurs for infinite billing periods unless cancelled. */
+    INFINITE_RECURRING: RecurrenceMode;
+    /** A one time charge that does not repeat. */
+    NON_RECURRING: RecurrenceMode;
+
     /**
      * The verbosity property defines how much you want store.js to write on the console.
      *
@@ -298,6 +308,19 @@ declare namespace IapStore {
      * https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#storedevelopername
      */
     developerName?: string;
+
+    /**
+     * Let the plugin operate in compatibility mode by filling in deprecated fields.
+     *
+     * By default, the plugin does not attempt to work in compatibility mode.
+     *
+     * Set to `10` to use the legacy product price definition instead of the more generic `offers` property.
+     * Set to `9` to keep the old names for intro period period definitions.
+     *
+     * NOTE: the plugin might not be able to describe all Google Play subscription plans in compatibility mode.
+     * (when or non backward-compatible pricing modes are being used).
+     */
+    compatibility?: number;
 
     disableHostedContent: boolean;
 
@@ -493,6 +516,15 @@ declare namespace IapStore {
   }
 
   export type IPeriodUnit = "Minute" | "Hour" | "Day" | "Week" | "Month" | "Year";
+
+  /**
+   * Type of recurring payment
+   *
+   * - FINITE_RECURRING: Payment recurs for a fixed number of billing period set in `paymentPhase.cycles`.
+   * - INFINITE_RECURRING: Payment recurs for infinite billing periods unless cancelled.
+   * - NON_RECURRING: A one time charge that does not repeat.
+   */
+  export type RecurrenceMode = "NON_RECURRING" | "FINITE_RECURRING" | "INFINITE_RECURRING";
 
   /**
    * In-App Product or Application Bundle

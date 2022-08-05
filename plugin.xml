@@ -119,7 +119,7 @@ SOFTWARE.
 
       <!-- To ensure we're using the latest version, see here:
         https://developer.android.com/google/play/billing/billing_library_releases_notes -->
-      <framework src="com.android.billingclient:billing:4.0.0" />
+      <framework src="com.android.billingclient:billing:5.0.0" />
       <source-file src="src/android/cc/fovea/PurchasePlugin.java" target-dir="src/cc/fovea" />
       <source-file src="src/android/cc/fovea/Constants.java" target-dir="src/cc/fovea" />
     </platform>

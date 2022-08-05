@@ -347,6 +347,12 @@ The `sandbox` property defines if you want to invoke the platform purchase sandb
 ### special purpose
 
     store.APPLICATION = "application";
+
+### recurrence modes
+
+    store.NON_RECURRING = "NON_RECURRING";
+    store.FINITE_RECURRING = "FINITE_RECURRING";
+    store.INFINITE_RECURRING = "INFINITE_RECURRING";
 ## <a name="product"></a>*store.Product* object ##
 
 Most events methods give you access to a `product` object.
@@ -1040,7 +1046,7 @@ Redeems a promotional offer from within the app.
    store.redeem();
 ```
 
-## <a name="launchPriceChangeConfirmationFlow"></a>*store.launchPriceChangeConfirmationFlow(callback)*
+## <a name="launchPriceChangeConfirmationFlow"></a>*store.launchPriceChangeConfirmationFlow(productId, callback)*
 
 Android only: display a generic dialog notifying the user of a subscription price change.
 
@@ -1051,9 +1057,10 @@ See https://developer.android.com/google/play/billing/subscriptions#price-change
 ##### example usage
 
 ```js
-   store.launchPriceChangeConfirmationFlow(function(status) {
+   store.launchPriceChangeConfirmationFlow(function('product_id', status) {
      if (status === "OK") { /* approved */ }
      if (status === "UserCanceled") { /* dialog canceled by user */ }
+     if (status === "UnknownProduct") { /* trying to update price of an unregistered product */ }
    }));
 ```
 ## *store.log* object

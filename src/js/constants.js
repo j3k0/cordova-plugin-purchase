@@ -92,4 +92,11 @@ var ERROR_CODES_BASE = 6777000;
 ///
 /*///*/     store.APPLICATION = "application";
 
+///
+/// ### recurrence modes
+///
+/*///*/     store.NON_RECURRING = "NON_RECURRING";
+/*///*/     store.FINITE_RECURRING = "FINITE_RECURRING";
+/*///*/     store.INFINITE_RECURRING = "INFINITE_RECURRING";
+
 })();
