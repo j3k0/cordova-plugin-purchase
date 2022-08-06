@@ -4,7 +4,78 @@
 
 ### Upgrade to Google Play Billing library v5.0
 
+With the upgrade to Google Play Billing library v5.0, many things will changes related to subscriptions, most importantly with the introduction of "subscription offers" and "pricing phases".
+
+**Receipt validations**
+
+Note that, at the time of writing this, validating purchases made with the Google Play Billing library v5.0 required the use the the SubscriptionV2 API. This API is already supported by [iaptic](https://www.iaptic.com/), the successor to Fovea's receipt validation service, so it might be a good option if you do not want to implement this new API.
+
+### (Google Play) `store.launchPriceChangeConfirmationFlow` - Update
+
 With Google Play, `store.launchPriceChangeConfirmationFlow(productId, callback)` is now the same as calling `store.manageSubscription()`. The underlying method provided by Google has been removed: https://developer.android.com/reference/com/android/billingclient/api/PriceChangeFlowParams - A deep link to the subscription management page on Google Play is now the newly recommended method.
+
+### NEW: `product.offers` - Subscription Offers support
+
+A single subscription product can now be purchased with different offers. See https://developer.android.com/google/play/billing/subscriptions
+
+To enable this new feature in a backward compatible way, the plugin will generate one product for each offer.
+
+The generated products will have all the attributes of a legacy subscription product, with those noticeable values:
+
+ * `id`: `PARENT_PRODUCT_ID@OFFER_TOKEN`.
+ * `group`: `PARENT_PRODUCT_ID`.
+
+The parent product will have an `offers` attributes. It's an array of strings containing the identifiers for all offers available to the user.
+
+You can get the information for those offers with `store.get(offerId)`, they are represented as virtual products.
+
+### NEW: `product.pricingPhases` - Flexible Pricing Phases support
+
+Google now allows more flexible pricing in multiple phases. While it's currently limited to 2 phases, the API doesn't really impose that limitation.
+
+To reflect this, the plugin now include prices in the `product.pricingPhases` attribute. It's an array of phases, with various costs, durations and recurrence modes. When present, this supersedes the legacy way of including prices and durations.
+
+Here is the newly defined type:
+
+```typescript
+/** Description of a phase for the pricing of a purchase. */
+export interface IPricingPhase {
+   /** Price formatted for humans */
+   price: string;
+   /** Price in micro-units (divide by 1000000 to get numeric price) */
+   priceMicros: number;
+   /** Currency code */
+   currency?: string;
+   /** ISO 8601 duration of the period (https://en.wikipedia.org/wiki/ISO_8601#Durations) */
+   billingPeriod?: string;
+   /** Number of recurrence cycles (if recurrenceMode is FINITE_RECURRING) */
+   billingCycles?: number;
+   /** Type of recurring payment */
+   recurrenceMode?: RecurrenceMode;
+   /** Payment mode for the pricing phase ("PayAsYouGo", "UpFront", or "FreeTrial") */
+   paymentMode?: IPaymentMode;
+}
+
+/**
+ * Type of recurring payment
+ *
+ * - FINITE_RECURRING: Payment recurs for a fixed number of billing period set in `paymentPhase.cycles`.
+ * - INFINITE_RECURRING: Payment recurs for infinite billing periods unless cancelled.
+ * - NON_RECURRING: A one time charge that does not repeat.
+ */
+export type RecurrenceMode = "NON_RECURRING" | "FINITE_RECURRING" | "INFINITE_RECURRING";
+```
+
+You can also keep the plugin in `v10` compatibility mode using `store.compatibility`, in which case the legacy "introPrice", "billingPeriod" and such will be filled using the content of the pricingPhases array. Notice that this legacy mode can only support **at most** 2 pricing phases.
+
+### NEW: `store.compatibility` - Legacy compatibility
+
+Let the plugin operate in compatibility mode by filling in deprecated fields. By default, the plugin does not attempt to work in compatibility mode.
+
+* Anything lower than `12` will use the legacy product price definition instead of the more generic `offers` property.
+* Anything lower than `10` will use the old names for intro period period definitions.
+
+**NOTE**: the plugin might not be able to describe all Google Play subscription plans in compatibility mode (when non backward-compatible pricing modes are being used, for instance if there are more than 2 pricing phases).
 
 ## 11.0.0
 

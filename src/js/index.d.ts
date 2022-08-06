@@ -594,6 +594,12 @@ declare namespace IapStore {
      * "You cannot make purchases at this stage. Try again in a moment. Make sure you didn't enable In-App-Purchases restrictions on your phone." */
     valid: boolean;
 
+    /** List of offers this product can be purchased from. This array contains identifiers for virtual products that you can access as you would for normal products, with `store.get(id)`. */
+    offers?: string[];
+
+    /** When the product is priced in different phases, this supersedes the pricing and period defined using the legacy fields. */
+    pricingPhases?: IPricingPhase[];
+
     /**
      * Call product.finish() to confirm to the store that an approved order has been delivered. This will change the product state from APPROVED to FINISHED (see life-cycle).
      *
@@ -622,7 +628,7 @@ declare namespace IapStore {
     priceMicros: number;
     /** Number of subscription periods */
     period: number;
-    /** Unit of the subcription period ("Day", "Week", "Month" or "Year") */
+    /** Unit of the subscription period ("Day", "Week", "Month" or "Year") */
     periodUnit: IPeriodUnit;
     /** "PayAsYouGo", "UpFront", or "FreeTrial" */
     paymentMode: IPaymentMode;
@@ -630,6 +636,27 @@ declare namespace IapStore {
     eligible: boolean;
   }
 
+  /** Description of a phase for the pricing of a purchase.
+   *
+   * @see IStoreProduct.pricingPhases */
+  export interface IPricingPhase {
+    /** Price formatted for humans */
+    price: string;
+    /** Price in micro-units (divide by 1000000 to get numeric price) */
+    priceMicros: number;
+    /** Currency code */
+    currency?: string;
+    /** ISO 8601 duration of the period (https://en.wikipedia.org/wiki/ISO_8601#Durations) */
+    billingPeriod?: string;
+    /** Number of recurrence cycles (if recurrenceMode is FINITE_RECURRING) */
+    billingCycles?: number;
+    /** Type of recurring payment */
+    recurrenceMode?: RecurrenceMode;
+    /** Payment mode for the pricing phase ("PayAsYouGo", "UpFront", or "FreeTrial") */
+    paymentMode?: IPaymentMode;
+  }
+
+  /** Type of payment for a pricing phase */
   export type IPaymentMode = "PayAsYouGo" | "UpFront" | "FreeTrial";
 
   /**
