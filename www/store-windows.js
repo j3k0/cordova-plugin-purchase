@@ -529,11 +529,19 @@ store.Product = function(options) {
     ///  - `product.downloaded` - Non-consumable content has been successfully downloaded for this product
     this.downloaded = options.downloaded;
 
-    ///  - `product.additionalData` - additional data possibly required for product purchase
+    ///  - `product.additionalData` - Additional data possibly required for product purchase
     this.additionalData = options.additionalData || null;
 
     ///  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
     this.transaction = null;
+
+    /// - `product.offers` - List of offers available for purchasing a product.
+    ///     - when not null, it contains an array of virtual product identifiers, you can fetch those virtual products as usual, with `store.get(id)`.
+    this.offers = null;
+
+    /// - `product.pricingPhases` - Since v11, when a product is paid for in multiple phases (for example, trial followed by paid periods), this contains the list of phases.
+    ///     - Example: [{"price":"€1.19","priceMicros":1190000,"currency":"EUR","billingPeriod":"P1W","billingCycles":0,"recurrenceMode":"INFINITE_RECURRING","paymentMode":"PayAsYouGo"}]
+    this.pricingPhases = null;
 
     ///  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
     ///  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
@@ -3417,7 +3425,7 @@ function iabSubsAddV12Attributes(attributes, offer) {
         attributes.billingPeriodUnit = normalizeISOPeriodUnit(lastPhase.billing_period);
         attributes.billingPeriod = normalizeISOPeriodCount(lastPhase.billing_period);
 
-        if (offer.pricing_phases == 2) {
+        if (offer.pricing_phases.length == 2) {
             attributes.introPrice = firstPhase.formatted_price;
             attributes.introPriceMicros = firstPhase.price_amount_micros;
             attributes.introPeriodISO = firstPhase.billing_period;
@@ -3544,7 +3552,7 @@ function iabSubsV11Loaded(vp) {
     });
     attributes.pricingPhases = pricingPhases;
 
-    if (store.compatibility > 0 && store.compatibility < 10.999) {
+    if (store.compatibility > 0 && store.compatibility < 11.999) {
         Object.assign(attributes, {
             price: price,
             priceMicros: priceMicros,

@@ -394,8 +394,12 @@ Products object have the following fields and methods.
    - `eligible` - True if the user is deemed eligible for this discount by the platform
  - `product.downloading` - Product is downloading non-consumable content
  - `product.downloaded` - Non-consumable content has been successfully downloaded for this product
- - `product.additionalData` - additional data possibly required for product purchase
+ - `product.additionalData` - Additional data possibly required for product purchase
  - `product.transaction` - Latest transaction data for this product (see [transactions](#transactions)).
+- `product.offers` - List of offers available for purchasing a product.
+    - when not null, it contains an array of virtual product identifiers, you can fetch those virtual products as usual, with `store.get(id)`.
+- `product.pricingPhases` - Since v11, when a product is paid for in multiple phases (for example, trial followed by paid periods), this contains the list of phases.
+    - Example: [{"price":"€1.19","priceMicros":1190000,"currency":"EUR","billingPeriod":"P1W","billingCycles":0,"recurrenceMode":"INFINITE_RECURRING","paymentMode":"PayAsYouGo"}]
  - `product.expiryDate` - Latest known expiry date for a subscription (a javascript Date)
  - `product.lastRenewalDate` - Latest date a subscription was renewed (a javascript Date)
  - `product.billingPeriod` - Duration of the billing period for a subscription, in the units specified by the `billingPeriodUnit` property. (_not available on iOS < 11.2_)
