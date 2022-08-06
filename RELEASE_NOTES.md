@@ -66,7 +66,13 @@ export interface IPricingPhase {
 export type RecurrenceMode = "NON_RECURRING" | "FINITE_RECURRING" | "INFINITE_RECURRING";
 ```
 
-You can also keep the plugin in `v10` compatibility mode using `store.compatibility`, in which case the legacy "introPrice", "billingPeriod" and such will be filled using the content of the pricingPhases array. Notice that this legacy mode can only support **at most** 2 pricing phases.
+You can also keep the plugin in `v11` compatibility mode using `store.compatibility = 11` (or lower), in which case the legacy "introPrice", "billingPeriod" and such will be filled using the content of the pricingPhases array. Notice that this legacy mode can only support **at most** 2 pricing phases.
+
+When in `v11` compatibility mode:
+
+ - prices and billing periods will be set using values from the last of the pricing phases.
+ - intro prices and billing periods will be set with the values from the first pricing phase (if there are more than one)
+ - product prices and billing periods will be set using values from the first offer for that product.
 
 ### NEW: `store.compatibility` - Legacy compatibility
 
