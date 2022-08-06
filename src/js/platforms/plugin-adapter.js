@@ -215,7 +215,7 @@ function iabSubsAddV12Attributes(attributes, offer) {
         attributes.billingPeriodUnit = normalizeISOPeriodUnit(lastPhase.billing_period);
         attributes.billingPeriod = normalizeISOPeriodCount(lastPhase.billing_period);
 
-        if (offer.pricing_phases == 2) {
+        if (offer.pricing_phases.length == 2) {
             attributes.introPrice = firstPhase.formatted_price;
             attributes.introPriceMicros = firstPhase.price_amount_micros;
             attributes.introPeriodISO = firstPhase.billing_period;
@@ -342,7 +342,7 @@ function iabSubsV11Loaded(vp) {
     });
     attributes.pricingPhases = pricingPhases;
 
-    if (store.compatibility > 0 && store.compatibility < 10.999) {
+    if (store.compatibility > 0 && store.compatibility < 11.999) {
         Object.assign(attributes, {
             price: price,
             priceMicros: priceMicros,
