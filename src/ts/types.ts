@@ -132,6 +132,7 @@
 
         export interface AdapterListener {
             productsUpdated(platform: Platform, products: Product[]): void;
+            receiptsUpdated(platform: Platform, receipts: Receipt[]): void;
         }
 
         export interface Adapter {
@@ -170,7 +171,15 @@
             /**
              * Initializes an order.
              */
-            order(offer: Offer, additionalData: AdditionalData): Promise<Transaction | IError>;
+            order(offer: Offer, additionalData: AdditionalData): Promise<undefined | IError>;
+
+            /**
+             * Finish a transaction.
+             *
+             * For non-consumables, this will acknowledge the purchase.
+             * For consumable, this will acknowledge and consume the purchase.
+             */
+            finish(transaction: Transaction): Promise<IError | undefined>;
         }
 
         export interface AdditionalData {
@@ -205,13 +214,14 @@
 
     /** Possible states of a product */
     export enum TransactionState {
-        REQUESTED = 'requested',
+        // REQUESTED = 'requested',
         INITIATED = 'initiated',
         APPROVED = 'approved',
         CANCELLED = 'cancelled',
         FINISHED = 'finished',
-        OWNED = 'owned',
-        EXPIRED = 'expired',
+        // OWNED = 'owned',
+        // EXPIRED = 'expired',
+        UNKNOWN_STATE = '',
     }
 
     export type PrivacyPolicyItem = 'fraud' | 'support' | 'analytics' | 'tracking';

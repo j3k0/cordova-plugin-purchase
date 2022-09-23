@@ -16,51 +16,126 @@ namespace CDVPurchase2 {
             log?: (msg: string) => void;
             showLog?: boolean;
             onPurchaseConsumed?: (purchase: BridgePurchase) => void;
-            onPurchasesUpdated?: (purchases: BridgePurchases) => void;
-            onSetPurchases?: (purchases: BridgePurchases) => void;
+            onPurchasesUpdated?: (purchases: BridgePurchase[]) => void;
+            onSetPurchases?: (purchases: BridgePurchase[]) => void;
             onPriceChangeConfirmationResult?: (result: "OK" | "UserCanceled" | "UnknownProduct") => void;
         }
 
-        export type BridgeErrorCallback = (message: string, code?: number) => void;
-
-        export interface BridgePurchases {
-        }
+        export type BridgeErrorCallback = (message: string, code?: ErrorCode) => void;
 
         export interface BridgePurchase {
+
+            /** Unique order identifier for the transaction.  (like GPA.XXXX-XXXX-XXXX-XXXXX) */
+            orderId?: string;
+
+            /** Application package from which the purchase originated. */
+            packageName: string;
+
+            /** Identifier of the purchased product.
+             *
+             * @deprecated - use productIds (since Billing v5 a single purchase can contain multiple products) */
+            productId: string;
+
+            /** Identifier of the purchased products */
+            productIds: string[];
+
+            /** Time the product was purchased, in milliseconds since the epoch (Jan 1, 1970). */
+            purchaseTime: number;
+
+            /** Payload specified when the purchase was acknowledged or consumed.
+             *
+             * @deprecated - This was removed from Billing v5 */
+            developerPayload: string;
+
+            /** Purchase state in the original JSON
+             *
+             * @deprecated - use getPurchaseState */
+            purchaseState: number;
+
+            /** Token that uniquely identifies a purchase for a given item and user pair. */
+            purchaseToken: string;
+
+            /** quantity of the purchased product */
+            quantity: number;
+
+            /** Whether the purchase has been acknowledged. */
+            acknowledged: boolean;
+
+            /** One of BridgePurchaseState indicating the state of the purchase. */
+            getPurchaseState: BridgePurchaseState;
+
+            /** Whether the subscription renews automatically. */
+            autoRenewing: false;
+
+            /** String containing the signature of the purchase data that was signed with the private key of the developer. */
+            signature: string;
+
+            /** String in JSON format that contains details about the purchase order. */
+            receipt: string;
+
+            /** Obfuscated account id specified at purchase - by default md5(applicationUsername) */
+            accountId: string;
+
+            /** Obfuscated profile id specified at purchase - used when a single user can have multiple profiles */
+            profileId: string;
         }
 
-        /** See https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#storeorderproduct-additionaldata for details */
-        export type ProrationMode =
-            'IMMEDIATE_WITH_TIME_PRORATION'
-            | 'IMMEDIATE_AND_CHARGE_PRORATED_PRICE'
-            | 'IMMEDIATE_WITHOUT_PRORATION'
-            | 'DEFERRED'
-            | 'IMMEDIATE_AND_CHARGE_FULL_PRICE';
+        export enum BridgePurchaseState {
+            UNSPECIFIED_STATE = 0,
+            PURCHASED = 1,
+            PENDING = 2,
+        }
+
+        /** Replace SKU ProrationMode.
+         *
+         * See https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode */
+        export enum ProrationMode {
+            /** Replacement takes effect immediately, and the remaining time will be prorated and credited to the user. */
+            IMMEDIATE_WITH_TIME_PRORATION = 'IMMEDIATE_WITH_TIME_PRORATION',
+            /** Replacement takes effect immediately, and the billing cycle remains the same. */
+            IMMEDIATE_AND_CHARGE_PRORATED_PRICE = 'IMMEDIATE_AND_CHARGE_PRORATED_PRICE',
+            /** Replacement takes effect immediately, and the new price will be charged on next recurrence time. */
+            IMMEDIATE_WITHOUT_PRORATION = 'IMMEDIATE_WITHOUT_PRORATION',
+            /** Replacement takes effect when the old plan expires, and the new price will be charged at the same time. */
+            DEFERRED = 'DEFERRED',
+            /** Replacement takes effect immediately, and the user is charged full price of new plan and is given a full billing cycle of subscription, plus remaining prorated time from the old plan. */
+            IMMEDIATE_AND_CHARGE_FULL_PRICE = 'IMMEDIATE_AND_CHARGE_FULL_PRICE',
+        }
 
         export interface AdditionalData {
 
             /** The GooglePlay offer token */
             offerToken?: string;
 
-            oldPurchasedSkus?: string[];
+            /** Replace another purchase with the new one
+             *
+             * Your can find the old token in the receipts. */
+            oldPurchaseToken?: string;
 
+            /**
+             * Obfuscated user account identifier
+             *
+             * Default to md5(store.applicationUsername)
+             */
             accountId?: string;
 
             /**
              * Some applications allow users to have multiple profiles within a single account.
+             *
              * Use this method to send the user's profile identifier to Google.
              */
             profileId?: string;
 
+            /** See https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#storeorderproduct-additionaldata for details */
             prorationMode?: ProrationMode;
         }
 
         export type BridgeMessage = {
             type: "setPurchases";
-            data: { purchases: BridgePurchases; };
+            data: { purchases: BridgePurchase[]; };
         } | {
             type: "purchasesUpdated";
-            data: { purchases: BridgePurchases; }
+            data: { purchases: BridgePurchase[]; }
         } | {
             type: "purchaseConsumed";
             data: { purchase: BridgePurchase; }
@@ -169,25 +244,25 @@ namespace CDVPurchase2 {
                 if (this.options.showLog) {
                     log('subscribe()');
                 }
-                if (additionalData.googlePlay?.oldPurchasedSkus && this.options.showLog) {
-                    log('subscribe() -> upgrading of old SKUs!');
+                if (additionalData.googlePlay?.oldPurchaseToken && this.options.showLog) {
+                    log('subscribe() -> upgrading from an old purchase');
                 }
                 return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [
                     productId, extendAdditionalData(additionalData)]);
             }
 
-            consumePurchase(success: () => void, fail: BridgeErrorCallback, productId: string, transactionId: string, developerPayload: string) {
+            consumePurchase(success: () => void, fail: BridgeErrorCallback, purchaseToken: string) {
                 if (this.options.showLog) {
                     log('consumePurchase()');
                 }
-                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "consumePurchase", [productId, transactionId, developerPayload]);
+                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "consumePurchase", [purchaseToken]);
             }
 
-            acknowledgePurchase(success: () => void, fail: BridgeErrorCallback, productId: string, transactionId: string, developerPayload: string) {
+            acknowledgePurchase(success: () => void, fail: BridgeErrorCallback, purchaseToken: string) {
                 if (this.options.showLog) {
                     log('acknowledgePurchase()');
                 }
-                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "acknowledgePurchase", [productId, transactionId, developerPayload]);
+                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "acknowledgePurchase", [purchaseToken]);
             }
 
             getAvailableProducts(inAppSkus: string[], subsSkus: string[], success: (validProducts: (BridgeInAppProduct | BridgeSubscriptionV12)[]) => void, fail: BridgeErrorCallback) {

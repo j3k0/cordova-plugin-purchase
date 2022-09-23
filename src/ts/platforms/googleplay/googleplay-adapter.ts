@@ -2,6 +2,70 @@ namespace CDVPurchase2 {
 
     export namespace GooglePlay {
 
+        export class Transaction extends CDVPurchase2.Transaction {
+
+            public nativePurchase: BridgePurchase;
+
+            constructor(purchase: BridgePurchase) {
+                super(Platform.GOOGLE_PLAY);
+                this.nativePurchase = purchase;
+                this.refresh(purchase);
+            }
+
+            static toState(state: BridgePurchaseState, isAcknowledged: boolean): TransactionState {
+                switch(state) {
+                    case BridgePurchaseState.PENDING:
+                        return TransactionState.INITIATED;
+                    case BridgePurchaseState.PURCHASED:
+                        if (isAcknowledged)
+                            return TransactionState.FINISHED;
+                        else
+                            return TransactionState.APPROVED;
+                    case BridgePurchaseState.UNSPECIFIED_STATE:
+                        return TransactionState.UNKNOWN_STATE;
+                }
+            }
+
+            /**
+             * Refresh the value in the transaction based on the native purchase update
+             */
+            refresh(purchase: BridgePurchase) {
+                this.nativePurchase = purchase;
+                this.transactionId = `google:${purchase.orderId || purchase.purchaseToken}`;
+                this.purchaseId = `google:${purchase.purchaseToken}`;
+                this.products = purchase.productIds.map(productId => ({ productId }));
+                if (purchase.purchaseTime) this.purchaseDate = new Date(purchase.purchaseTime);
+                this.isPending = (purchase.getPurchaseState === BridgePurchaseState.PENDING);
+                if (typeof purchase.acknowledged !== 'undefined') this.isAcknowledged = purchase.acknowledged;
+                if (typeof purchase.autoRenewing !== 'undefined') this.renewalIntent = purchase.autoRenewing ? RenewalIntent.RENEW : RenewalIntent.LAPSE;
+                this.state = Transaction.toState(purchase.getPurchaseState, purchase.acknowledged);
+            }
+        }
+
+        export class Receipt extends CDVPurchase2.Receipt {
+
+            /** Token that uniquely identifies a purchase for a given item and user pair. */
+            public purchaseToken: string;
+
+            /** Unique order identifier for the transaction.  (like GPA.XXXX-XXXX-XXXX-XXXXX) */
+            public orderId?: string;
+
+            constructor(purchase: BridgePurchase) {
+                super({
+                    platform: Platform.GOOGLE_PLAY,
+                    transactions: [new Transaction(purchase)],
+                });
+                this.purchaseToken = purchase.purchaseToken;
+                this.orderId = purchase.orderId;
+            }
+
+            /** Refresh the content of the purchase based on the native BridgePurchase */
+            refresh(purchase: BridgePurchase) {
+                (this.transactions[0] as Transaction)?.refresh(purchase);
+                this.orderId = purchase.orderId;
+            }
+        }
+
         export class Adapter implements CDVPurchase2.Adapter {
 
             /** Adapter identifier */
@@ -94,7 +158,7 @@ namespace CDVPurchase2 {
                 return {inAppSkus, subsSkus};
             }
 
-            /** Loads product metadata from the store */
+            /** @inheritdoc */
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
 
                 return new Promise((resolve) => {
@@ -138,16 +202,64 @@ namespace CDVPurchase2 {
                 });
             }
 
+            /** @inheritdoc */
+            finish(transaction: CDVPurchase2.Transaction): Promise<IError | undefined> {
+                return new Promise(resolve => {
+
+                    const onSuccess = () => resolve(undefined);
+                    const onFailure = (message: string, code?: ErrorCode) => resolve({ message, code } as IError);
+
+                    const firstProduct = transaction.products[0];
+                    if (!firstProduct)
+                        return resolve({ code: ErrorCode.FINISH, message: 'Cannot finish a transaction with no product' });
+
+                    const product = this._products.getProduct(firstProduct.productId);
+                    if (!product)
+                        return resolve({ code: ErrorCode.FINISH, message: 'Cannot finish transaction, unknown product ' + firstProduct.productId });
+
+                    const receipt = this._receipts.find(r => r.hasTransaction(transaction));
+                    if (!receipt)
+                        return resolve({ code: ErrorCode.FINISH, message: 'Cannot finish transaction, linked receipt not found.' });
+
+                    if (!receipt.purchaseToken)
+                        return resolve({ code: ErrorCode.FINISH, message: 'Cannot finish transaction, linked receipt contains no purchaseToken.' });
+
+                    if (product.type === ProductType.NON_RENEWING_SUBSCRIPTION || product.type === ProductType.CONSUMABLE) {
+                        if (!transaction.isConsumed)
+                            return this.bridge.consumePurchase(onSuccess, onFailure, receipt.purchaseToken);
+                    }
+                    else { // subscription and non-consumable
+                        if (!transaction.isAcknowledged)
+                            return this.bridge.acknowledgePurchase(onSuccess, onFailure, receipt.purchaseToken);
+                    }
+                    // nothing to do
+                    resolve(undefined);
+                });
+            }
+
             onPurchaseConsumed(purchase: BridgePurchase): void {
-
+                this.log.debug("onPurchaseConsumed: " + purchase.orderId);
             }
 
-            onPurchasesUpdated(purchases: BridgePurchases): void {
-
+            onPurchasesUpdated(purchases: BridgePurchase[]): void {
+                this.log.debug("onPurchaseUpdated: " + purchases.map(p => p.orderId).join(', '));
+                // GooglePlay generates one receipt for each purchase
+                purchases.forEach(purchase => {
+                    const existingReceipt = this.receipts.find(r => r.purchaseToken === purchase.purchaseToken);
+                    if (existingReceipt) {
+                        existingReceipt.refresh(purchase);
+                        this.context.listener.receiptsUpdated(Platform.GOOGLE_PLAY, [existingReceipt]);
+                    }
+                    else {
+                        const newReceipt = new Receipt(purchase);
+                        this.receipts.push(newReceipt);
+                        this.context.listener.receiptsUpdated(Platform.GOOGLE_PLAY, [newReceipt]);
+                    }
+                });
             }
 
-            onSetPurchases(purchases: BridgePurchases): void {
-
+            onSetPurchases(purchases: BridgePurchase[]): void {
+                this.log.debug("onSetPurchases: " + JSON.stringify(purchases));
             }
 
             onPriceChangeConfirmationResult(result: "OK" | "UserCanceled" | "UnknownProduct"): void {
@@ -159,21 +271,19 @@ namespace CDVPurchase2 {
                 }
             }
 
-            async order(offer: Offer, additionalData: CDVPurchase2.AdditionalData): Promise<IError | Transaction> {
+            /** @inheritdoc */
+            async order(offer: Offer, additionalData: CDVPurchase2.AdditionalData): Promise<IError | undefined> {
                 return new Promise(resolve => {
                     this.log.info("Order - " + JSON.stringify(offer));
-                    const transaction = new Transaction();
-                    transaction.productId = offer.product.id;
-                    transaction.offerId = offer.id;
-                    transaction.state = TransactionState.REQUESTED;
                     const buySuccess = () => {
-                        resolve(transaction);
+                        resolve(undefined);
                     };
                     const buyFailed = (message: string, code?: ErrorCode): void => {
                         this.log.warn('Order failed: ' + JSON.stringify({message, code}));
                         resolve({ code: code ?? ErrorCode.UNKNOWN, message });
                     };
-                    this.bridge.buy(buySuccess, buyFailed, offer.product.id + '@' + offer.id, additionalData);
+                    const idAndToken = offer.product.type === ProductType.PAID_SUBSCRIPTION ? offer.product.id + '@' + offer.id : offer.product.id;
+                    this.bridge.buy(buySuccess, buyFailed, idAndToken, additionalData);
                 });
             }
         }

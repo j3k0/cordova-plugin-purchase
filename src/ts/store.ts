@@ -2,19 +2,6 @@ namespace CDVPurchase2 {
 
     export const PLUGIN_VERSION = '13.0.0';
 
-    interface StoreAdapterDelegate {
-        updatedCallbacks: Callbacks<Product>;
-    }
-
-    class StoreAdapterListener implements AdapterListener {
-
-        delegate: StoreAdapterDelegate;
-        constructor(delegate: StoreAdapterDelegate) { this.delegate = delegate; }
-
-        productsUpdated(platform: Platform, products: Product[]): void {
-            products.forEach(product => this.delegate.updatedCallbacks.trigger(product));
-        }
-    }
 
     export class Store {
 
@@ -57,11 +44,14 @@ namespace CDVPurchase2 {
         private _readyCallbacks = new ReadyCallbacks();
 
         /** Listens to adapters */
-        listener: StoreAdapterListener;
+        listener: Internal.StoreAdapterListener;
 
         constructor() {
-            this.listener = new StoreAdapterListener({
+            this.listener = new Internal.StoreAdapterListener({
                 updatedCallbacks: this.updatedCallbacks,
+                updatedReceiptCallbacks: this.updatedReceiptsCallbacks,
+                approvedCallbacks: this.approvedCallbacks,
+                finishedCallbacks: this.finishedCallbacks,
             });
         }
 
@@ -118,6 +108,9 @@ namespace CDVPurchase2 {
         /** Callbacks when a product definition was updated */
         private updatedCallbacks = new Callbacks<Product>();
 
+        /** Callback when a receipt was updated */
+        private updatedReceiptsCallbacks = new Callbacks<Receipt>();
+
         /** Callbacks when a product is owned */
         private ownedCallbacks = new Callbacks<Product>();
 
@@ -147,14 +140,18 @@ namespace CDVPurchase2 {
             return ([] as Receipt[]).concat(...this.adapters.list.map(a => a.receipts));
         }
 
-        async order(offer: Offer, additionalData: AdditionalData): Promise<IError | Transaction> {
+        /** Place an order for a given offer */
+        async order(offer: Offer, additionalData?: AdditionalData): Promise<IError | undefined> {
             const adapter = this.adapters.find(offer.product.platform);
             if (!adapter) return {
                 code: ErrorCode.PAYMENT_NOT_ALLOWED,
                 message: 'Adapter not found for this platform (' + offer.product.platform + ')',
             } as IError;
-            return adapter.order(offer, additionalData);
+            return adapter.order(offer, additionalData || {});
         }
+
+        /** TODO */
+        async pay(options: { platform: Platform, amount: number, currency: string, description: string }) { }
 
         async verify(receiptOrTransaction: Transaction | Receipt) {
             this._validator.add(receiptOrTransaction);
@@ -164,7 +161,12 @@ namespace CDVPurchase2 {
             }), 50);
         }
 
-        async finish(value: Transaction | Receipt) {
+        /** Finalize a transaction */
+        async finish(transaction: Transaction | Receipt) {
+            const transactions = transaction instanceof Receipt ? transaction.transactions : [transaction];
+            transactions.forEach(transaction => {
+                const adapter = this.adapters.find(transaction.platform)?.finish(transaction);
+            });
         }
 
         async restorePurchases() {
@@ -202,7 +204,21 @@ namespace CDVPurchase2 {
             products: Product[] = [];
             receipts: Receipt[] = [];
             async initialize(): Promise<IError | undefined> { return; }
-            async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> { return products.map(p => ({ code: ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' } as IError)); }
+            async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
+                return products.map(p => ({ code: ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' } as IError));
+            }
+            async order(offer: Offer): Promise<undefined | IError> {
+                return {
+                    code: ErrorCode.UNKNOWN,
+                    message: 'TODO: Not implemented'
+                } as IError;
+            }
+            async finish(transaction: Transaction): Promise<undefined | IError> {
+                return {
+                    code: ErrorCode.UNKNOWN,
+                    message: 'TODO: Not implemented'
+                } as IError;
+            }
         }
     }
 
@@ -212,8 +228,16 @@ namespace CDVPurchase2 {
             products: Product[] = [];
             receipts: Receipt[] = [];
             async initialize(): Promise<IError | undefined> { return; }
-            async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> { return products.map(p => ({ code: ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' } as IError)); }
-            async order(offer: Offer): Promise<Transaction | IError> {
+            async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
+                return products.map(p => ({ code: ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' } as IError));
+            }
+            async order(offer: Offer): Promise<undefined | IError> {
+                return {
+                    code: ErrorCode.UNKNOWN,
+                    message: 'TODO: Not implemented'
+                } as IError;
+            }
+            async finish(transaction: Transaction): Promise<undefined | IError> {
                 return {
                     code: ErrorCode.UNKNOWN,
                     message: 'TODO: Not implemented'
@@ -228,8 +252,16 @@ namespace CDVPurchase2 {
             products: Product[] = [];
             receipts: Receipt[] = [];
             async initialize(): Promise<IError | undefined> { return; }
-            async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> { return products.map(p => ({ code: ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' } as IError)); }
-            async order(offer: Offer): Promise<Transaction | IError> {
+            async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
+                return products.map(p => ({ code: ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' } as IError));
+            }
+            async order(offer: Offer): Promise<undefined | IError> {
+                return {
+                    code: ErrorCode.UNKNOWN,
+                    message: 'TODO: Not implemented'
+                } as IError;
+            }
+            async finish(transaction: Transaction): Promise<undefined | IError> {
                 return {
                     code: ErrorCode.UNKNOWN,
                     message: 'TODO: Not implemented'

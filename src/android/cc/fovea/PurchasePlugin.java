@@ -176,11 +176,11 @@ public class PurchasePlugin
       } else if ("getPurchases".equals(action)) {
         getPurchases();
       } else if ("consumePurchase".equals(action)) {
-        final String sku = data.getString(0);
-        consumePurchase(sku);
+        final String purchaseToken = data.getString(0);
+        consumePurchase(purchaseToken);
       } else if ("acknowledgePurchase".equals(action)) {
-        final String sku = data.getString(0);
-        acknowledgePurchase(sku);
+        final String purchaseToken = data.getString(0);
+        acknowledgePurchase(purchaseToken);
       } else if ("buy".equals(action)) {
         buy(data);
       } else if ("subscribe".equals(action)) {
@@ -297,10 +297,14 @@ public class PurchasePlugin
 
   private JSONObject toJSON(final Purchase p) throws JSONException {
     return new JSONObject(p.getOriginalJson())
+      .put("productIds", new JSONArray(p.getProducts()))
       .put("orderId", p.getOrderId())
       .put("getPurchaseState", p.getPurchaseState())
+      .put("developerPayload", p.getDeveloperPayload())
       .put("acknowledged", p.isAcknowledged())
       .put("autoRenewing", p.isAutoRenewing())
+      .put("accountId", p.getAccountIdentifiers().getObfuscatedAccountId())
+      .put("profileId", p.getAccountIdentifiers().getObfuscatedProfileId())
       .put("signature", p.getSignature())
       .put("receipt", p.getOriginalJson().toString());
   }
@@ -722,7 +726,7 @@ public class PurchasePlugin
         .setProductDetails(productDetails)
         .setOfferToken(offerToken)
         .build());
-        Log.d(mTag, "Product details: " + productId + "@" + offerToken);
+        Log.d(mTag, "Product details id@token: " + productIdAndOfferIndexArray + " === " + productId + "@" + offerToken + " ... " + productDetails.toString());
     }
     else {
       productDetailsParamsList.add(ProductDetailsParams.newBuilder()
@@ -860,16 +864,16 @@ public class PurchasePlugin
   }
 
   // Consume a purchase
-  private void consumePurchase(final String productId) throws JSONException {
-    Log.d(mTag, "consumePurchase(" + productId + ")");
+  private void consumePurchase(final String purchaseToken) throws JSONException {
+    Log.d(mTag, "consumePurchase(" + purchaseToken + ")");
     // Find the purchaseToken from sku
-    final Purchase purchase = findPurchaseByProductId(productId);
-    if (purchase == null) {
-      Log.w(mTag, "consumePurchase() -> No such purchase");
-      callError(Constants.ERR_PURCHASE, "ITEM_NOT_OWNED");
-      return;
-    }
-    final String purchaseToken = purchase.getPurchaseToken();
+    // final Purchase purchase = findPurchaseByProductId(productId);
+    // if (purchase == null) {
+    //   Log.w(mTag, "consumePurchase() -> No such purchase");
+    //   callError(Constants.ERR_PURCHASE, "ITEM_NOT_OWNED");
+    //   return;
+    // }
+    // final String purchaseToken = purchase.getPurchaseToken();
 
     if (mTokensToBeConsumed.contains(purchaseToken)) {
       Log.i(mTag, "consumePurchase() -> Consume already in progress.");
@@ -880,23 +884,22 @@ public class PurchasePlugin
     executeServiceRequest(() -> {
       final ConsumeParams params = ConsumeParams.newBuilder()
         .setPurchaseToken(purchaseToken)
-        // .setDeveloperPayload(developerPayload) (removed in v3)
         .build();
       mBillingClient.consumeAsync(params, this);
     });
   }
 
   // Acknowledge a purchase
-  private void acknowledgePurchase(final String sku) throws JSONException {
-    Log.d(mTag, "acknowledgePurchase(" + sku + ")");
+  private void acknowledgePurchase(final String purchaseToken) throws JSONException {
+    Log.d(mTag, "acknowledgePurchase(" + purchaseToken + ")");
     // Find the purchaseToken from sku
-    final Purchase purchase = findPurchaseByProductId(sku);
-    if (purchase == null) {
-      Log.w(mTag, "acknowledgePurchase() -> No such purchase");
-      callError(Constants.ERR_PURCHASE, "ITEM_NOT_OWNED");
-      return;
-    }
-    final String purchaseToken = purchase.getPurchaseToken();
+    // final Purchase purchase = findPurchaseByProductId(sku);
+    // if (purchase == null) {
+    //   Log.w(mTag, "acknowledgePurchase() -> No such purchase");
+    //   callError(Constants.ERR_PURCHASE, "ITEM_NOT_OWNED");
+    //   return;
+    // }
+    // final String purchaseToken = purchase.getPurchaseToken();
     executeServiceRequest(() -> {
       final AcknowledgePurchaseParams params = AcknowledgePurchaseParams.newBuilder()
         .setPurchaseToken(purchaseToken)
