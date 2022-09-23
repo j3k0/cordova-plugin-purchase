@@ -45,8 +45,8 @@ namespace CDVPurchase2
                 });
             }
 
-            async initialize(platforms: Platform[] = [Store.defaultPlatform()], context: AdapterContext): Promise<IError[]> {
-                const newPlatforms = platforms.filter(p => !this.find(p));
+            async initialize(platforms: (Platform | { platform: Platform, options: any })[] = [Store.defaultPlatform()], context: AdapterContext): Promise<IError[]> {
+                const newPlatforms = platforms.map(p => typeof p === 'string' ? p : p.platform).filter(p => !this.find(p));
                 this.add(newPlatforms, context);
                 const products = context.registeredProducts.byPlatform();
                 const result = await Promise.all(newPlatforms.map(async (platform) => {

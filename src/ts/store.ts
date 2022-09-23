@@ -65,7 +65,7 @@ namespace CDVPurchase2 {
          *
          * @param platforms - List of payment platforms to initialize, default to Store.defaultPlatform().
          */
-        async initialize(platforms: Platform[] = [Store.defaultPlatform()]): Promise<IError[]> {
+        async initialize(platforms: (Platform | { platform: Platform, options: any })[] = [Store.defaultPlatform()]): Promise<IError[]> {
             const ret = this.adapters.initialize(platforms, this);
             ret.then(() => this._readyCallbacks.trigger());
             return ret;
