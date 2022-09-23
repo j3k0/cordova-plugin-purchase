@@ -18,6 +18,45 @@ var CDVPurchase2;
 (function (CDVPurchase2) {
     let Internal;
     (function (Internal) {
+        class StoreAdapterListener {
+            constructor(delegate) {
+                this.lastTransactionState = {};
+                this.delegate = delegate;
+            }
+            static makeTransactionToken(transaction) {
+                return transaction.platform + '|' + transaction.transactionId;
+            }
+            productsUpdated(platform, products) {
+                products.forEach(product => this.delegate.updatedCallbacks.trigger(product));
+            }
+            receiptsUpdated(platform, receipts) {
+                receipts.forEach(receipt => {
+                    this.delegate.updatedReceiptCallbacks.trigger(receipt);
+                    receipt.transactions.forEach(transaction => {
+                        const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
+                        const lastState = this.lastTransactionState[transactionToken];
+                        if (lastState !== transaction.state) {
+                            this.lastTransactionState[transactionToken] = transaction.state;
+                            switch (transaction.state) {
+                                case CDVPurchase2.TransactionState.APPROVED:
+                                    this.delegate.approvedCallbacks.trigger(transaction);
+                                    break;
+                                case CDVPurchase2.TransactionState.FINISHED:
+                                    this.delegate.finishedCallbacks.trigger(transaction);
+                                    break;
+                            }
+                        }
+                    });
+                });
+            }
+        }
+        Internal.StoreAdapterListener = StoreAdapterListener;
+    })(Internal = CDVPurchase2.Internal || (CDVPurchase2.Internal = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    let Internal;
+    (function (Internal) {
         class Adapters {
             constructor() {
                 this.list = [];
@@ -41,7 +80,7 @@ var CDVPurchase2;
             }
             initialize(platforms = [CDVPurchase2.Store.defaultPlatform()], context) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    const newPlatforms = platforms.filter(p => !this.find(p));
+                    const newPlatforms = platforms.map(p => typeof p === 'string' ? p : p.platform).filter(p => !this.find(p));
                     this.add(newPlatforms, context);
                     const products = context.registeredProducts.byPlatform();
                     const result = yield Promise.all(newPlatforms.map((platform) => __awaiter(this, void 0, void 0, function* () {
@@ -592,12 +631,6 @@ var CDVPurchase2;
 var CDVPurchase2;
 (function (CDVPurchase2) {
     CDVPurchase2.PLUGIN_VERSION = '13.0.0';
-    class StoreAdapterListener {
-        constructor(delegate) { this.delegate = delegate; }
-        productsUpdated(platform, products) {
-            products.forEach(product => this.delegate.updatedCallbacks.trigger(product));
-        }
-    }
     class Store {
         constructor() {
             /** Payment platform adapters */
@@ -613,6 +646,8 @@ var CDVPurchase2;
             this._readyCallbacks = new CDVPurchase2.ReadyCallbacks();
             /** Callbacks when a product definition was updated */
             this.updatedCallbacks = new CDVPurchase2.Callbacks();
+            /** Callback when a receipt was updated */
+            this.updatedReceiptsCallbacks = new CDVPurchase2.Callbacks();
             /** Callbacks when a product is owned */
             this.ownedCallbacks = new CDVPurchase2.Callbacks();
             /** Callbacks when a transaction has been approved */
@@ -623,8 +658,11 @@ var CDVPurchase2;
             this.verifiedCallbacks = new CDVPurchase2.Callbacks();
             this.errorCallbacks = new CDVPurchase2.Callbacks;
             this.version = CDVPurchase2.PLUGIN_VERSION;
-            this.listener = new StoreAdapterListener({
+            this.listener = new CDVPurchase2.Internal.StoreAdapterListener({
                 updatedCallbacks: this.updatedCallbacks,
+                updatedReceiptCallbacks: this.updatedReceiptsCallbacks,
+                approvedCallbacks: this.approvedCallbacks,
+                finishedCallbacks: this.finishedCallbacks,
             });
         }
         /** Get the application username as a string by either calling or returning Store.applicationUsername */
@@ -698,6 +736,7 @@ var CDVPurchase2;
             // concatenate products all all active platforms
             return [].concat(...this.adapters.list.map(a => a.receipts));
         }
+        /** Place an order for a given offer */
         order(offer, additionalData) {
             return __awaiter(this, void 0, void 0, function* () {
                 const adapter = this.adapters.find(offer.product.platform);
@@ -706,8 +745,12 @@ var CDVPurchase2;
                         code: CDVPurchase2.ErrorCode.PAYMENT_NOT_ALLOWED,
                         message: 'Adapter not found for this platform (' + offer.product.platform + ')',
                     };
-                return adapter.order(offer, additionalData);
+                return adapter.order(offer, additionalData || {});
             });
+        }
+        /** TODO */
+        pay(options) {
+            return __awaiter(this, void 0, void 0, function* () { });
         }
         verify(receiptOrTransaction) {
             return __awaiter(this, void 0, void 0, function* () {
@@ -718,8 +761,14 @@ var CDVPurchase2;
                 }), 50);
             });
         }
-        finish(value) {
+        /** Finalize a transaction */
+        finish(transaction) {
             return __awaiter(this, void 0, void 0, function* () {
+                const transactions = transaction instanceof CDVPurchase2.Receipt ? transaction.transactions : [transaction];
+                transactions.forEach(transaction => {
+                    var _a;
+                    const adapter = (_a = this.adapters.find(transaction.platform)) === null || _a === void 0 ? void 0 : _a.finish(transaction);
+                });
             });
         }
         restorePurchases() {
@@ -759,7 +808,25 @@ var CDVPurchase2;
                 return __awaiter(this, void 0, void 0, function* () { return; });
             }
             load(products) {
-                return __awaiter(this, void 0, void 0, function* () { return products.map(p => ({ code: CDVPurchase2.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' })); });
+                return __awaiter(this, void 0, void 0, function* () {
+                    return products.map(p => ({ code: CDVPurchase2.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' }));
+                });
+            }
+            order(offer) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return {
+                        code: CDVPurchase2.ErrorCode.UNKNOWN,
+                        message: 'TODO: Not implemented'
+                    };
+                });
+            }
+            finish(transaction) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return {
+                        code: CDVPurchase2.ErrorCode.UNKNOWN,
+                        message: 'TODO: Not implemented'
+                    };
+                });
             }
         }
         WindowsStore.Adapter = Adapter;
@@ -776,9 +843,19 @@ var CDVPurchase2;
                 return __awaiter(this, void 0, void 0, function* () { return; });
             }
             load(products) {
-                return __awaiter(this, void 0, void 0, function* () { return products.map(p => ({ code: CDVPurchase2.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' })); });
+                return __awaiter(this, void 0, void 0, function* () {
+                    return products.map(p => ({ code: CDVPurchase2.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' }));
+                });
             }
             order(offer) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return {
+                        code: CDVPurchase2.ErrorCode.UNKNOWN,
+                        message: 'TODO: Not implemented'
+                    };
+                });
+            }
+            finish(transaction) {
                 return __awaiter(this, void 0, void 0, function* () {
                     return {
                         code: CDVPurchase2.ErrorCode.UNKNOWN,
@@ -801,9 +878,19 @@ var CDVPurchase2;
                 return __awaiter(this, void 0, void 0, function* () { return; });
             }
             load(products) {
-                return __awaiter(this, void 0, void 0, function* () { return products.map(p => ({ code: CDVPurchase2.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' })); });
+                return __awaiter(this, void 0, void 0, function* () {
+                    return products.map(p => ({ code: CDVPurchase2.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' }));
+                });
             }
             order(offer) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return {
+                        code: CDVPurchase2.ErrorCode.UNKNOWN,
+                        message: 'TODO: Not implemented'
+                    };
+                });
+            }
+            finish(transaction) {
                 return __awaiter(this, void 0, void 0, function* () {
                     return {
                         code: CDVPurchase2.ErrorCode.UNKNOWN,
@@ -827,17 +914,25 @@ setTimeout(() => {
 var CDVPurchase2;
 (function (CDVPurchase2) {
     class Transaction {
-        constructor() {
-            this.state = CDVPurchase2.TransactionState.REQUESTED;
-            /** Product identifier */
-            this.productId = '';
-            /** Offer identifier */
-            this.offerId = '';
-            /** Transaction identifier */
+        constructor(platform) {
+            /** Transaction identifier. */
             this.transactionId = '';
+            /** State this transaction is in */
+            this.state = CDVPurchase2.TransactionState.UNKNOWN_STATE;
+            /** Purchased products */
+            this.products = [];
+            this.platform = platform;
         }
     }
     CDVPurchase2.Transaction = Transaction;
+    /** Whether or not the user intends to let the subscription auto-renew. */
+    let RenewalIntent;
+    (function (RenewalIntent) {
+        /** The user intends to let the subscription expire without renewing. */
+        RenewalIntent["LAPSE"] = "Lapse";
+        /** The user intends to renew the subscription. */
+        RenewalIntent["RENEW"] = "Renew";
+    })(RenewalIntent = CDVPurchase2.RenewalIntent || (CDVPurchase2.RenewalIntent = {}));
 })(CDVPurchase2 || (CDVPurchase2 = {}));
 var CDVPurchase2;
 (function (CDVPurchase2) {
@@ -938,13 +1033,14 @@ var CDVPurchase2;
     /** Possible states of a product */
     let TransactionState;
     (function (TransactionState) {
-        TransactionState["REQUESTED"] = "requested";
+        // REQUESTED = 'requested',
         TransactionState["INITIATED"] = "initiated";
         TransactionState["APPROVED"] = "approved";
         TransactionState["CANCELLED"] = "cancelled";
         TransactionState["FINISHED"] = "finished";
-        TransactionState["OWNED"] = "owned";
-        TransactionState["EXPIRED"] = "expired";
+        // OWNED = 'owned',
+        // EXPIRED = 'expired',
+        TransactionState["UNKNOWN_STATE"] = "";
     })(TransactionState = CDVPurchase2.TransactionState || (CDVPurchase2.TransactionState = {}));
 })(CDVPurchase2 || (CDVPurchase2 = {}));
 var CDVPurchase2;
@@ -1039,6 +1135,14 @@ var CDVPurchase2;
                     };
                 });
             }
+            finish(transaction) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return {
+                        code: CDVPurchase2.ErrorCode.UNKNOWN,
+                        message: 'TODO: Not implemented'
+                    };
+                });
+            }
         }
         AppleStore.Adapter = Adapter;
     })(AppleStore = CDVPurchase2.AppleStore || (CDVPurchase2.AppleStore = {}));
@@ -1047,6 +1151,61 @@ var CDVPurchase2;
 (function (CDVPurchase2) {
     let GooglePlay;
     (function (GooglePlay) {
+        class Transaction extends CDVPurchase2.Transaction {
+            constructor(purchase) {
+                super(CDVPurchase2.Platform.GOOGLE_PLAY);
+                this.nativePurchase = purchase;
+                this.refresh(purchase);
+            }
+            static toState(state, isAcknowledged) {
+                switch (state) {
+                    case GooglePlay.BridgePurchaseState.PENDING:
+                        return CDVPurchase2.TransactionState.INITIATED;
+                    case GooglePlay.BridgePurchaseState.PURCHASED:
+                        if (isAcknowledged)
+                            return CDVPurchase2.TransactionState.FINISHED;
+                        else
+                            return CDVPurchase2.TransactionState.APPROVED;
+                    case GooglePlay.BridgePurchaseState.UNSPECIFIED_STATE:
+                        return CDVPurchase2.TransactionState.UNKNOWN_STATE;
+                }
+            }
+            /**
+             * Refresh the value in the transaction based on the native purchase update
+             */
+            refresh(purchase) {
+                this.nativePurchase = purchase;
+                this.transactionId = `google:${purchase.orderId || purchase.purchaseToken}`;
+                this.purchaseId = `google:${purchase.purchaseToken}`;
+                this.products = purchase.productIds.map(productId => ({ productId }));
+                if (purchase.purchaseTime)
+                    this.purchaseDate = new Date(purchase.purchaseTime);
+                this.isPending = (purchase.getPurchaseState === GooglePlay.BridgePurchaseState.PENDING);
+                if (typeof purchase.acknowledged !== 'undefined')
+                    this.isAcknowledged = purchase.acknowledged;
+                if (typeof purchase.autoRenewing !== 'undefined')
+                    this.renewalIntent = purchase.autoRenewing ? CDVPurchase2.RenewalIntent.RENEW : CDVPurchase2.RenewalIntent.LAPSE;
+                this.state = Transaction.toState(purchase.getPurchaseState, purchase.acknowledged);
+            }
+        }
+        GooglePlay.Transaction = Transaction;
+        class Receipt extends CDVPurchase2.Receipt {
+            constructor(purchase) {
+                super({
+                    platform: CDVPurchase2.Platform.GOOGLE_PLAY,
+                    transactions: [new Transaction(purchase)],
+                });
+                this.purchaseToken = purchase.purchaseToken;
+                this.orderId = purchase.orderId;
+            }
+            /** Refresh the content of the purchase based on the native BridgePurchase */
+            refresh(purchase) {
+                var _a;
+                (_a = this.transactions[0]) === null || _a === void 0 ? void 0 : _a.refresh(purchase);
+                this.orderId = purchase.orderId;
+            }
+        }
+        GooglePlay.Receipt = Receipt;
         class Adapter {
             constructor(context, autoRefreshIntervalMillis = 1000 * 3600 * 24) {
                 /** Adapter identifier */
@@ -1116,7 +1275,7 @@ var CDVPurchase2;
                 }
                 return { inAppSkus, subsSkus };
             }
-            /** Loads product metadata from the store */
+            /** @inheritdoc */
             load(products) {
                 return new Promise((resolve) => {
                     this.log.debug("Load: " + JSON.stringify(products));
@@ -1153,11 +1312,55 @@ var CDVPurchase2;
                     go();
                 });
             }
+            /** @inheritdoc */
+            finish(transaction) {
+                return new Promise(resolve => {
+                    const onSuccess = () => resolve(undefined);
+                    const onFailure = (message, code) => resolve({ message, code });
+                    const firstProduct = transaction.products[0];
+                    if (!firstProduct)
+                        return resolve({ code: CDVPurchase2.ErrorCode.FINISH, message: 'Cannot finish a transaction with no product' });
+                    const product = this._products.getProduct(firstProduct.productId);
+                    if (!product)
+                        return resolve({ code: CDVPurchase2.ErrorCode.FINISH, message: 'Cannot finish transaction, unknown product ' + firstProduct.productId });
+                    const receipt = this._receipts.find(r => r.hasTransaction(transaction));
+                    if (!receipt)
+                        return resolve({ code: CDVPurchase2.ErrorCode.FINISH, message: 'Cannot finish transaction, linked receipt not found.' });
+                    if (!receipt.purchaseToken)
+                        return resolve({ code: CDVPurchase2.ErrorCode.FINISH, message: 'Cannot finish transaction, linked receipt contains no purchaseToken.' });
+                    if (product.type === CDVPurchase2.ProductType.NON_RENEWING_SUBSCRIPTION || product.type === CDVPurchase2.ProductType.CONSUMABLE) {
+                        if (!transaction.isConsumed)
+                            return this.bridge.consumePurchase(onSuccess, onFailure, receipt.purchaseToken);
+                    }
+                    else { // subscription and non-consumable
+                        if (!transaction.isAcknowledged)
+                            return this.bridge.acknowledgePurchase(onSuccess, onFailure, receipt.purchaseToken);
+                    }
+                    // nothing to do
+                    resolve(undefined);
+                });
+            }
             onPurchaseConsumed(purchase) {
+                this.log.debug("onPurchaseConsumed: " + purchase.orderId);
             }
             onPurchasesUpdated(purchases) {
+                this.log.debug("onPurchaseUpdated: " + purchases.map(p => p.orderId).join(', '));
+                // GooglePlay generates one receipt for each purchase
+                purchases.forEach(purchase => {
+                    const existingReceipt = this.receipts.find(r => r.purchaseToken === purchase.purchaseToken);
+                    if (existingReceipt) {
+                        existingReceipt.refresh(purchase);
+                        this.context.listener.receiptsUpdated(CDVPurchase2.Platform.GOOGLE_PLAY, [existingReceipt]);
+                    }
+                    else {
+                        const newReceipt = new Receipt(purchase);
+                        this.receipts.push(newReceipt);
+                        this.context.listener.receiptsUpdated(CDVPurchase2.Platform.GOOGLE_PLAY, [newReceipt]);
+                    }
+                });
             }
             onSetPurchases(purchases) {
+                this.log.debug("onSetPurchases: " + JSON.stringify(purchases));
             }
             onPriceChangeConfirmationResult(result) {
             }
@@ -1166,22 +1369,20 @@ var CDVPurchase2;
                     setTimeout(callback, 0);
                 }
             }
+            /** @inheritdoc */
             order(offer, additionalData) {
                 return __awaiter(this, void 0, void 0, function* () {
                     return new Promise(resolve => {
                         this.log.info("Order - " + JSON.stringify(offer));
-                        const transaction = new CDVPurchase2.Transaction();
-                        transaction.productId = offer.product.id;
-                        transaction.offerId = offer.id;
-                        transaction.state = CDVPurchase2.TransactionState.REQUESTED;
                         const buySuccess = () => {
-                            resolve(transaction);
+                            resolve(undefined);
                         };
                         const buyFailed = (message, code) => {
                             this.log.warn('Order failed: ' + JSON.stringify({ message, code }));
                             resolve({ code: code !== null && code !== void 0 ? code : CDVPurchase2.ErrorCode.UNKNOWN, message });
                         };
-                        this.bridge.buy(buySuccess, buyFailed, offer.product.id + '@' + offer.id, additionalData);
+                        const idAndToken = offer.product.type === CDVPurchase2.ProductType.PAID_SUBSCRIPTION ? offer.product.id + '@' + offer.id : offer.product.id;
+                        this.bridge.buy(buySuccess, buyFailed, idAndToken, additionalData);
                     });
                 });
             }
@@ -1201,6 +1402,28 @@ var CDVPurchase2;
         let log = function log(msg) {
             console.log("InAppBilling[js]: " + msg);
         };
+        let BridgePurchaseState;
+        (function (BridgePurchaseState) {
+            BridgePurchaseState[BridgePurchaseState["UNSPECIFIED_STATE"] = 0] = "UNSPECIFIED_STATE";
+            BridgePurchaseState[BridgePurchaseState["PURCHASED"] = 1] = "PURCHASED";
+            BridgePurchaseState[BridgePurchaseState["PENDING"] = 2] = "PENDING";
+        })(BridgePurchaseState = GooglePlay.BridgePurchaseState || (GooglePlay.BridgePurchaseState = {}));
+        /** Replace SKU ProrationMode.
+         *
+         * See https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode */
+        let ProrationMode;
+        (function (ProrationMode) {
+            /** Replacement takes effect immediately, and the remaining time will be prorated and credited to the user. */
+            ProrationMode["IMMEDIATE_WITH_TIME_PRORATION"] = "IMMEDIATE_WITH_TIME_PRORATION";
+            /** Replacement takes effect immediately, and the billing cycle remains the same. */
+            ProrationMode["IMMEDIATE_AND_CHARGE_PRORATED_PRICE"] = "IMMEDIATE_AND_CHARGE_PRORATED_PRICE";
+            /** Replacement takes effect immediately, and the new price will be charged on next recurrence time. */
+            ProrationMode["IMMEDIATE_WITHOUT_PRORATION"] = "IMMEDIATE_WITHOUT_PRORATION";
+            /** Replacement takes effect when the old plan expires, and the new price will be charged at the same time. */
+            ProrationMode["DEFERRED"] = "DEFERRED";
+            /** Replacement takes effect immediately, and the user is charged full price of new plan and is given a full billing cycle of subscription, plus remaining prorated time from the old plan. */
+            ProrationMode["IMMEDIATE_AND_CHARGE_FULL_PRICE"] = "IMMEDIATE_AND_CHARGE_FULL_PRICE";
+        })(ProrationMode = GooglePlay.ProrationMode || (GooglePlay.ProrationMode = {}));
         class Bridge {
             constructor() {
                 this.options = {};
@@ -1295,24 +1518,24 @@ var CDVPurchase2;
                 if (this.options.showLog) {
                     log('subscribe()');
                 }
-                if (((_a = additionalData.googlePlay) === null || _a === void 0 ? void 0 : _a.oldPurchasedSkus) && this.options.showLog) {
-                    log('subscribe() -> upgrading of old SKUs!');
+                if (((_a = additionalData.googlePlay) === null || _a === void 0 ? void 0 : _a.oldPurchaseToken) && this.options.showLog) {
+                    log('subscribe() -> upgrading from an old purchase');
                 }
                 return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [
                     productId, extendAdditionalData(additionalData)
                 ]);
             }
-            consumePurchase(success, fail, productId, transactionId, developerPayload) {
+            consumePurchase(success, fail, purchaseToken) {
                 if (this.options.showLog) {
                     log('consumePurchase()');
                 }
-                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "consumePurchase", [productId, transactionId, developerPayload]);
+                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "consumePurchase", [purchaseToken]);
             }
-            acknowledgePurchase(success, fail, productId, transactionId, developerPayload) {
+            acknowledgePurchase(success, fail, purchaseToken) {
                 if (this.options.showLog) {
                     log('acknowledgePurchase()');
                 }
-                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "acknowledgePurchase", [productId, transactionId, developerPayload]);
+                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "acknowledgePurchase", [purchaseToken]);
             }
             getAvailableProducts(inAppSkus, subsSkus, success, fail) {
                 if (this.options.showLog) {

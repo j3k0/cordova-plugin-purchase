@@ -1,5 +1,25 @@
 declare namespace CDVPurchase2 {
     namespace Internal {
+        interface StoreAdapterDelegate {
+            updatedCallbacks: Callbacks<Product>;
+            updatedReceiptCallbacks: Callbacks<Receipt>;
+            approvedCallbacks: Callbacks<Transaction>;
+            finishedCallbacks: Callbacks<Transaction>;
+        }
+        class StoreAdapterListener implements AdapterListener {
+            delegate: StoreAdapterDelegate;
+            constructor(delegate: StoreAdapterDelegate);
+            lastTransactionState: {
+                [transactionToken: string]: TransactionState;
+            };
+            static makeTransactionToken(transaction: Transaction): string;
+            productsUpdated(platform: Platform, products: Product[]): void;
+            receiptsUpdated(platform: Platform, receipts: Receipt[]): void;
+        }
+    }
+}
+declare namespace CDVPurchase2 {
+    namespace Internal {
         /** Adapter execution context */
         interface AdapterContext {
             /** Logger */
@@ -18,7 +38,10 @@ declare namespace CDVPurchase2 {
         class Adapters {
             list: Adapter[];
             add(adapters: Platform[], context: AdapterContext): void;
-            initialize(platforms: Platform[] | undefined, context: AdapterContext): Promise<IError[]>;
+            initialize(platforms: (Platform | {
+                platform: Platform;
+                options: any;
+            })[] | undefined, context: AdapterContext): Promise<IError[]>;
             find(platform: Platform): Adapter | undefined;
         }
     }
@@ -282,16 +305,8 @@ declare namespace CDVPurchase2 {
     }
 }
 declare namespace CDVPurchase2 {
-    export const PLUGIN_VERSION = "13.0.0";
-    interface StoreAdapterDelegate {
-        updatedCallbacks: Callbacks<Product>;
-    }
-    class StoreAdapterListener implements AdapterListener {
-        delegate: StoreAdapterDelegate;
-        constructor(delegate: StoreAdapterDelegate);
-        productsUpdated(platform: Platform, products: Product[]): void;
-    }
-    export class Store {
+    const PLUGIN_VERSION = "13.0.0";
+    class Store {
         /** Payment platform adapters */
         adapters: Internal.Adapters;
         /** List of registered products */
@@ -318,7 +333,7 @@ declare namespace CDVPurchase2 {
         /** List of callbacks for the "ready" events */
         private _readyCallbacks;
         /** Listens to adapters */
-        listener: StoreAdapterListener;
+        listener: Internal.StoreAdapterListener;
         constructor();
         /** Register a product */
         register(product: IRegisterProduct | IRegisterProduct[]): void;
@@ -327,7 +342,10 @@ declare namespace CDVPurchase2 {
          *
          * @param platforms - List of payment platforms to initialize, default to Store.defaultPlatform().
          */
-        initialize(platforms?: Platform[]): Promise<IError[]>;
+        initialize(platforms?: (Platform | {
+            platform: Platform;
+            options: any;
+        })[]): Promise<IError[]>;
         /**
          * @deprecated - use store.initialize(), store.update() or store.restorePurchases()
          */
@@ -341,6 +359,8 @@ declare namespace CDVPurchase2 {
         when(): When;
         /** Callbacks when a product definition was updated */
         private updatedCallbacks;
+        /** Callback when a receipt was updated */
+        private updatedReceiptsCallbacks;
         /** Callbacks when a product is owned */
         private ownedCallbacks;
         /** Callbacks when a transaction has been approved */
@@ -355,9 +375,18 @@ declare namespace CDVPurchase2 {
         get(productId: string, platform?: Platform): Product | undefined;
         /** List of all receipts */
         get receipts(): Receipt[];
-        order(offer: Offer, additionalData: AdditionalData): Promise<IError | Transaction>;
+        /** Place an order for a given offer */
+        order(offer: Offer, additionalData?: AdditionalData): Promise<IError | undefined>;
+        /** TODO */
+        pay(options: {
+            platform: Platform;
+            amount: number;
+            currency: string;
+            description: string;
+        }): Promise<void>;
         verify(receiptOrTransaction: Transaction | Receipt): Promise<void>;
-        finish(value: Transaction | Receipt): Promise<void>;
+        /** Finalize a transaction */
+        finish(transaction: Transaction | Receipt): Promise<void>;
         restorePurchases(): Promise<void>;
         /**
          * The default payment platform to use depending on the OS.
@@ -370,47 +399,87 @@ declare namespace CDVPurchase2 {
         error(error: IError | Callback<IError>): void;
         version: string;
     }
-    export namespace WindowsStore {
+    namespace WindowsStore {
         class Adapter implements Adapter {
             id: Platform;
             products: Product[];
             receipts: Receipt[];
             initialize(): Promise<IError | undefined>;
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
+            order(offer: Offer): Promise<undefined | IError>;
+            finish(transaction: Transaction): Promise<undefined | IError>;
         }
     }
-    export namespace Braintree {
+    namespace Braintree {
         class Adapter implements Adapter {
             id: Platform;
             products: Product[];
             receipts: Receipt[];
             initialize(): Promise<IError | undefined>;
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
-            order(offer: Offer): Promise<Transaction | IError>;
+            order(offer: Offer): Promise<undefined | IError>;
+            finish(transaction: Transaction): Promise<undefined | IError>;
         }
     }
-    export namespace Test {
+    namespace Test {
         class Adapter implements Adapter {
             id: Platform;
             products: Product[];
             receipts: Receipt[];
             initialize(): Promise<IError | undefined>;
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
-            order(offer: Offer): Promise<Transaction | IError>;
+            order(offer: Offer): Promise<undefined | IError>;
+            finish(transaction: Transaction): Promise<undefined | IError>;
         }
     }
-    export {};
 }
 /** window.store - the global store object */
 declare namespace CDVPurchase2 {
     class Transaction {
-        state: TransactionState;
-        /** Product identifier */
-        productId: string;
-        /** Offer identifier */
-        offerId: string;
-        /** Transaction identifier */
+        /** Platform this transaction was created on */
+        platform: Platform;
+        /** Transaction identifier. */
         transactionId: string;
+        /** Identifier for the purchase this transaction is a part of. */
+        purchaseId?: string;
+        /**
+         * Time the purchase was made.
+         *
+         * For subscriptions this is equal to the date of the first transaction.
+         * Note that it might be undefined for deleted transactions (google for instance don't provide any info in that case).
+         */
+        purchaseDate?: Date;
+        /** Time a subscription was last renewed */
+        lastRenewalDate?: Date;
+        /** Time when the subscription is set to expire following this transaction */
+        expirationDate?: Date;
+        /** True when the transaction has been acknowledged to the platform. */
+        isAcknowledged?: boolean;
+        /** True when the transaction is still pending payment. */
+        isPending?: boolean;
+        /** True when the transaction was consumed. */
+        isConsumed?: boolean;
+        /** Is the subscription set to renew. */
+        renewalIntent?: RenewalIntent;
+        /** Time when the renewal intent was changed */
+        renewalIntentChangeDate?: Date;
+        /** State this transaction is in */
+        state: TransactionState;
+        /** Purchased products */
+        products: {
+            /** Product identifier */
+            productId: string;
+            /** Offer identifier, if known */
+            offerId?: string;
+        }[];
+        constructor(platform: Platform);
+    }
+    /** Whether or not the user intends to let the subscription auto-renew. */
+    enum RenewalIntent {
+        /** The user intends to let the subscription expire without renewing. */
+        LAPSE = "Lapse",
+        /** The user intends to renew the subscription. */
+        RENEW = "Renew"
     }
 }
 declare namespace CDVPurchase2 {
@@ -515,6 +584,7 @@ declare namespace CDVPurchase2 {
     }
     interface AdapterListener {
         productsUpdated(platform: Platform, products: Product[]): void;
+        receiptsUpdated(platform: Platform, receipts: Receipt[]): void;
     }
     interface Adapter {
         /**
@@ -546,7 +616,14 @@ declare namespace CDVPurchase2 {
         /**
          * Initializes an order.
          */
-        order(offer: Offer, additionalData: AdditionalData): Promise<Transaction | IError>;
+        order(offer: Offer, additionalData: AdditionalData): Promise<undefined | IError>;
+        /**
+         * Finish a transaction.
+         *
+         * For non-consumables, this will acknowledge the purchase.
+         * For consumable, this will acknowledge and consume the purchase.
+         */
+        finish(transaction: Transaction): Promise<IError | undefined>;
     }
     interface AdditionalData {
         /** The application's user identifier, will be obfuscated with md5 to fill `accountId` if necessary */
@@ -568,13 +645,11 @@ declare namespace CDVPurchase2 {
     }
     /** Possible states of a product */
     enum TransactionState {
-        REQUESTED = "requested",
         INITIATED = "initiated",
         APPROVED = "approved",
         CANCELLED = "cancelled",
         FINISHED = "finished",
-        OWNED = "owned",
-        EXPIRED = "expired"
+        UNKNOWN_STATE = ""
     }
     type PrivacyPolicyItem = 'fraud' | 'support' | 'analytics' | 'tracking';
     interface When {
@@ -636,12 +711,31 @@ declare namespace CDVPurchase2 {
             constructor(context: Internal.AdapterContext);
             initialize(): Promise<IError | undefined>;
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
-            order(offer: Offer): Promise<Transaction | IError>;
+            order(offer: Offer): Promise<undefined | IError>;
+            finish(transaction: Transaction): Promise<undefined | IError>;
         }
     }
 }
 declare namespace CDVPurchase2 {
     namespace GooglePlay {
+        class Transaction extends CDVPurchase2.Transaction {
+            nativePurchase: BridgePurchase;
+            constructor(purchase: BridgePurchase);
+            static toState(state: BridgePurchaseState, isAcknowledged: boolean): TransactionState;
+            /**
+             * Refresh the value in the transaction based on the native purchase update
+             */
+            refresh(purchase: BridgePurchase): void;
+        }
+        class Receipt extends CDVPurchase2.Receipt {
+            /** Token that uniquely identifies a purchase for a given item and user pair. */
+            purchaseToken: string;
+            /** Unique order identifier for the transaction.  (like GPA.XXXX-XXXX-XXXX-XXXXX) */
+            orderId?: string;
+            constructor(purchase: BridgePurchase);
+            /** Refresh the content of the purchase based on the native BridgePurchase */
+            refresh(purchase: BridgePurchase): void;
+        }
         class Adapter implements CDVPurchase2.Adapter {
             /** Adapter identifier */
             id: Platform;
@@ -668,14 +762,17 @@ declare namespace CDVPurchase2 {
                 inAppSkus: string[];
                 subsSkus: string[];
             };
-            /** Loads product metadata from the store */
+            /** @inheritdoc */
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
+            /** @inheritdoc */
+            finish(transaction: CDVPurchase2.Transaction): Promise<IError | undefined>;
             onPurchaseConsumed(purchase: BridgePurchase): void;
-            onPurchasesUpdated(purchases: BridgePurchases): void;
-            onSetPurchases(purchases: BridgePurchases): void;
+            onPurchasesUpdated(purchases: BridgePurchase[]): void;
+            onSetPurchases(purchases: BridgePurchase[]): void;
             onPriceChangeConfirmationResult(result: "OK" | "UserCanceled" | "UnknownProduct"): void;
             getPurchases(callback?: () => void): void;
-            order(offer: Offer, additionalData: CDVPurchase2.AdditionalData): Promise<IError | Transaction>;
+            /** @inheritdoc */
+            order(offer: Offer, additionalData: CDVPurchase2.AdditionalData): Promise<IError | undefined>;
         }
     }
 }
@@ -685,38 +782,102 @@ declare namespace CDVPurchase2 {
             log?: (msg: string) => void;
             showLog?: boolean;
             onPurchaseConsumed?: (purchase: BridgePurchase) => void;
-            onPurchasesUpdated?: (purchases: BridgePurchases) => void;
-            onSetPurchases?: (purchases: BridgePurchases) => void;
+            onPurchasesUpdated?: (purchases: BridgePurchase[]) => void;
+            onSetPurchases?: (purchases: BridgePurchase[]) => void;
             onPriceChangeConfirmationResult?: (result: "OK" | "UserCanceled" | "UnknownProduct") => void;
         }
-        type BridgeErrorCallback = (message: string, code?: number) => void;
-        interface BridgePurchases {
-        }
+        type BridgeErrorCallback = (message: string, code?: ErrorCode) => void;
         interface BridgePurchase {
+            /** Unique order identifier for the transaction.  (like GPA.XXXX-XXXX-XXXX-XXXXX) */
+            orderId?: string;
+            /** Application package from which the purchase originated. */
+            packageName: string;
+            /** Identifier of the purchased product.
+             *
+             * @deprecated - use productIds (since Billing v5 a single purchase can contain multiple products) */
+            productId: string;
+            /** Identifier of the purchased products */
+            productIds: string[];
+            /** Time the product was purchased, in milliseconds since the epoch (Jan 1, 1970). */
+            purchaseTime: number;
+            /** Payload specified when the purchase was acknowledged or consumed.
+             *
+             * @deprecated - This was removed from Billing v5 */
+            developerPayload: string;
+            /** Purchase state in the original JSON
+             *
+             * @deprecated - use getPurchaseState */
+            purchaseState: number;
+            /** Token that uniquely identifies a purchase for a given item and user pair. */
+            purchaseToken: string;
+            /** quantity of the purchased product */
+            quantity: number;
+            /** Whether the purchase has been acknowledged. */
+            acknowledged: boolean;
+            /** One of BridgePurchaseState indicating the state of the purchase. */
+            getPurchaseState: BridgePurchaseState;
+            /** Whether the subscription renews automatically. */
+            autoRenewing: false;
+            /** String containing the signature of the purchase data that was signed with the private key of the developer. */
+            signature: string;
+            /** String in JSON format that contains details about the purchase order. */
+            receipt: string;
+            /** Obfuscated account id specified at purchase - by default md5(applicationUsername) */
+            accountId: string;
+            /** Obfuscated profile id specified at purchase - used when a single user can have multiple profiles */
+            profileId: string;
         }
-        /** See https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#storeorderproduct-additionaldata for details */
-        type ProrationMode = 'IMMEDIATE_WITH_TIME_PRORATION' | 'IMMEDIATE_AND_CHARGE_PRORATED_PRICE' | 'IMMEDIATE_WITHOUT_PRORATION' | 'DEFERRED' | 'IMMEDIATE_AND_CHARGE_FULL_PRICE';
+        enum BridgePurchaseState {
+            UNSPECIFIED_STATE = 0,
+            PURCHASED = 1,
+            PENDING = 2
+        }
+        /** Replace SKU ProrationMode.
+         *
+         * See https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode */
+        enum ProrationMode {
+            /** Replacement takes effect immediately, and the remaining time will be prorated and credited to the user. */
+            IMMEDIATE_WITH_TIME_PRORATION = "IMMEDIATE_WITH_TIME_PRORATION",
+            /** Replacement takes effect immediately, and the billing cycle remains the same. */
+            IMMEDIATE_AND_CHARGE_PRORATED_PRICE = "IMMEDIATE_AND_CHARGE_PRORATED_PRICE",
+            /** Replacement takes effect immediately, and the new price will be charged on next recurrence time. */
+            IMMEDIATE_WITHOUT_PRORATION = "IMMEDIATE_WITHOUT_PRORATION",
+            /** Replacement takes effect when the old plan expires, and the new price will be charged at the same time. */
+            DEFERRED = "DEFERRED",
+            /** Replacement takes effect immediately, and the user is charged full price of new plan and is given a full billing cycle of subscription, plus remaining prorated time from the old plan. */
+            IMMEDIATE_AND_CHARGE_FULL_PRICE = "IMMEDIATE_AND_CHARGE_FULL_PRICE"
+        }
         interface AdditionalData {
             /** The GooglePlay offer token */
             offerToken?: string;
-            oldPurchasedSkus?: string[];
+            /** Replace another purchase with the new one
+             *
+             * Your can find the old token in the receipts. */
+            oldPurchaseToken?: string;
+            /**
+             * Obfuscated user account identifier
+             *
+             * Default to md5(store.applicationUsername)
+             */
             accountId?: string;
             /**
              * Some applications allow users to have multiple profiles within a single account.
+             *
              * Use this method to send the user's profile identifier to Google.
              */
             profileId?: string;
+            /** See https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#storeorderproduct-additionaldata for details */
             prorationMode?: ProrationMode;
         }
         type BridgeMessage = {
             type: "setPurchases";
             data: {
-                purchases: BridgePurchases;
+                purchases: BridgePurchase[];
             };
         } | {
             type: "purchasesUpdated";
             data: {
-                purchases: BridgePurchases;
+                purchases: BridgePurchase[];
             };
         } | {
             type: "purchaseConsumed";
@@ -737,8 +898,8 @@ declare namespace CDVPurchase2 {
             getPurchases(success: () => void, fail: BridgeErrorCallback): void;
             buy(success: () => void, fail: BridgeErrorCallback, productId: string, additionalData: CDVPurchase2.AdditionalData): void;
             subscribe(success: () => void, fail: BridgeErrorCallback, productId: string, additionalData: CDVPurchase2.AdditionalData): void;
-            consumePurchase(success: () => void, fail: BridgeErrorCallback, productId: string, transactionId: string, developerPayload: string): void;
-            acknowledgePurchase(success: () => void, fail: BridgeErrorCallback, productId: string, transactionId: string, developerPayload: string): void;
+            consumePurchase(success: () => void, fail: BridgeErrorCallback, purchaseToken: string): void;
+            acknowledgePurchase(success: () => void, fail: BridgeErrorCallback, purchaseToken: string): void;
             getAvailableProducts(inAppSkus: string[], subsSkus: string[], success: (validProducts: (BridgeInAppProduct | BridgeSubscriptionV12)[]) => void, fail: BridgeErrorCallback): void;
             manageSubscriptions(): void;
             manageBilling(): void;

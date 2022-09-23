@@ -29,10 +29,19 @@ namespace CDVPurchase2 {
             constructor(context: Internal.AdapterContext) {}
 
             async initialize(): Promise<IError | undefined> { return; }
+
             async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
                 return products.map(p => ({ code: ErrorCode.LOAD, message: 'Not implemented' } as IError));
             }
-            async order(offer: Offer): Promise<Transaction | IError> {
+
+            async order(offer: Offer): Promise<undefined | IError> {
+                return {
+                    code: ErrorCode.UNKNOWN,
+                    message: 'TODO: Not implemented'
+                } as IError;
+            }
+
+            async finish(transaction: Transaction): Promise<undefined | IError> {
                 return {
                     code: ErrorCode.UNKNOWN,
                     message: 'TODO: Not implemented'
