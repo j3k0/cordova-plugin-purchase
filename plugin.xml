@@ -42,7 +42,8 @@ SOFTWARE.
 
     <!-- ios -->
     <platform name="ios">
-        <js-module src="www/store-ios.js" name="InAppPurchase">
+        <js-module src="www/store.js" name="CDVPurchase2">
+            <clobbers target="CDVPurchase2" />
             <clobbers target="store" />
         </js-module>
 
@@ -71,7 +72,8 @@ SOFTWARE.
 
     <!-- osx -->
     <platform name="osx">
-        <js-module src="www/store-ios.js" name="InAppPurchase">
+        <js-module src="www/store.js" name="CDVPurchase2">
+            <clobbers target="CDVPurchase2" />
             <clobbers target="store" />
         </js-module>
         <js-module src="www/cordova-osx-polyfill.js" name="CordovaOSXPolyfill">
@@ -100,8 +102,9 @@ SOFTWARE.
 
     <!-- android -->
     <platform name="android">
-      <js-module src="www/store-android.js" name="InAppBillingPlugin">
+      <js-module src="www/store.js" name="CDVPurchase2">
         <clobbers target="store" />
+        <clobbers target="CDVPurchase2" />
       </js-module>
       <config-file target="AndroidManifest.xml" parent="/*">
         <uses-permission android:name="com.android.vending.BILLING" />
@@ -126,8 +129,9 @@ SOFTWARE.
 
     <!-- windows -->
 	<platform name="windows">
-		<js-module src="www/store-windows.js" name="InAppPurchase">
-			<clobbers target="store" />
+		<js-module src="www/store.js" name="CDVPurchase2">
+            <clobbers target="CDVPurchase2" />
+            <clobbers target="store" />
 		</js-module>
 		<js-module src="src/windows/InAppPurchaseProxy.js" name="InAppPurchaseProxy">
 			<merges target="" />

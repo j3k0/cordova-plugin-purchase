@@ -1,4 +1,5 @@
 NODE_MODULES?=node_modules
+
 help:
 	@echo ""
 	@echo "Usage: make <target>"
@@ -21,13 +22,16 @@ help:
 
 all: build doc
 
-build: preprocess test-js
+build: check-tsc preprocess test-js
 
 preprocess:
 	@echo "- Preprocess"
-	@${NODE_MODULES}/.bin/preprocess src/js/store-ios.js src/js > www/store-ios.js
-	@${NODE_MODULES}/.bin/preprocess src/js/store-android.js src/js > www/store-android.js
-	@${NODE_MODULES}/.bin/preprocess src/js/store-windows.js src/js > www/store-windows.js
+	@${NODE_MODULES}/.bin/tsc
+	@# cd src/tmpjs; for F in *.js; do grep -v "export {};" $$F > ../js/$$F; done
+	@# cd src/tmpjs/platforms; for F in *.js; do grep -v "export {};" $$F > ../js/platforms/$$F; done
+	@# ${NODE_MODULES}/.bin/preprocess src/js/store-ios.js src/js > www/store-ios.js
+	@# ${NODE_MODULES}/.bin/preprocess src/js/store-android.js src/js > www/store-android.js
+	@# ${NODE_MODULES}/.bin/preprocess src/js/store-windows.js src/js > www/store-windows.js
 	@echo "  Done"
 	@echo ""
 
@@ -37,31 +41,13 @@ prepare-test-js:
 	@cp src/js/platforms/*-adapter.js test/tmp/
 	@#${NODE_MODULES}/.bin/istanbul instrument --no-compact --output test/tmp/store-test.js test/store-test-src.js
 
-jshint: check-jshint
-	@echo "- JSHint"
-	@${NODE_MODULES}/.bin/jshint --config .jshintrc src/js/*.js src/js/platforms/*.js test/js/*.js src/windows/*.js
-	@echo "  Done"
-	@echo ""
-
-eslint: jshint
-	@echo "- ESLint"
-	@${NODE_MODULES}/.bin/eslint --config .eslintrc src/js/*.js src/js/platforms/*.js test/js/*.js src/windows/*.js
-	@echo "  Done"
-	@echo ""
-
-eslint-fix:
-	@echo "- ESLint Fix"
-	@${NODE_MODULES}/.bin/eslint --fix --config .eslintrc src/js/*.js src/js/platforms/*.js test/js/*.js
-	@echo "  Done"
-	@echo ""
-
-test-js: jshint eslint prepare-test-js
+test-js: prepare-test-js
 	@echo "- Mocha"
 	@${NODE_MODULES}/.bin/istanbul test --root test/tmp test/js/run.js
 	@echo "  Done"
 	@echo ""
 
-test-js-coverage: jshint eslint prepare-test-js
+test-js-coverage: prepare-test-js
 	@echo "- Mocha / Instanbul"
 	@${NODE_MODULES}/.bin/istanbul cover --root test/ test/js/run.js
 	@${NODE_MODULES}/.bin/coveralls < coverage/lcov.info
@@ -80,8 +66,8 @@ test-install: build
 tests: test-js test-install
 	@echo 'ok'
 
-check-jshint:
-	@test -e "${NODE_MODULES}/.bin/jshint" || ( echo "${NODE_MODULES} not found."; echo 'Please install dependencies: npm install'; exit 1 )
+check-tsc:
+	@test -e "${NODE_MODULES}/.bin/tsc" || ( echo "${NODE_MODULES} not found."; echo 'Please install dependencies: npm install'; exit 1 )
 
 doc-api: test-js
 	@echo "# API Documentation" > doc/api.md
@@ -101,3 +87,6 @@ doc: doc-api doc-contrib
 
 clean:
 	@find . -name '*~' -exec rm '{}' ';'
+
+todo:
+	@grep -rE "TODO|XXX" src/ts src/android src/ios src/windows
