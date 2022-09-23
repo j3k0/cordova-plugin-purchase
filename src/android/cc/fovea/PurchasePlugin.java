@@ -70,8 +70,22 @@ public class PurchasePlugin
   /** A reference to BillingClient. */
   private BillingClient mBillingClient;
 
-  private List<String> mInAppProductIds;
-  private List<String> mSubsProductIds;
+  private List<String> mInAppProductIds = new ArrayList<String>();
+  private void addInAppProductIds(List<String> list) {
+    for (int i = 0; i < list.size(); ++i) {
+        if (!mInAppProductIds.contains(list.get(i)))
+            mInAppProductIds.add(list.get(i));
+    }
+  }
+
+  private List<String> mSubsProductIds = new ArrayList<String>();
+  private void addSubsProductIds(List<String> list) {
+    for (int i = 0; i < list.size(); ++i) {
+        if (!mSubsProductIds.contains(list.get(i)))
+            mSubsProductIds.add(list.get(i));
+    }
+  }
+
   private final List<Purchase> mPurchases = new ArrayList<>();
 
   /** True if billing service is connected now. */
@@ -152,11 +166,13 @@ public class PurchasePlugin
     try {
       // Action selector
       if ("init".equals(action)) {
-        final List<String> inAppSkus = parseStringArrayAtIndex(data, 1);
-        final List<String> subsSkus = parseStringArrayAtIndex(data, 2);
-        init(inAppSkus, subsSkus);
+        init();
       } else if ("getAvailableProducts".equals(action)) {
-        getAvailableProducts();
+        final List<String> inAppSkus = parseStringArrayAtIndex(data, 0);
+        final List<String> subsSkus = parseStringArrayAtIndex(data, 1);
+        this.addInAppProductIds(inAppSkus);
+        this.addSubsProductIds(subsSkus);
+        getAvailableProducts(mInAppProductIds, mSubsProductIds);
       } else if ("getPurchases".equals(action)) {
         getPurchases();
       } else if ("consumePurchase".equals(action)) {
@@ -219,13 +235,10 @@ public class PurchasePlugin
   }
 
   // Initialize the plugin
-  private void init(
-      final List<String> inAppProductIds,
-      final List<String> subsProductIds) {
+  private void init() {
 
     Log.d(mTag, "init()");
-    mInAppProductIds = inAppProductIds;
-    mSubsProductIds = subsProductIds;
+
 
     mBillingClient = BillingClient
       .newBuilder(cordova.getActivity())
@@ -475,9 +488,9 @@ public class PurchasePlugin
     return ret;
   }
 
-  private void getAvailableProducts() {
+  private void getAvailableProducts(List<String> inAppProductIds, List<String> subsProductIds) {
     Log.d(mTag, "getAvailableProducts()");
-    queryAllProductDetails(new ProductDetailsResponseListener() {
+    queryAllProductDetails(inAppProductIds, subsProductIds, new ProductDetailsResponseListener() {
       @Override
         public void onProductDetailsResponse(
             final BillingResult result,
@@ -709,6 +722,7 @@ public class PurchasePlugin
         .setProductDetails(productDetails)
         .setOfferToken(offerToken)
         .build());
+        Log.d(mTag, "Product details: " + productId + "@" + offerToken);
     }
     else {
       productDetailsParamsList.add(ProductDetailsParams.newBuilder()
@@ -1002,13 +1016,13 @@ public class PurchasePlugin
    *
    * @param listener Code to run once data has been loaded
    */
-  private void queryAllProductDetails(final ProductDetailsResponseListener listener) {
+  private void queryAllProductDetails(List<String> inAppProductIds, List<String> subsProductIds, final ProductDetailsResponseListener listener) {
     Log.d(mTag, "queryAllProductDetails()");
     ArrayList<ProductDetails> allProducts = new ArrayList<ProductDetails>();
 
     final int nRequests =
-      (mSubsProductIds.size() > 0 ? 1 : 0)
-      + (mInAppProductIds.size() > 0 ? 1 : 0);
+      (subsProductIds.size() > 0 ? 1 : 0)
+      + (inAppProductIds.size() > 0 ? 1 : 0);
     nProductDetailsQuerySuccessful = 0;
 
     final ProductDetailsResponseListener queryListener =
@@ -1044,17 +1058,17 @@ public class PurchasePlugin
       };
 
     List<Product> subsList = new ArrayList<Product>();
-    for (int i = 0; i < mSubsProductIds.size(); ++i) {
+    for (int i = 0; i < subsProductIds.size(); ++i) {
       subsList.add(Product.newBuilder()
-        .setProductId(mSubsProductIds.get(i))
+        .setProductId(subsProductIds.get(i))
         .setProductType(ProductType.SUBS)
         .build());
     }
 
     List<Product> inAppList = new ArrayList<Product>();
-    for (int i = 0; i < mInAppProductIds.size(); ++i) {
+    for (int i = 0; i < inAppProductIds.size(); ++i) {
       inAppList.add(Product.newBuilder()
-        .setProductId(mInAppProductIds.get(i))
+        .setProductId(inAppProductIds.get(i))
         .setProductType(ProductType.INAPP)
         .build());
     }
