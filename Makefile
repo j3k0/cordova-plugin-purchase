@@ -6,10 +6,10 @@ help:
 	@echo ""
 	@echo "available targets:"
 	@echo "    build ............. Generate javascript files for iOS and Android."
-	@echo "    tests ............. Run all tests."
-	@echo "    test-js ........... Test javascript files for errors."
-	@echo "    test-js-coverage .. Test javascript with coverage information."
-	@echo "    test-install ...... Test plugin installation on iOS and Android."
+	@3echo "    tests ............. Run all tests."
+	@#echo "    test-js ........... Test javascript files for errors."
+	@#echo "    test-js-coverage .. Test javascript with coverage information."
+	@#echo "    test-install ...... Test plugin installation on iOS and Android."
 	@echo "    doc-api ........... Generate API documentation into doc/api.md"
 	@echo "    doc-contrib ....... Generate Contributor Guide into doc/contributor-guide.md"
 	@echo "    clean ............. Cleanup the project (temporary and generated files)."
@@ -22,37 +22,31 @@ help:
 
 all: build doc
 
-build: check-tsc preprocess test-js
+build: check-tsc compile test-js
 
-preprocess:
-	@echo "- Preprocess"
+compile:
+	@echo "- Compiling TypeScript"
 	@${NODE_MODULES}/.bin/tsc
-	@# cd src/tmpjs; for F in *.js; do grep -v "export {};" $$F > ../js/$$F; done
-	@# cd src/tmpjs/platforms; for F in *.js; do grep -v "export {};" $$F > ../js/platforms/$$F; done
-	@# ${NODE_MODULES}/.bin/preprocess src/js/store-ios.js src/js > www/store-ios.js
-	@# ${NODE_MODULES}/.bin/preprocess src/js/store-android.js src/js > www/store-android.js
-	@# ${NODE_MODULES}/.bin/preprocess src/js/store-windows.js src/js > www/store-windows.js
-	@echo "  Done"
-	@echo ""
+
+# for backward compatibility
+proprocess: compile
 
 prepare-test-js:
 	@mkdir -p test/tmp
-	@${NODE_MODULES}/.bin/preprocess src/js/store-test.js src/js > test/tmp/store-test.js
-	@cp src/js/platforms/*-adapter.js test/tmp/
+	@#${NODE_MODULES}/.bin/preprocess src/js/store-test.js src/js > test/tmp/store-test.js
+	@#cp src/js/platforms/*-adapter.js test/tmp/
 	@#${NODE_MODULES}/.bin/istanbul instrument --no-compact --output test/tmp/store-test.js test/store-test-src.js
 
 test-js: prepare-test-js
-	@echo "- Mocha"
-	@${NODE_MODULES}/.bin/istanbul test --root test/tmp test/js/run.js
-	@echo "  Done"
-	@echo ""
+	@#echo "- Mocha"
+	@#${NODE_MODULES}/.bin/istanbul test --root test/tmp test/js/run.js
 
-test-js-coverage: prepare-test-js
-	@echo "- Mocha / Instanbul"
-	@${NODE_MODULES}/.bin/istanbul cover --root test/ test/js/run.js
-	@${NODE_MODULES}/.bin/coveralls < coverage/lcov.info
-	@echo "  Done"
-	@echo ""
+# test-js-coverage: prepare-test-js
+# 	@echo "- Mocha / Instanbul"
+# 	@${NODE_MODULES}/.bin/istanbul cover --root test/ test/js/run.js
+# 	@${NODE_MODULES}/.bin/coveralls < coverage/lcov.info
+# 	@echo "  Done"
+# 	@echo ""
 
 .checkstyle.jar:
 	curl "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.23/checkstyle-8.23-all.jar" -o .checkstyle.jar -L
@@ -69,19 +63,21 @@ tests: test-js test-install
 check-tsc:
 	@test -e "${NODE_MODULES}/.bin/tsc" || ( echo "${NODE_MODULES} not found."; echo 'Please install dependencies: npm install'; exit 1 )
 
-doc-api: test-js
+doc-api: build
+	@echo "- Generating doc/api.md"
 	@echo "# API Documentation" > doc/api.md
 	@echo >> doc/api.md
 	@echo "*(generated from source files using \`make doc-api)\`*" >> doc/api.md
 	@echo >> doc/api.md
-	@cat test/tmp/store-test.js | grep "///" | cut -d/ -f4- | cut -d\  -f2- >> doc/api.md
+	@cat www/store.js | grep -E "[\w^]//:" | cut -d: -f2- | cut -d\  -f2- >> doc/api.md
 
-doc-contrib: test-js
+doc-contrib: build
+	@echo "- Generating doc/contributor-guide.md"
 	@echo "# Contributor Guide" > doc/contributor-guide.md
 	@echo >> doc/contributor-guide.md
 	@echo "*(generated from source files using \`make doc-contrib)\`*" >> doc/contributor-guide.md
 	@echo >> doc/contributor-guide.md
-	@cat src/js/*.js src/js/platforms/*.js | grep "//!" | cut -d! -f2- | cut -d\  -f2- >> doc/contributor-guide.md
+	@cat www/store.js | grep -E "[\w^]//!" | cut -d! -f2- | cut -d\  -f2- >> doc/contributor-guide.md
 
 doc: doc-api doc-contrib
 
