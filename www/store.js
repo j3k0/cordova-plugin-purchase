@@ -57,6 +57,9 @@ var CDVPurchase2;
 (function (CDVPurchase2) {
     let Internal;
     (function (Internal) {
+        /**
+         * The list of active platform adapters
+         */
         class Adapters {
             constructor() {
                 this.list = [];
@@ -67,7 +70,7 @@ var CDVPurchase2;
                         return;
                     switch (platform) {
                         case CDVPurchase2.Platform.APPLE_APPSTORE:
-                            this.list.push(new CDVPurchase2.AppleStore.Adapter(context));
+                            this.list.push(new CDVPurchase2.AppleAppStore.Adapter(context));
                         case CDVPurchase2.Platform.GOOGLE_PLAY:
                             this.list.push(new CDVPurchase2.GooglePlay.Adapter(context));
                         case CDVPurchase2.Platform.BRAINTREE:
@@ -78,6 +81,9 @@ var CDVPurchase2;
                     }
                 });
             }
+            /**
+             * Initialize some platform adapters.
+             */
             initialize(platforms = [CDVPurchase2.Store.defaultPlatform()], context) {
                 return __awaiter(this, void 0, void 0, function* () {
                     const newPlatforms = platforms.map(p => typeof p === 'string' ? p : p.platform).filter(p => !this.find(p));
@@ -89,15 +95,16 @@ var CDVPurchase2;
                         const adapter = this.find(platform);
                         if (!adapter)
                             return;
+                        const log = context.log.child('Adapters').child(adapter.name);
                         const initResult = yield adapter.initialize();
-                        context.log.info(`Adapter ${platform}. Initialized: ${JSON.stringify(initResult)}`);
+                        log.info(`Initialized: ${JSON.stringify(initResult)}`);
                         if (initResult === null || initResult === void 0 ? void 0 : initResult.code)
                             return initResult;
-                        context.log.info(`Adapter ${platform}. Products: ${JSON.stringify(platformProducts)}`);
+                        log.info(`Products: ${JSON.stringify(platformProducts)}`);
                         if (platformProducts.length === 0)
                             return;
                         const loadResult = yield adapter.load(platformProducts);
-                        context.log.info(`Adapter ${platform}. Products loaded: ${JSON.stringify(loadResult)}`);
+                        log.info(`Loaded: ${JSON.stringify(loadResult)}`);
                         const loadedProducts = loadResult.filter(p => p instanceof CDVPurchase2.Product);
                         context.listener.productsUpdated(platform, loadedProducts);
                         return loadResult.filter(lr => 'code' in lr && 'message' in lr)[0];
@@ -105,6 +112,9 @@ var CDVPurchase2;
                     return result.filter(err => err);
                 });
             }
+            /**
+             * Retrieve a platform adapter.
+             */
             find(platform) {
                 return this.list.filter(a => a.id === platform)[0];
             }
@@ -218,230 +228,72 @@ var CDVPurchase2;
         LogLevel[LogLevel["DEBUG"] = 4] = "DEBUG";
     })(LogLevel = CDVPurchase2.LogLevel || (CDVPurchase2.LogLevel = {}));
     ;
-    let Internal;
-    (function (Internal) {
-        class Log {
-            constructor(store, prefix = '') {
-                this.prefix = '';
-                this.store = store;
-                this.prefix = prefix || 'CordovaPurchase';
-            }
-            child(prefix) {
-                return new Log(this.store, this.prefix + '.' + prefix);
-            }
-            /// ### `store.log.error(message)`
-            /// Logs an error message, only if `store.verbosity` >= store.ERROR
-            error(o) { log(this.store.verbosity, LogLevel.ERROR, this.prefix, o); }
-            /// ### `store.log.warn(message)`
-            /// Logs a warning message, only if `store.verbosity` >= store.WARNING
-            warn(o) { log(this.store.verbosity, LogLevel.WARNING, this.prefix, o); }
-            /// ### `store.log.info(message)`
-            /// Logs an info message, only if `store.verbosity` >= store.INFO
-            info(o) { log(this.store.verbosity, LogLevel.INFO, this.prefix, o); }
-            /// ### `store.log.debug(message)`
-            /// Logs a debug message, only if `store.verbosity` >= store.DEBUG
-            debug(o) { log(this.store.verbosity, LogLevel.DEBUG, this.prefix, o); }
-            /**
-             * Add warning logs on a console describing an exceptions.
-             *
-             * This method is mostly used when executing user registered callbacks.
-             *
-             * @param context - a string describing why the method was called
-             * @param error - a javascript Error object thrown by a exception
-             */
-            logCallbackException(context, err) {
-                this.warn("A callback in \'" + context + "\' failed with an exception.");
-                if (typeof err === 'string')
-                    this.warn("           " + err);
-                else if (err) {
-                    const errAny = err;
-                    if (errAny.fileName)
-                        this.warn("           " + errAny.fileName + ":" + errAny.lineNumber);
-                    if (err.message)
-                        this.warn("           " + err.message);
-                    if (err.stack)
-                        this.warn("           " + err.stack);
-                }
+    class Logger {
+        constructor(store, prefix = '') {
+            this.prefix = '';
+            this.store = store;
+            this.prefix = prefix || 'CordovaPurchase';
+        }
+        child(prefix) {
+            return new Logger(this.store, this.prefix + '.' + prefix);
+        }
+        /// ### `store.log.error(message)`
+        /// Logs an error message, only if `store.verbosity` >= store.ERROR
+        error(o) { log(this.store.verbosity, LogLevel.ERROR, this.prefix, o); }
+        /// ### `store.log.warn(message)`
+        /// Logs a warning message, only if `store.verbosity` >= store.WARNING
+        warn(o) { log(this.store.verbosity, LogLevel.WARNING, this.prefix, o); }
+        /// ### `store.log.info(message)`
+        /// Logs an info message, only if `store.verbosity` >= store.INFO
+        info(o) { log(this.store.verbosity, LogLevel.INFO, this.prefix, o); }
+        /// ### `store.log.debug(message)`
+        /// Logs a debug message, only if `store.verbosity` >= store.DEBUG
+        debug(o) { log(this.store.verbosity, LogLevel.DEBUG, this.prefix, o); }
+        /**
+         * Add warning logs on a console describing an exceptions.
+         *
+         * This method is mostly used when executing user registered callbacks.
+         *
+         * @param context - a string describing why the method was called
+         * @param error - a javascript Error object thrown by a exception
+         */
+        logCallbackException(context, err) {
+            this.warn("A callback in \'" + context + "\' failed with an exception.");
+            if (typeof err === 'string')
+                this.warn("           " + err);
+            else if (err) {
+                const errAny = err;
+                if (errAny.fileName)
+                    this.warn("           " + errAny.fileName + ":" + errAny.lineNumber);
+                if (err.message)
+                    this.warn("           " + err.message);
+                if (err.stack)
+                    this.warn("           " + err.stack);
             }
         }
-        Internal.Log = Log;
-        const LOG_LEVEL_STRING = ["QUIET", "ERROR", "WARNING", "INFO", "DEBUG"];
-        function log(verbosity, level, prefix, o) {
-            var maxLevel = verbosity === true ? 1 : verbosity;
-            if (level > maxLevel)
-                return;
-            if (typeof o !== 'string')
-                o = JSON.stringify(o);
-            const fullPrefix = prefix ? `[${prefix}] ` : '';
-            if (LOG_LEVEL_STRING[level])
-                console.log(`${fullPrefix}${LOG_LEVEL_STRING[level]}: ${o}`);
-            else
-                console.log(`${fullPrefix}${o}`);
-        }
-    })(Internal = CDVPurchase2.Internal || (CDVPurchase2.Internal = {}));
+    }
+    CDVPurchase2.Logger = Logger;
+    const LOG_LEVEL_STRING = ["QUIET", "ERROR", "WARNING", "INFO", "DEBUG"];
+    function log(verbosity, level, prefix, o) {
+        var maxLevel = verbosity === true ? 1 : verbosity;
+        if (level > maxLevel)
+            return;
+        if (typeof o !== 'string')
+            o = JSON.stringify(o);
+        const fullPrefix = prefix ? `[${prefix}] ` : '';
+        const logStr = (level === LogLevel.ERROR) ? ((str) => console.error(str))
+            : (level === LogLevel.WARNING) ? ((str) => console.warn(str))
+                : ((str) => console.log(str));
+        if (LOG_LEVEL_STRING[level])
+            logStr(`${fullPrefix}${LOG_LEVEL_STRING[level]}: ${o}`);
+        else
+            logStr(`${fullPrefix}${o}`);
+    }
 })(CDVPurchase2 || (CDVPurchase2 = {}));
 var CDVPurchase2;
 (function (CDVPurchase2) {
-    let Internal;
-    (function (Internal) {
-        /// ## store.utils
-        class Utils {
-            /**
-             * Calls an user-registered callback.
-             *
-             * Won't throw exceptions, only logs errors.
-             *
-             * @param name a short string describing the callback
-             * @param callback the callback to call (won't fail if undefined)
-             *
-             * @example
-             * ```js
-             * store.utils.callExternal(store, "ajax.error", options.error, 404, "Not found");
-             * ```
-             */
-            static callExternal(context, name, callback, ...args) {
-                try {
-                    const args = Array.prototype.slice.call(arguments, 3);
-                    // store.log.debug("calling " + name + "(" + JSON.stringify(args2) + ")");
-                    if (callback)
-                        callback.apply(context, args);
-                }
-                catch (e) {
-                    context.log.logCallbackException(name, e);
-                }
-            }
-            ///
-            /// ### store.utils.ajax(options)
-            /// Simplified version of jQuery's ajax method based on XMLHttpRequest.
-            /// Only supports JSON requests.
-            ///
-            /// Options:
-            ///
-            /// * `url`:
-            /// * `method`: HTTP method to use (GET, POST, ...)
-            /// * `success`: callback(data)
-            /// * `error`: callback(statusCode, statusText)
-            /// * `data`: body of your request
-            ///
-            static ajax(context, options) {
-                const log = context.log;
-                if (typeof window !== 'undefined' && window.cordova && window.cordova.plugin && window.cordova.plugin.http) {
-                    return this.ajaxWithHttpPlugin(context, options);
-                }
-                var doneCb = function () { };
-                var xhr = new XMLHttpRequest();
-                xhr.open(options.method || 'POST', options.url, true);
-                xhr.onreadystatechange = function ( /*event*/) {
-                    try {
-                        if (xhr.readyState === 4) {
-                            if (xhr.status === 200) {
-                                context.callExternal('ajax.success', options.success, JSON.parse(xhr.responseText));
-                            }
-                            else {
-                                log.warn("ajax -> request to " + options.url + " failed with status " + xhr.status + " (" + xhr.statusText + ")");
-                                context.callExternal('ajax.error', options.error, xhr.status, xhr.statusText);
-                            }
-                        }
-                    }
-                    catch (e) {
-                        log.warn("ajax -> request to " + options.url + " failed with an exception: " + e.message);
-                        if (options.error)
-                            options.error(417, e.message, null);
-                    }
-                    if (xhr.readyState === 4)
-                        context.callExternal('ajax.done', doneCb);
-                };
-                const customHeaders = options.customHeaders;
-                if (customHeaders) {
-                    Object.keys(customHeaders).forEach(function (header) {
-                        log.debug('ajax -> adding custom header: ' + header);
-                        xhr.setRequestHeader(header, customHeaders[header]);
-                    });
-                }
-                xhr.setRequestHeader("Accept", "application/json");
-                log.debug('ajax -> send request to ' + options.url);
-                if (options.data) {
-                    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                    xhr.send(JSON.stringify(options.data));
-                }
-                else {
-                    xhr.send();
-                }
-                return {
-                    done: function (cb) { doneCb = cb; return this; }
-                };
-            }
-            /** Simplified version of jQuery's ajax method based on XMLHttpRequest.
-             *
-             * Uses the http plugin. */
-            static ajaxWithHttpPlugin(context, options) {
-                let doneCb = function () { };
-                const ajaxOptions = {
-                    method: (options.method || 'get').toLowerCase(),
-                    data: options.data,
-                    serializer: 'json',
-                    // responseType: 'json',
-                };
-                if (options.customHeaders) {
-                    context.log.debug('ajax[http] -> adding custom headers: ' + JSON.stringify(options.customHeaders));
-                    ajaxOptions.headers = options.customHeaders;
-                }
-                context.log.debug('ajax[http] -> send request to ' + options.url);
-                const ajaxDone = (response) => {
-                    try {
-                        if (response.status == 200) {
-                            context.callExternal('ajax.success', options.success, JSON.parse(response.data));
-                        }
-                        else {
-                            context.log.warn("ajax[http] -> request to " + options.url + " failed with status " + response.status + " (" + response.error + ")");
-                            context.callExternal('ajax.error', options.error, response.status, response.error);
-                        }
-                    }
-                    catch (e) {
-                        context.log.warn("ajax[http] -> request to " + options.url + " failed with an exception: " + e.message);
-                        if (options.error)
-                            context.callExternal('ajax.error', options.error, 417, e.message);
-                    }
-                    context.callExternal('ajax.done', doneCb);
-                };
-                cordova.plugin.http.sendRequest(options.url, ajaxOptions, ajaxDone, ajaxDone);
-                return {
-                    done: function (cb) { doneCb = cb; return this; }
-                };
-            }
-            ///
-            /// ### store.utils.uuidv4()
-            /// Returns an UUID v4. Uses `window.crypto` internally to generate random values.
-            ///
-            /** Returns an UUID v4. Uses `window.crypto` internally to generate random values. */
-            static uuidv4() {
-                // @ts-ignore
-                return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, function (c) {
-                    return (c ^ (window.crypto || window.msCrypto).getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
-                });
-            }
-            ///
-            /// ### store.utils.md5(str)
-            /// Returns the MD5 hash-value of the passed string.
-            ///
-            static md5(r) { return md5(r); }
-            static delay(fn, wait) {
-                return setTimeout(fn, wait);
-            }
-            static debounce(fn, wait) {
-                let timeout = null;
-                const later = function (context, args) {
-                    timeout = null;
-                    fn();
-                };
-                const debounced = function () {
-                    if (timeout)
-                        window.clearTimeout(timeout);
-                    timeout = setTimeout(later, wait);
-                };
-                return debounced;
-            }
-        }
+    let Utils;
+    (function (Utils) {
         Utils.nonEnumerable = (target, name, desc) => {
             if (desc) {
                 desc.enumerable = false;
@@ -456,41 +308,9 @@ var CDVPurchase2;
                 configurable: true,
             });
         };
-        Internal.Utils = Utils;
-        ;
-        /* eslint-disable */ /* jshint ignore:start */
-        // Based on the work of Jeff Mott, who did a pure JS implementation of the MD5 algorithm that was published by Ronald L. Rivest in 1991.
-        // Code was imported from https://github.com/pvorb/node-md5
-        function md5(r) {
-            // @ts-ignore
-            function n(o) { if (t[o])
-                return t[o].exports; var e = t[o] = { i: o, l: !1, exports: {} }; return r[o].call(e.exports, e, e.exports, n), e.l = !0, e.exports; }
-            var t = {};
-            return n.m = r, n.c = t, n.i = function (r) { return r; }, n.d = function (r, t, o) { n.o(r, t) || Object.defineProperty(r, t, { configurable: !1, enumerable: !0, get: o }); }, n.n = function (r) { var t = r && r.__esModule ? function () { return r.default; } : function () { return r; }; return n.d(t, "a", t), t; }, n.o = function (r, n) { return Object.prototype.hasOwnProperty.call(r, n); }, n.p = "", n(n.s = 4);
-            // @ts-ignore
-        }
-        ([function (r, n) { var t = { utf8: { stringToBytes: function (r) { return t.bin.stringToBytes(unescape(encodeURIComponent(r))); }, bytesToString: function (r) { return decodeURIComponent(escape(t.bin.bytesToString(r))); } }, bin: { stringToBytes: function (r) { for (var n = [], t = 0; t < r.length; t++)
-                        n.push(255 & r.charCodeAt(t)); return n; }, bytesToString: function (r) { for (var n = [], t = 0; t < r.length; t++)
-                        n.push(String.fromCharCode(r[t])); return n.join(""); } } }; r.exports = t; }, function (r, n, t) { !function () { var n = t(2), o = t(0).utf8, e = t(3), u = t(0).bin, i = function (r, t) { r.constructor == String ? r = t && "binary" === t.encoding ? u.stringToBytes(r) : o.stringToBytes(r) : e(r) ? r = Array.prototype.slice.call(r, 0) : Array.isArray(r) || (r = r.toString()); for (var f = n.bytesToWords(r), s = 8 * r.length, c = 1732584193, a = -271733879, l = -1732584194, g = 271733878, h = 0; h < f.length; h++)
-                f[h] = 16711935 & (f[h] << 8 | f[h] >>> 24) | 4278255360 & (f[h] << 24 | f[h] >>> 8); f[s >>> 5] |= 128 << s % 32, f[14 + (s + 64 >>> 9 << 4)] = s; for (var p = i._ff, y = i._gg, v = i._hh, d = i._ii, h = 0; h < f.length; h += 16) {
-                var b = c, T = a, x = l, B = g;
-                c = p(c, a, l, g, f[h + 0], 7, -680876936), g = p(g, c, a, l, f[h + 1], 12, -389564586), l = p(l, g, c, a, f[h + 2], 17, 606105819), a = p(a, l, g, c, f[h + 3], 22, -1044525330), c = p(c, a, l, g, f[h + 4], 7, -176418897), g = p(g, c, a, l, f[h + 5], 12, 1200080426), l = p(l, g, c, a, f[h + 6], 17, -1473231341), a = p(a, l, g, c, f[h + 7], 22, -45705983), c = p(c, a, l, g, f[h + 8], 7, 1770035416), g = p(g, c, a, l, f[h + 9], 12, -1958414417), l = p(l, g, c, a, f[h + 10], 17, -42063), a = p(a, l, g, c, f[h + 11], 22, -1990404162), c = p(c, a, l, g, f[h + 12], 7, 1804603682), g = p(g, c, a, l, f[h + 13], 12, -40341101), l = p(l, g, c, a, f[h + 14], 17, -1502002290), a = p(a, l, g, c, f[h + 15], 22, 1236535329), c = y(c, a, l, g, f[h + 1], 5, -165796510), g = y(g, c, a, l, f[h + 6], 9, -1069501632), l = y(l, g, c, a, f[h + 11], 14, 643717713), a = y(a, l, g, c, f[h + 0], 20, -373897302), c = y(c, a, l, g, f[h + 5], 5, -701558691), g = y(g, c, a, l, f[h + 10], 9, 38016083), l = y(l, g, c, a, f[h + 15], 14, -660478335), a = y(a, l, g, c, f[h + 4], 20, -405537848), c = y(c, a, l, g, f[h + 9], 5, 568446438), g = y(g, c, a, l, f[h + 14], 9, -1019803690), l = y(l, g, c, a, f[h + 3], 14, -187363961), a = y(a, l, g, c, f[h + 8], 20, 1163531501), c = y(c, a, l, g, f[h + 13], 5, -1444681467), g = y(g, c, a, l, f[h + 2], 9, -51403784), l = y(l, g, c, a, f[h + 7], 14, 1735328473), a = y(a, l, g, c, f[h + 12], 20, -1926607734), c = v(c, a, l, g, f[h + 5], 4, -378558), g = v(g, c, a, l, f[h + 8], 11, -2022574463), l = v(l, g, c, a, f[h + 11], 16, 1839030562), a = v(a, l, g, c, f[h + 14], 23, -35309556), c = v(c, a, l, g, f[h + 1], 4, -1530992060), g = v(g, c, a, l, f[h + 4], 11, 1272893353), l = v(l, g, c, a, f[h + 7], 16, -155497632), a = v(a, l, g, c, f[h + 10], 23, -1094730640), c = v(c, a, l, g, f[h + 13], 4, 681279174), g = v(g, c, a, l, f[h + 0], 11, -358537222), l = v(l, g, c, a, f[h + 3], 16, -722521979), a = v(a, l, g, c, f[h + 6], 23, 76029189), c = v(c, a, l, g, f[h + 9], 4, -640364487), g = v(g, c, a, l, f[h + 12], 11, -421815835), l = v(l, g, c, a, f[h + 15], 16, 530742520), a = v(a, l, g, c, f[h + 2], 23, -995338651), c = d(c, a, l, g, f[h + 0], 6, -198630844), g = d(g, c, a, l, f[h + 7], 10, 1126891415), l = d(l, g, c, a, f[h + 14], 15, -1416354905), a = d(a, l, g, c, f[h + 5], 21, -57434055), c = d(c, a, l, g, f[h + 12], 6, 1700485571), g = d(g, c, a, l, f[h + 3], 10, -1894986606), l = d(l, g, c, a, f[h + 10], 15, -1051523), a = d(a, l, g, c, f[h + 1], 21, -2054922799), c = d(c, a, l, g, f[h + 8], 6, 1873313359), g = d(g, c, a, l, f[h + 15], 10, -30611744), l = d(l, g, c, a, f[h + 6], 15, -1560198380), a = d(a, l, g, c, f[h + 13], 21, 1309151649), c = d(c, a, l, g, f[h + 4], 6, -145523070), g = d(g, c, a, l, f[h + 11], 10, -1120210379), l = d(l, g, c, a, f[h + 2], 15, 718787259), a = d(a, l, g, c, f[h + 9], 21, -343485551), c = c + b >>> 0, a = a + T >>> 0, l = l + x >>> 0, g = g + B >>> 0;
-            } return n.endian([c, a, l, g]); }; i._ff = function (r, n, t, o, e, u, i) { var f = r + (n & t | ~n & o) + (e >>> 0) + i; return (f << u | f >>> 32 - u) + n; }, i._gg = function (r, n, t, o, e, u, i) { var f = r + (n & o | t & ~o) + (e >>> 0) + i; return (f << u | f >>> 32 - u) + n; }, i._hh = function (r, n, t, o, e, u, i) { var f = r + (n ^ t ^ o) + (e >>> 0) + i; return (f << u | f >>> 32 - u) + n; }, i._ii = function (r, n, t, o, e, u, i) { var f = r + (t ^ (n | ~o)) + (e >>> 0) + i; return (f << u | f >>> 32 - u) + n; }, i._blocksize = 16, i._digestsize = 16, r.exports = function (r, t) { if (void 0 === r || null === r)
-                throw new Error("Illegal argument " + r); var o = n.wordsToBytes(i(r, t)); return t && t.asBytes ? o : t && t.asString ? u.bytesToString(o) : n.bytesToHex(o); }; }(); }, function (r, n) { !function () { var n = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", t = { rotl: function (r, n) { return r << n | r >>> 32 - n; }, rotr: function (r, n) { return r << 32 - n | r >>> n; }, endian: function (r) { if (r.constructor == Number)
-                    return 16711935 & t.rotl(r, 8) | 4278255360 & t.rotl(r, 24); for (var n = 0; n < r.length; n++)
-                    r[n] = t.endian(r[n]); return r; }, randomBytes: function (r) { for (var n = []; r > 0; r--)
-                    n.push(Math.floor(256 * Math.random())); return n; }, bytesToWords: function (r) { for (var n = [], t = 0, o = 0; t < r.length; t++, o += 8)
-                    n[o >>> 5] |= r[t] << 24 - o % 32; return n; }, wordsToBytes: function (r) { for (var n = [], t = 0; t < 32 * r.length; t += 8)
-                    n.push(r[t >>> 5] >>> 24 - t % 32 & 255); return n; }, bytesToHex: function (r) { for (var n = [], t = 0; t < r.length; t++)
-                    n.push((r[t] >>> 4).toString(16)), n.push((15 & r[t]).toString(16)); return n.join(""); }, hexToBytes: function (r) { for (var n = [], t = 0; t < r.length; t += 2)
-                    n.push(parseInt(r.substr(t, 2), 16)); return n; }, bytesToBase64: function (r) { for (var t = [], o = 0; o < r.length; o += 3)
-                    for (var e = r[o] << 16 | r[o + 1] << 8 | r[o + 2], u = 0; u < 4; u++)
-                        8 * o + 6 * u <= 8 * r.length ? t.push(n.charAt(e >>> 6 * (3 - u) & 63)) : t.push("="); return t.join(""); }, base64ToBytes: function (r) { r = r.replace(/[^A-Z0-9+\/]/gi, ""); for (var t = [], o = 0, e = 0; o < r.length; e = ++o % 4)
-                    0 != e && t.push((n.indexOf(r.charAt(o - 1)) & Math.pow(2, -2 * e + 8) - 1) << 2 * e | n.indexOf(r.charAt(o)) >>> 6 - 2 * e); return t; } }; r.exports = t; }(); }, function (r, n) { function t(r) { return !!r.constructor && "function" == typeof r.constructor.isBuffer && r.constructor.isBuffer(r); } function o(r) { return "function" == typeof r.readFloatLE && "function" == typeof r.slice && t(r.slice(0, 0)); } r.exports = function (r) { return null != r && (t(r) || o(r) || !!r._isBuffer); }; }, function (r, n, t) { r.exports = t(1); }]);
-        /* eslint-enable */ /* jshint ignore:end */
-    })(Internal = CDVPurchase2.Internal || (CDVPurchase2.Internal = {}));
+    })(Utils = CDVPurchase2.Utils || (CDVPurchase2.Utils = {}));
 })(CDVPurchase2 || (CDVPurchase2 = {}));
-/// <reference path="utils.ts" />
+/// <reference path="utils/non-enumerable.ts" />
 var CDVPurchase2;
 (function (CDVPurchase2) {
     class Offer {
@@ -503,9 +323,58 @@ var CDVPurchase2;
         }
     }
     __decorate([
-        CDVPurchase2.Internal.Utils.nonEnumerable
+        CDVPurchase2.Utils.nonEnumerable
     ], Offer.prototype, "product", void 0);
     CDVPurchase2.Offer = Offer;
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    /** Product definition from a store */
+    class Product {
+        constructor(p) {
+            /** Product title from the store. */
+            this.title = '';
+            /** Product full description from the store. */
+            this.description = '';
+            this.platform = p.platform;
+            this.type = p.type;
+            this.id = p.id;
+            this.offers = [];
+            Object.defineProperty(this, 'pricing', { enumerable: false });
+        }
+        /**
+         * Shortcut to offers[0].pricingPhases[0]
+         *
+         * Useful when you know products have a single offer and a single pricing phase.
+         */
+        get pricing() { var _a; return (_a = this.offers[0]) === null || _a === void 0 ? void 0 : _a.pricingPhases[0]; }
+        /**
+         * Find and return an offer for this product from its id
+         *
+         * If id isn't specified, returns the first offer.
+         *
+         * @param id - Identifier of the offer to return
+         * @return An Offer or undefined if no match is found
+         */
+        getOffer(id = '') {
+            if (!id)
+                return this.offers[0];
+            return this.offers.find(o => o.id === id);
+        }
+        /**
+         * Find and return an offer for this product from its id
+         *
+         * If id isn't specified, returns the first offer.
+         *
+         * @param id - Identifier of the offer to return
+         */
+        addOffer(offer) {
+            if (this.getOffer(offer.id))
+                return;
+            this.offers.push(offer);
+        }
+    }
+    CDVPurchase2.Product = Product;
 })(CDVPurchase2 || (CDVPurchase2 = {}));
 var CDVPurchase2;
 (function (CDVPurchase2) {
@@ -630,7 +499,196 @@ var CDVPurchase2;
 })(CDVPurchase2 || (CDVPurchase2 = {}));
 var CDVPurchase2;
 (function (CDVPurchase2) {
+    let Internal;
+    (function (Internal) {
+        /** Queue of receipts to validate */
+        class ReceiptsToValidate {
+            constructor() {
+                this.array = [];
+            }
+            get() {
+                return this.array.concat();
+            }
+            add(receipt) {
+                if (!this.has(receipt))
+                    this.array.push(receipt);
+            }
+            clear() {
+                while (this.array.length !== 0)
+                    this.array.pop();
+            }
+            has(receipt) {
+                return !!this.array.find(el => el === receipt);
+            }
+        }
+        Internal.ReceiptsToValidate = ReceiptsToValidate;
+        /** Handles communication with the remote receipt validation service */
+        class Validator {
+            constructor(controller, log) {
+                /** List of receipts waiting for validation */
+                this.receiptsToValidate = new ReceiptsToValidate();
+                /** List of verified receipts */
+                this.verifiedReceipts = [];
+                this.controller = controller;
+                this.log = log.child('Validator');
+            }
+            /** Add/update a verified receipt from the server response */
+            addVerifiedReceipt(receipt, data) {
+                for (const vr of this.verifiedReceipts) {
+                    if (vr.platform === receipt.platform && vr.id === data.id) {
+                        // update existing receipt
+                        vr.set(receipt, data);
+                        return vr;
+                    }
+                }
+                const newVR = new CDVPurchase2.VerifiedReceipt(receipt, data);
+                this.verifiedReceipts.push(newVR);
+                return newVR;
+            }
+            /** Add a receipt to the validation queue. It'll get validated after a few milliseconds. */
+            add(receiptOrTransaction) {
+                const receipt = (receiptOrTransaction instanceof CDVPurchase2.Transaction)
+                    ? this.controller.localReceipts.filter(r => r.hasTransaction(receiptOrTransaction)).slice(-1)[0]
+                    : receiptOrTransaction;
+                if (receipt) {
+                    this.receiptsToValidate.add(receipt);
+                }
+            }
+            /** Run validation for all receipts in the queue */
+            run() {
+                // pseudo implementation
+                const receipts = this.receiptsToValidate.get();
+                this.receiptsToValidate.clear();
+                const onResponse = (r) => __awaiter(this, void 0, void 0, function* () {
+                    const { receipt, payload } = r;
+                    const adapter = this.controller.adapters.find(receipt.platform);
+                    yield (adapter === null || adapter === void 0 ? void 0 : adapter.handleReceiptValidationResponse(receipt, payload));
+                    if (payload.ok) {
+                        const vr = this.addVerifiedReceipt(receipt, payload.data);
+                        this.controller.verifiedCallbacks.trigger(vr);
+                        // this.verifiedCallbacks.trigger(data.receipt);
+                    }
+                    // else {
+                    // }
+                    // TODO: update transactions
+                });
+                receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));
+            }
+            runOnReceipt(receipt, callback) {
+                if (!this.controller.validator)
+                    return;
+                if (typeof this.controller.validator === 'function')
+                    return this.runValidatorFunction(this.controller.validator, receipt, callback);
+                const target = typeof this.controller.validator === 'string'
+                    ? { url: this.controller.validator }
+                    : this.controller.validator;
+                const body = this.buildRequestBody(receipt);
+                if (!body)
+                    return;
+                return this.runValidatorRequest(target, receipt, body, callback);
+            }
+            runValidatorFunction(validator, receipt, callback) {
+                try {
+                    validator(receipt, (payload) => callback({ receipt, payload }));
+                }
+                catch (error) {
+                    this.log.warn("user provided validator function failed with error: " + (error === null || error === void 0 ? void 0 : error.stack));
+                }
+            }
+            buildRequestBody(receipt) {
+                var _a, _b, _c;
+                // Let the adapter generate the initial content
+                const adapter = this.controller.adapters.find(receipt.platform);
+                const body = adapter === null || adapter === void 0 ? void 0 : adapter.receiptValidationBody(receipt);
+                if (!body)
+                    return;
+                // Add the applicationUsername
+                body.additionalData = Object.assign(Object.assign({}, (_a = body.additionalData) !== null && _a !== void 0 ? _a : {}), { applicationUsername: this.controller.getApplicationUsername() });
+                if (!body.additionalData.applicationUsername)
+                    delete body.additionalData.applicationUsername;
+                // Add device information
+                body.device = Object.assign(Object.assign({}, (_b = body.device) !== null && _b !== void 0 ? _b : {}), CDVPurchase2.Validator.Internal.getDeviceInfo(this.controller));
+                // Add legacy pricing information
+                if (((_c = body.offers) === null || _c === void 0 ? void 0 : _c.length) === 1) {
+                    const offer = body.offers[0];
+                    if (offer.pricingPhases.length === 1) {
+                        const pricing = offer.pricingPhases[0];
+                        body.currency = pricing.currency;
+                        body.priceMicros = pricing.priceMicros;
+                    }
+                    else if (offer.pricingPhases.length === 2) {
+                        const pricing = offer.pricingPhases[1];
+                        body.currency = pricing.currency;
+                        body.priceMicros = pricing.priceMicros;
+                        const intro = offer.pricingPhases[0];
+                        body.introPriceMicros = intro.priceMicros;
+                    }
+                }
+                return body;
+            }
+            runValidatorRequest(target, receipt, body, callback) {
+                CDVPurchase2.Utils.ajax(this.log.child("Ajax"), {
+                    url: target.url,
+                    method: 'POST',
+                    customHeaders: target.headers,
+                    data: body,
+                    success: (response) => {
+                        var _a;
+                        this.log.debug("validator success, response: " + JSON.stringify(response));
+                        if (!isValidatorResponsePayload(response))
+                            return callback({
+                                receipt,
+                                payload: {
+                                    ok: false,
+                                    code: CDVPurchase2.ErrorCode.BAD_RESPONSE,
+                                    message: 'Validator responded with invalid data',
+                                    data: { latest_receipt: (_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.latest_receipt },
+                                }
+                            });
+                        callback({ receipt, payload: response });
+                    },
+                    error: (status, message, data) => {
+                        var fullMessage = "Error " + status + ": " + message;
+                        this.log.debug("validator failed, response: " + JSON.stringify(fullMessage));
+                        this.log.debug("body => " + JSON.stringify(data));
+                        callback({
+                            receipt,
+                            payload: {
+                                ok: false,
+                                message: fullMessage,
+                                data: {},
+                            }
+                        });
+                    }
+                });
+            }
+        }
+        Internal.Validator = Validator;
+        /**
+         * Check if a payload looks like a valid validator response.
+         */
+        function isValidatorResponsePayload(payload) {
+            // TODO: could be made more robust.
+            return (!!payload)
+                && (typeof payload === 'object')
+                && ('ok' in payload)
+                && (typeof payload.ok === 'boolean');
+        }
+    })(Internal = CDVPurchase2.Internal || (CDVPurchase2.Internal = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+/// <reference path="validator/validator.ts" />
+/// <reference path="adapters.ts" />
+/// <reference path="log.ts" />
+/// <reference path="callbacks.ts" />
+/// <reference path="ready.ts" />
+var CDVPurchase2;
+(function (CDVPurchase2) {
     CDVPurchase2.PLUGIN_VERSION = '13.0.0';
+    /** Singleton */
+    let globalStore;
+    /**
+     * Main class of the purchase.
+     */
     class Store {
         constructor() {
             /** Payment platform adapters */
@@ -638,10 +696,9 @@ var CDVPurchase2;
             /** List of registered products */
             this.registeredProducts = new CDVPurchase2.Internal.RegisteredProducts();
             /** Logger */
-            this.log = new CDVPurchase2.Internal.Log(this);
+            this.log = new CDVPurchase2.Logger(this);
             /** Verbosity level for log */
             this.verbosity = CDVPurchase2.LogLevel.ERROR;
-            this._validator = new CDVPurchase2.Internal.Validator(this);
             /** List of callbacks for the "ready" events */
             this._readyCallbacks = new CDVPurchase2.ReadyCallbacks();
             /** Callbacks when a product definition was updated */
@@ -649,13 +706,14 @@ var CDVPurchase2;
             /** Callback when a receipt was updated */
             this.updatedReceiptsCallbacks = new CDVPurchase2.Callbacks();
             /** Callbacks when a product is owned */
-            this.ownedCallbacks = new CDVPurchase2.Callbacks();
+            // private ownedCallbacks = new Callbacks<Product>();
             /** Callbacks when a transaction has been approved */
             this.approvedCallbacks = new CDVPurchase2.Callbacks();
             /** Callbacks when a transaction has been finished */
             this.finishedCallbacks = new CDVPurchase2.Callbacks();
             /** Callbacks when a receipt has been validated */
             this.verifiedCallbacks = new CDVPurchase2.Callbacks();
+            /** Callbacks for errors */
             this.errorCallbacks = new CDVPurchase2.Callbacks;
             this.version = CDVPurchase2.PLUGIN_VERSION;
             this.listener = new CDVPurchase2.Internal.StoreAdapterListener({
@@ -664,6 +722,26 @@ var CDVPurchase2;
                 approvedCallbacks: this.approvedCallbacks,
                 finishedCallbacks: this.finishedCallbacks,
             });
+            const store = this;
+            this._validator = new CDVPurchase2.Internal.Validator({
+                adapters: this.adapters,
+                getApplicationUsername: this.getApplicationUsername.bind(this),
+                get localReceipts() { return store.localReceipts; },
+                get validator() { return store.validator; },
+                get validator_privacy_policy() { return store.validator_privacy_policy; },
+                verifiedCallbacks: this.verifiedCallbacks,
+            }, this.log);
+        }
+        /** The singleton store object */
+        static get instance() {
+            if (globalStore) {
+                return globalStore;
+            }
+            else {
+                globalStore = new Store();
+                Object.assign(globalStore, CDVPurchase2.LogLevel, CDVPurchase2.ProductType, CDVPurchase2.ErrorCode); // for backward compatibility
+                return globalStore;
+            }
         }
         /** Get the application username as a string by either calling or returning Store.applicationUsername */
         getApplicationUsername() {
@@ -682,7 +760,15 @@ var CDVPurchase2;
          */
         initialize(platforms = [Store.defaultPlatform()]) {
             return __awaiter(this, void 0, void 0, function* () {
-                const ret = this.adapters.initialize(platforms, this);
+                const store = this;
+                const ret = this.adapters.initialize(platforms, {
+                    error: this.error.bind(this),
+                    get verbosity() { return store.verbosity; },
+                    getApplicationUsername() { return store.getApplicationUsername(); },
+                    listener: this.listener,
+                    log: this.log,
+                    registeredProducts: this.registeredProducts,
+                });
                 ret.then(() => this._readyCallbacks.trigger());
                 return ret;
             });
@@ -711,10 +797,19 @@ var CDVPurchase2;
         }
         /** Register a callback to be called when the plugin is ready. */
         ready(cb) { this._readyCallbacks.add(cb); }
+        /** Setup events listener.
+         *
+         * @example
+         * store.when()
+         *      .productUpdated(product => updateUI(product))
+         *      .approved(transaction => store.finish(transaction));
+         */
         when() {
             const ret = {
-                updated: (cb) => (this.updatedCallbacks.push(cb), ret),
-                owned: (cb) => (this.ownedCallbacks.push(cb), ret),
+                productUpdated: (cb) => (this.updatedCallbacks.push(cb), ret),
+                receiptUpdated: (cb) => (this.updatedReceiptsCallbacks.push(cb), ret),
+                updated: (cb) => (this.updatedCallbacks.push(cb), this.updatedReceiptsCallbacks.push(cb), ret),
+                // owned: (cb: Callback<Product>) => (this.ownedCallbacks.push(cb), ret),
                 approved: (cb) => (this.approvedCallbacks.push(cb), ret),
                 finished: (cb) => (this.finishedCallbacks.push(cb), ret),
                 verified: (cb) => (this.verifiedCallbacks.push(cb), ret),
@@ -731,10 +826,54 @@ var CDVPurchase2;
             var _a;
             return (_a = this.adapters.find(platform)) === null || _a === void 0 ? void 0 : _a.products.find(p => p.id === productId);
         }
-        /** List of all receipts */
-        get receipts() {
+        /** List of all receipts present on the device */
+        get localReceipts() {
             // concatenate products all all active platforms
             return [].concat(...this.adapters.list.map(a => a.receipts));
+        }
+        /** List of receipts verified with the receipt validation service.
+         *
+         * Those receipt contains more information and are generally more up-to-date than the local ones. */
+        get verifiedReceipts() {
+            return this._validator.verifiedReceipts;
+        }
+        /**
+         * Find the last verified purchase for a given product, from those verified by the receipt validator.
+         */
+        findInVerifiedReceipts(product) {
+            var _a, _b;
+            let found;
+            for (const receipt of this.verifiedReceipts) {
+                if (receipt.platform !== product.platform)
+                    continue;
+                for (const purchase of receipt.collection) {
+                    if (purchase.id === product.id) {
+                        if (((_a = found === null || found === void 0 ? void 0 : found.purchaseDate) !== null && _a !== void 0 ? _a : 0) < ((_b = purchase.purchaseDate) !== null && _b !== void 0 ? _b : 1))
+                            found = purchase;
+                    }
+                }
+            }
+            return found;
+        }
+        /**
+         * Find the latest transaction for a givne product, from those reported by the device.
+         */
+        findInLocalReceipts(product) {
+            var _a, _b;
+            let found;
+            for (const receipt of this.localReceipts) {
+                if (receipt.platform !== product.platform)
+                    continue;
+                for (const transaction of receipt.transactions) {
+                    for (const trProducts of transaction.products) {
+                        if (trProducts.productId === product.id) {
+                            if (((_a = transaction.purchaseDate) !== null && _a !== void 0 ? _a : 0) < ((_b = found === null || found === void 0 ? void 0 : found.purchaseDate) !== null && _b !== void 0 ? _b : 1))
+                                found = transaction;
+                        }
+                    }
+                }
+            }
+            return found;
         }
         /** Place an order for a given offer */
         order(offer, additionalData) {
@@ -756,15 +895,17 @@ var CDVPurchase2;
             return __awaiter(this, void 0, void 0, function* () {
                 this._validator.add(receiptOrTransaction);
                 // Run validation after 50ms, so if the same receipt is to be validated multiple times it will just create one call.
-                setTimeout(() => this._validator.run((receipt) => {
-                    this.verifiedCallbacks.trigger(receipt);
-                }), 50);
+                setTimeout(() => this._validator.run());
             });
         }
         /** Finalize a transaction */
-        finish(transaction) {
+        finish(receipt) {
             return __awaiter(this, void 0, void 0, function* () {
-                const transactions = transaction instanceof CDVPurchase2.Receipt ? transaction.transactions : [transaction];
+                const transactions = receipt instanceof CDVPurchase2.VerifiedReceipt
+                    ? receipt.sourceReceipt.transactions
+                    : receipt instanceof CDVPurchase2.Receipt
+                        ? receipt.transactions
+                        : [receipt];
                 transactions.forEach(transaction => {
                     var _a;
                     const adapter = (_a = this.adapters.find(transaction.platform)) === null || _a === void 0 ? void 0 : _a.finish(transaction);
@@ -773,6 +914,7 @@ var CDVPurchase2;
         }
         restorePurchases() {
             return __awaiter(this, void 0, void 0, function* () {
+                // TODO
             });
         }
         /**
@@ -782,7 +924,7 @@ var CDVPurchase2;
          * - on Android: `GOOGLE_PLAY`
          */
         static defaultPlatform() {
-            switch (cordova.platformId) {
+            switch (window.cordova.platformId) {
                 case 'android': return CDVPurchase2.Platform.GOOGLE_PLAY;
                 case 'ios': return CDVPurchase2.Platform.APPLE_APPSTORE;
                 default: return CDVPurchase2.Platform.TEST;
@@ -796,121 +938,11 @@ var CDVPurchase2;
         }
     }
     CDVPurchase2.Store = Store;
-    let WindowsStore;
-    (function (WindowsStore) {
-        class Adapter {
-            constructor() {
-                this.id = CDVPurchase2.Platform.WINDOWS_STORE;
-                this.products = [];
-                this.receipts = [];
-            }
-            initialize() {
-                return __awaiter(this, void 0, void 0, function* () { return; });
-            }
-            load(products) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    return products.map(p => ({ code: CDVPurchase2.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' }));
-                });
-            }
-            order(offer) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    return {
-                        code: CDVPurchase2.ErrorCode.UNKNOWN,
-                        message: 'TODO: Not implemented'
-                    };
-                });
-            }
-            finish(transaction) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    return {
-                        code: CDVPurchase2.ErrorCode.UNKNOWN,
-                        message: 'TODO: Not implemented'
-                    };
-                });
-            }
-        }
-        WindowsStore.Adapter = Adapter;
-    })(WindowsStore = CDVPurchase2.WindowsStore || (CDVPurchase2.WindowsStore = {}));
-    let Braintree;
-    (function (Braintree) {
-        class Adapter {
-            constructor() {
-                this.id = CDVPurchase2.Platform.BRAINTREE;
-                this.products = [];
-                this.receipts = [];
-            }
-            initialize() {
-                return __awaiter(this, void 0, void 0, function* () { return; });
-            }
-            load(products) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    return products.map(p => ({ code: CDVPurchase2.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' }));
-                });
-            }
-            order(offer) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    return {
-                        code: CDVPurchase2.ErrorCode.UNKNOWN,
-                        message: 'TODO: Not implemented'
-                    };
-                });
-            }
-            finish(transaction) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    return {
-                        code: CDVPurchase2.ErrorCode.UNKNOWN,
-                        message: 'TODO: Not implemented'
-                    };
-                });
-            }
-        }
-        Braintree.Adapter = Adapter;
-    })(Braintree = CDVPurchase2.Braintree || (CDVPurchase2.Braintree = {}));
-    let Test;
-    (function (Test) {
-        class Adapter {
-            constructor() {
-                this.id = CDVPurchase2.Platform.TEST;
-                this.products = [];
-                this.receipts = [];
-            }
-            initialize() {
-                return __awaiter(this, void 0, void 0, function* () { return; });
-            }
-            load(products) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    return products.map(p => ({ code: CDVPurchase2.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' }));
-                });
-            }
-            order(offer) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    return {
-                        code: CDVPurchase2.ErrorCode.UNKNOWN,
-                        message: 'TODO: Not implemented'
-                    };
-                });
-            }
-            finish(transaction) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    return {
-                        code: CDVPurchase2.ErrorCode.UNKNOWN,
-                        message: 'TODO: Not implemented'
-                    };
-                });
-            }
-        }
-        Test.Adapter = Adapter;
-    })(Test = CDVPurchase2.Test || (CDVPurchase2.Test = {}));
 })(CDVPurchase2 || (CDVPurchase2 = {}));
-window.Iaptic = CDVPurchase2;
 setTimeout(() => {
-    window.CDVPurchase2 = window.Iaptic;
-    window.store = new CDVPurchase2.Store();
-    Object.assign(window.store, CDVPurchase2.LogLevel, CDVPurchase2.ProductType, CDVPurchase2.ErrorCode);
+    window.CDVPurchase2 = CDVPurchase2;
+    window.CDVPurchase2.store = CDVPurchase2.Store.instance;
 }, 0);
-/** window.store - the global store object */
-// declare var store: CDVPurchase2.Store;
-// window.store = new CDVPurchase2.Store();
 var CDVPurchase2;
 (function (CDVPurchase2) {
     class Transaction {
@@ -925,14 +957,6 @@ var CDVPurchase2;
         }
     }
     CDVPurchase2.Transaction = Transaction;
-    /** Whether or not the user intends to let the subscription auto-renew. */
-    let RenewalIntent;
-    (function (RenewalIntent) {
-        /** The user intends to let the subscription expire without renewing. */
-        RenewalIntent["LAPSE"] = "Lapse";
-        /** The user intends to renew the subscription. */
-        RenewalIntent["RENEW"] = "Renew";
-    })(RenewalIntent = CDVPurchase2.RenewalIntent || (CDVPurchase2.RenewalIntent = {}));
 })(CDVPurchase2 || (CDVPurchase2 = {}));
 var CDVPurchase2;
 (function (CDVPurchase2) {
@@ -952,50 +976,6 @@ var CDVPurchase2;
         /** Type: The application bundle */
         ProductType["APPLICATION"] = "application";
     })(ProductType = CDVPurchase2.ProductType || (CDVPurchase2.ProductType = {}));
-    class Product {
-        constructor(p) {
-            /**
-             * Product title from the store.
-             */
-            this.title = '';
-            /**
-             * Product full description from the store.
-             */
-            this.description = '';
-            this.platform = p.platform;
-            this.type = p.type;
-            this.id = p.id;
-            this.offers = [];
-            Object.defineProperty(this, 'pricing', { enumerable: false });
-        }
-        get pricing() { var _a; return (_a = this.offers[0]) === null || _a === void 0 ? void 0 : _a.pricingPhases[0]; }
-        /**
-         * Find and return an offer for this product from its id
-         *
-         * If id isn't specified, returns the first offer.
-         *
-         * @param id - Identifier of the offer to return
-         * @return An Offer or undefined if no match is found
-         */
-        getOffer(id = '') {
-            if (!id)
-                return this.offers[0];
-            return this.offers.find(o => o.id === id);
-        }
-        /**
-         * Find and return an offer for this product from its id
-         *
-         * If id isn't specified, returns the first offer.
-         *
-         * @param id - Identifier of the offer to return
-         */
-        addOffer(offer) {
-            if (this.getOffer(offer.id))
-                return;
-            this.offers.push(offer);
-        }
-    }
-    CDVPurchase2.Product = Product;
     /**
      * Type of recurring payment
      *
@@ -1042,80 +1022,81 @@ var CDVPurchase2;
         // EXPIRED = 'expired',
         TransactionState["UNKNOWN_STATE"] = "";
     })(TransactionState = CDVPurchase2.TransactionState || (CDVPurchase2.TransactionState = {}));
+    /** Whether or not the user intends to let the subscription auto-renew. */
+    let RenewalIntent;
+    (function (RenewalIntent) {
+        /** The user intends to let the subscription expire without renewing. */
+        RenewalIntent["LAPSE"] = "Lapse";
+        /** The user intends to renew the subscription. */
+        RenewalIntent["RENEW"] = "Renew";
+    })(RenewalIntent = CDVPurchase2.RenewalIntent || (CDVPurchase2.RenewalIntent = {}));
+    /** Whether or not the user was notified or agreed to a price change */
+    let PriceConsentStatus;
+    (function (PriceConsentStatus) {
+        PriceConsentStatus["NOTIFIED"] = "Notified";
+        PriceConsentStatus["AGREED"] = "Agreed";
+    })(PriceConsentStatus = CDVPurchase2.PriceConsentStatus || (CDVPurchase2.PriceConsentStatus = {}));
+    /** Reason why a subscription has been canceled */
+    let CancelationReason;
+    (function (CancelationReason) {
+        /** Not canceled */
+        CancelationReason["NOT_CANCELED"] = "";
+        /** Subscription canceled by the developer. */
+        CancelationReason["DEVELOPER"] = "Developer";
+        /** Subscription canceled by the system for an unspecified reason. */
+        CancelationReason["SYSTEM"] = "System";
+        /** Subscription upgraded or downgraded to a new subscription. */
+        CancelationReason["SYSTEM_REPLACED"] = "System.Replaced";
+        /** Product not available for purchase at the time of renewal. */
+        CancelationReason["SYSTEM_PRODUCT_UNAVAILABLE"] = "System.ProductUnavailable";
+        /** Billing error; for example customer’s payment information is no longer valid. */
+        CancelationReason["SYSTEM_BILLING_ERROR"] = "System.BillingError";
+        /** Transaction is gone; It has been deleted. */
+        CancelationReason["SYSTEM_DELETED"] = "System.Deleted";
+        /** Subscription canceled by the user for an unspecified reason. */
+        CancelationReason["CUSTOMER"] = "Customer";
+        /** Customer canceled their transaction due to an actual or perceived issue within your app. */
+        CancelationReason["CUSTOMER_TECHNICAL_ISSUES"] = "Customer.TechnicalIssues";
+        /** Customer did not agree to a recent price increase. See also priceConsentStatus. */
+        CancelationReason["CUSTOMER_PRICE_INCREASE"] = "Customer.PriceIncrease";
+        /** Customer canceled for cost-related reasons. */
+        CancelationReason["CUSTOMER_COST"] = "Customer.Cost";
+        /** Customer claimed to have found a better app. */
+        CancelationReason["CUSTOMER_FOUND_BETTER_APP"] = "Customer.FoundBetterApp";
+        /** Customer did not feel he is using this service enough. */
+        CancelationReason["CUSTOMER_NOT_USEFUL_ENOUGH"] = "Customer.NotUsefulEnough";
+        /** Subscription canceled for another reason; for example, if the customer made the purchase accidentally. */
+        CancelationReason["CUSTOMER_OTHER_REASON"] = "Customer.OtherReason";
+        /** Subscription canceled for unknown reasons. */
+        CancelationReason["UNKNOWN"] = "Unknown";
+    })(CancelationReason = CDVPurchase2.CancelationReason || (CDVPurchase2.CancelationReason = {}));
 })(CDVPurchase2 || (CDVPurchase2 = {}));
-var CDVPurchase2;
-(function (CDVPurchase2) {
-    let Internal;
-    (function (Internal) {
-        class ReceiptsToValidate {
-            constructor() {
-                this.array = [];
-            }
-            get() {
-                return this.array.concat();
-            }
-            add(receipt) {
-                if (!this.has(receipt))
-                    this.array.push(receipt);
-            }
-            clear() {
-                while (this.array.length !== 0)
-                    this.array.pop();
-            }
-            has(receipt) {
-                return !!this.array.find(el => el === receipt);
-            }
-        }
-        Internal.ReceiptsToValidate = ReceiptsToValidate;
-        class Validator {
-            constructor(controller) {
-                this.receipts = new ReceiptsToValidate();
-                this.controller = controller;
-            }
-            add(receiptOrTransaction) {
-                const receipt = (receiptOrTransaction instanceof CDVPurchase2.Transaction)
-                    ? this.controller.receipts.filter(r => r.hasTransaction(receiptOrTransaction))[0]
-                    : receiptOrTransaction;
-                if (receipt) {
-                    this.receipts.add(receipt);
-                }
-            }
-            run(onVerified) {
-                // pseudo implementation
-                const receipts = this.receipts.get();
-                this.receipts.clear();
-                receipts.forEach(receipt => {
-                    setTimeout(() => onVerified(receipt), 0);
-                });
-            }
-        }
-        Internal.Validator = Validator;
-    })(Internal = CDVPurchase2.Internal || (CDVPurchase2.Internal = {}));
-})(CDVPurchase2 || (CDVPurchase2 = {}));
-/// <reference path="../types.ts" />
-/// <reference path="../receipt.ts" />
-/// <reference path="../offer.ts" />
-/// <reference path="../transaction.ts" />
+/// <reference path="../../types.ts" />
+/// <reference path="../../product.ts" />
+/// <reference path="../../receipt.ts" />
+/// <reference path="../../offer.ts" />
+/// <reference path="../../transaction.ts" />
 var CDVPurchase2;
 (function (CDVPurchase2) {
     // Apple
-    let AppleStore;
-    (function (AppleStore) {
+    let AppleAppStore;
+    (function (AppleAppStore) {
         class SKReceipt extends CDVPurchase2.Receipt {
         }
-        AppleStore.SKReceipt = SKReceipt;
+        AppleAppStore.SKReceipt = SKReceipt;
         class SKProduct extends CDVPurchase2.Product {
         }
-        AppleStore.SKProduct = SKProduct;
+        AppleAppStore.SKProduct = SKProduct;
         class SKOffer extends CDVPurchase2.Offer {
         }
-        AppleStore.SKOffer = SKOffer;
+        AppleAppStore.SKOffer = SKOffer;
         class SKTransaction extends CDVPurchase2.Transaction {
         }
-        AppleStore.SKTransaction = SKTransaction;
+        AppleAppStore.SKTransaction = SKTransaction;
         class Adapter {
             constructor(context) {
                 this.id = CDVPurchase2.Platform.APPLE_APPSTORE;
+                this.name = 'AppStore';
                 this.products = [];
                 this.receipts = [];
             }
@@ -1143,10 +1124,93 @@ var CDVPurchase2;
                     };
                 });
             }
+            receiptValidationBody(receipt) {
+                // TODO
+                return;
+            }
+            handleReceiptValidationResponse(receipt, response) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return;
+                });
+            }
         }
-        AppleStore.Adapter = Adapter;
-    })(AppleStore = CDVPurchase2.AppleStore || (CDVPurchase2.AppleStore = {}));
+        AppleAppStore.Adapter = Adapter;
+    })(AppleAppStore = CDVPurchase2.AppleAppStore || (CDVPurchase2.AppleAppStore = {}));
 })(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    let AppleAppStore;
+    (function (AppleAppStore) {
+        let VerifyReceipt;
+        (function (VerifyReceipt) {
+            /** The reason a subscription expired.
+             * https://developer.apple.com/documentation/appstorereceipts/expiration_intent
+             */
+            let AppleExpirationIntent;
+            (function (AppleExpirationIntent) {
+                /** The customer voluntarily canceled their subscription. */
+                AppleExpirationIntent["CANCELED"] = "1";
+                /** Billing error; for example, the customer"s payment information was no longer valid. */
+                AppleExpirationIntent["BILLING_ERROR"] = "2";
+                /** The customer did not agree to a recent price increase. */
+                AppleExpirationIntent["PRICE_INCREASE"] = "3";
+                /** The product was not available for purchase at the time of renewal. */
+                AppleExpirationIntent["PRODUCT_NOT_AVAILABLE"] = "4";
+                /** Unknown error. */
+                AppleExpirationIntent["UNKNOWN"] = "5";
+            })(AppleExpirationIntent = VerifyReceipt.AppleExpirationIntent || (VerifyReceipt.AppleExpirationIntent = {}));
+        })(VerifyReceipt = AppleAppStore.VerifyReceipt || (AppleAppStore.VerifyReceipt = {}));
+    })(AppleAppStore = CDVPurchase2.AppleAppStore || (CDVPurchase2.AppleAppStore = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    let Braintree;
+    (function (Braintree) {
+        class Adapter {
+            constructor() {
+                this.id = CDVPurchase2.Platform.BRAINTREE;
+                this.name = 'BrainTree';
+                this.products = [];
+                this.receipts = [];
+            }
+            initialize() {
+                return __awaiter(this, void 0, void 0, function* () { return; });
+            }
+            load(products) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return products.map(p => ({ code: CDVPurchase2.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' }));
+                });
+            }
+            order(offer) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return {
+                        code: CDVPurchase2.ErrorCode.UNKNOWN,
+                        message: 'TODO: Not implemented'
+                    };
+                });
+            }
+            finish(transaction) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return {
+                        code: CDVPurchase2.ErrorCode.UNKNOWN,
+                        message: 'TODO: Not implemented'
+                    };
+                });
+            }
+            receiptValidationBody(receipt) {
+                return;
+            }
+            handleReceiptValidationResponse(receipt, response) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return;
+                });
+            }
+        }
+        Braintree.Adapter = Adapter;
+    })(Braintree = CDVPurchase2.Braintree || (CDVPurchase2.Braintree = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+/// <reference path="../../receipt.ts" />
+/// <reference path="../../transaction.ts" />
 var CDVPurchase2;
 (function (CDVPurchase2) {
     let GooglePlay;
@@ -1159,14 +1223,14 @@ var CDVPurchase2;
             }
             static toState(state, isAcknowledged) {
                 switch (state) {
-                    case GooglePlay.BridgePurchaseState.PENDING:
+                    case GooglePlay.Bridge.PurchaseState.PENDING:
                         return CDVPurchase2.TransactionState.INITIATED;
-                    case GooglePlay.BridgePurchaseState.PURCHASED:
+                    case GooglePlay.Bridge.PurchaseState.PURCHASED:
                         if (isAcknowledged)
                             return CDVPurchase2.TransactionState.FINISHED;
                         else
                             return CDVPurchase2.TransactionState.APPROVED;
-                    case GooglePlay.BridgePurchaseState.UNSPECIFIED_STATE:
+                    case GooglePlay.Bridge.PurchaseState.UNSPECIFIED_STATE:
                         return CDVPurchase2.TransactionState.UNKNOWN_STATE;
                 }
             }
@@ -1175,12 +1239,12 @@ var CDVPurchase2;
              */
             refresh(purchase) {
                 this.nativePurchase = purchase;
-                this.transactionId = `google:${purchase.orderId || purchase.purchaseToken}`;
-                this.purchaseId = `google:${purchase.purchaseToken}`;
+                this.transactionId = `${purchase.orderId || purchase.purchaseToken}`;
+                this.purchaseId = `${purchase.purchaseToken}`;
                 this.products = purchase.productIds.map(productId => ({ productId }));
                 if (purchase.purchaseTime)
                     this.purchaseDate = new Date(purchase.purchaseTime);
-                this.isPending = (purchase.getPurchaseState === GooglePlay.BridgePurchaseState.PENDING);
+                this.isPending = (purchase.getPurchaseState === GooglePlay.Bridge.PurchaseState.PENDING);
                 if (typeof purchase.acknowledged !== 'undefined')
                     this.isAcknowledged = purchase.acknowledged;
                 if (typeof purchase.autoRenewing !== 'undefined')
@@ -1210,10 +1274,12 @@ var CDVPurchase2;
             constructor(context, autoRefreshIntervalMillis = 1000 * 3600 * 24) {
                 /** Adapter identifier */
                 this.id = CDVPurchase2.Platform.GOOGLE_PLAY;
+                /** Adapter name */
+                this.name = 'GooglePlay';
                 this._products = new GooglePlay.Products();
                 this._receipts = [];
                 /** The GooglePlay bridge */
-                this.bridge = new GooglePlay.Bridge();
+                this.bridge = new GooglePlay.Bridge.Bridge();
                 /** Prevent double initialization */
                 this.initialized = false;
                 /** Used to retry failed commands */
@@ -1275,7 +1341,7 @@ var CDVPurchase2;
                 }
                 return { inAppSkus, subsSkus };
             }
-            /** @inheritdoc */
+            /** @inheritDoc */
             load(products) {
                 return new Promise((resolve) => {
                     this.log.debug("Load: " + JSON.stringify(products));
@@ -1295,6 +1361,8 @@ var CDVPurchase2;
                             }
                         });
                         resolve(ret);
+                        // let's also refresh purchases
+                        this.getPurchases();
                     };
                     /** Start loading products */
                     const go = () => {
@@ -1312,7 +1380,7 @@ var CDVPurchase2;
                     go();
                 });
             }
-            /** @inheritdoc */
+            /** @inheritDoc */
             finish(transaction) {
                 return new Promise(resolve => {
                     const onSuccess = () => resolve(undefined);
@@ -1343,6 +1411,7 @@ var CDVPurchase2;
             onPurchaseConsumed(purchase) {
                 this.log.debug("onPurchaseConsumed: " + purchase.orderId);
             }
+            /** Called when the platform reports update for some purchases */
             onPurchasesUpdated(purchases) {
                 this.log.debug("onPurchaseUpdated: " + purchases.map(p => p.orderId).join(', '));
                 // GooglePlay generates one receipt for each purchase
@@ -1359,35 +1428,138 @@ var CDVPurchase2;
                     }
                 });
             }
+            /** Called when the platform reports some purchases */
             onSetPurchases(purchases) {
                 this.log.debug("onSetPurchases: " + JSON.stringify(purchases));
+                this.onPurchasesUpdated(purchases);
             }
             onPriceChangeConfirmationResult(result) {
             }
-            getPurchases(callback) {
-                if (callback) {
-                    setTimeout(callback, 0);
-                }
+            /** Refresh purchases from GooglePlay */
+            getPurchases() {
+                return new Promise(resolve => {
+                    this.log.debug('getPurchases');
+                    const success = () => {
+                        this.log.debug('getPurchases success');
+                        setTimeout(() => resolve(undefined), 0);
+                    };
+                    const failure = (message, code) => {
+                        this.log.warn('getPurchases failed: ' + message + ' (' + code + ')');
+                        setTimeout(() => resolve({ code: code || CDVPurchase2.ErrorCode.UNKNOWN, message }), 0);
+                    };
+                    this.bridge.getPurchases(success, failure);
+                });
             }
-            /** @inheritdoc */
+            /** @inheritDoc */
             order(offer, additionalData) {
                 return __awaiter(this, void 0, void 0, function* () {
                     return new Promise(resolve => {
                         this.log.info("Order - " + JSON.stringify(offer));
-                        const buySuccess = () => {
-                            resolve(undefined);
-                        };
+                        const buySuccess = () => resolve(undefined);
                         const buyFailed = (message, code) => {
                             this.log.warn('Order failed: ' + JSON.stringify({ message, code }));
                             resolve({ code: code !== null && code !== void 0 ? code : CDVPurchase2.ErrorCode.UNKNOWN, message });
                         };
-                        const idAndToken = offer.product.type === CDVPurchase2.ProductType.PAID_SUBSCRIPTION ? offer.product.id + '@' + offer.id : offer.product.id;
-                        this.bridge.buy(buySuccess, buyFailed, idAndToken, additionalData);
+                        if (offer.product.type === CDVPurchase2.ProductType.PAID_SUBSCRIPTION) {
+                            const idAndToken = offer.id; // offerId contains the productId and token (format productId@offerToken)
+                            this.bridge.subscribe(buySuccess, buyFailed, idAndToken, additionalData);
+                        }
+                        else {
+                            this.bridge.buy(buySuccess, buyFailed, offer.product.id, additionalData);
+                        }
                     });
+                });
+            }
+            /**
+             * Prepare for receipt validation
+             */
+            receiptValidationBody(receipt) {
+                var _a;
+                const transaction = receipt.transactions[0];
+                if (!transaction)
+                    return;
+                const productId = (_a = transaction.products[0]) === null || _a === void 0 ? void 0 : _a.productId;
+                if (!productId)
+                    return;
+                const product = this._products.getProduct(productId);
+                if (!product)
+                    return;
+                const purchase = transaction.nativePurchase;
+                return {
+                    id: productId,
+                    type: product.type,
+                    offers: product.offers,
+                    transaction: {
+                        type: CDVPurchase2.Platform.GOOGLE_PLAY,
+                        id: receipt.transactions[0].transactionId,
+                        purchaseToken: purchase.purchaseToken,
+                        signature: purchase.signature,
+                        receipt: purchase.receipt,
+                    }
+                };
+            }
+            handleReceiptValidationResponse(receipt, response) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    if (response.ok) {
+                        const transaction = response.data.transaction;
+                        if (transaction.type !== CDVPurchase2.Platform.GOOGLE_PLAY)
+                            return;
+                        switch (transaction.kind) {
+                            case 'androidpublisher#productPurchase':
+                                break;
+                            case 'androidpublisher#subscriptionPurchase':
+                                break;
+                            case 'androidpublisher#subscriptionPurchaseV2':
+                                transaction;
+                                break;
+                            case 'fovea#subscriptionGone':
+                                // the transaction doesn't exist anymore
+                                break;
+                        }
+                    }
+                    return; // Nothing specific to do on GooglePlay
                 });
             }
         }
         GooglePlay.Adapter = Adapter;
+    })(GooglePlay = CDVPurchase2.GooglePlay || (CDVPurchase2.GooglePlay = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    let GooglePlay;
+    (function (GooglePlay) {
+        let Bridge;
+        (function (Bridge) {
+            /* export namespace V11 {
+                export interface Subscription {
+                    product_format: "v11.0";
+                    productId: string;
+                    title: string;
+                    name: string;
+                    billing_period: string;
+                    billing_period_unit: string;
+                    description: string;
+                    price: string;
+                    price_amount_micros: string;
+                    price_currency_code: string;
+                    trial_period: string;
+                    trial_period_unit: string;
+                    formatted_price: string;
+                    freeTrialPeriod: string;
+                    introductoryPrice: string;
+                    introductoryPriceAmountMicros: string;
+                    introductoryPriceCycles: string;
+                    introductoryPricePeriod: string;
+                    subscriptionPeriod: string;
+                }
+            } */
+            let RecurrenceMode;
+            (function (RecurrenceMode) {
+                RecurrenceMode["FINITE_RECURRING"] = "FINITE_RECURRING";
+                RecurrenceMode["INFINITE_RECURRING"] = "INFINITE_RECURRING";
+                RecurrenceMode["NON_RECURRING"] = "NON_RECURRING";
+            })(RecurrenceMode = Bridge.RecurrenceMode || (Bridge.RecurrenceMode = {}));
+        })(Bridge = GooglePlay.Bridge || (GooglePlay.Bridge = {}));
     })(GooglePlay = CDVPurchase2.GooglePlay || (CDVPurchase2.GooglePlay = {}));
 })(CDVPurchase2 || (CDVPurchase2 = {}));
 /*
@@ -1399,15 +1571,6 @@ var CDVPurchase2;
 (function (CDVPurchase2) {
     let GooglePlay;
     (function (GooglePlay) {
-        let log = function log(msg) {
-            console.log("InAppBilling[js]: " + msg);
-        };
-        let BridgePurchaseState;
-        (function (BridgePurchaseState) {
-            BridgePurchaseState[BridgePurchaseState["UNSPECIFIED_STATE"] = 0] = "UNSPECIFIED_STATE";
-            BridgePurchaseState[BridgePurchaseState["PURCHASED"] = 1] = "PURCHASED";
-            BridgePurchaseState[BridgePurchaseState["PENDING"] = 2] = "PENDING";
-        })(BridgePurchaseState = GooglePlay.BridgePurchaseState || (GooglePlay.BridgePurchaseState = {}));
         /** Replace SKU ProrationMode.
          *
          * See https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode */
@@ -1424,177 +1587,181 @@ var CDVPurchase2;
             /** Replacement takes effect immediately, and the user is charged full price of new plan and is given a full billing cycle of subscription, plus remaining prorated time from the old plan. */
             ProrationMode["IMMEDIATE_AND_CHARGE_FULL_PRICE"] = "IMMEDIATE_AND_CHARGE_FULL_PRICE";
         })(ProrationMode = GooglePlay.ProrationMode || (GooglePlay.ProrationMode = {}));
-        class Bridge {
-            constructor() {
-                this.options = {};
-            }
-            init(success, fail, options) {
-                if (!options)
-                    options = {};
-                if (options.log)
-                    log = options.log;
-                this.options = {
-                    showLog: options.showLog !== false,
-                    onPurchaseConsumed: options.onPurchaseConsumed,
-                    onPurchasesUpdated: options.onPurchasesUpdated,
-                    onSetPurchases: options.onSetPurchases,
-                };
-                if (this.options.showLog) {
-                    log('setup ok');
-                }
-                // Set a listener (see "listener()" function above)
-                const listener = this.listener.bind(this);
-                cordova.exec(listener, function (err) { }, "InAppBillingPlugin", "setListener", []);
-                cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", []);
-            }
-            load(success, fail, skus, inAppSkus, subsSkus) {
-                var hasSKUs = false;
-                // Optional Load SKUs to Inventory.
-                if (typeof skus !== "undefined") {
-                    if (typeof skus === "string") {
-                        skus = [skus];
-                    }
-                    if (skus.length > 0) {
-                        if (typeof skus[0] !== 'string') {
-                            var msg = 'invalid productIds: ' + JSON.stringify(skus);
-                            if (this.options.showLog) {
-                                log(msg);
-                            }
-                            fail(msg, CDVPurchase2.ErrorCode.INVALID_PRODUCT_ID);
-                            return;
-                        }
-                        if (this.options.showLog) {
-                            log('load ' + JSON.stringify(skus));
-                        }
-                        hasSKUs = true;
-                    }
-                }
-                cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "load", [skus, inAppSkus, subsSkus]);
-            }
-            listener(msg) {
-                // Handle changes to purchase that are being notified
-                // through the PurchasesUpdatedListener on the native side (android)
-                if (this.options.showLog) {
-                    log('listener: ' + JSON.stringify(msg));
-                }
-                if (!msg || !msg.type) {
-                    return;
-                }
-                if (msg.type === "setPurchases" && this.options.onSetPurchases) {
-                    this.options.onSetPurchases(msg.data.purchases);
-                }
-                if (msg.type === "purchasesUpdated" && this.options.onPurchasesUpdated) {
-                    this.options.onPurchasesUpdated(msg.data.purchases);
-                }
-                if (msg.type === "purchaseConsumed" && this.options.onPurchaseConsumed) {
-                    this.options.onPurchaseConsumed(msg.data.purchase);
-                }
-                if (msg.type === "onPriceChangeConfirmationResultOK" && this.options.onPriceChangeConfirmationResult) {
-                    this.options.onPriceChangeConfirmationResult("OK");
-                }
-                if (msg.type === "onPriceChangeConfirmationResultUserCanceled" && this.options.onPriceChangeConfirmationResult) {
-                    this.options.onPriceChangeConfirmationResult("UserCanceled");
-                }
-                if (msg.type === "onPriceChangeConfirmationResultUnknownSku" && this.options.onPriceChangeConfirmationResult) {
-                    this.options.onPriceChangeConfirmationResult("UnknownProduct");
-                }
-            }
-            getPurchases(success, fail) {
-                if (this.options.showLog) {
-                    log('getPurchases()');
-                }
-                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getPurchases", ["null"]);
-            }
-            buy(success, fail, productId, additionalData) {
-                if (this.options.showLog) {
-                    log('buy()');
-                }
-                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [
-                    productId, extendAdditionalData(additionalData)
-                ]);
-            }
-            subscribe(success, fail, productId, additionalData) {
-                var _a;
-                if (this.options.showLog) {
-                    log('subscribe()');
-                }
-                if (((_a = additionalData.googlePlay) === null || _a === void 0 ? void 0 : _a.oldPurchaseToken) && this.options.showLog) {
-                    log('subscribe() -> upgrading from an old purchase');
-                }
-                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [
-                    productId, extendAdditionalData(additionalData)
-                ]);
-            }
-            consumePurchase(success, fail, purchaseToken) {
-                if (this.options.showLog) {
-                    log('consumePurchase()');
-                }
-                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "consumePurchase", [purchaseToken]);
-            }
-            acknowledgePurchase(success, fail, purchaseToken) {
-                if (this.options.showLog) {
-                    log('acknowledgePurchase()');
-                }
-                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "acknowledgePurchase", [purchaseToken]);
-            }
-            getAvailableProducts(inAppSkus, subsSkus, success, fail) {
-                if (this.options.showLog) {
-                    log('getAvailableProducts()');
-                }
-                return cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getAvailableProducts", [inAppSkus, subsSkus]);
-            }
-            manageSubscriptions() {
-                return cordova.exec(function () { }, function () { }, "InAppBillingPlugin", "manageSubscriptions", []);
-            }
-            manageBilling() {
-                return cordova.exec(function () { }, function () { }, "InAppBillingPlugin", "manageBilling", []);
-            }
-            launchPriceChangeConfirmationFlow(productId) {
-                return cordova.exec(function () { }, function () { }, "InAppBillingPlugin", "launchPriceChangeConfirmationFlow", [productId]);
-            }
-        }
-        GooglePlay.Bridge = Bridge;
-        // Generates a `fail` function that accepts an optional error code
-        // in the first part of the error string.
-        //
-        // format: `code|message`
-        //
-        // `fail` function will be called with `message` as a first argument
-        // and `code` as a second argument (or undefined). This ensures
-        // backward compatibility with legacy code
-        function errorCb(fail) {
-            return function (error) {
-                if (!fail)
-                    return;
-                const tokens = typeof error === 'string' ? error.split('|') : [];
-                if (tokens.length > 1 && /^[-+]?(\d+)$/.test(tokens[0])) {
-                    var code = tokens[0];
-                    var message = tokens[1];
-                    fail(message, +code);
-                }
-                else {
-                    fail(error);
-                }
+        let Bridge;
+        (function (Bridge_1) {
+            let log = function log(msg) {
+                console.log("InAppBilling[js]: " + msg);
             };
-        }
-        function ensureObject(obj) {
-            return !!obj && obj.constructor === Object ? obj : {};
-        }
-        function extendAdditionalData(ad) {
-            const additionalData = ensureObject(ad === null || ad === void 0 ? void 0 : ad.googlePlay);
-            if (!additionalData.accountId && (ad === null || ad === void 0 ? void 0 : ad.applicationUsername)) {
-                additionalData.accountId = CDVPurchase2.Internal.Utils.md5(ad.applicationUsername);
+            let PurchaseState;
+            (function (PurchaseState) {
+                PurchaseState[PurchaseState["UNSPECIFIED_STATE"] = 0] = "UNSPECIFIED_STATE";
+                PurchaseState[PurchaseState["PURCHASED"] = 1] = "PURCHASED";
+                PurchaseState[PurchaseState["PENDING"] = 2] = "PENDING";
+            })(PurchaseState = Bridge_1.PurchaseState || (Bridge_1.PurchaseState = {}));
+            class Bridge {
+                constructor() {
+                    this.options = {};
+                }
+                init(success, fail, options) {
+                    if (!options)
+                        options = {};
+                    if (options.log)
+                        log = options.log;
+                    this.options = {
+                        showLog: options.showLog !== false,
+                        onPurchaseConsumed: options.onPurchaseConsumed,
+                        onPurchasesUpdated: options.onPurchasesUpdated,
+                        onSetPurchases: options.onSetPurchases,
+                    };
+                    if (this.options.showLog) {
+                        log('setup ok');
+                    }
+                    // Set a listener (see "listener()" function above)
+                    const listener = this.listener.bind(this);
+                    window.cordova.exec(listener, function (err) { }, "InAppBillingPlugin", "setListener", []);
+                    window.cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "init", []);
+                }
+                load(success, fail, skus, inAppSkus, subsSkus) {
+                    var hasSKUs = false;
+                    // Optional Load SKUs to Inventory.
+                    if (typeof skus !== "undefined") {
+                        if (typeof skus === "string") {
+                            skus = [skus];
+                        }
+                        if (skus.length > 0) {
+                            if (typeof skus[0] !== 'string') {
+                                var msg = 'invalid productIds: ' + JSON.stringify(skus);
+                                if (this.options.showLog) {
+                                    log(msg);
+                                }
+                                fail(msg, CDVPurchase2.ErrorCode.INVALID_PRODUCT_ID);
+                                return;
+                            }
+                            if (this.options.showLog) {
+                                log('load ' + JSON.stringify(skus));
+                            }
+                            hasSKUs = true;
+                        }
+                    }
+                    window.cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "load", [skus, inAppSkus, subsSkus]);
+                }
+                listener(msg) {
+                    // Handle changes to purchase that are being notified
+                    // through the PurchasesUpdatedListener on the native side (android)
+                    if (this.options.showLog) {
+                        log('listener: ' + JSON.stringify(msg));
+                    }
+                    if (!msg || !msg.type) {
+                        return;
+                    }
+                    if (msg.type === "setPurchases" && this.options.onSetPurchases) {
+                        this.options.onSetPurchases(msg.data.purchases);
+                    }
+                    if (msg.type === "purchasesUpdated" && this.options.onPurchasesUpdated) {
+                        this.options.onPurchasesUpdated(msg.data.purchases);
+                    }
+                    if (msg.type === "purchaseConsumed" && this.options.onPurchaseConsumed) {
+                        this.options.onPurchaseConsumed(msg.data.purchase);
+                    }
+                    if (msg.type === "onPriceChangeConfirmationResultOK" && this.options.onPriceChangeConfirmationResult) {
+                        this.options.onPriceChangeConfirmationResult("OK");
+                    }
+                    if (msg.type === "onPriceChangeConfirmationResultUserCanceled" && this.options.onPriceChangeConfirmationResult) {
+                        this.options.onPriceChangeConfirmationResult("UserCanceled");
+                    }
+                    if (msg.type === "onPriceChangeConfirmationResultUnknownSku" && this.options.onPriceChangeConfirmationResult) {
+                        this.options.onPriceChangeConfirmationResult("UnknownProduct");
+                    }
+                }
+                getPurchases(success, fail) {
+                    if (this.options.showLog) {
+                        log('getPurchases()');
+                    }
+                    return window.cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getPurchases", ["null"]);
+                }
+                buy(success, fail, productId, additionalData) {
+                    if (this.options.showLog) {
+                        log('buy()');
+                    }
+                    return window.cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "buy", [
+                        productId, extendAdditionalData(additionalData)
+                    ]);
+                }
+                subscribe(success, fail, productId, additionalData) {
+                    var _a;
+                    if (this.options.showLog) {
+                        log('subscribe()');
+                    }
+                    if (((_a = additionalData.googlePlay) === null || _a === void 0 ? void 0 : _a.oldPurchaseToken) && this.options.showLog) {
+                        log('subscribe() -> upgrading from an old purchase');
+                    }
+                    return window.cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "subscribe", [
+                        productId, extendAdditionalData(additionalData)
+                    ]);
+                }
+                consumePurchase(success, fail, purchaseToken) {
+                    if (this.options.showLog) {
+                        log('consumePurchase()');
+                    }
+                    return window.cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "consumePurchase", [purchaseToken]);
+                }
+                acknowledgePurchase(success, fail, purchaseToken) {
+                    if (this.options.showLog) {
+                        log('acknowledgePurchase()');
+                    }
+                    return window.cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "acknowledgePurchase", [purchaseToken]);
+                }
+                getAvailableProducts(inAppSkus, subsSkus, success, fail) {
+                    if (this.options.showLog) {
+                        log('getAvailableProducts()');
+                    }
+                    return window.cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getAvailableProducts", [inAppSkus, subsSkus]);
+                }
+                manageSubscriptions() {
+                    return window.cordova.exec(function () { }, function () { }, "InAppBillingPlugin", "manageSubscriptions", []);
+                }
+                manageBilling() {
+                    return window.cordova.exec(function () { }, function () { }, "InAppBillingPlugin", "manageBilling", []);
+                }
+                launchPriceChangeConfirmationFlow(productId) {
+                    return window.cordova.exec(function () { }, function () { }, "InAppBillingPlugin", "launchPriceChangeConfirmationFlow", [productId]);
+                }
             }
-            return additionalData;
-        }
-        // window.inappbilling = new Bridge();
-        // That's for compatibility with the unified IAP plugin.
-        // try {
-        //     store.internals.inappbilling = window.inappbilling;
-        // }
-        // catch (e) {
-        //     log(e);
-        // }
+            Bridge_1.Bridge = Bridge;
+            // Generates a `fail` function that accepts an optional error code
+            // in the first part of the error string.
+            //
+            // format: `code|message`
+            //
+            // `fail` function will be called with `message` as a first argument
+            // and `code` as a second argument (or undefined). This ensures
+            // backward compatibility with legacy code
+            function errorCb(fail) {
+                return function (error) {
+                    if (!fail)
+                        return;
+                    const tokens = typeof error === 'string' ? error.split('|') : [];
+                    if (tokens.length > 1 && /^[-+]?(\d+)$/.test(tokens[0])) {
+                        var code = tokens[0];
+                        var message = tokens[1];
+                        fail(message, +code);
+                    }
+                    else {
+                        fail(error);
+                    }
+                };
+            }
+            function ensureObject(obj) {
+                return !!obj && obj.constructor === Object ? obj : {};
+            }
+            function extendAdditionalData(ad) {
+                const additionalData = ensureObject(ad === null || ad === void 0 ? void 0 : ad.googlePlay);
+                if (!additionalData.accountId && (ad === null || ad === void 0 ? void 0 : ad.applicationUsername)) {
+                    additionalData.accountId = CDVPurchase2.Utils.md5(ad.applicationUsername);
+                }
+                return additionalData;
+            }
+        })(Bridge = GooglePlay.Bridge || (GooglePlay.Bridge = {}));
     })(GooglePlay = CDVPurchase2.GooglePlay || (CDVPurchase2.GooglePlay = {}));
 })(CDVPurchase2 || (CDVPurchase2 = {}));
 /// <reference path="../../offer.ts" />
@@ -1602,17 +1769,17 @@ var CDVPurchase2;
 (function (CDVPurchase2) {
     let GooglePlay;
     (function (GooglePlay) {
-        class GooglePlayProduct extends CDVPurchase2.Product {
+        class GProduct extends CDVPurchase2.Product {
         }
-        GooglePlay.GooglePlayProduct = GooglePlayProduct;
-        class GooglePlayInAppOffer extends CDVPurchase2.Offer {
+        GooglePlay.GProduct = GProduct;
+        class InAppOffer extends CDVPurchase2.Offer {
             constructor() {
                 super(...arguments);
                 this.type = 'inapp';
             }
         }
-        GooglePlay.GooglePlayInAppOffer = GooglePlayInAppOffer;
-        class GooglePlaySubscriptionOffer extends CDVPurchase2.Offer {
+        GooglePlay.InAppOffer = InAppOffer;
+        class SubscriptionOffer extends CDVPurchase2.Offer {
             constructor(options) {
                 super(options);
                 this.type = 'subs';
@@ -1620,7 +1787,7 @@ var CDVPurchase2;
                 this.token = options.token;
             }
         }
-        GooglePlay.GooglePlaySubscriptionOffer = GooglePlaySubscriptionOffer;
+        GooglePlay.SubscriptionOffer = SubscriptionOffer;
         class Products {
             constructor() {
                 /** List of products managed by the GooglePlay adapter */
@@ -1637,7 +1804,7 @@ var CDVPurchase2;
             /**  */
             addProduct(registeredProduct, vp) {
                 const existingProduct = this.getProduct(registeredProduct.id);
-                const p = existingProduct !== null && existingProduct !== void 0 ? existingProduct : new CDVPurchase2.Product(registeredProduct);
+                const p = existingProduct !== null && existingProduct !== void 0 ? existingProduct : new GProduct(registeredProduct);
                 p.title = vp.title || vp.name || p.title;
                 p.description = vp.description || p.description;
                 // Process the product depending on the format
@@ -1684,15 +1851,15 @@ var CDVPurchase2;
                 return product;
             }
             iabSubsOfferV12Loaded(product, vp, productOffer) {
-                const id = vp.productId + '@' + productOffer.token;
-                const existingOffer = this.getOffer(id);
+                const offerId = vp.productId + '@' + productOffer.token;
+                const existingOffer = this.getOffer(offerId);
                 const pricingPhases = productOffer.pricing_phases.map(p => this.toPricingPhase(p));
                 if (existingOffer) {
                     existingOffer.pricingPhases = pricingPhases;
                     return existingOffer;
                 }
                 else {
-                    const offer = new GooglePlaySubscriptionOffer({ id, product, pricingPhases, token: productOffer.token, tags: productOffer.tags });
+                    const offer = new SubscriptionOffer({ id: offerId, product, pricingPhases, token: productOffer.token, tags: productOffer.tags });
                     this.offers.push(offer);
                     return offer;
                 }
@@ -1852,7 +2019,7 @@ var CDVPurchase2;
                     p.offers = [existingOffer];
                 }
                 else {
-                    const newOffer = new GooglePlayInAppOffer({ id: vp.productId, product: p, pricingPhases });
+                    const newOffer = new InAppOffer({ id: vp.productId, product: p, pricingPhases });
                     this.offers.push(newOffer);
                     p.offers = [newOffer];
                 }
@@ -1870,15 +2037,15 @@ var CDVPurchase2;
             toPaymentMode(phase) {
                 return phase.price_amount_micros === 0
                     ? CDVPurchase2.PaymentMode.FREE_TRIAL
-                    : phase.recurrence_mode === GooglePlay.BridgeRecurrenceModeV12.NON_RECURRING
+                    : phase.recurrence_mode === GooglePlay.Bridge.RecurrenceMode.NON_RECURRING
                         ? CDVPurchase2.PaymentMode.UP_FRONT
                         : CDVPurchase2.PaymentMode.PAY_AS_YOU_GO;
             }
             toRecurrenceMode(mode) {
                 switch (mode) {
-                    case GooglePlay.BridgeRecurrenceModeV12.FINITE_RECURRING: return CDVPurchase2.RecurrenceMode.FINITE_RECURRING;
-                    case GooglePlay.BridgeRecurrenceModeV12.INFINITE_RECURRING: return CDVPurchase2.RecurrenceMode.INFINITE_RECURRING;
-                    case GooglePlay.BridgeRecurrenceModeV12.NON_RECURRING: return CDVPurchase2.RecurrenceMode.NON_RECURRING;
+                    case GooglePlay.Bridge.RecurrenceMode.FINITE_RECURRING: return CDVPurchase2.RecurrenceMode.FINITE_RECURRING;
+                    case GooglePlay.Bridge.RecurrenceMode.INFINITE_RECURRING: return CDVPurchase2.RecurrenceMode.INFINITE_RECURRING;
+                    case GooglePlay.Bridge.RecurrenceMode.NON_RECURRING: return CDVPurchase2.RecurrenceMode.NON_RECURRING;
                 }
             }
             toPricingPhase(phase) {
@@ -1900,11 +2067,591 @@ var CDVPurchase2;
 (function (CDVPurchase2) {
     let GooglePlay;
     (function (GooglePlay) {
-        let BridgeRecurrenceModeV12;
-        (function (BridgeRecurrenceModeV12) {
-            BridgeRecurrenceModeV12["FINITE_RECURRING"] = "FINITE_RECURRING";
-            BridgeRecurrenceModeV12["INFINITE_RECURRING"] = "INFINITE_RECURRING";
-            BridgeRecurrenceModeV12["NON_RECURRING"] = "NON_RECURRING";
-        })(BridgeRecurrenceModeV12 = GooglePlay.BridgeRecurrenceModeV12 || (GooglePlay.BridgeRecurrenceModeV12 = {}));
+        let PublisherAPI;
+        (function (PublisherAPI) {
+            let GoogleErrorReason;
+            (function (GoogleErrorReason) {
+                /** The subscription purchase is no longer available for query because it has been expired for too long. */
+                GoogleErrorReason["SUBSCRIPTION_NO_LONGER_AVAILABLE"] = "subscriptionPurchaseNoLongerAvailable";
+                /** The purchase token is no longer valid. */
+                GoogleErrorReason["PURCHASE_TOKEN_NO_LONGER_VALID"] = "purchaseTokenNoLongerValid";
+            })(GoogleErrorReason = PublisherAPI.GoogleErrorReason || (PublisherAPI.GoogleErrorReason = {}));
+            /**
+           * Those are actually HTTP status codes.
+           *
+           * Duplicated here for documentation purposes.
+           */
+            let ErrorCode;
+            (function (ErrorCode) {
+                /** The subscription purchase is no longer available for query because it has been expired for too long. */
+                ErrorCode[ErrorCode["GONE"] = 410] = "GONE";
+            })(ErrorCode = PublisherAPI.ErrorCode || (PublisherAPI.ErrorCode = {}));
+        })(PublisherAPI = GooglePlay.PublisherAPI || (GooglePlay.PublisherAPI = {}));
     })(GooglePlay = CDVPurchase2.GooglePlay || (CDVPurchase2.GooglePlay = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    let Test;
+    (function (Test) {
+        class Adapter {
+            constructor() {
+                this.id = CDVPurchase2.Platform.TEST;
+                this.name = 'Test';
+                this.products = [];
+                this.receipts = [];
+            }
+            initialize() {
+                return __awaiter(this, void 0, void 0, function* () { return; });
+            }
+            load(products) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return products.map(p => ({ code: CDVPurchase2.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' }));
+                });
+            }
+            order(offer) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return {
+                        code: CDVPurchase2.ErrorCode.UNKNOWN,
+                        message: 'TODO: Not implemented'
+                    };
+                });
+            }
+            finish(transaction) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return {
+                        code: CDVPurchase2.ErrorCode.UNKNOWN,
+                        message: 'TODO: Not implemented'
+                    };
+                });
+            }
+            receiptValidationBody(receipt) {
+                return;
+            }
+            handleReceiptValidationResponse(receipt, response) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return;
+                });
+            }
+        }
+        Test.Adapter = Adapter;
+    })(Test = CDVPurchase2.Test || (CDVPurchase2.Test = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    let WindowsStore;
+    (function (WindowsStore) {
+        class Adapter {
+            constructor() {
+                this.id = CDVPurchase2.Platform.WINDOWS_STORE;
+                this.name = 'WindowsStore';
+                this.products = [];
+                this.receipts = [];
+            }
+            initialize() {
+                return __awaiter(this, void 0, void 0, function* () { return; });
+            }
+            load(products) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return products.map(p => ({ code: CDVPurchase2.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' }));
+                });
+            }
+            order(offer) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return {
+                        code: CDVPurchase2.ErrorCode.UNKNOWN,
+                        message: 'TODO: Not implemented'
+                    };
+                });
+            }
+            finish(transaction) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return {
+                        code: CDVPurchase2.ErrorCode.UNKNOWN,
+                        message: 'TODO: Not implemented'
+                    };
+                });
+            }
+            handleReceiptValidationResponse(receipt, response) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return;
+                });
+            }
+            receiptValidationBody(receipt) {
+                return;
+            }
+        }
+        WindowsStore.Adapter = Adapter;
+    })(WindowsStore = CDVPurchase2.WindowsStore || (CDVPurchase2.WindowsStore = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    let Utils;
+    (function (Utils) {
+        /**
+         * Simplified version of jQuery's ajax method based on XMLHttpRequest.
+         *
+         * Uses cordova's http plugin when installed.
+         *
+         * Only supports JSON requests.
+         */
+        function ajax(log, options) {
+            if (typeof window !== 'undefined' && window.cordova && window.cordova.plugin && window.cordova.plugin.http) {
+                return ajaxWithHttpPlugin(log, options);
+            }
+            var doneCb = function () { };
+            var xhr = new XMLHttpRequest();
+            xhr.open(options.method || 'POST', options.url, true);
+            xhr.onreadystatechange = function ( /*event*/) {
+                try {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            Utils.callExternal(log, 'ajax.success', options.success, JSON.parse(xhr.responseText));
+                        }
+                        else {
+                            log.warn("ajax -> request to " + options.url + " failed with status " + xhr.status + " (" + xhr.statusText + ")");
+                            Utils.callExternal(log, 'ajax.error', options.error, xhr.status, xhr.statusText);
+                        }
+                    }
+                }
+                catch (e) {
+                    log.warn("ajax -> request to " + options.url + " failed with an exception: " + e.message);
+                    if (options.error)
+                        options.error(417, e.message, null);
+                }
+                if (xhr.readyState === 4)
+                    Utils.callExternal(log, 'ajax.done', doneCb);
+            };
+            const customHeaders = options.customHeaders;
+            if (customHeaders) {
+                Object.keys(customHeaders).forEach(function (header) {
+                    log.debug('ajax -> adding custom header: ' + header);
+                    xhr.setRequestHeader(header, customHeaders[header]);
+                });
+            }
+            xhr.setRequestHeader("Accept", "application/json");
+            log.debug('ajax -> send request to ' + options.url);
+            if (options.data) {
+                xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                xhr.send(JSON.stringify(options.data));
+            }
+            else {
+                xhr.send();
+            }
+            return {
+                done: function (cb) { doneCb = cb; return this; }
+            };
+        }
+        Utils.ajax = ajax;
+        /**
+         * Simplified version of jQuery's ajax method based on XMLHttpRequest.
+         *
+         * Uses the http plugin.
+         */
+        function ajaxWithHttpPlugin(log, options) {
+            let doneCb = function () { };
+            const ajaxOptions = {
+                method: (options.method || 'get').toLowerCase(),
+                data: options.data,
+                serializer: 'json',
+                // responseType: 'json',
+            };
+            if (options.customHeaders) {
+                log.debug('ajax[http] -> adding custom headers: ' + JSON.stringify(options.customHeaders));
+                ajaxOptions.headers = options.customHeaders;
+            }
+            log.debug('ajax[http] -> send request to ' + options.url);
+            const ajaxDone = (response) => {
+                try {
+                    if (response.status == 200) {
+                        Utils.callExternal(log, 'ajax.success', options.success, JSON.parse(response.data));
+                    }
+                    else {
+                        log.warn("ajax[http] -> request to " + options.url + " failed with status " + response.status + " (" + response.error + ")");
+                        Utils.callExternal(log, 'ajax.error', options.error, response.status, response.error);
+                    }
+                }
+                catch (e) {
+                    log.warn("ajax[http] -> request to " + options.url + " failed with an exception: " + e.message);
+                    if (options.error)
+                        Utils.callExternal(log, 'ajax.error', options.error, 417, e.message);
+                }
+                Utils.callExternal(log, 'ajax.done', doneCb);
+            };
+            window.cordova.plugin.http.sendRequest(options.url, ajaxOptions, ajaxDone, ajaxDone);
+            return {
+                done: function (cb) { doneCb = cb; return this; }
+            };
+        }
+    })(Utils = CDVPurchase2.Utils || (CDVPurchase2.Utils = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    let Utils;
+    (function (Utils) {
+        /**
+         * Calls an user-registered callback.
+         *
+         * Won't throw exceptions, only logs errors.
+         *
+         * @param name a short string describing the callback
+         * @param callback the callback to call (won't fail if undefined)
+         *
+         * @example
+         * ```js
+         * Utils.callExternal(store.log, "ajax.error", options.error, 404, "Not found");
+         * ```
+         */
+        function callExternal(log, name, callback, ...args) {
+            try {
+                const args = Array.prototype.slice.call(arguments, 3);
+                // store.log.debug("calling " + name + "(" + JSON.stringify(args2) + ")");
+                if (callback)
+                    callback.apply(CDVPurchase2.Store.instance, args);
+            }
+            catch (e) {
+                log.logCallbackException(name, e);
+            }
+        }
+        Utils.callExternal = callExternal;
+    })(Utils = CDVPurchase2.Utils || (CDVPurchase2.Utils = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    let Utils;
+    (function (Utils) {
+        function delay(fn, wait) {
+            return setTimeout(fn, wait);
+        }
+        Utils.delay = delay;
+        function debounce(fn, wait) {
+            let timeout = null;
+            const later = function (context, args) {
+                timeout = null;
+                fn();
+            };
+            const debounced = function () {
+                if (timeout)
+                    window.clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+            return debounced;
+        }
+        Utils.debounce = debounce;
+    })(Utils = CDVPurchase2.Utils || (CDVPurchase2.Utils = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    let Utils;
+    (function (Utils) {
+        const HEX2STR = "0123456789abcdef".split("");
+        function toHexString(r) {
+            for (var n = "", e = 0; e < 4; e++)
+                n += HEX2STR[r >> 8 * e + 4 & 15] + HEX2STR[r >> 8 * e & 15];
+            return n;
+        }
+        function hexStringFromArray(array) {
+            const out = [];
+            for (var arrayLength = array.length, i = 0; i < arrayLength; i++)
+                out.push(toHexString(array[i]));
+            return out.join("");
+        }
+        function add32(r, n) {
+            return r + n & 4294967295;
+        }
+        function complexShift(r, n, e, t, o, u, shiftFunction) {
+            function shiftAdd32(op0, op1, v1) {
+                return add32(op0 << op1 | op0 >>> 32 - op1, v1);
+            }
+            function add32x4(i0, i1, j0, j1) {
+                return add32(add32(i1, i0), add32(j0, j1));
+            }
+            return shiftAdd32(add32x4(r, n, t, u), o, e);
+        }
+        var step1Function = function (shiftFunction, n, e, t, o, u, f, a) { return complexShift(e & t | ~e & o, n, e, u, f, a, shiftFunction); };
+        var step2Function = function (shiftFunction, n, e, t, o, u, f, a) { return complexShift(e & o | t & ~o, n, e, u, f, a, shiftFunction); };
+        var step3Function = function (shiftFunction, n, e, t, o, u, f, a) { return complexShift(e ^ t ^ o, n, e, u, f, a, shiftFunction); };
+        var step4Function = function (shiftFunction, n, e, t, o, u, f, a) { return complexShift(t ^ (e | ~o), n, e, u, f, a, shiftFunction); };
+        function hashStep(inOutVec4, strAsInts, shiftFunction) {
+            if (!shiftFunction)
+                shiftFunction = add32;
+            let v0 = inOutVec4[0];
+            let v1 = inOutVec4[1];
+            let v2 = inOutVec4[2];
+            let v3 = inOutVec4[3];
+            var step1 = step1Function.bind(null, shiftFunction);
+            v0 = step1(v0, v1, v2, v3, strAsInts[0], 7, -680876936);
+            v3 = step1(v3, v0, v1, v2, strAsInts[1], 12, -389564586);
+            v2 = step1(v2, v3, v0, v1, strAsInts[2], 17, 606105819);
+            v1 = step1(v1, v2, v3, v0, strAsInts[3], 22, -1044525330);
+            v0 = step1(v0, v1, v2, v3, strAsInts[4], 7, -176418897);
+            v3 = step1(v3, v0, v1, v2, strAsInts[5], 12, 1200080426);
+            v2 = step1(v2, v3, v0, v1, strAsInts[6], 17, -1473231341);
+            v1 = step1(v1, v2, v3, v0, strAsInts[7], 22, -45705983);
+            v0 = step1(v0, v1, v2, v3, strAsInts[8], 7, 1770035416);
+            v3 = step1(v3, v0, v1, v2, strAsInts[9], 12, -1958414417);
+            v2 = step1(v2, v3, v0, v1, strAsInts[10], 17, -42063);
+            v1 = step1(v1, v2, v3, v0, strAsInts[11], 22, -1990404162);
+            v0 = step1(v0, v1, v2, v3, strAsInts[12], 7, 1804603682);
+            v3 = step1(v3, v0, v1, v2, strAsInts[13], 12, -40341101);
+            v2 = step1(v2, v3, v0, v1, strAsInts[14], 17, -1502002290);
+            v1 = step1(v1, v2, v3, v0, strAsInts[15], 22, 1236535329);
+            var step2 = step2Function.bind(null, shiftFunction);
+            v0 = step2(v0, v1, v2, v3, strAsInts[1], 5, -165796510);
+            v3 = step2(v3, v0, v1, v2, strAsInts[6], 9, -1069501632);
+            v2 = step2(v2, v3, v0, v1, strAsInts[11], 14, 643717713);
+            v1 = step2(v1, v2, v3, v0, strAsInts[0], 20, -373897302);
+            v0 = step2(v0, v1, v2, v3, strAsInts[5], 5, -701558691);
+            v3 = step2(v3, v0, v1, v2, strAsInts[10], 9, 38016083);
+            v2 = step2(v2, v3, v0, v1, strAsInts[15], 14, -660478335);
+            v1 = step2(v1, v2, v3, v0, strAsInts[4], 20, -405537848);
+            v0 = step2(v0, v1, v2, v3, strAsInts[9], 5, 568446438);
+            v3 = step2(v3, v0, v1, v2, strAsInts[14], 9, -1019803690);
+            v2 = step2(v2, v3, v0, v1, strAsInts[3], 14, -187363961);
+            v1 = step2(v1, v2, v3, v0, strAsInts[8], 20, 1163531501);
+            v0 = step2(v0, v1, v2, v3, strAsInts[13], 5, -1444681467);
+            v3 = step2(v3, v0, v1, v2, strAsInts[2], 9, -51403784);
+            v2 = step2(v2, v3, v0, v1, strAsInts[7], 14, 1735328473);
+            v1 = step2(v1, v2, v3, v0, strAsInts[12], 20, -1926607734);
+            var step3 = step3Function.bind(null, shiftFunction);
+            v0 = step3(v0, v1, v2, v3, strAsInts[5], 4, -378558);
+            v3 = step3(v3, v0, v1, v2, strAsInts[8], 11, -2022574463);
+            v2 = step3(v2, v3, v0, v1, strAsInts[11], 16, 1839030562);
+            v1 = step3(v1, v2, v3, v0, strAsInts[14], 23, -35309556);
+            v0 = step3(v0, v1, v2, v3, strAsInts[1], 4, -1530992060);
+            v3 = step3(v3, v0, v1, v2, strAsInts[4], 11, 1272893353);
+            v2 = step3(v2, v3, v0, v1, strAsInts[7], 16, -155497632);
+            v1 = step3(v1, v2, v3, v0, strAsInts[10], 23, -1094730640);
+            v0 = step3(v0, v1, v2, v3, strAsInts[13], 4, 681279174);
+            v3 = step3(v3, v0, v1, v2, strAsInts[0], 11, -358537222);
+            v2 = step3(v2, v3, v0, v1, strAsInts[3], 16, -722521979);
+            v1 = step3(v1, v2, v3, v0, strAsInts[6], 23, 76029189);
+            v0 = step3(v0, v1, v2, v3, strAsInts[9], 4, -640364487);
+            v3 = step3(v3, v0, v1, v2, strAsInts[12], 11, -421815835);
+            v2 = step3(v2, v3, v0, v1, strAsInts[15], 16, 530742520);
+            v1 = step3(v1, v2, v3, v0, strAsInts[2], 23, -995338651);
+            var step4 = step4Function.bind(null, shiftFunction);
+            v0 = step4(v0, v1, v2, v3, strAsInts[0], 6, -198630844);
+            v3 = step4(v3, v0, v1, v2, strAsInts[7], 10, 1126891415);
+            v2 = step4(v2, v3, v0, v1, strAsInts[14], 15, -1416354905);
+            v1 = step4(v1, v2, v3, v0, strAsInts[5], 21, -57434055);
+            v0 = step4(v0, v1, v2, v3, strAsInts[12], 6, 1700485571);
+            v3 = step4(v3, v0, v1, v2, strAsInts[3], 10, -1894986606);
+            v2 = step4(v2, v3, v0, v1, strAsInts[10], 15, -1051523);
+            v1 = step4(v1, v2, v3, v0, strAsInts[1], 21, -2054922799);
+            v0 = step4(v0, v1, v2, v3, strAsInts[8], 6, 1873313359);
+            v3 = step4(v3, v0, v1, v2, strAsInts[15], 10, -30611744);
+            v2 = step4(v2, v3, v0, v1, strAsInts[6], 15, -1560198380);
+            v1 = step4(v1, v2, v3, v0, strAsInts[13], 21, 1309151649);
+            v0 = step4(v0, v1, v2, v3, strAsInts[4], 6, -145523070);
+            v3 = step4(v3, v0, v1, v2, strAsInts[11], 10, -1120210379);
+            v2 = step4(v2, v3, v0, v1, strAsInts[2], 15, 718787259);
+            v1 = step4(v1, v2, v3, v0, strAsInts[9], 21, -343485551);
+            inOutVec4[0] = shiftFunction(v0, inOutVec4[0]);
+            inOutVec4[1] = shiftFunction(v1, inOutVec4[1]);
+            inOutVec4[2] = shiftFunction(v2, inOutVec4[2]);
+            inOutVec4[3] = shiftFunction(v3, inOutVec4[3]);
+        }
+        ;
+        function stringToIntArray(r) {
+            for (var ret = [], e = 0; e < 64; e += 4)
+                ret[e >> 2] = r.charCodeAt(e) + (r.charCodeAt(e + 1) << 8) + (r.charCodeAt(e + 2) << 16) + (r.charCodeAt(e + 3) << 24);
+            return ret;
+        }
+        function computeMD5(str, shiftFunction) {
+            let lastCharIndex;
+            const strLength = str.length;
+            const vec4 = [1732584193, -271733879, -1732584194, 271733878];
+            for (lastCharIndex = 64; lastCharIndex <= strLength; lastCharIndex += 64)
+                hashStep(vec4, stringToIntArray(str.substring(lastCharIndex - 64, lastCharIndex)), shiftFunction);
+            const vec16 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            const reminderLength = (str = str.substring(lastCharIndex - 64)).length;
+            // process by batch of 64
+            let vec16Index;
+            for (vec16Index = 0; vec16Index < reminderLength; vec16Index++)
+                vec16[vec16Index >> 2] |= str.charCodeAt(vec16Index) << (vec16Index % 4 << 3);
+            vec16[vec16Index >> 2] |= 128 << (vec16Index % 4 << 3);
+            if (vec16Index > 55) {
+                hashStep(vec4, vec16, shiftFunction);
+                for (vec16Index = 16; vec16Index--;)
+                    vec16[vec16Index] = 0;
+            }
+            vec16[14] = 8 * strLength;
+            hashStep(vec4, vec16, shiftFunction);
+            return vec4;
+        }
+        ;
+        /**
+         * Returns the MD5 hash-value of the passed string.
+         *
+         * Based on the work of Jeff Mott, who did a pure JS implementation of the MD5 algorithm that was published by Ronald L. Rivest in 1991.
+         * Code was imported from https://github.com/pvorb/node-md5
+         *
+         * I cleaned up the all-including minified version of it.
+         */
+        function md5(str) {
+            if (!str)
+                return '';
+            let shiftFunction;
+            if ("5d41402abc4b2a76b9719d911017c592" !== hexStringFromArray(computeMD5("hello")))
+                shiftFunction = function (r, n) {
+                    const e = (65535 & r) + (65535 & n);
+                    return (r >> 16) + (n >> 16) + (e >> 16) << 16 | 65535 & e;
+                };
+            return hexStringFromArray(computeMD5(str, shiftFunction));
+        }
+        Utils.md5 = md5;
+    })(Utils = CDVPurchase2.Utils || (CDVPurchase2.Utils = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    let Utils;
+    (function (Utils) {
+        function getCryptoExtension() {
+            return (window.crypto || window.msCrypto);
+        }
+        /** Returns an UUID v4. Uses `window.crypto` internally to generate random values. */
+        function uuidv4() {
+            // @ts-ignore
+            return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, function (c) {
+                return (c ^ getCryptoExtension().getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
+            });
+        }
+        Utils.uuidv4 = uuidv4;
+    })(Utils = CDVPurchase2.Utils || (CDVPurchase2.Utils = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    let Validator;
+    (function (Validator) {
+        let Internal;
+        (function (Internal) {
+            function isArray(arg) {
+                return Object.prototype.toString.call(arg) === '[object Array]';
+            }
+            function isObject(arg) {
+                return Object.prototype.toString.call(arg) === '[object Object]';
+            }
+            // List of functions allowed by store.validator_privacy_policy
+            function getPrivacyPolicy(store) {
+                if (typeof store.validator_privacy_policy === 'string')
+                    return store.validator_privacy_policy.split(',');
+                else if (isArray(store.validator_privacy_policy))
+                    return store.validator_privacy_policy;
+                else // default: no tracking
+                    return ['analytics', 'support', 'fraud'];
+            }
+            function getDeviceInfo(store) {
+                const privacyPolicy = getPrivacyPolicy(store); // string[]
+                function allowed(policy) {
+                    return privacyPolicy.indexOf(policy) >= 0;
+                }
+                // Different versions of the plugin use different response fields.
+                // Sending this information allows the validator to reply with only expected information.
+                const ret = {
+                    plugin: 'cordova-plugin-purchase/' + CDVPurchase2.PLUGIN_VERSION,
+                };
+                const wdw = window;
+                // the cordova-plugin-device global object
+                const device = isObject(wdw.device) ? wdw.device : {};
+                // Send the receipt validator information about the device.
+                // This will allow to make vendor or device specific fixes and detect class
+                // of devices with issues.
+                // Knowing running version of OS and libraries also required for handling
+                // support requests.
+                if (allowed('analytics') || allowed('support')) {
+                    // Version of ionic (if applicable)
+                    const ionic = wdw.Ionic || wdw.ionic;
+                    if (ionic && ionic.version)
+                        ret.ionic = ionic.version;
+                    // Information from the cordova-plugin-device (if installed)
+                    if (device.cordova)
+                        ret.cordova = device.cordova; // Version of cordova
+                    if (device.model)
+                        ret.model = device.model; // Device model
+                    if (device.platform)
+                        ret.platform = device.platform; // OS
+                    if (device.version)
+                        ret.version = device.version; // OS version
+                    if (device.manufacturer)
+                        ret.manufacturer = device.manufacturer; // Device manufacturer
+                }
+                // Device identifiers are used for tracking users across services
+                // It is sometimes required for support requests too, but I choose to
+                // keep this out.
+                if (allowed('tracking')) {
+                    if (device.serial)
+                        ret.serial = device.serial; // Hardware serial number
+                    if (device.uuid)
+                        ret.uuid = device.uuid; // Device UUID
+                }
+                // Running from a simulator is an error condition for in-app purchases.
+                // Since only developers run in a simulator, let's always report that.
+                if (device.isVirtual)
+                    ret.isVirtual = device.isVirtual; // Simulator
+                // Probably nobody wants to disable fraud discovery.
+                // A fingerprint of the device identifiers is used for fraud discovery.
+                // An alert should be triggered by the validator when a lot of devices
+                // share a single receipt.
+                if (allowed('fraud')) {
+                    // For fraud discovery, we only need a fingerprint of the device.
+                    var fingerprint = '';
+                    if (device.serial)
+                        fingerprint = 'serial:' + device.serial; // Hardware serial number
+                    else if (device.uuid)
+                        fingerprint = 'uuid:' + device.uuid; // Device UUID
+                    else {
+                        // Using only model and manufacturer, we might end-up with many
+                        // users sharing the same fingerprint, which is fine for fraud discovery.
+                        if (device.model)
+                            fingerprint += '/' + device.model;
+                        if (device.manufacturer)
+                            fingerprint = '/' + device.manufacturer;
+                    }
+                    // Fingerprint is hashed to keep required level of privacy.
+                    if (fingerprint)
+                        ret.fingerprint = CDVPurchase2.Utils.md5(fingerprint);
+                }
+                return ret;
+            }
+            Internal.getDeviceInfo = getDeviceInfo;
+        })(Internal = Validator.Internal || (Validator.Internal = {}));
+    })(Validator = CDVPurchase2.Validator || (CDVPurchase2.Validator = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    let Validator;
+    (function (Validator) {
+        let Request;
+        (function (Request) {
+            ;
+        })(Request = Validator.Request || (Validator.Request = {}));
+    })(Validator = CDVPurchase2.Validator || (CDVPurchase2.Validator = {}));
+})(CDVPurchase2 || (CDVPurchase2 = {}));
+var CDVPurchase2;
+(function (CDVPurchase2) {
+    /** Receipt data as validated by the receipt validation server */
+    class VerifiedReceipt {
+        constructor(receipt, response) {
+            var _a;
+            this.id = response.id;
+            this.sourceReceipt = receipt;
+            this.collection = (_a = response.collection) !== null && _a !== void 0 ? _a : [];
+            this.latestReceipt = response.latest_receipt;
+            this.nativeTransactions = [response.transaction];
+            this.warning = response.warning;
+        }
+        /** Platform this receipt originated from */
+        get platform() { return this.sourceReceipt.platform; }
+        /** Update the receipt content */
+        set(receipt, response) {
+            var _a;
+            this.id = response.id;
+            this.sourceReceipt = receipt;
+            this.collection = (_a = response.collection) !== null && _a !== void 0 ? _a : [];
+            this.latestReceipt = response.latest_receipt;
+            this.nativeTransactions = [response.transaction];
+            this.warning = response.warning;
+        }
+    }
+    CDVPurchase2.VerifiedReceipt = VerifiedReceipt;
 })(CDVPurchase2 || (CDVPurchase2 = {}));
