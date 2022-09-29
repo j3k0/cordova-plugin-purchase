@@ -3,44 +3,44 @@ namespace CDVPurchase2 {
 
     export namespace GooglePlay {
 
-        export class GooglePlayProduct extends Product {
+        export class GProduct extends CDVPurchase2.Product {
         }
 
-        export class GooglePlayInAppOffer extends Offer {
+        export class InAppOffer extends CDVPurchase2.Offer {
             type = 'inapp';
         }
 
-        export class GooglePlaySubscriptionOffer extends Offer {
+        export class SubscriptionOffer extends CDVPurchase2.Offer {
             type = 'subs';
             tags: string[];
             token: string;
-            constructor(options: { id: string, product: GooglePlayProduct, pricingPhases: PricingPhase[], tags: string[], token: string }) {
+            constructor(options: { id: string, product: GProduct, pricingPhases: PricingPhase[], tags: string[], token: string }) {
                 super(options);
                 this.tags = options.tags;
                 this.token = options.token;
             }
         }
 
-        export type GooglePlayOffer = GooglePlayInAppOffer | GooglePlaySubscriptionOffer;
+        export type GOffer = InAppOffer | SubscriptionOffer;
 
         export class Products {
 
             /** List of products managed by the GooglePlay adapter */
-            products: Product[] = [];
-            getProduct(id: string): Product | undefined {
+            products: GProduct[] = [];
+            getProduct(id: string): GProduct | undefined {
                 return this.products.find(p => p.id === id);
             }
 
             /** List of offers managed by the GooglePlay adapter */
-            offers: GooglePlayOffer[] = [];
-            getOffer(id: string): GooglePlayOffer | undefined {
+            offers: GOffer[] = [];
+            getOffer(id: string): GOffer | undefined {
                 return this.offers.find(p => p.id === id);
             }
 
             /**  */
-            addProduct(registeredProduct: IRegisterProduct, vp: BridgeInAppProduct /* | SubscriptionV11 */ | BridgeSubscriptionV12): Product {
+            addProduct(registeredProduct: IRegisterProduct, vp: Bridge.InAppProduct /* | SubscriptionV11 */ | Bridge.Subscription): GProduct {
                 const existingProduct = this.getProduct(registeredProduct.id);
-                const p = existingProduct ?? new Product(registeredProduct);
+                const p = existingProduct ?? new GProduct(registeredProduct);
                 p.title = vp.title || vp.name || p.title;
                 p.description = vp.description || p.description;
                 // Process the product depending on the format
@@ -62,7 +62,7 @@ namespace CDVPurchase2 {
                 return p;
             }
 
-            private onSubsV12Loaded(product: Product, vp: BridgeSubscriptionV12): Product {
+            private onSubsV12Loaded(product: GProduct, vp: Bridge.Subscription): GProduct {
                 // console.log('iabSubsV12Loaded: ' + JSON.stringify(vp));
                 vp.offers.forEach((productOffer) => {
                     const offer = this.iabSubsOfferV12Loaded(product, vp, productOffer);
@@ -88,17 +88,17 @@ namespace CDVPurchase2 {
                 return product;
             }
 
-            private iabSubsOfferV12Loaded(product: Product, vp: BridgeSubscriptionV12, productOffer: BridgeSubscriptionOfferV12): GooglePlayOffer {
+            private iabSubsOfferV12Loaded(product: GProduct, vp: Bridge.Subscription, productOffer: Bridge.SubscriptionOffer): GOffer {
 
-                const id = vp.productId + '@' + productOffer.token;
-                const existingOffer = this.getOffer(id);
+                const offerId = vp.productId + '@' + productOffer.token;
+                const existingOffer = this.getOffer(offerId);
                 const pricingPhases: PricingPhase[] = productOffer.pricing_phases.map(p => this.toPricingPhase(p));
                 if (existingOffer) {
                     existingOffer.pricingPhases = pricingPhases;
                     return existingOffer;
                 }
                 else {
-                    const offer = new GooglePlaySubscriptionOffer({ id, product, pricingPhases, token: productOffer.token, tags: productOffer.tags });
+                    const offer = new SubscriptionOffer({ id: offerId, product, pricingPhases, token: productOffer.token, tags: productOffer.tags });
                     this.offers.push(offer);
                     return offer;
                 }
@@ -239,7 +239,7 @@ namespace CDVPurchase2 {
             }
             */
 
-            private onInAppLoaded(p: Product, vp: BridgeInAppProduct): Product {
+            private onInAppLoaded(p: GProduct, vp: Bridge.InAppProduct): GProduct {
                 // console.log('iabInAppLoaded: ' + JSON.stringify(vp));
                 const existingOffer = this.getOffer(vp.productId);
                 const pricingPhases = [{
@@ -259,7 +259,7 @@ namespace CDVPurchase2 {
                     p.offers = [existingOffer];
                 }
                 else {
-                    const newOffer = new GooglePlayInAppOffer({ id: vp.productId, product: p, pricingPhases });
+                    const newOffer = new InAppOffer({ id: vp.productId, product: p, pricingPhases });
                     this.offers.push(newOffer);
                     p.offers = [newOffer];
                 }
@@ -275,23 +275,23 @@ namespace CDVPurchase2 {
                 return p;
             }
 
-            private toPaymentMode(phase: BridgePricingPhaseV12): PaymentMode {
+            private toPaymentMode(phase: Bridge.PricingPhase): PaymentMode {
                 return phase.price_amount_micros === 0
                     ? PaymentMode.FREE_TRIAL
-                    : phase.recurrence_mode === BridgeRecurrenceModeV12.NON_RECURRING
+                    : phase.recurrence_mode === Bridge.RecurrenceMode.NON_RECURRING
                         ? PaymentMode.UP_FRONT
                         : PaymentMode.PAY_AS_YOU_GO;
             }
 
-            private toRecurrenceMode(mode: BridgeRecurrenceModeV12): RecurrenceMode {
+            private toRecurrenceMode(mode: Bridge.RecurrenceMode): RecurrenceMode {
                 switch (mode) {
-                    case BridgeRecurrenceModeV12.FINITE_RECURRING: return RecurrenceMode.FINITE_RECURRING;
-                    case BridgeRecurrenceModeV12.INFINITE_RECURRING: return RecurrenceMode.INFINITE_RECURRING;
-                    case BridgeRecurrenceModeV12.NON_RECURRING: return RecurrenceMode.NON_RECURRING;
+                    case Bridge.RecurrenceMode.FINITE_RECURRING: return RecurrenceMode.FINITE_RECURRING;
+                    case Bridge.RecurrenceMode.INFINITE_RECURRING: return RecurrenceMode.INFINITE_RECURRING;
+                    case Bridge.RecurrenceMode.NON_RECURRING: return RecurrenceMode.NON_RECURRING;
                 }
             }
 
-            private toPricingPhase(phase: BridgePricingPhaseV12): PricingPhase {
+            private toPricingPhase(phase: Bridge.PricingPhase): PricingPhase {
                 return {
                     price: phase.formatted_price,
                     priceMicros: phase.price_amount_micros,

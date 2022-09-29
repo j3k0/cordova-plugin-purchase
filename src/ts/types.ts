@@ -1,5 +1,6 @@
     namespace CDVPurchase2
     {
+        /** Callback */
         export type Callback<T> = (t: T) => void;
 
         /** An error triggered by the In-App Purchase plugin */
@@ -30,60 +31,6 @@
             NON_RENEWING_SUBSCRIPTION = 'non renewing subscription',
             /** Type: The application bundle */
             APPLICATION = 'application',
-        }
-
-        export class Product {
-
-            platform: Platform;
-            type: ProductType;
-            id: string;
-            valid?: boolean;
-            offers: Offer[];
-
-            /**
-             * Product title from the store.
-             */
-            title: string = '';
-
-            /**
-             * Product full description from the store.
-             */
-            description: string = '';
-
-            get pricing(): PricingPhase | undefined { return this.offers[0]?.pricingPhases[0]; }
-
-            constructor(p: IRegisterProduct) {
-                this.platform = p.platform;
-                this.type = p.type;
-                this.id = p.id;
-                this.offers = [];
-                Object.defineProperty(this, 'pricing', { enumerable: false });
-            }
-
-            /**
-             * Find and return an offer for this product from its id
-             *
-             * If id isn't specified, returns the first offer.
-             *
-             * @param id - Identifier of the offer to return
-             * @return An Offer or undefined if no match is found
-             */
-            getOffer(id: string = ''): Offer | undefined {
-                if (!id) return this.offers[0];
-                return this.offers.find(o => o.id === id);
-            }
-
-            /**
-             * Find and return an offer for this product from its id
-             *
-             * If id isn't specified, returns the first offer.
-             *
-             * @param id - Identifier of the offer to return
-             */
-            addOffer(offer: Offer) {
-                if (this.getOffer(offer.id)) return;
-                this.offers.push(offer);
-            }
         }
 
 
@@ -143,6 +90,11 @@
             id: Platform;
 
             /**
+             * Nice name for the adapter
+             */
+            name: string;
+
+            /**
              * List of products managed by the adapter.
              */
             get products(): Product[];
@@ -180,6 +132,16 @@
              * For consumable, this will acknowledge and consume the purchase.
              */
             finish(transaction: Transaction): Promise<IError | undefined>;
+
+            /**
+             * Prepare for receipt validation
+             */
+            receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
+
+            /**
+             * Handle platform specific fields from receipt validation response.
+             */
+            handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
         }
 
         export interface AdditionalData {
@@ -226,11 +188,80 @@
 
     export type PrivacyPolicyItem = 'fraud' | 'support' | 'analytics' | 'tracking';
 
+    /** Store events listener */
     export interface When {
-        updated(cb: Callback<Product>): When;
-        owned(cb: Callback<Product>): When;
+
+        /**
+         * Register a function called when a product is updated.
+         *
+         * @deprecated - Use `productUpdated` or `receiptUpdated`.
+         */
+        updated(cb: Callback<Product | Receipt>): When;
+
+        /** Register a function called when a receipt is updated. */
+        receiptUpdated(cb: Callback<Receipt>): When;
+
+        /** Register a function called when a product is updated. */
+        productUpdated(cb: Callback<Product>): When;
+
+        // /** Register a function called when a product is owned. */
+        // owned(cb: Callback<Product>): When;
+
+        /** Register a function called when transaction is approved. */
         approved(cb: Callback<Transaction>): When;
+
+        /** Register a function called when a transaction is finished. */
         finished(cb: Callback<Transaction>): When;
-        verified(cb: Callback<Receipt>): When;
+
+        /** Register a function called when a receipt is verified. */
+        verified(cb: Callback<VerifiedReceipt>): When;
+    }
+
+    /** Whether or not the user intends to let the subscription auto-renew. */
+    export enum RenewalIntent {
+        /** The user intends to let the subscription expire without renewing. */
+        LAPSE = "Lapse",
+        /** The user intends to renew the subscription. */
+        RENEW = "Renew",
+    }
+
+    /** Whether or not the user was notified or agreed to a price change */
+    export enum PriceConsentStatus {
+        NOTIFIED = 'Notified',
+        AGREED = 'Agreed',
+    }
+
+    /** Reason why a subscription has been canceled */
+    export enum CancelationReason {
+        /** Not canceled */
+        NOT_CANCELED = '',
+        /** Subscription canceled by the developer. */
+        DEVELOPER = 'Developer',
+        /** Subscription canceled by the system for an unspecified reason. */
+        SYSTEM = 'System',
+        /** Subscription upgraded or downgraded to a new subscription. */
+        SYSTEM_REPLACED = 'System.Replaced',
+        /** Product not available for purchase at the time of renewal. */
+        SYSTEM_PRODUCT_UNAVAILABLE = 'System.ProductUnavailable',
+        /** Billing error; for example customer’s payment information is no longer valid. */
+        SYSTEM_BILLING_ERROR = 'System.BillingError',
+        /** Transaction is gone; It has been deleted. */
+        SYSTEM_DELETED = 'System.Deleted',
+        /** Subscription canceled by the user for an unspecified reason. */
+        CUSTOMER = 'Customer',
+        /** Customer canceled their transaction due to an actual or perceived issue within your app. */
+        CUSTOMER_TECHNICAL_ISSUES = 'Customer.TechnicalIssues',
+        /** Customer did not agree to a recent price increase. See also priceConsentStatus. */
+        CUSTOMER_PRICE_INCREASE = 'Customer.PriceIncrease',
+        /** Customer canceled for cost-related reasons. */
+        CUSTOMER_COST = 'Customer.Cost',
+        /** Customer claimed to have found a better app. */
+        CUSTOMER_FOUND_BETTER_APP = 'Customer.FoundBetterApp',
+        /** Customer did not feel he is using this service enough. */
+        CUSTOMER_NOT_USEFUL_ENOUGH = 'Customer.NotUsefulEnough',
+        /** Subscription canceled for another reason; for example, if the customer made the purchase accidentally. */
+        CUSTOMER_OTHER_REASON = 'Customer.OtherReason',
+        /** Subscription canceled for unknown reasons. */
+        UNKNOWN = 'Unknown'
     }
 }

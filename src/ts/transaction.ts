@@ -56,11 +56,4 @@ namespace CDVPurchase2
         constructor(platform: Platform) { this.platform = platform; }
     }
 
-    /** Whether or not the user intends to let the subscription auto-renew. */
-    export enum RenewalIntent {
-        /** The user intends to let the subscription expire without renewing. */
-        LAPSE = "Lapse",
-        /** The user intends to renew the subscription. */
-        RENEW = "Renew",
-    }
 }

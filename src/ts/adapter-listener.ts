@@ -3,10 +3,10 @@ namespace CDVPurchase2
     export namespace Internal {
 
         export interface StoreAdapterDelegate {
-            updatedCallbacks: Callbacks<Product>;
-            updatedReceiptCallbacks: Callbacks<Receipt>;
             approvedCallbacks: Callbacks<Transaction>;
             finishedCallbacks: Callbacks<Transaction>;
+            updatedCallbacks: Callbacks<Product>;
+            updatedReceiptCallbacks: Callbacks<Receipt>;
         }
 
         export class StoreAdapterListener implements AdapterListener {

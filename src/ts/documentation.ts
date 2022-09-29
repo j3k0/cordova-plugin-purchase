@@ -8,3 +8,6 @@
 //! Lines starting with "//!" will be included in the contributor documentation.
 //! Lines starting with "//:" will be included in the user documentation.
 //!
+
+/** cordova-plugin-purchase global namespace */
+namespace CDVPurchase2 {}

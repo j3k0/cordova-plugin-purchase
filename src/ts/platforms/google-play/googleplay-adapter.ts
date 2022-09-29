@@ -1,27 +1,30 @@
+/// <reference path="../../receipt.ts" />
+/// <reference path="../../transaction.ts" />
+
 namespace CDVPurchase2 {
 
     export namespace GooglePlay {
 
         export class Transaction extends CDVPurchase2.Transaction {
 
-            public nativePurchase: BridgePurchase;
+            public nativePurchase: Bridge.Purchase;
 
-            constructor(purchase: BridgePurchase) {
+            constructor(purchase: Bridge.Purchase) {
                 super(Platform.GOOGLE_PLAY);
                 this.nativePurchase = purchase;
                 this.refresh(purchase);
             }
 
-            static toState(state: BridgePurchaseState, isAcknowledged: boolean): TransactionState {
+            static toState(state: Bridge.PurchaseState, isAcknowledged: boolean): TransactionState {
                 switch(state) {
-                    case BridgePurchaseState.PENDING:
+                    case Bridge.PurchaseState.PENDING:
                         return TransactionState.INITIATED;
-                    case BridgePurchaseState.PURCHASED:
+                    case Bridge.PurchaseState.PURCHASED:
                         if (isAcknowledged)
                             return TransactionState.FINISHED;
                         else
                             return TransactionState.APPROVED;
-                    case BridgePurchaseState.UNSPECIFIED_STATE:
+                    case Bridge.PurchaseState.UNSPECIFIED_STATE:
                         return TransactionState.UNKNOWN_STATE;
                 }
             }
@@ -29,13 +32,13 @@ namespace CDVPurchase2 {
             /**
              * Refresh the value in the transaction based on the native purchase update
              */
-            refresh(purchase: BridgePurchase) {
+            refresh(purchase: Bridge.Purchase) {
                 this.nativePurchase = purchase;
-                this.transactionId = `google:${purchase.orderId || purchase.purchaseToken}`;
-                this.purchaseId = `google:${purchase.purchaseToken}`;
+                this.transactionId = `${purchase.orderId || purchase.purchaseToken}`;
+                this.purchaseId = `${purchase.purchaseToken}`;
                 this.products = purchase.productIds.map(productId => ({ productId }));
                 if (purchase.purchaseTime) this.purchaseDate = new Date(purchase.purchaseTime);
-                this.isPending = (purchase.getPurchaseState === BridgePurchaseState.PENDING);
+                this.isPending = (purchase.getPurchaseState === Bridge.PurchaseState.PENDING);
                 if (typeof purchase.acknowledged !== 'undefined') this.isAcknowledged = purchase.acknowledged;
                 if (typeof purchase.autoRenewing !== 'undefined') this.renewalIntent = purchase.autoRenewing ? RenewalIntent.RENEW : RenewalIntent.LAPSE;
                 this.state = Transaction.toState(purchase.getPurchaseState, purchase.acknowledged);
@@ -50,7 +53,7 @@ namespace CDVPurchase2 {
             /** Unique order identifier for the transaction.  (like GPA.XXXX-XXXX-XXXX-XXXXX) */
             public orderId?: string;
 
-            constructor(purchase: BridgePurchase) {
+            constructor(purchase: Bridge.Purchase) {
                 super({
                     platform: Platform.GOOGLE_PLAY,
                     transactions: [new Transaction(purchase)],
@@ -60,7 +63,7 @@ namespace CDVPurchase2 {
             }
 
             /** Refresh the content of the purchase based on the native BridgePurchase */
-            refresh(purchase: BridgePurchase) {
+            refresh(purchase: Bridge.Purchase) {
                 (this.transactions[0] as Transaction)?.refresh(purchase);
                 this.orderId = purchase.orderId;
             }
@@ -71,15 +74,18 @@ namespace CDVPurchase2 {
             /** Adapter identifier */
             id = Platform.GOOGLE_PLAY;
 
+            /** Adapter name */
+            name = 'GooglePlay';
+
             /** List of products managed by the GooglePlay adapter */
-            get products(): Product[] { return this._products.products; }
+            get products(): GProduct[] { return this._products.products; }
             private _products: Products = new Products();
 
             get receipts(): Receipt[] { return this._receipts; }
             private _receipts: Receipt[] = [];
 
             /** The GooglePlay bridge */
-            bridge = new Bridge();
+            bridge = new Bridge.Bridge();
 
             /** Prevent double initialization */
             initialized = false;
@@ -88,7 +94,7 @@ namespace CDVPurchase2 {
             retry = new Retry();
 
             private context: Internal.AdapterContext;
-            private log: Internal.Log;
+            private log: Logger;
 
             public autoRefreshIntervalMillis: number = 0;
 
@@ -158,15 +164,15 @@ namespace CDVPurchase2 {
                 return {inAppSkus, subsSkus};
             }
 
-            /** @inheritdoc */
-            load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
+            /** @inheritDoc */
+            load(products: IRegisterProduct[]): Promise<(GProduct | IError)[]> {
 
                 return new Promise((resolve) => {
 
                     this.log.debug("Load: " + JSON.stringify(products));
 
                     /** Called when a list of product definitions have been loaded */
-                    const iabLoaded = (validProducts: (BridgeInAppProduct | BridgeSubscriptionV12)[]) => {
+                    const iabLoaded = (validProducts: (Bridge.InAppProduct | Bridge.Subscription)[]) => {
 
                         this.log.debug("Loaded: " + JSON.stringify(validProducts));
                         const ret = products.map(registeredProduct => {
@@ -182,6 +188,9 @@ namespace CDVPurchase2 {
                             }
                         });
                         resolve(ret);
+
+                        // let's also refresh purchases
+                        this.getPurchases();
                     }
 
                     /** Start loading products */
@@ -202,7 +211,7 @@ namespace CDVPurchase2 {
                 });
             }
 
-            /** @inheritdoc */
+            /** @inheritDoc */
             finish(transaction: CDVPurchase2.Transaction): Promise<IError | undefined> {
                 return new Promise(resolve => {
 
@@ -237,11 +246,12 @@ namespace CDVPurchase2 {
                 });
             }
 
-            onPurchaseConsumed(purchase: BridgePurchase): void {
+            onPurchaseConsumed(purchase: Bridge.Purchase): void {
                 this.log.debug("onPurchaseConsumed: " + purchase.orderId);
             }
 
-            onPurchasesUpdated(purchases: BridgePurchase[]): void {
+            /** Called when the platform reports update for some purchases */
+            onPurchasesUpdated(purchases: Bridge.Purchase[]): void {
                 this.log.debug("onPurchaseUpdated: " + purchases.map(p => p.orderId).join(', '));
                 // GooglePlay generates one receipt for each purchase
                 purchases.forEach(purchase => {
@@ -258,33 +268,93 @@ namespace CDVPurchase2 {
                 });
             }
 
-            onSetPurchases(purchases: BridgePurchase[]): void {
+            /** Called when the platform reports some purchases */
+            onSetPurchases(purchases: Bridge.Purchase[]): void {
                 this.log.debug("onSetPurchases: " + JSON.stringify(purchases));
+                this.onPurchasesUpdated(purchases);
             }
 
             onPriceChangeConfirmationResult(result: "OK" | "UserCanceled" | "UnknownProduct"): void {
             }
 
-            getPurchases(callback?: () => void): void {
-                if (callback) {
-                    setTimeout(callback, 0);
-                }
+            /** Refresh purchases from GooglePlay */
+            getPurchases(): Promise<IError | undefined> {
+                return new Promise(resolve => {
+                    this.log.debug('getPurchases');
+                    const success = () => {
+                        this.log.debug('getPurchases success');
+                        setTimeout(() => resolve(undefined), 0);
+                    }
+                    const failure = (message: string, code?: number) => {
+                        this.log.warn('getPurchases failed: ' + message + ' (' + code + ')');
+                        setTimeout(() => resolve({ code: code || ErrorCode.UNKNOWN, message }), 0);
+                    }
+                    this.bridge.getPurchases(success, failure);
+                });
             }
 
-            /** @inheritdoc */
-            async order(offer: Offer, additionalData: CDVPurchase2.AdditionalData): Promise<IError | undefined> {
+            /** @inheritDoc */
+            async order(offer: GOffer, additionalData: CDVPurchase2.AdditionalData): Promise<IError | undefined> {
                 return new Promise(resolve => {
                     this.log.info("Order - " + JSON.stringify(offer));
-                    const buySuccess = () => {
-                        resolve(undefined);
-                    };
+                    const buySuccess = () => resolve(undefined);
                     const buyFailed = (message: string, code?: ErrorCode): void => {
                         this.log.warn('Order failed: ' + JSON.stringify({message, code}));
                         resolve({ code: code ?? ErrorCode.UNKNOWN, message });
                     };
-                    const idAndToken = offer.product.type === ProductType.PAID_SUBSCRIPTION ? offer.product.id + '@' + offer.id : offer.product.id;
-                    this.bridge.buy(buySuccess, buyFailed, idAndToken, additionalData);
+                    if (offer.product.type === ProductType.PAID_SUBSCRIPTION) {
+                        const idAndToken = offer.id; // offerId contains the productId and token (format productId@offerToken)
+                        this.bridge.subscribe(buySuccess, buyFailed, idAndToken, additionalData);
+                    }
+                    else {
+                        this.bridge.buy(buySuccess, buyFailed, offer.product.id, additionalData);
+                    }
                 });
+            }
+
+            /**
+             * Prepare for receipt validation
+             */
+            receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined {
+                const transaction = receipt.transactions[0] as GooglePlay.Transaction;
+                if (!transaction) return;
+                const productId = transaction.products[0]?.productId;
+                if (!productId) return;
+                const product = this._products.getProduct(productId);
+                if (!product) return;
+                const purchase = transaction.nativePurchase;
+                return {
+                    id: productId,
+                    type: product.type,
+                    offers: product.offers,
+                    transaction: {
+                        type: Platform.GOOGLE_PLAY,
+                        id: receipt.transactions[0].transactionId,
+                        purchaseToken: purchase.purchaseToken,
+                        signature: purchase.signature,
+                        receipt: purchase.receipt,
+                    }
+                }
+            }
+
+            async handleReceiptValidationResponse(receipt: CDVPurchase2.Receipt, response: Validator.Response.Payload): Promise<void> {
+                if (response.ok) {
+                    const transaction = response.data.transaction;
+                    if (transaction.type !== Platform.GOOGLE_PLAY) return;
+                    switch (transaction.kind) {
+                        case 'androidpublisher#productPurchase':
+                            break;
+                        case 'androidpublisher#subscriptionPurchase':
+                            break;
+                        case 'androidpublisher#subscriptionPurchaseV2':
+                            transaction;
+                            break;
+                        case 'fovea#subscriptionGone':
+                            // the transaction doesn't exist anymore
+                            break;
+                    }
+                }
+                return; // Nothing specific to do on GooglePlay
             }
         }
 

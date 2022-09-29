@@ -6,7 +6,7 @@ namespace CDVPurchase2
         /** Adapter execution context */
         export interface AdapterContext {
             /** Logger */
-            log: Log;
+            log: Logger;
 
             /** Verbosity level */
             verbosity: LogLevel;
@@ -24,6 +24,9 @@ namespace CDVPurchase2
             getApplicationUsername: () => string | undefined;
         }
 
+        /**
+         * The list of active platform adapters
+         */
         export class Adapters {
 
             public list: Adapter[] = [];
@@ -33,7 +36,7 @@ namespace CDVPurchase2
                     if (this.find(platform)) return;
                     switch (platform) {
                         case Platform.APPLE_APPSTORE:
-                            this.list.push(new AppleStore.Adapter(context));
+                            this.list.push(new AppleAppStore.Adapter(context));
                         case Platform.GOOGLE_PLAY:
                             this.list.push(new GooglePlay.Adapter(context));
                         case Platform.BRAINTREE:
@@ -45,6 +48,9 @@ namespace CDVPurchase2
                 });
             }
 
+            /**
+             * Initialize some platform adapters.
+             */
             async initialize(platforms: (Platform | { platform: Platform, options: any })[] = [Store.defaultPlatform()], context: AdapterContext): Promise<IError[]> {
                 const newPlatforms = platforms.map(p => typeof p === 'string' ? p : p.platform).filter(p => !this.find(p));
                 this.add(newPlatforms, context);
@@ -53,13 +59,14 @@ namespace CDVPurchase2
                     const platformProducts = products.filter(p => p.platform === platform)?.[0]?.products ?? [];
                     const adapter = this.find(platform);
                     if (!adapter) return;
+                    const log = context.log.child('Adapters').child(adapter.name);
                     const initResult = await adapter.initialize();
-                    context.log.info(`Adapter ${platform}. Initialized: ${JSON.stringify(initResult)}`);
+                    log.info(`Initialized: ${JSON.stringify(initResult)}`);
                     if (initResult?.code) return initResult;
-                    context.log.info(`Adapter ${platform}. Products: ${JSON.stringify(platformProducts)}`);
+                    log.info(`Products: ${JSON.stringify(platformProducts)}`);
                     if (platformProducts.length === 0) return;
                     const loadResult = await adapter.load(platformProducts);
-                    context.log.info(`Adapter ${platform}. Products loaded: ${JSON.stringify(loadResult)}`);
+                    log.info(`Loaded: ${JSON.stringify(loadResult)}`);
                     const loadedProducts = loadResult.filter(p => p instanceof Product) as Product[];
                     context.listener.productsUpdated(platform, loadedProducts);
                     return loadResult.filter(lr => 'code' in lr && 'message' in lr)[0] as (IError | undefined);
@@ -67,6 +74,9 @@ namespace CDVPurchase2
                 return result.filter(err => err) as IError[];
             }
 
+            /**
+             * Retrieve a platform adapter.
+             */
             find(platform: Platform): Adapter | undefined {
                 return this.list.filter(a => a.id === platform)[0];
             }

@@ -1,41 +1,42 @@
 /**
  * Purchase Plugin.
+ *
  * @author Jean-Christophe Hoelt - Fovea.cc
  */
 
 package cc.fovea;
 
+// import com.android.billingclient.api.PriceChangeConfirmationListener;
+// import com.android.billingclient.api.PriceChangeFlowParams;
+// import com.android.billingclient.api.ProductDetails.PricingPhases;
+// import java.io.IOException;
+// import java.lang.reflect.Array;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 import com.android.billingclient.api.AcknowledgePurchaseParams;
 import com.android.billingclient.api.AcknowledgePurchaseResponseListener;
+import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClient.BillingResponseCode;
 import com.android.billingclient.api.BillingClient.FeatureType;
 import com.android.billingclient.api.BillingClient.ProductType;
-import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingFlowParams.ProductDetailsParams;
 import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.ConsumeParams;
 import com.android.billingclient.api.ConsumeResponseListener;
-import com.android.billingclient.api.PriceChangeConfirmationListener;
-import com.android.billingclient.api.PriceChangeFlowParams;
+import com.android.billingclient.api.ProductDetails;
+import com.android.billingclient.api.ProductDetails.OneTimePurchaseOfferDetails;
+import com.android.billingclient.api.ProductDetails.PricingPhase;
+import com.android.billingclient.api.ProductDetails.SubscriptionOfferDetails;
+import com.android.billingclient.api.ProductDetailsResponseListener;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
-import com.android.billingclient.api.ProductDetails;
-import com.android.billingclient.api.ProductDetails.PricingPhases;
-import com.android.billingclient.api.ProductDetails.PricingPhase;
-import com.android.billingclient.api.ProductDetails.SubscriptionOfferDetails;
-import com.android.billingclient.api.ProductDetails.OneTimePurchaseOfferDetails;
-import com.android.billingclient.api.ProductDetailsResponseListener;
-import com.android.billingclient.api.QueryPurchasesParams;
 import com.android.billingclient.api.QueryProductDetailsParams;
 import com.android.billingclient.api.QueryProductDetailsParams.Product;
-import java.io.IOException;
-import java.lang.reflect.Array;
+import com.android.billingclient.api.QueryPurchasesParams;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -51,11 +52,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class PurchasePlugin
-  extends CordovaPlugin
-  implements PurchasesUpdatedListener,
-             ConsumeResponseListener,
-             AcknowledgePurchaseResponseListener {
+/**
+ * Plugin implementation for Google Play.
+ */
+public final class PurchasePlugin
+        extends CordovaPlugin
+        implements PurchasesUpdatedListener,
+        ConsumeResponseListener,
+        AcknowledgePurchaseResponseListener {
 
   /** Tag used for log messages. */
   private final String mTag = "CordovaPurchase";
@@ -63,29 +67,48 @@ public class PurchasePlugin
   /**
    * Context for the last plugin call.
    *
-   * See execute(), callSuccess() and callError().
+   * <p>See execute(), callSuccess() and callError().</p>
    */
   private CallbackContext mCallbackContext;
 
   /** A reference to BillingClient. */
   private BillingClient mBillingClient;
 
+  /** List of registered IN_APP product identifiers. */
   private List<String> mInAppProductIds = new ArrayList<String>();
-  private void addInAppProductIds(List<String> list) {
+
+  /**
+   * Register additional IN_APP product identifiers.
+   *
+   * @param list - List of product identifiers to register.
+   */
+  private void addInAppProductIds(final List<String> list) {
     for (int i = 0; i < list.size(); ++i) {
-        if (!mInAppProductIds.contains(list.get(i)))
-            mInAppProductIds.add(list.get(i));
+      if (!mInAppProductIds.contains(list.get(i))) {
+        mInAppProductIds.add(list.get(i));
+      }
     }
   }
 
+  /**
+   * List of registered SUBS product identifiers.
+   */
   private List<String> mSubsProductIds = new ArrayList<String>();
-  private void addSubsProductIds(List<String> list) {
+
+  /**
+   * Register additional SUBS product identifiers.
+   *
+   * @param list - List of product identifiers to register.
+   */
+  private void addSubsProductIds(final List<String> list) {
     for (int i = 0; i < list.size(); ++i) {
-        if (!mSubsProductIds.contains(list.get(i)))
+        if (!mSubsProductIds.contains(list.get(i))) {
             mSubsProductIds.add(list.get(i));
+        }
     }
   }
 
+  /** List of purchases reported by the Billing library. */
   private final List<Purchase> mPurchases = new ArrayList<>();
 
   /** True if billing service is connected now. */
@@ -102,11 +125,21 @@ public class PurchasePlugin
   private BillingResult getLastResult() {
     return mBillingClientResult;
   }
-  /** Last response code from the billing client. */
+
+  /**
+   * Last response code from the billing client.
+   *
+   * @return The last response code from the billing client.
+   */
   private int getLastResponseCode() {
     return mBillingClientResult.getResponseCode();
   }
-  /** Reset last result to the given code. */
+
+  /**
+   * Set last result to the given code.
+   *
+   * @param responseCode The response code to set.
+   */
   private void resetLastResult(final int responseCode) {
     mBillingClientResult = BillingResult
       .newBuilder()
@@ -115,6 +148,7 @@ public class PurchasePlugin
       .build();
   }
 
+  /** Product details loaded from GooglePlay, indexed by product identifier. */
   private final HashMap<String, ProductDetails> mProductDetails =
     new HashMap<String, ProductDetails>();
 
@@ -122,13 +156,27 @@ public class PurchasePlugin
   private Set<String> mTokensToBeConsumed = new HashSet<>();
 
   @Override
-  public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-    super.initialize(cordova, webView);
-    // your init code here
+  public void initialize(
+          final CordovaInterface cordova,
+          final CordovaWebView webView) {
+      super.initialize(cordova, webView);
+      // your init code here
   }
 
+  /**
+   * Context used to send messages to the javascript side.
+   *
+   * @see GooglePlay.Bridge
+   */
   private CallbackContext mListenerContext = null;
-  private void sendToListener(String type, JSONObject data) {
+
+  /**
+   * Send a message to the javascript bridge (GooglePlay.Bridge).
+   *
+   * @param type Message type / identifer.
+   * @param data Message arguments.
+   */
+  private void sendToListener(final String type, final JSONObject data) {
     try {
       Log.d(mTag, "sendToListener() -> " + type);
       Log.d(mTag, "            data -> " + data.toString());
@@ -137,8 +185,9 @@ public class PurchasePlugin
       }
       final JSONObject message = new JSONObject()
         .put("type", type);
-      if (data != null)
+      if (data != null) {
         message.put("data", data);
+      }
       final PluginResult result =
         new PluginResult(PluginResult.Status.OK, message);
       result.setKeepCallback(true);
@@ -264,7 +313,9 @@ public class PurchasePlugin
     queryPurchases();
   }
 
-  private void onQueryPurchasesFinished(BillingResult result, List<Purchase> purchases) {
+  private void onQueryPurchasesFinished(
+          final BillingResult result,
+          final List<Purchase> purchases) {
     try {
       if (result.getResponseCode() == BillingResponseCode.OK) {
         for (Purchase p : purchases) {
@@ -273,8 +324,7 @@ public class PurchasePlugin
         sendToListener("setPurchases", new JSONObject()
             .put("purchases", toJSON(purchases)));
         callSuccess(toJSON(purchases));
-      }
-      else {
+      } else {
         callError(Constants.ERR_LOAD, "Failed to query purchases: "
             + result.getResponseCode());
       }

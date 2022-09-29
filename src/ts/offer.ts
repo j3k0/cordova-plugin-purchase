@@ -1,4 +1,4 @@
-/// <reference path="utils.ts" />
+/// <reference path="utils/non-enumerable.ts" />
 namespace CDVPurchase2
 {
     export class Offer {
@@ -7,7 +7,7 @@ namespace CDVPurchase2
         id: string;
 
         /** Parent product */
-        @Internal.Utils.nonEnumerable
+        @Utils.nonEnumerable
         product: Product;
 
         // tags: string[];
