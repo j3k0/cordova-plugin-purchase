@@ -22,7 +22,7 @@ help:
 
 all: build doc
 
-build: check-tsc compile test-js
+build: javalint check-tsc compile test-js
 
 compile:
 	@echo "- Compiling TypeScript"
@@ -49,10 +49,10 @@ test-js: prepare-test-js
 # 	@echo ""
 
 .checkstyle.jar:
-	curl "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.23/checkstyle-8.23-all.jar" -o .checkstyle.jar -L
+	curl "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.3.4/checkstyle-10.3.4-all.jar" -o .checkstyle.jar -L
 
 javalint: .checkstyle.jar
-	java -jar .checkstyle.jar -c /sun_checks.xml src/android/cc/fovea/PurchasePlugin.java
+	java -jar .checkstyle.jar -c /google_checks.xml src/android/cc/fovea/PurchasePlugin.java
 
 test-install: build
 	@./test/run.sh cc.fovea.babygoo babygooinapp1
