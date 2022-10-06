@@ -1,4 +1,4 @@
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace Internal {
         interface StoreAdapterDelegate {
             approvedCallbacks: Callbacks<Transaction>;
@@ -18,7 +18,19 @@ declare namespace CDVPurchase2 {
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
+    type PlatformWithOptions = {
+        platform: Platform.BRAINTREE;
+        options: Braintree.AdapterOptions;
+    } | {
+        platform: Platform.GOOGLE_PLAY;
+    } | {
+        platform: Platform.APPLE_APPSTORE;
+    } | {
+        platform: Platform.TEST;
+    } | {
+        platform: Platform.WINDOWS_STORE;
+    };
     namespace Internal {
         /** Adapter execution context */
         interface AdapterContext {
@@ -40,14 +52,11 @@ declare namespace CDVPurchase2 {
          */
         class Adapters {
             list: Adapter[];
-            add(adapters: Platform[], context: AdapterContext): void;
+            add(log: Logger, adapters: (PlatformWithOptions)[], context: AdapterContext): void;
             /**
              * Initialize some platform adapters.
              */
-            initialize(platforms: (Platform | {
-                platform: Platform;
-                options: any;
-            })[] | undefined, context: AdapterContext): Promise<IError[]>;
+            initialize(platforms: (Platform | PlatformWithOptions)[] | undefined, context: AdapterContext): Promise<IError[]>;
             /**
              * Retrieve a platform adapter.
              */
@@ -55,7 +64,7 @@ declare namespace CDVPurchase2 {
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     /** Manage a list of callbacks */
     class Callbacks<T> {
         callbacks: Callback<T>[];
@@ -64,8 +73,8 @@ declare namespace CDVPurchase2 {
     }
 }
 /** cordova-plugin-purchase global namespace */
-declare namespace CDVPurchase2 { }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase { }
+declare namespace CdvPurchase {
     enum ErrorCode {
         /** Error: Failed to intialize the in-app purchase library */
         SETUP,
@@ -131,7 +140,7 @@ declare namespace CDVPurchase2 {
         MISSING_OFFER_PARAMS
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     enum LogLevel {
         QUIET = 0,
         ERROR = 1,
@@ -162,7 +171,7 @@ declare namespace CDVPurchase2 {
         logCallbackException(context: string, err: Error | string): void;
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace Utils {
         const nonEnumerable: {
             (target: any, name: string): void;
@@ -170,7 +179,7 @@ declare namespace CDVPurchase2 {
         };
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     class Offer {
         /** Offer identifier */
         id: string;
@@ -185,7 +194,7 @@ declare namespace CDVPurchase2 {
         });
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     /** Product definition from a store */
     class Product {
         /** Platform this product is available from */
@@ -226,7 +235,7 @@ declare namespace CDVPurchase2 {
         addOffer(offer: Offer): void;
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     /** Ready callbacks */
     class ReadyCallbacks {
         /** True when the plugin is ready */
@@ -239,7 +248,7 @@ declare namespace CDVPurchase2 {
         trigger(): void;
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     class Receipt {
         /** Platform that generated the receipt */
         platform: Platform;
@@ -252,7 +261,7 @@ declare namespace CDVPurchase2 {
         hasTransaction(value: Transaction): boolean;
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     /**
      * Data provided to store.register()
      */
@@ -287,7 +296,7 @@ declare namespace CDVPurchase2 {
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     /** Retry failed requests
      *
      * When setup and/or load failed, the plugin will retry over and over till it can connect
@@ -309,7 +318,7 @@ declare namespace CDVPurchase2 {
         retry(fn: F): void;
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     type ValidatorCallback = (payload: Validator.Response.Payload) => void;
     interface ValidatorFunction {
         (receipt: Receipt, callback: ValidatorCallback): void;
@@ -365,7 +374,7 @@ declare namespace CDVPurchase2 {
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     const PLUGIN_VERSION = "13.0.0";
     /**
      * Main class of the purchase.
@@ -422,10 +431,7 @@ declare namespace CDVPurchase2 {
          *
          * @param platforms - List of payment platforms to initialize, default to Store.defaultPlatform().
          */
-        initialize(platforms?: (Platform | {
-            platform: Platform;
-            options: any;
-        })[]): Promise<IError[]>;
+        initialize(platforms?: (Platform | PlatformWithOptions)[]): Promise<IError[]>;
         /**
          * @deprecated - use store.initialize(), store.update() or store.restorePurchases()
          */
@@ -464,13 +470,9 @@ declare namespace CDVPurchase2 {
         findInLocalReceipts(product: Product): Transaction | undefined;
         /** Place an order for a given offer */
         order(offer: Offer, additionalData?: AdditionalData): Promise<IError | undefined>;
-        /** TODO */
-        pay(options: {
-            platform: Platform;
-            amount: number;
-            currency: string;
-            description: string;
-        }): Promise<void>;
+        /** Request a payment */
+        requestPayment(paymentRequest: PaymentRequest, additionalData?: AdditionalData): Promise<IError | undefined>;
+        /** Verify a receipt or transacting with the receipt validation service. */
         verify(receiptOrTransaction: Transaction | Receipt): Promise<void>;
         /** Finalize a transaction */
         finish(receipt: Transaction | Receipt | VerifiedReceipt): Promise<void>;
@@ -487,7 +489,7 @@ declare namespace CDVPurchase2 {
     }
     let store: Store;
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     class Transaction {
         /** Platform this transaction was created on */
         platform: Platform;
@@ -528,7 +530,7 @@ declare namespace CDVPurchase2 {
         constructor(platform: Platform);
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     /** Callback */
     type Callback<T> = (t: T) => void;
     /** An error triggered by the In-App Purchase plugin */
@@ -649,12 +651,39 @@ declare namespace CDVPurchase2 {
          * Handle platform specific fields from receipt validation response.
          */
         handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
+        /**
+         * Request a payment from the user
+         */
+        requestPayment(payment: PaymentRequest, additionalData?: AdditionalData): Promise<undefined | IError>;
+    }
+    /**
+     * Request for payment.
+     */
+    interface PaymentRequest {
+        /**
+         * Platform that will handle the payment request.
+         */
+        platform: Platform;
+        /**
+         * Amount to pay.
+         */
+        amountMicros: number;
+        /**
+         * Currency.
+         */
+        currency?: string;
+        /**
+         * Description for the payment.
+         */
+        description?: string;
     }
     interface AdditionalData {
         /** The application's user identifier, will be obfuscated with md5 to fill `accountId` if necessary */
         applicationUsername?: string;
         /** GooglePlay specific additional data */
         googlePlay?: GooglePlay.AdditionalData;
+        /** Braintree specific additional data */
+        braintree?: Braintree.AdditionalData;
     }
     enum Platform {
         /** Apple AppStore */
@@ -742,7 +771,7 @@ declare namespace CDVPurchase2 {
         UNKNOWN = "Unknown"
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace AppleAppStore {
         class SKReceipt extends Receipt {
         }
@@ -752,7 +781,7 @@ declare namespace CDVPurchase2 {
         }
         class SKTransaction extends Transaction {
         }
-        class Adapter implements CDVPurchase2.Adapter {
+        class Adapter implements CdvPurchase.Adapter {
             id: Platform;
             name: string;
             products: SKProduct[];
@@ -764,10 +793,11 @@ declare namespace CDVPurchase2 {
             finish(transaction: Transaction): Promise<undefined | IError>;
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
+            requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace AppleAppStore {
         namespace VerifyReceipt {
             interface AppleTransaction {
@@ -1081,25 +1111,557 @@ declare namespace CDVPurchase2 {
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace Braintree {
-        class Adapter implements CDVPurchase2.Adapter {
+        interface AdapterOptions {
+            /** Authorization key, as a direct string. */
+            tokenizationKey?: string;
+            /** Function used to retrieve a Client Token (used if no tokenizationKey are provided). */
+            clientTokenProvider?: ClientTokenProvider;
+            /** Provides a nonce for a payment request. */
+            nonceProvider: NonceProvider;
+        }
+        type ClientTokenProvider = (callback: Callback<string | IError>) => void;
+        type Nonce = {
+            type: PaymentMethod.THREE_D_SECURE;
+            value: string;
+        };
+        type NonceProvider = (type: PaymentMethod, callback: Callback<Nonce | IError>) => void;
+        enum PaymentMethod {
+            THREE_D_SECURE = "THREE_D_SECURE"
+        }
+        /** Parameters for a payment with Braintree */
+        type AdditionalData = DropIn.Request;
+        class Adapter implements CdvPurchase.Adapter {
             id: Platform;
             name: string;
             products: Product[];
             receipts: Receipt[];
+            log: Logger;
+            androidBridge?: AndroidBridge.Bridge;
+            options: AdapterOptions;
+            constructor(log: Logger, options: AdapterOptions);
+            /**
+             * Initialize the Braintree Adapter.
+             */
             initialize(): Promise<IError | undefined>;
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
             order(offer: Offer): Promise<undefined | IError>;
             finish(transaction: Transaction): Promise<undefined | IError>;
+            getNonce(paymentMethod: PaymentMethod): Promise<Nonce | IError>;
+            requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
+    namespace Braintree {
+    }
+}
+declare namespace CdvPurchase {
+    namespace Braintree {
+        namespace AndroidBridge {
+            /**
+             * Message received by the native plugin.
+             */
+            type Message = {
+                type: "ready";
+            } | {
+                type: "getClientToken";
+            };
+            type ClientTokenProvider = (callback: Callback<string | IError>) => void;
+            /**
+             * Bridge to access native functions.
+             *
+             * This tries to export pretty raw functions from the underlying native SDKs.
+             */
+            class Bridge {
+                private log;
+                private clientTokenProvider?;
+                constructor(log: Logger);
+                /** Receive asynchronous messages from the native side */
+                private listener;
+                initialize(clientTokenProvider: ClientTokenProvider | string, callback: Callback<IError | undefined>): void;
+                /**
+                 * Fetches a client token and sends it to the SDK.
+                 *
+                 * This method is called by the native side when the SDK requests a Client Token.
+                 */
+                private getClientToken;
+                /** Returns true on Android, the only platform supported by this Braintree bridge */
+                static isSupported(): boolean;
+                launchDropIn(dropInRequest: DropIn.Request): Promise<undefined | IError>;
+            }
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace Braintree {
+        namespace DropIn {
+            /** A Braintree Drop-In Request */
+            interface Request {
+                threeDSecureRequest?: ThreeDSecure.Request;
+                /**
+                 * the default value used to determine if Drop-in should vault the customer's card.
+                 *
+                 * This setting can be overwritten by the customer if the save card checkbox is visible using setAllowVaultCardOverride(boolean)
+                 *
+                 * If the save card CheckBox is shown, and default vault value is true: the save card CheckBox will appear pre-checked.
+                 * If the save card CheckBox is shown, and default vault value is false: the save card Checkbox will appear un-checked.
+                 * If the save card CheckBox is not shown, and default vault value is true: card always vaults.
+                 * If the save card CheckBox is not shown, and default vault value is false: card never vaults.
+                 *
+                 * This value is true by default.
+                 */
+                vaultCardDefaultValue?: boolean;
+                /**
+                 * - true shows save card CheckBox to allow user to choose whether or not to vault their card.
+                 * - false does not show Save Card CheckBox.
+                 *
+                 * Default value is false.
+                 */
+                allowVaultCardOverride?: boolean;
+                /**
+                 * Sets the Cardholder Name field status, which is how it will behave in CardForm.
+                 *
+                 * Default is DISABLED.
+                 */
+                cardholderNameStatus?: CardFormFieldStatus;
+                /**
+                 * true to allow customers to manage their vaulted payment methods. Defaults to false.
+                 */
+                vaultManager?: boolean;
+                /**
+                 * If set to true, disables Card in Drop-in. Default value is false.
+                 */
+                disableCard?: boolean;
+                /**
+                 * true to mask the card number when the field is not focused. See com.braintreepayments.cardform.view.CardEditText for more details.
+                 */
+                maskCardNumber?: boolean;
+                /**
+                 * true to mask the security code during input. Defaults to false.
+                 */
+                maskSecurityCode?: boolean;
+            }
+            /** How a field will behave in CardForm. */
+            enum CardFormFieldStatus {
+                DISABLED = 0,
+                OPTIONAL = 1,
+                REQUIRED = 2
+            }
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace Braintree {
+        namespace DropIn {
+            interface Result {
+                /**
+                 * The previously used {@link PaymentMethod} or {@code undefined} if there was no
+                 * previous payment method. If the type is {@link PaymentMethod#GOOGLE_PAY} the Google
+                 * Pay flow will need to be performed by the user again at the time of checkout,
+                 * {@link #paymentMethodNonce()} will be {@code undefined} in this case.
+                 */
+                paymentMethodType?: PaymentMethod;
+                /**
+                 * The previous {@link PaymentMethodNonce} or {@code undefined} if there is no previous payment method
+                 * or the previous payment method was {@link com.braintreepayments.api.GooglePayCardNonce}.
+                 */
+                paymentMethodNonce?: PaymentMethodNonce;
+                /**
+                 * Device data.
+                 */
+                deviceData?: string;
+                /**
+                 * A description of the payment method.
+                 */
+                paymentDescription?: string;
+            }
+            /**
+             * A method of payment for a customer.
+             *
+             * PaymentMethodNonce represents the common interface of all payment method nonces,
+             * and can be handled by a server interchangeably.
+             */
+            interface PaymentMethodNonce {
+                /**
+                 * The nonce generated for this payment method by the Braintree gateway.
+                 *
+                 * The nonce will represent this PaymentMethod for the purposes of creating transactions and other monetary actions.
+                 */
+                nonce: string;
+                /** true if this payment method is the default for the current customer, false otherwise. */
+                isDefault: boolean;
+            }
+            enum PaymentMethod {
+                AMEX = "AMEX",
+                GOOGLE_PAY = "GOOGLE_PAY",
+                DINERS_CLUB = "DINERS_CLUB",
+                DISCOVER = "DISCOVER",
+                JCB = "JCB",
+                MAESTRO = "MAESTRO",
+                MASTERCARD = "MASTERCARD",
+                PAYPAL = "PAYPAL",
+                VISA = "VISA",
+                VENMO = "VENMO",
+                UNIONPAY = "UNIONPAY",
+                HIPER = "HIPER",
+                HIPERCARD = "HIPERCARD",
+                UNKNOWN = "UNKNOWN"
+            }
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace Braintree {
+        namespace ThreeDSecure {
+            /**
+             * Used to initialize a 3D Secure payment flow.
+             */
+            interface Request {
+                /**
+                 * The amount for the transaction.
+                 *
+                 * String representation of a decimal number.
+                 */
+                amount: string;
+                /**
+                 * A nonce to be verified by ThreeDSecure.
+                 */
+                nonce: string;
+                /** The email used for verification. Optional. */
+                email?: string;
+                /** The billing address used for verification. Optional. */
+                billingAddress?: PostalAddress;
+                /**
+                 * The mobile phone number used for verification.
+                 *
+                 * Only numbers. Remove dashes, parentheses and other characters.
+                 */
+                mobilePhoneNumber?: string;
+                /** The shipping method chosen for the transaction. */
+                shippingMethod?: ShippingMethod;
+                /**
+                 * The account type selected by the cardholder.
+                 *
+                 * Note: Some cards can be processed using either a credit or debit account and cardholders have the option to choose which account to use.
+                 */
+                accountType?: AccountType;
+                /** The additional information used for verification. */
+                additionalInformation?: AdditionalInformation;
+                /** Set to V2 if ThreeDSecure V2 flows are desired, when possible. Defaults to V2 */
+                versionRequested?: Version;
+                /** If set to true, an authentication challenge will be forced if possible. */
+                challengeRequested?: boolean;
+                /**  If set to true, an exemption to the authentication challenge will be requested. */
+                exemptionRequested?: boolean;
+                /**
+                 * An authentication created using this property should only be used for adding a payment method to the merchant’s vault and not for creating transactions.
+                 *
+                 * If set to true (REQUESTED), the authentication challenge will be requested from the issuer to confirm adding new card to the merchant’s vault.
+                 * If set to false (NOT_REQUESTED) the authentication challenge will not be requested from the issuer. If set to BTThreeDSecureAddCardChallengeUnspecified, when the amount is 0, the authentication challenge will be requested from the issuer.
+                 * If set to undefined (UNSPECIFIED), when the amount is greater than 0, the authentication challenge will not be requested from the issuer.
+                 */
+                cardAddChallenge?: boolean;
+            }
+            /** The account type */
+            enum AccountType {
+                UNSPECIFIED = "00",
+                CREDIT = "01",
+                DEBIT = "02"
+            }
+            /** The shipping method */
+            enum ShippingMethod {
+                /** Unspecified */
+                UNSPECIFIED = 0,
+                /** Same say */
+                SAME_DAY = 1,
+                /** Overnight / Expedited */
+                EXPEDITED = 2,
+                /** Priority */
+                PRIORITY = 3,
+                /** Ground */
+                GROUND = 4,
+                /** Electronic delivery */
+                ELECTRONIC_DELIVERY = 5,
+                /** Ship to store */
+                SHIP_TO_STORE = 6
+            }
+            /** Additional information for a 3DS lookup. Used in 3DS 2.0+ flows. */
+            interface AdditionalInformation {
+                /** The shipping address used for verification */
+                shippingAddress?: PostalAddress;
+                /**
+                 * The 2-digit string indicating the shipping method chosen for the transaction
+                 *
+                 * Possible Values:
+                 *  - "01": Ship to cardholder billing address
+                 *  - "02": Ship to another verified address on file with merchant
+                 *  - "03": Ship to address that is different than billing address
+                 *  - "04": Ship to store (store address should be populated on request)
+                 *  - "05": Digital goods
+                 *  - "06": Travel and event tickets, not shipped
+                 *  - "07": Other
+                 */
+                shippingMethodIndicator?: "01" | "02" | "03" | "04" | "05" | "06" | "07";
+                /**
+                 * The 3-letter string representing the merchant product code
+                 *
+                 * Possible Values:
+                 *  - "AIR": Airline
+                 *  - "GEN": General Retail
+                 *  - "DIG": Digital Goods
+                 *  - "SVC": Services
+                 *  - "RES": Restaurant
+                 *  - "TRA": Travel
+                 *  - "DSP": Cash Dispensing
+                 *  - "REN": Car Rental
+                 *  - "GAS": Fueld
+                 *  - "LUX": Luxury Retail
+                 *  - "ACC": Accommodation Retail
+                 *  - "TBD": Other
+                 */
+                productCode?: "AIR" | "GEN" | "DIG" | "SVC" | "RES" | "TRA" | "DSP" | "REN" | "GAS" | "LUX" | "ACC" | "TBD";
+                /**
+                 * The 2-digit number indicating the delivery timeframe
+                 *
+                 * Possible values:
+                 *  - "01": Electronic delivery
+                 *  - "02": Same day shipping
+                 *  - "03": Overnight shipping
+                 *  - "04": Two or more day shipping
+                 */
+                deliveryTimeframe?: "01" | "02" | "03" | "04";
+                /** For electronic delivery, email address to which the merchandise was delivered */
+                deliveryEmail?: string;
+                /**
+                 * The 2-digit number indicating whether the cardholder is reordering previously purchased merchandise
+                 *
+                 * Possible values:
+                 *  - "01": First time ordered
+                 *  - "02": Reordered
+                 */
+                reorderIndicator?: "01" | "02";
+                /**
+                 * The 2-digit number indicating whether the cardholder is placing an order with a future availability or release date
+                 *
+                 * Possible values:
+                 *  - "01": Merchandise available
+                 *  - "02": Future availability
+                 */
+                preorderIndicator?: "01" | "02";
+                /** The 8-digit number (format: YYYYMMDD) indicating expected date that a pre-ordered purchase will be available */
+                preorderDate?: string;
+                /** The purchase amount total for prepaid gift cards in major units */
+                giftCardAmount?: string;
+                /** ISO 4217 currency code for the gift card purchased */
+                giftCardCurrencyCode?: string;
+                /** Total count of individual prepaid gift cards purchased */
+                giftCardCount?: string;
+                /**
+                 * The 2-digit value representing the length of time cardholder has had account.
+                 *
+                 * Possible values:
+                 *  - "01": No account
+                 *  - "02": Created during transaction
+                 *  - "03": Less than 30 days
+                 *  - "04": 30-60 days
+                 *  - "05": More than 60 days
+                 */
+                accountAgeIndicator?: "01" | "02" | "03" | "04" | "05";
+                /** The 8-digit number (format: YYYYMMDD) indicating the date the cardholder opened the account. */
+                accountCreateDate?: string;
+                /** The 2-digit value representing the length of time since the last change to the cardholder account. This includes shipping address, new payment account or new user added.
+                 *
+                 * Possible values:
+                 *  - "01": Changed during transaction
+                 *  - "02": Less than 30 days
+                 *  - "03": 30-60 days
+                 *  - "04": More than 60 days
+                 */
+                accountChangeIndicator?: "01" | "02" | "03" | "04";
+                /** The 8-digit number (format: YYYYMMDD) indicating the date the cardholder's account was last changed. This includes changes to the billing or shipping address, new payment accounts or new users added. */
+                accountChangeDate?: string;
+                /**
+                 * Optional. The 2-digit value representing the length of time since the cardholder changed or reset the password on the account.
+                 * Possible values:
+                 * 01 No change
+                 * 02 Changed during transaction
+                 * 03 Less than 30 days
+                 * 04 30-60 days
+                 * 05 More than 60 days
+                 */
+                accountPwdChangeIndicator?: "01" | "02" | "03" | "04" | "05";
+                /**
+                 * Optional. The 8-digit number (format: YYYYMMDD) indicating the date the cardholder last changed or reset password on account.
+                 */
+                accountPwdChangeDate?: string;
+                /**
+                 *
+                 * Optional. The 2-digit value indicating when the shipping address used for transaction was first used.
+                 * Possible values:
+                 * 01 This transaction
+                 * 02 Less than 30 days
+                 * 03 30-60 days
+                 * 04 More than 60 days
+                 */
+                shippingAddressUsageIndicator?: "01" | "02" | "03" | "04";
+                /**
+                 * Optional. The 8-digit number (format: YYYYMMDD) indicating the date when the shipping address used for this transaction was first used.
+                 */
+                shippingAddressUsageDate?: string;
+                /**
+                 * Optional. Number of transactions (successful or abandoned) for this cardholder account within the last 24 hours.
+                 */
+                transactionCountDay?: string;
+                /**
+                 * Optional. Number of transactions (successful or abandoned) for this cardholder account within the last year.
+                 */
+                transactionCountYear?: string;
+                /**
+                 * Optional. Number of add card attempts in the last 24 hours.
+                 */
+                addCardAttempts?: string;
+                /**
+                 * Optional. Number of purchases with this cardholder account during the previous six months.
+                 */
+                accountPurchases?: string;
+                /**
+                 * Optional. The 2-digit value indicating whether the merchant experienced suspicious activity (including previous fraud) on the account.
+                 * Possible values:
+                 * 01 No suspicious activity
+                 * 02 Suspicious activity observed
+                 */
+                fraudActivity?: "01" | "02";
+                /**
+                 * Optional. The 2-digit value indicating if the cardholder name on the account is identical to the shipping name used for the transaction.
+                 * Possible values:
+                 * 01 Account name identical to shipping name
+                 * 02 Account name different than shipping name
+                 */
+                shippingNameIndicator?: "01" | "02";
+                /**
+                 * Optional. The 2-digit value indicating the length of time that the payment account was enrolled in the merchant account.
+                 * Possible values:
+                 * 01 No account (guest checkout)
+                 * 02 During the transaction
+                 * 03 Less than 30 days
+                 * 04 30-60 days
+                 * 05 More than 60 days
+                 */
+                paymentAccountIndicator?: "01" | "02" | "03" | "04" | "05";
+                /**
+                 * Optional. The 8-digit number (format: YYYYMMDD) indicating the date the payment account was added to the cardholder account.
+                 */
+                paymentAccountAge?: string;
+                /**
+                 * Optional. The 1-character value (Y/N) indicating whether cardholder billing and shipping addresses match.
+                 */
+                addressMatch?: string;
+                /**
+                 * Optional. Additional cardholder account information.
+                 */
+                accountID: string;
+                /**
+                 * Optional. The IP address of the consumer. IPv4 and IPv6 are supported.
+                 */
+                ipAddress?: string;
+                /**
+                 * Optional. Brief description of items purchased.
+                 */
+                orderDescription?: string;
+                /**
+                 * Optional. Unformatted tax amount without any decimalization (ie. $123.67 = 12367).
+                 */
+                taxAmount?: string;
+                /**
+                 * Optional. The exact content of the HTTP user agent header.
+                 */
+                userAgent?: string;
+                /**
+                 * Optional. The 2-digit number indicating the type of authentication request.
+                 * Possible values:
+                 * 02 Recurring transaction
+                 * 03 Installment transaction
+                 */
+                authenticationIndicator?: "02" | "03";
+                /**
+                 * Optional.  An integer value greater than 1 indicating the maximum number of permitted authorizations for installment payments.
+                 */
+                installment?: string;
+                /**
+                 * Optional. The 14-digit number (format: YYYYMMDDHHMMSS) indicating the date in UTC of original purchase.
+                 */
+                purchaseDate?: string;
+                /**
+                 * Optional. The 8-digit number (format: YYYYMMDD) indicating the date after which no further recurring authorizations should be performed..
+                 */
+                recurringEnd?: string;
+                /**
+                 * Optional. Integer value indicating the minimum number of days between recurring authorizations. A frequency of monthly is indicated by the value 28. Multiple of 28 days will be used to indicate months (ex. 6 months = 168).
+                 */
+                recurringFrequency?: string;
+                /**
+                 * Optional. The 2-digit number of minutes (minimum 05) to set the maximum amount of time for all 3DS 2.0 messages to be communicated between all components.
+                 */
+                sdkMaxTimeout?: string;
+                /**
+                 * Optional. The work phone number used for verification. Only numbers; remove dashes, parenthesis and other characters.
+                 */
+                workPhoneNumber: string;
+            }
+            enum Version {
+                /** 3DS 1.0 */
+                V1 = 0,
+                /** 3DS 2.0 */
+                V2 = 1
+            }
+            /** The card add challenge request */
+            /**
+             * Postal address for 3D Secure flows.
+             *
+             * @link https://braintree.github.io/braintree_ios/current/Classes/BTThreeDSecurePostalAddress.html
+             */
+            interface PostalAddress {
+                /** Given name associated with the address. */
+                givenName?: string;
+                /** Surname associated with the address. */
+                surname?: string;
+                /** Line 1 of the Address (eg. number, street, etc) */
+                streetAddress?: string;
+                /** Line 2 of the Address (eg. suite, apt #, etc.) */
+                extendedAddress?: string;
+                /** Line 3 of the Address (eg. suite, apt #, etc.) */
+                line3?: string;
+                /** City name */
+                locality?: string;
+                /** Either a two-letter state code (for the US), or an ISO-3166-2 country subdivision code of up to three letters. */
+                region?: string;
+                /**
+                 * Zip code or equivalent is usually required for countries that have them.
+                 *
+                 * For a list of countries that do not have postal codes please refer to http://en.wikipedia.org/wiki/Postal_code
+                 */
+                postalCode?: string;
+                /**
+                 * The phone number associated with the address
+                 *
+                 * Note: Only numbers. Remove dashes, parentheses and other characters
+                 */
+                phoneNumber?: string;
+                /**
+                 * 2 letter country code
+                 */
+                countryCodeAlpha2?: string;
+            }
+        }
+    }
+}
+declare namespace CdvPurchase {
     namespace GooglePlay {
-        class Transaction extends CDVPurchase2.Transaction {
+        class Transaction extends CdvPurchase.Transaction {
             nativePurchase: Bridge.Purchase;
             constructor(purchase: Bridge.Purchase);
             static toState(state: Bridge.PurchaseState, isAcknowledged: boolean): TransactionState;
@@ -1108,7 +1670,7 @@ declare namespace CDVPurchase2 {
              */
             refresh(purchase: Bridge.Purchase): void;
         }
-        class Receipt extends CDVPurchase2.Receipt {
+        class Receipt extends CdvPurchase.Receipt {
             /** Token that uniquely identifies a purchase for a given item and user pair. */
             purchaseToken: string;
             /** Unique order identifier for the transaction.  (like GPA.XXXX-XXXX-XXXX-XXXXX) */
@@ -1117,7 +1679,7 @@ declare namespace CDVPurchase2 {
             /** Refresh the content of the purchase based on the native BridgePurchase */
             refresh(purchase: Bridge.Purchase): void;
         }
-        class Adapter implements CDVPurchase2.Adapter {
+        class Adapter implements CdvPurchase.Adapter {
             /** Adapter identifier */
             id: Platform;
             /** Adapter name */
@@ -1148,7 +1710,7 @@ declare namespace CDVPurchase2 {
             /** @inheritDoc */
             load(products: IRegisterProduct[]): Promise<(GProduct | IError)[]>;
             /** @inheritDoc */
-            finish(transaction: CDVPurchase2.Transaction): Promise<IError | undefined>;
+            finish(transaction: CdvPurchase.Transaction): Promise<IError | undefined>;
             onPurchaseConsumed(purchase: Bridge.Purchase): void;
             /** Called when the platform reports update for some purchases */
             onPurchasesUpdated(purchases: Bridge.Purchase[]): void;
@@ -1158,16 +1720,17 @@ declare namespace CDVPurchase2 {
             /** Refresh purchases from GooglePlay */
             getPurchases(): Promise<IError | undefined>;
             /** @inheritDoc */
-            order(offer: GOffer, additionalData: CDVPurchase2.AdditionalData): Promise<IError | undefined>;
+            order(offer: GOffer, additionalData: CdvPurchase.AdditionalData): Promise<IError | undefined>;
             /**
              * Prepare for receipt validation
              */
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
-            handleReceiptValidationResponse(receipt: CDVPurchase2.Receipt, response: Validator.Response.Payload): Promise<void>;
+            handleReceiptValidationResponse(receipt: CdvPurchase.Receipt, response: Validator.Response.Payload): Promise<void>;
+            requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace GooglePlay {
         namespace Bridge {
             interface Subscription {
@@ -1212,7 +1775,7 @@ declare namespace CDVPurchase2 {
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace GooglePlay {
         /** Replace SKU ProrationMode.
          *
@@ -1333,8 +1896,8 @@ declare namespace CDVPurchase2 {
                 load(success: () => void, fail: ErrorCallback, skus: string[], inAppSkus: string[], subsSkus: string[]): void;
                 listener(msg: Message): void;
                 getPurchases(success: () => void, fail: ErrorCallback): void;
-                buy(success: () => void, fail: ErrorCallback, productId: string, additionalData: CDVPurchase2.AdditionalData): void;
-                subscribe(success: () => void, fail: ErrorCallback, productId: string, additionalData: CDVPurchase2.AdditionalData): void;
+                buy(success: () => void, fail: ErrorCallback, productId: string, additionalData: CdvPurchase.AdditionalData): void;
+                subscribe(success: () => void, fail: ErrorCallback, productId: string, additionalData: CdvPurchase.AdditionalData): void;
                 consumePurchase(success: () => void, fail: ErrorCallback, purchaseToken: string): void;
                 acknowledgePurchase(success: () => void, fail: ErrorCallback, purchaseToken: string): void;
                 getAvailableProducts(inAppSkus: string[], subsSkus: string[], success: (validProducts: (InAppProduct | Subscription)[]) => void, fail: ErrorCallback): void;
@@ -1345,14 +1908,14 @@ declare namespace CDVPurchase2 {
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace GooglePlay {
-        class GProduct extends CDVPurchase2.Product {
+        class GProduct extends CdvPurchase.Product {
         }
-        class InAppOffer extends CDVPurchase2.Offer {
+        class InAppOffer extends CdvPurchase.Offer {
             type: string;
         }
-        class SubscriptionOffer extends CDVPurchase2.Offer {
+        class SubscriptionOffer extends CdvPurchase.Offer {
             type: string;
             tags: string[];
             token: string;
@@ -1383,7 +1946,7 @@ declare namespace CDVPurchase2 {
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace GooglePlay {
         namespace PublisherAPI {
             /**
@@ -1889,9 +2452,9 @@ declare namespace CDVPurchase2 {
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace Test {
-        class Adapter implements CDVPurchase2.Adapter {
+        class Adapter implements CdvPurchase.Adapter {
             id: Platform;
             name: string;
             products: Product[];
@@ -1902,12 +2465,13 @@ declare namespace CDVPurchase2 {
             finish(transaction: Transaction): Promise<undefined | IError>;
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
+            requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace WindowsStore {
-        class Adapter implements CDVPurchase2.Adapter {
+        class Adapter implements CdvPurchase.Adapter {
             id: Platform;
             name: string;
             products: Product[];
@@ -1918,10 +2482,11 @@ declare namespace CDVPurchase2 {
             finish(transaction: Transaction): Promise<undefined | IError>;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
+            requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace WindowsStore {
         /**
          * Date and time in ISO 8601 format.
@@ -2007,7 +2572,7 @@ declare namespace CDVPurchase2 {
     }
 }
 declare var msCrypto: any;
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace Utils {
         namespace Ajax {
             /** Success callback for an ajax call */
@@ -2044,7 +2609,7 @@ declare namespace CDVPurchase2 {
         };
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace Utils {
         /**
          * Calls an user-registered callback.
@@ -2062,13 +2627,13 @@ declare namespace CDVPurchase2 {
         function callExternal<F extends Function = Function>(log: Logger, name: string, callback: F | undefined, ...args: any): void;
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace Utils {
         function delay(fn: () => void, wait: number): number;
         function debounce(fn: () => void, wait: number): () => void;
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace Utils {
         /**
          * Returns the MD5 hash-value of the passed string.
@@ -2081,13 +2646,13 @@ declare namespace CDVPurchase2 {
         function md5(str: string): string;
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace Utils {
         /** Returns an UUID v4. Uses `window.crypto` internally to generate random values. */
         function uuidv4(): string;
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace Validator {
         interface DeviceInfo {
             /** Version of the plugin. Requires "support" or "analytics" policy. */
@@ -2121,7 +2686,7 @@ declare namespace CDVPurchase2 {
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace Validator {
         namespace Request {
             /**
@@ -2207,7 +2772,7 @@ declare namespace CDVPurchase2 {
                 /** Define the unit for the duration of the trial period (Day, Week, Month, Year) */
                 trialPeriodUnit?: SubscriptionPeriodUnit;
                 /** Metadata about the user's device */
-                device?: CDVPurchase2.Validator.DeviceInfo;
+                device?: CdvPurchase.Validator.DeviceInfo;
             }
             type ApiValidatorBodyTransaction = ApiValidatorBodyTransactionApple | ApiValidatorBodyTransactionGoogle | ApiValidatorBodyTransactionWindows;
             /** Transaction type from an Apple powered device  */
@@ -2308,7 +2873,7 @@ declare namespace CDVPurchase2 {
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace Validator {
         namespace Response {
             type Payload = SuccessPayload | ErrorPayload;
@@ -2360,7 +2925,7 @@ declare namespace CDVPurchase2 {
         }
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     namespace Validator {
         /**
          * Dates stored as a ISO formatted string
@@ -2368,7 +2933,7 @@ declare namespace CDVPurchase2 {
         type ISODate = string;
     }
 }
-declare namespace CDVPurchase2 {
+declare namespace CdvPurchase {
     /** Receipt data as validated by the receipt validation server */
     class VerifiedReceipt {
         /** Platform this receipt originated from */
