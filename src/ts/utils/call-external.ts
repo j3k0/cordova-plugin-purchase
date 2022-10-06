@@ -1,4 +1,4 @@
-namespace CDVPurchase2 {
+namespace CdvPurchase {
     export namespace Utils {
         /**
          * Calls an user-registered callback.
@@ -17,7 +17,7 @@ namespace CDVPurchase2 {
             try {
                 const args = Array.prototype.slice.call(arguments, 3);
                 // store.log.debug("calling " + name + "(" + JSON.stringify(args2) + ")");
-                if (callback) callback.apply(CDVPurchase2.Store.instance, args);
+                if (callback) callback.apply(CdvPurchase.Store.instance, args);
             }
             catch (e) {
                 log.logCallbackException(name, e as Error);

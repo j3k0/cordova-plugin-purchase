@@ -1,11 +1,11 @@
 /// <reference path="../../receipt.ts" />
 /// <reference path="../../transaction.ts" />
 
-namespace CDVPurchase2 {
+namespace CdvPurchase {
 
     export namespace GooglePlay {
 
-        export class Transaction extends CDVPurchase2.Transaction {
+        export class Transaction extends CdvPurchase.Transaction {
 
             public nativePurchase: Bridge.Purchase;
 
@@ -45,7 +45,7 @@ namespace CDVPurchase2 {
             }
         }
 
-        export class Receipt extends CDVPurchase2.Receipt {
+        export class Receipt extends CdvPurchase.Receipt {
 
             /** Token that uniquely identifies a purchase for a given item and user pair. */
             public purchaseToken: string;
@@ -69,7 +69,7 @@ namespace CDVPurchase2 {
             }
         }
 
-        export class Adapter implements CDVPurchase2.Adapter {
+        export class Adapter implements CdvPurchase.Adapter {
 
             /** Adapter identifier */
             id = Platform.GOOGLE_PLAY;
@@ -212,7 +212,7 @@ namespace CDVPurchase2 {
             }
 
             /** @inheritDoc */
-            finish(transaction: CDVPurchase2.Transaction): Promise<IError | undefined> {
+            finish(transaction: CdvPurchase.Transaction): Promise<IError | undefined> {
                 return new Promise(resolve => {
 
                     const onSuccess = () => resolve(undefined);
@@ -294,7 +294,7 @@ namespace CDVPurchase2 {
             }
 
             /** @inheritDoc */
-            async order(offer: GOffer, additionalData: CDVPurchase2.AdditionalData): Promise<IError | undefined> {
+            async order(offer: GOffer, additionalData: CdvPurchase.AdditionalData): Promise<IError | undefined> {
                 return new Promise(resolve => {
                     this.log.info("Order - " + JSON.stringify(offer));
                     const buySuccess = () => resolve(undefined);
@@ -337,7 +337,7 @@ namespace CDVPurchase2 {
                 }
             }
 
-            async handleReceiptValidationResponse(receipt: CDVPurchase2.Receipt, response: Validator.Response.Payload): Promise<void> {
+            async handleReceiptValidationResponse(receipt: CdvPurchase.Receipt, response: Validator.Response.Payload): Promise<void> {
                 if (response.ok) {
                     const transaction = response.data.transaction;
                     if (transaction.type !== Platform.GOOGLE_PLAY) return;
@@ -356,9 +356,15 @@ namespace CDVPurchase2 {
                 }
                 return; // Nothing specific to do on GooglePlay
             }
+
+            async requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
+                return {
+                    code: ErrorCode.UNKNOWN,
+                    message: 'requestPayment not supported',
+                };
+            }
+
         }
-
-
 
     }
 }

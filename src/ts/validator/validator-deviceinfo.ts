@@ -1,4 +1,4 @@
-namespace CDVPurchase2 {
+namespace CdvPurchase {
 
     export namespace Validator {
 
@@ -71,7 +71,7 @@ namespace CDVPurchase2 {
                 // Different versions of the plugin use different response fields.
                 // Sending this information allows the validator to reply with only expected information.
                 const ret: DeviceInfo = {
-                    plugin: 'cordova-plugin-purchase/' + CDVPurchase2.PLUGIN_VERSION,
+                    plugin: 'cordova-plugin-purchase/' + CdvPurchase.PLUGIN_VERSION,
                 };
 
                 const wdw: {
@@ -142,7 +142,7 @@ namespace CDVPurchase2 {
                     }
                     // Fingerprint is hashed to keep required level of privacy.
                     if (fingerprint)
-                        ret.fingerprint = CDVPurchase2.Utils.md5(fingerprint);
+                        ret.fingerprint = CdvPurchase.Utils.md5(fingerprint);
                 }
 
                 return ret;

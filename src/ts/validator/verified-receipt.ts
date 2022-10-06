@@ -1,4 +1,4 @@
-namespace CDVPurchase2 {
+namespace CdvPurchase {
 
     /** Receipt data as validated by the receipt validation server */
     export class VerifiedReceipt {

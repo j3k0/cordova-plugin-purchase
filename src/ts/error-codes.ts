@@ -1,4 +1,4 @@
-namespace CDVPurchase2 {
+namespace CdvPurchase {
 
     const ERROR_CODES_BASE = 6777000;
 

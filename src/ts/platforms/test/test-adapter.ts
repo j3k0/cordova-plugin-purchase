@@ -1,6 +1,6 @@
-namespace CDVPurchase2 {
+namespace CdvPurchase {
     export namespace Test {
-        export class Adapter implements CDVPurchase2.Adapter {
+        export class Adapter implements CdvPurchase.Adapter {
             id = Platform.TEST;
             name = 'Test';
             products: Product[] = [];
@@ -26,6 +26,12 @@ namespace CDVPurchase2 {
             }
             async handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void> {
                 return;
+            }
+            async requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
+                return {
+                    code: ErrorCode.UNKNOWN,
+                    message: 'requestPayment not supported',
+                };
             }
         }
     }

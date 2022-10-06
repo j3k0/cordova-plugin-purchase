@@ -1,5 +1,5 @@
 /// <reference path="utils/non-enumerable.ts" />
-namespace CDVPurchase2
+namespace CdvPurchase
 {
     export class Offer {
 

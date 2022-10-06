@@ -1,4 +1,4 @@
-namespace CDVPurchase2 {
+namespace CdvPurchase {
 
     export type ValidatorCallback = (payload: Validator.Response.Payload) => void;
 
@@ -157,7 +157,7 @@ namespace CDVPurchase2 {
                 // Add device information
                 body.device = {
                     ...body.device ?? {},
-                    ...CDVPurchase2.Validator.Internal.getDeviceInfo(this.controller),
+                    ...CdvPurchase.Validator.Internal.getDeviceInfo(this.controller),
                 }
 
                 // Add legacy pricing information
@@ -182,7 +182,7 @@ namespace CDVPurchase2 {
 
             private runValidatorRequest(target: ValidatorTarget, receipt: Receipt, body: Validator.Request.Body, callback: Callback<ReceiptResponse>) {
 
-                CDVPurchase2.Utils.ajax<Validator.Response.Payload>(this.log.child("Ajax"), {
+                CdvPurchase.Utils.ajax<Validator.Response.Payload>(this.log.child("Ajax"), {
                     url: target.url,
                     method: 'POST',
                     customHeaders: target.headers,

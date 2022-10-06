@@ -1,4 +1,4 @@
-namespace CDVPurchase2 {
+namespace CdvPurchase {
     export namespace Utils {
 
         type ShiftFunction = (r: number, n: number) => number;

@@ -1,4 +1,4 @@
-namespace CDVPurchase2 {
+namespace CdvPurchase {
     export namespace Utils {
         export const nonEnumerable: {
             (target: any, name: string): void;

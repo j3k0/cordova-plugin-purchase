@@ -2,9 +2,9 @@ declare interface Window {
     cordova: {
         platformId: string;
         plugin: { http?: any; }
-        exec: (listener: (msg?: any) => void, errorCallback: (err: string) => void, context: string, fnName: string, args: any[]) => void;
+        exec: (listener: ((msg?: any) => void) | undefined | null, errorCallback: ((err: string) => void) | undefined | null, context: string, fnName: string, args: any[]) => void;
     }
-    // store: CDVPurchase2.Store; // cordova-plugin-purchase
-    // Iaptic: CDVPurchase2;
-    CDVPurchase2: CDVPurchase2;
+    // store: CdvPurchase.Store; // cordova-plugin-purchase
+    // Iaptic: CdvPurchase;
+    CdvPurchase: CdvPurchase;
 }

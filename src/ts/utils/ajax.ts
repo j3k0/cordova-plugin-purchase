@@ -1,7 +1,7 @@
 // plugins or browser extensions
 declare var msCrypto: any;
 
-namespace CDVPurchase2 {
+namespace CdvPurchase {
 
     export namespace Utils {
 

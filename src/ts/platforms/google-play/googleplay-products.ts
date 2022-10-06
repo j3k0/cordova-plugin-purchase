@@ -1,16 +1,16 @@
 /// <reference path="../../offer.ts" />
-namespace CDVPurchase2 {
+namespace CdvPurchase {
 
     export namespace GooglePlay {
 
-        export class GProduct extends CDVPurchase2.Product {
+        export class GProduct extends CdvPurchase.Product {
         }
 
-        export class InAppOffer extends CDVPurchase2.Offer {
+        export class InAppOffer extends CdvPurchase.Offer {
             type = 'inapp';
         }
 
-        export class SubscriptionOffer extends CDVPurchase2.Offer {
+        export class SubscriptionOffer extends CdvPurchase.Offer {
             type = 'subs';
             tags: string[];
             token: string;

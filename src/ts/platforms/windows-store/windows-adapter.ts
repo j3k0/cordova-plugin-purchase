@@ -1,6 +1,6 @@
-namespace CDVPurchase2 {
+namespace CdvPurchase {
     export namespace WindowsStore {
-        export class Adapter implements CDVPurchase2.Adapter {
+        export class Adapter implements CdvPurchase.Adapter {
             id = Platform.WINDOWS_STORE;
             name = 'WindowsStore';
             products: Product[] = [];
@@ -26,6 +26,12 @@ namespace CDVPurchase2 {
             }
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined {
                 return;
+            }
+            async requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
+                return {
+                    code: ErrorCode.UNKNOWN,
+                    message: 'requestPayment not supported',
+                };
             }
         }
     }

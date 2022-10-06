@@ -1,4 +1,4 @@
-namespace CDVPurchase2 {
+namespace CdvPurchase {
 
     /** Ready callbacks */
     export class ReadyCallbacks {

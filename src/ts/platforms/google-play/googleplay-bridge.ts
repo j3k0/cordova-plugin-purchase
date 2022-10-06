@@ -4,7 +4,7 @@
  */
 /*global cordova */
 
-namespace CDVPurchase2 {
+namespace CdvPurchase {
 
     export namespace GooglePlay {
 
@@ -235,7 +235,7 @@ namespace CDVPurchase2 {
                     return window.cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getPurchases", ["null"]);
                 }
 
-                buy(success: () => void, fail: ErrorCallback, productId: string, additionalData: CDVPurchase2.AdditionalData) {
+                buy(success: () => void, fail: ErrorCallback, productId: string, additionalData: CdvPurchase.AdditionalData) {
                     if (this.options.showLog) {
                         log('buy()');
                     }
@@ -243,7 +243,7 @@ namespace CDVPurchase2 {
                         productId, extendAdditionalData(additionalData)]);
                 }
 
-                subscribe(success: () => void, fail: ErrorCallback, productId: string, additionalData: CDVPurchase2.AdditionalData) {
+                subscribe(success: () => void, fail: ErrorCallback, productId: string, additionalData: CdvPurchase.AdditionalData) {
                     if (this.options.showLog) {
                         log('subscribe()');
                     }
@@ -316,7 +316,7 @@ namespace CDVPurchase2 {
                 return !!obj && obj.constructor === Object ? obj : {};
             }
 
-            function extendAdditionalData(ad?: CDVPurchase2.AdditionalData): AdditionalData {
+            function extendAdditionalData(ad?: CdvPurchase.AdditionalData): AdditionalData {
                 const additionalData: AdditionalData = ensureObject(ad?.googlePlay);
                 if (!additionalData.accountId && ad?.applicationUsername) {
                     additionalData.accountId = Utils.md5(ad.applicationUsername);

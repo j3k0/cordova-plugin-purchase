@@ -1,9 +1,11 @@
 package cc.fovea;
 
 public class Constants {
-  // IAB Helper error codes
+
   //
-  // KEEP SYNCHRONIZED with src/js/constants.js
+  // Error codes
+  //
+  // KEEP SYNCHRONIZED with src/ts/error-codes.ts
   //
   public static final int ERROR_CODES_BASE = 6777000;
 

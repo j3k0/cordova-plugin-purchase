@@ -1,4 +1,4 @@
-namespace CDVPurchase2 {
+namespace CdvPurchase {
 
     /** Manage a list of callbacks */
     export class Callbacks<T> {

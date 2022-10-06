@@ -1,4 +1,4 @@
-    namespace CDVPurchase2
+    namespace CdvPurchase
     {
         /** Callback */
         export type Callback<T> = (t: T) => void;
@@ -142,6 +142,36 @@
              * Handle platform specific fields from receipt validation response.
              */
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
+
+            /**
+             * Request a payment from the user
+             */
+            requestPayment(payment: PaymentRequest, additionalData?: AdditionalData): Promise<undefined | IError>;
+        }
+
+        /**
+         * Request for payment.
+         */
+        export interface PaymentRequest {
+            /**
+             * Platform that will handle the payment request.
+             */
+            platform: Platform;
+
+            /**
+             * Amount to pay.
+             */
+            amountMicros: number;
+
+            /**
+             * Currency.
+             */
+            currency?: string;
+
+            /**
+             * Description for the payment.
+             */
+            description?: string;
         }
 
         export interface AdditionalData {

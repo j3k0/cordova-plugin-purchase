@@ -1,4 +1,4 @@
-namespace CDVPurchase2 {
+namespace CdvPurchase {
     export namespace Utils {
 
         export function delay(fn: () => void, wait: number) {

@@ -1,4 +1,4 @@
-namespace CDVPurchase2 {
+namespace CdvPurchase {
     export namespace Validator {
         export namespace Request {
             /**
@@ -87,7 +87,7 @@ namespace CDVPurchase2 {
                 /** Define the unit for the duration of the trial period (Day, Week, Month, Year) */
                 trialPeriodUnit?: SubscriptionPeriodUnit;
                 /** Metadata about the user's device */
-                device?: CDVPurchase2.Validator.DeviceInfo;
+                device?: CdvPurchase.Validator.DeviceInfo;
             }
 
             export type ApiValidatorBodyTransaction =

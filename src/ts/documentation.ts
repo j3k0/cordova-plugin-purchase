@@ -10,4 +10,4 @@
 //!
 
 /** cordova-plugin-purchase global namespace */
-namespace CDVPurchase2 {}
+namespace CdvPurchase {}

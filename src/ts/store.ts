@@ -4,7 +4,7 @@
 /// <reference path="callbacks.ts" />
 /// <reference path="ready.ts" />
 
-namespace CDVPurchase2 {
+namespace CdvPurchase {
 
     export const PLUGIN_VERSION = '13.0.0';
 
@@ -23,7 +23,7 @@ namespace CDVPurchase2 {
             }
             else {
                 globalStore = new Store();
-                Object.assign(globalStore, CDVPurchase2.LogLevel, CDVPurchase2.ProductType, CDVPurchase2.ErrorCode); // for backward compatibility
+                Object.assign(globalStore, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode); // for backward compatibility
                 return globalStore;
             }
         }
@@ -120,7 +120,7 @@ namespace CDVPurchase2 {
          *
          * @param platforms - List of payment platforms to initialize, default to Store.defaultPlatform().
          */
-        async initialize(platforms: (Platform | { platform: Platform, options: any })[] = [Store.defaultPlatform()]): Promise<IError[]> {
+        async initialize(platforms: (Platform | PlatformWithOptions)[] = [Store.defaultPlatform()]): Promise<IError[]> {
             const store = this;
             const ret = this.adapters.initialize(platforms, {
                 error: this.error.bind(this),
@@ -248,9 +248,14 @@ namespace CDVPurchase2 {
             return adapter.order(offer, additionalData || {});
         }
 
-        /** TODO */
-        async pay(options: { platform: Platform, amount: number, currency: string, description: string }) { }
+        /** Request a payment */
+        async requestPayment(paymentRequest: PaymentRequest, additionalData?: AdditionalData): Promise<IError | undefined> {
+            const adapter = this.adapters.find(paymentRequest.platform);
+            if (!adapter) return;
+            return adapter.requestPayment(paymentRequest, additionalData);
+        }
 
+        /** Verify a receipt or transacting with the receipt validation service. */
         async verify(receiptOrTransaction: Transaction | Receipt) {
             this._validator.add(receiptOrTransaction);
 
@@ -304,6 +309,6 @@ namespace CDVPurchase2 {
 }
 
 setTimeout(() => {
-    window.CDVPurchase2 = CDVPurchase2;
-    window.CDVPurchase2.store = CDVPurchase2.Store.instance;
+    window.CdvPurchase = CdvPurchase;
+    window.CdvPurchase.store = CdvPurchase.Store.instance;
 }, 0);

@@ -1,4 +1,4 @@
-namespace CDVPurchase2
+namespace CdvPurchase
 {
     export enum LogLevel {
         QUIET = 0,
