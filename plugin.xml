@@ -26,7 +26,7 @@ SOFTWARE.
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     id="cordova-plugin-purchase"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    version="11.0.0">
+    version="13.0.0">
 
     <name>Purchase</name>
 	<description>Cordova Purchase plugin for iOS (AppStore), Android (PlayStore) and Windows</description>
@@ -42,8 +42,8 @@ SOFTWARE.
 
     <!-- ios -->
     <platform name="ios">
-        <js-module src="www/store.js" name="CDVPurchase2">
-            <clobbers target="CDVPurchase2" />
+        <js-module src="www/store.js" name="CdvPurchase">
+            <clobbers target="CdvPurchase" />
             <clobbers target="store" />
         </js-module>
 
@@ -72,8 +72,8 @@ SOFTWARE.
 
     <!-- osx -->
     <platform name="osx">
-        <js-module src="www/store.js" name="CDVPurchase2">
-            <clobbers target="CDVPurchase2" />
+        <js-module src="www/store.js" name="CdvPurchase">
+            <clobbers target="CdvPurchase" />
             <clobbers target="store" />
         </js-module>
         <js-module src="www/cordova-osx-polyfill.js" name="CordovaOSXPolyfill">
@@ -102,9 +102,9 @@ SOFTWARE.
 
     <!-- android -->
     <platform name="android">
-      <js-module src="www/store.js" name="CDVPurchase2">
+      <js-module src="www/store.js" name="CdvPurchase">
         <clobbers target="store" />
-        <clobbers target="CDVPurchase2" />
+        <clobbers target="CdvPurchase" />
       </js-module>
       <config-file target="AndroidManifest.xml" parent="/*">
         <uses-permission android:name="com.android.vending.BILLING" />
@@ -129,8 +129,8 @@ SOFTWARE.
 
     <!-- windows -->
 	<platform name="windows">
-		<js-module src="www/store.js" name="CDVPurchase2">
-            <clobbers target="CDVPurchase2" />
+		<js-module src="www/store.js" name="CdvPurchase">
+            <clobbers target="CdvPurchase" />
             <clobbers target="store" />
 		</js-module>
 		<js-module src="src/windows/InAppPurchaseProxy.js" name="InAppPurchaseProxy">

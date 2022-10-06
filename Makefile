@@ -6,7 +6,7 @@ help:
 	@echo ""
 	@echo "available targets:"
 	@echo "    build ............. Generate javascript files for iOS and Android."
-	@3echo "    tests ............. Run all tests."
+	@#echo "    tests ............. Run all tests."
 	@#echo "    test-js ........... Test javascript files for errors."
 	@#echo "    test-js-coverage .. Test javascript with coverage information."
 	@#echo "    test-install ...... Test plugin installation on iOS and Android."
