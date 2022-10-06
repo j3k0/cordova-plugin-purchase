@@ -181,6 +181,9 @@
 
             /** GooglePlay specific additional data */
             googlePlay?: GooglePlay.AdditionalData;
+
+            /** Braintree specific additional data */
+            braintree?: Braintree.AdditionalData;
         }
 
         export enum Platform {
