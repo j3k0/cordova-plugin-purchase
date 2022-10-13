@@ -86,6 +86,7 @@ namespace CdvPurchase {
 
             /** Add a receipt to the validation queue. It'll get validated after a few milliseconds. */
             add(receiptOrTransaction: Receipt | Transaction) {
+                this.log.debug("Schedule validation: " + JSON.stringify(receiptOrTransaction));
                 const receipt: Receipt | undefined =
                     (receiptOrTransaction instanceof Transaction)
                         ? this.controller.localReceipts.filter(r => r.hasTransaction(receiptOrTransaction)).slice(-1)[0]

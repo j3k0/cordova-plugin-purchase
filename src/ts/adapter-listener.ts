@@ -29,17 +29,15 @@ namespace CdvPurchase
                     receipt.transactions.forEach(transaction => {
                         const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
                         const lastState = this.lastTransactionState[transactionToken];
-                        if (lastState !== transaction.state) {
-                            this.lastTransactionState[transactionToken] = transaction.state;
-                            switch (transaction.state) {
-                                case TransactionState.APPROVED:
-                                    this.delegate.approvedCallbacks.trigger(transaction);
-                                    break;
-                                case TransactionState.FINISHED:
-                                    this.delegate.finishedCallbacks.trigger(transaction);
-                                    break;
+                        if (transaction.state === TransactionState.APPROVED) {
+                            this.delegate.approvedCallbacks.trigger(transaction); // better retrigger (so validation is rerun on potential update)
+                        }
+                        else if (lastState !== transaction.state) {
+                            if (transaction.state === TransactionState.FINISHED) {
+                                this.delegate.finishedCallbacks.trigger(transaction);
                             }
                         }
+                        this.lastTransactionState[transactionToken] = transaction.state;
                     });
                 });
             }
