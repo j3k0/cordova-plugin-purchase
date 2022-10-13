@@ -35,17 +35,15 @@ var CdvPurchase;
                     receipt.transactions.forEach(transaction => {
                         const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
                         const lastState = this.lastTransactionState[transactionToken];
-                        if (lastState !== transaction.state) {
-                            this.lastTransactionState[transactionToken] = transaction.state;
-                            switch (transaction.state) {
-                                case CdvPurchase.TransactionState.APPROVED:
-                                    this.delegate.approvedCallbacks.trigger(transaction);
-                                    break;
-                                case CdvPurchase.TransactionState.FINISHED:
-                                    this.delegate.finishedCallbacks.trigger(transaction);
-                                    break;
+                        if (transaction.state === CdvPurchase.TransactionState.APPROVED) {
+                            this.delegate.approvedCallbacks.trigger(transaction); // better retrigger (so validation is rerun on potential update)
+                        }
+                        else if (lastState !== transaction.state) {
+                            if (transaction.state === CdvPurchase.TransactionState.FINISHED) {
+                                this.delegate.finishedCallbacks.trigger(transaction);
                             }
                         }
+                        this.lastTransactionState[transactionToken] = transaction.state;
                     });
                 });
             }
@@ -78,7 +76,7 @@ var CdvPurchase;
                             if (!po.options) {
                                 log.error('Options missing for Braintree initialization. Use {platform: Platform.BRAINTREE, options: {...}} in your call to store.initialize');
                             }
-                            return this.list.push(new CdvPurchase.Braintree.Adapter(context.log, po.options));
+                            return this.list.push(new CdvPurchase.Braintree.Adapter(context, po.options));
                         case CdvPurchase.Platform.TEST:
                         default:
                             return this.list.push(new CdvPurchase.Test.Adapter());
@@ -245,7 +243,16 @@ var CdvPurchase;
         }
         /// ### `store.log.error(message)`
         /// Logs an error message, only if `store.verbosity` >= store.ERROR
-        error(o) { log(this.store.verbosity, LogLevel.ERROR, this.prefix, o); }
+        error(o) {
+            log(this.store.verbosity, LogLevel.ERROR, this.prefix, o);
+            // show the stack trace
+            try {
+                throw new Error(toString(o));
+            }
+            catch (e) {
+                log(this.store.verbosity, LogLevel.ERROR, this.prefix, e.stack);
+            }
+        }
         /// ### `store.log.warn(message)`
         /// Logs a warning message, only if `store.verbosity` >= store.WARNING
         warn(o) { log(this.store.verbosity, LogLevel.WARNING, this.prefix, o); }
@@ -280,6 +287,11 @@ var CdvPurchase;
     }
     CdvPurchase.Logger = Logger;
     const LOG_LEVEL_STRING = ["QUIET", "ERROR", "WARNING", "INFO", "DEBUG"];
+    function toString(o) {
+        if (typeof o !== 'string')
+            o = JSON.stringify(o);
+        return o;
+    }
     function log(verbosity, level, prefix, o) {
         var maxLevel = verbosity === true ? 1 : verbosity;
         if (level > maxLevel)
@@ -553,6 +565,7 @@ var CdvPurchase;
             }
             /** Add a receipt to the validation queue. It'll get validated after a few milliseconds. */
             add(receiptOrTransaction) {
+                this.log.debug("Schedule validation: " + JSON.stringify(receiptOrTransaction));
                 const receipt = (receiptOrTransaction instanceof CdvPurchase.Transaction)
                     ? this.controller.localReceipts.filter(r => r.hasTransaction(receiptOrTransaction)).slice(-1)[0]
                     : receiptOrTransaction;
@@ -1186,19 +1199,53 @@ var CdvPurchase;
 (function (CdvPurchase) {
     let Braintree;
     (function (Braintree) {
+        // export type NonceProvider = (type: PaymentMethod, callback: Callback<Nonce | IError>) => void;
         let PaymentMethod;
         (function (PaymentMethod) {
             PaymentMethod["THREE_D_SECURE"] = "THREE_D_SECURE";
         })(PaymentMethod = Braintree.PaymentMethod || (Braintree.PaymentMethod = {}));
+        class BraintreeReceipt extends CdvPurchase.Receipt {
+            constructor(paymentRequest, dropInResult) {
+                // Now we have to send this to the server + the request
+                // result.paymentDescription; // "1111"
+                // result.paymentMethodType; // "VISA"
+                // result.deviceData; // undefined
+                // result.paymentMethodNonce; // {"isDefault":false,"nonce":"tokencc_bh_rdjmsc_76vjtq_9tzsv3_4467mg_tt4"}
+                var _a, _b;
+                const transaction = new CdvPurchase.Transaction(CdvPurchase.Platform.BRAINTREE);
+                transaction.products = paymentRequest.productIds.map(productId => ({ productId }));
+                transaction.state = CdvPurchase.TransactionState.APPROVED;
+                transaction.transactionId = (_b = (_a = dropInResult.paymentMethodNonce) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
+                super({
+                    platform: CdvPurchase.Platform.BRAINTREE,
+                    transactions: [transaction],
+                });
+                this.dropInResult = dropInResult;
+                this.paymentRequest = paymentRequest;
+                this.refresh(paymentRequest, dropInResult);
+            }
+            refresh(paymentRequest, dropInResult) {
+                var _a, _b;
+                this.dropInResult = dropInResult;
+                this.paymentRequest = paymentRequest;
+                const transaction = new CdvPurchase.Transaction(CdvPurchase.Platform.BRAINTREE);
+                transaction.products = paymentRequest.productIds.map(productId => ({ productId }));
+                transaction.state = CdvPurchase.TransactionState.APPROVED;
+                transaction.transactionId = (_b = (_a = dropInResult.paymentMethodNonce) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
+            }
+        }
+        Braintree.BraintreeReceipt = BraintreeReceipt;
         class Adapter {
-            constructor(log, options) {
+            constructor(context, options) {
                 this.id = CdvPurchase.Platform.BRAINTREE;
                 this.name = 'BrainTree';
                 this.products = [];
-                this.receipts = [];
-                this.log = log.child("Braintree");
+                this._receipts = [];
+                this.context = context;
+                this.log = context.log.child("Braintree");
                 this.options = options;
             }
+            get receipts() { return this._receipts; }
             /**
              * Initialize the Braintree Adapter.
              */
@@ -1243,57 +1290,125 @@ var CdvPurchase;
                     };
                 });
             }
-            getNonce(paymentMethod) {
+            // async getNonce(paymentMethod: PaymentMethod): Promise<Nonce | IError> {
+            //     return new Promise(resolve => {
+            //         if (this.options.nonceProvider) {
+            //             this.options.nonceProvider(paymentMethod, resolve);
+            //         }
+            //         else {
+            //             resolve({
+            //                 code: ErrorCode.UNAUTHORIZED_REQUEST_DATA,
+            //                 message: 'Braintree requires a nonceProvider',
+            //             });
+            //         }
+            //     });
+            // }
+            requestPayment(paymentRequest, additionalData) {
+                var _a, _b, _c, _d;
                 return __awaiter(this, void 0, void 0, function* () {
-                    return new Promise(resolve => {
-                        if (this.options.nonceProvider) {
-                            this.options.nonceProvider(paymentMethod, resolve);
+                    this.log.info("requestPayment()" + JSON.stringify(paymentRequest));
+                    let dropInResult;
+                    if ((_a = additionalData === null || additionalData === void 0 ? void 0 : additionalData.braintree) === null || _a === void 0 ? void 0 : _a.dropInRequest) {
+                        // User provided a full DropInRequest, just passing it through
+                        const response = yield ((_b = this.androidBridge) === null || _b === void 0 ? void 0 : _b.launchDropIn(additionalData.braintree.dropInRequest));
+                        if (!response || (('code' in response) && ('message' in response))) {
+                            return response;
                         }
-                        else {
-                            resolve({
-                                code: CdvPurchase.ErrorCode.UNAUTHORIZED_REQUEST_DATA,
-                                message: 'Braintree requires a nonceProvider',
-                            });
-                        }
-                    });
-                });
-            }
-            requestPayment(payment, additionalData) {
-                var _a, _b;
-                return __awaiter(this, void 0, void 0, function* () {
-                    this.log.info("requestPayment()");
-                    if (additionalData === null || additionalData === void 0 ? void 0 : additionalData.braintree) {
-                        return (_a = this.androidBridge) === null || _a === void 0 ? void 0 : _a.launchDropIn(additionalData.braintree);
+                        dropInResult = response;
                     }
-                    else {
-                        const nonce = yield this.getNonce(PaymentMethod.THREE_D_SECURE);
+                    /*
+                    else if (!additionalData?.braintree?.method || additionalData.braintree.method === PaymentMethod.THREE_D_SECURE) {
+                        // User requested a 3D Secure payment
+                        const nonce = await this.getNonce(PaymentMethod.THREE_D_SECURE);
                         if ('code' in nonce) {
                             return nonce;
                         }
                         if (nonce.type !== PaymentMethod.THREE_D_SECURE) {
                             return {
-                                code: CdvPurchase.ErrorCode.BAD_RESPONSE,
+                                code: ErrorCode.BAD_RESPONSE,
                                 message: 'The returned nonce should be of type THREE_D_SECURE',
                             };
                         }
-                        const threeDSecureRequest = {
+                        const threeDSecureRequest: CdvPurchase.Braintree.ThreeDSecure.Request = {
                             amount: formatAmount(payment.amountMicros),
                             nonce: nonce.value,
-                        };
-                        const result = yield ((_b = this.androidBridge) === null || _b === void 0 ? void 0 : _b.launchDropIn({ threeDSecureRequest }));
-                        if (result === null || result === void 0 ? void 0 : result.code) {
+                            email: payment.email,
+                            mobilePhoneNumber: payment.mobilePhoneNumber,
+                            billingAddress: {
+                                givenName: payment.billingAddress?.givenName,
+                                surname: payment.billingAddress?.surname,
+                                streetAddress: payment.billingAddress?.streetAddress1,
+                                extendedAddress: payment.billingAddress?.streetAddress2,
+                                line3: payment.billingAddress?.streetAddress3,
+                                locality: payment.billingAddress?.locality,
+                                phoneNumber: payment.billingAddress?.phoneNumber,
+                                postalCode: payment.billingAddress?.postalCode,
+                                region: payment.billingAddress?.region,
+                                countryCodeAlpha2: payment.billingAddress?.countryCode,
+                            },
+                        }
+                        const result = await this.androidBridge?.launchDropIn({ threeDSecureRequest });
+                        if (result?.code) {
                             this.log.warn("launchDropIn failed: " + JSON.stringify(result));
                             return result;
                         }
                     }
+                    */
+                    else {
+                        // No other payment method as the moment...
+                        const response = yield ((_c = this.androidBridge) === null || _c === void 0 ? void 0 : _c.launchDropIn({}));
+                        if (!response || (('code' in response) && ('message' in response))) {
+                            // Failed
+                            this.log.warn("launchDropIn failed: " + JSON.stringify(response));
+                            return response;
+                        }
+                        // Success
+                        dropInResult = response;
+                    }
+                    this.log.info("launchDropIn success: " + JSON.stringify({ paymentRequest, dropInResult }));
+                    if (!((_d = dropInResult.paymentMethodNonce) === null || _d === void 0 ? void 0 : _d.nonce)) {
+                        return {
+                            code: CdvPurchase.ErrorCode.BAD_RESPONSE,
+                            message: 'launchDropIn returned no paymentMethodNonce',
+                        };
+                    }
+                    let receipt = this._receipts.find(r => { var _a, _b; return ((_a = r.dropInResult.paymentMethodNonce) === null || _a === void 0 ? void 0 : _a.nonce) === ((_b = dropInResult.paymentMethodNonce) === null || _b === void 0 ? void 0 : _b.nonce); });
+                    if (receipt) {
+                        receipt.refresh(paymentRequest, dropInResult);
+                    }
+                    else {
+                        receipt = new BraintreeReceipt(paymentRequest, dropInResult);
+                        this.receipts.push(receipt);
+                    }
+                    this.context.listener.receiptsUpdated(CdvPurchase.Platform.BRAINTREE, [receipt]);
                 });
             }
             receiptValidationBody(receipt) {
-                return;
+                var _a, _b, _c, _d;
+                if (!isBraintreeReceipt(receipt)) {
+                    this.log.error("Unexpected error, expecting a BraintreeReceipt: " + JSON.stringify(receipt));
+                    return;
+                }
+                this.log.info("create receiptValidationBody for: " + JSON.stringify(receipt));
+                return {
+                    id: (_b = (_a = receipt.paymentRequest.productIds) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : 'unknown',
+                    type: CdvPurchase.ProductType.CONSUMABLE,
+                    priceMicros: receipt.paymentRequest.amountMicros,
+                    currency: receipt.paymentRequest.currency,
+                    transaction: {
+                        type: CdvPurchase.Platform.BRAINTREE,
+                        deviceData: receipt.dropInResult.deviceData,
+                        id: 'nonce',
+                        paymentMethodNonce: (_d = (_c = receipt.dropInResult.paymentMethodNonce) === null || _c === void 0 ? void 0 : _c.nonce) !== null && _d !== void 0 ? _d : '',
+                        paymentDescription: receipt.dropInResult.paymentDescription,
+                        paymentMethodType: receipt.dropInResult.paymentMethodType,
+                    }
+                };
             }
             handleReceiptValidationResponse(receipt, response) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return;
+                    this.log.info("receipt validation response: " + JSON.stringify(response));
+                    // return;
                 });
             }
         }
@@ -1301,6 +1416,9 @@ var CdvPurchase;
         function formatAmount(amountMicros) {
             const amountCents = '' + (amountMicros / 10000);
             return (amountCents.slice(0, -2) || '0') + '.' + (amountCents.slice(-2, -1) || '0') + (amountCents.slice(-1) || '0');
+        }
+        function isBraintreeReceipt(receipt) {
+            return receipt.platform === CdvPurchase.Platform.BRAINTREE;
         }
     })(Braintree = CdvPurchase.Braintree || (CdvPurchase.Braintree = {}));
 })(CdvPurchase || (CdvPurchase = {}));
@@ -1376,7 +1494,9 @@ var CdvPurchase;
                  * This method is called by the native side when the SDK requests a Client Token.
                  */
                 getClientToken() {
+                    this.log.info("getClientToken()");
                     if (this.clientTokenProvider) {
+                        this.log.debug("clientTokenProvider set, calling.");
                         this.clientTokenProvider((value) => {
                             if (typeof value === 'string') {
                                 window.cordova.exec(null, null, PLUGIN_ID, "onClientTokenSuccess", [value]);
@@ -1387,6 +1507,7 @@ var CdvPurchase;
                         });
                     }
                     else {
+                        this.log.debug("clientTokenProvider not set, retrying later...");
                         setTimeout(() => this.getClientToken(), 1000); // retry after 1s (over and over)
                     }
                 }
@@ -1396,10 +1517,11 @@ var CdvPurchase;
                 }
                 launchDropIn(dropInRequest) {
                     return new Promise(resolve => {
-                        window.cordova.exec(function dropInSuccess(data) {
-                            // TODO: send the result back
-                            resolve(undefined);
-                        }, function dropInFailure(err) {
+                        window.cordova.exec((result) => {
+                            this.log.info("dropInSuccess: " + JSON.stringify(result));
+                            resolve(result);
+                        }, (err) => {
+                            this.log.info("dropIFailure: " + err);
                             const errCode = err.split("|")[0];
                             const errMessage = err.split("|").slice(1).join('');
                             if (errCode === "UserCanceledException") {
@@ -1528,10 +1650,10 @@ var CdvPurchase;
                     case GooglePlay.Bridge.PurchaseState.PENDING:
                         return CdvPurchase.TransactionState.INITIATED;
                     case GooglePlay.Bridge.PurchaseState.PURCHASED:
-                        if (isAcknowledged)
-                            return CdvPurchase.TransactionState.FINISHED;
-                        else
-                            return CdvPurchase.TransactionState.APPROVED;
+                        // if (isAcknowledged)
+                        // return TransactionState.FINISHED; (this prevents receipt validation...)
+                        // else
+                        return CdvPurchase.TransactionState.APPROVED;
                     case GooglePlay.Bridge.PurchaseState.UNSPECIFIED_STATE:
                         return CdvPurchase.TransactionState.UNKNOWN_STATE;
                 }

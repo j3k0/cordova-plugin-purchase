@@ -195,6 +195,80 @@ declare namespace CdvPurchase {
     }
 }
 declare namespace CdvPurchase {
+    /**
+     * Request for payment.
+     */
+    interface PaymentRequest {
+        /**
+         * Products being purchased.
+         *
+         * Used for your reference, does not have to be a product registered with the plugin.
+         */
+        productIds: string[];
+        /**
+         * Platform that will handle the payment request.
+         */
+        platform: Platform;
+        /**
+         * Amount to pay.
+         */
+        amountMicros: number;
+        /**
+         * Currency.
+         */
+        currency?: string;
+        /**
+         * Description for the payment.
+         */
+        description?: string;
+        /** The email used for verification. Optional. */
+        email?: string;
+        /**
+         * The mobile phone number used for verification. Optional.
+         *
+         * Only numbers. Remove dashes, parentheses and other characters.
+         */
+        mobilePhoneNumber?: string;
+        /** The billing address used for verification. Optional. */
+        billingAddress?: PostalAddress;
+    }
+    /**
+     * Postal address for payment requests.
+     */
+    interface PostalAddress {
+        /** Given name associated with the address. */
+        givenName?: string;
+        /** Surname associated with the address. */
+        surname?: string;
+        /** Line 1 of the Address (eg. number, street, etc) */
+        streetAddress1?: string;
+        /** Line 2 of the Address (eg. suite, apt #, etc.) */
+        streetAddress2?: string;
+        /** Line 3 of the Address (eg. suite, apt #, etc.) */
+        streetAddress3?: string;
+        /** City name */
+        locality?: string;
+        /** Either a two-letter state code (for the US), or an ISO-3166-2 country subdivision code of up to three letters. */
+        region?: string;
+        /**
+         * Zip code or equivalent is usually required for countries that have them.
+         *
+         * For a list of countries that do not have postal codes please refer to http://en.wikipedia.org/wiki/Postal_code
+         */
+        postalCode?: string;
+        /**
+         * The phone number associated with the address
+         *
+         * Note: Only numbers. Remove dashes, parentheses and other characters
+         */
+        phoneNumber?: string;
+        /**
+         * 2 letter country code
+         */
+        countryCode?: string;
+    }
+}
+declare namespace CdvPurchase {
     /** Product definition from a store */
     class Product {
         /** Platform this product is available from */
@@ -656,27 +730,6 @@ declare namespace CdvPurchase {
          */
         requestPayment(payment: PaymentRequest, additionalData?: AdditionalData): Promise<undefined | IError>;
     }
-    /**
-     * Request for payment.
-     */
-    interface PaymentRequest {
-        /**
-         * Platform that will handle the payment request.
-         */
-        platform: Platform;
-        /**
-         * Amount to pay.
-         */
-        amountMicros: number;
-        /**
-         * Currency.
-         */
-        currency?: string;
-        /**
-         * Description for the payment.
-         */
-        description?: string;
-    }
     interface AdditionalData {
         /** The application's user identifier, will be obfuscated with md5 to fill `accountId` if necessary */
         applicationUsername?: string;
@@ -709,7 +762,7 @@ declare namespace CdvPurchase {
     /** Store events listener */
     interface When {
         /**
-         * Register a function called when a product is updated.
+         * Register a function called when a product or receipt is updated.
          *
          * @deprecated - Use `productUpdated` or `receiptUpdated`.
          */
@@ -1118,29 +1171,94 @@ declare namespace CdvPurchase {
             tokenizationKey?: string;
             /** Function used to retrieve a Client Token (used if no tokenizationKey are provided). */
             clientTokenProvider?: ClientTokenProvider;
-            /** Provides a nonce for a payment request. */
-            nonceProvider: NonceProvider;
+            /**
+             * Create a transaction server side.
+             *
+             * @see https://developer.paypal.com/braintree/docs/start/hello-server
+             */
+            serverCheckout?: ServerCheckout;
         }
+        type ServerCheckout = (dropInRequest: DropIn.Request, dropInResult: DropIn.Result, callback: Callback<TransactionResultObject>) => void;
         type ClientTokenProvider = (callback: Callback<string | IError>) => void;
+        interface TransactionResultObject {
+            success: boolean;
+            transaction?: ({
+                status: "authorized";
+            } | {
+                status: "processor_declined";
+                /** e.g. paypal or credit card */
+                paymentInstrumentType: string;
+                /** e.g. "soft_declined" */
+                processorResponseType: "soft_declined" | "hard_declined" | "approved";
+                /** e.g. "2001" */
+                processorResponseCode: string;
+                /** e.g. "Insufficient Funds" */
+                processorResponseText: string;
+                /** e.g. "05 : NOT AUTHORISED" */
+                additionalProcessorResponse: string;
+            } | {
+                /** can void */
+                status: "submitted_for_settlement";
+            } | {
+                status: "settlement_declined";
+                /** e.g. "4001" */
+                processorSettlementResponseCode: string;
+                /** e.g. "Settlement Declined" */
+                processorSettlementResponseText: string;
+            } | {
+                status: "gateway_rejected";
+                /** e.g. "cvv" */
+                gatewayRejectionReason: string;
+            }) & {
+                /**
+                 * Each merchant account can only process transactions for a single currency.
+                 * Setting which merchant account to use will also determine which currency the transaction is processed with.
+                 *
+                 * e.g. "USD"
+                 */
+                currencyIsoCode: string;
+                /** Risk data on credit card verifications and on transactions with all compatible payment methods */
+                riskData: {
+                    /** e.g. "1SG23YHM4BT5" */
+                    id: string;
+                    /** e.g. "Decline" */
+                    decision: "Not Evaluated" | "Approve" | "Review" | "Decline";
+                    /** e.g. true */
+                    deviceDataCaptured: boolean;
+                    /** e.g. "Kount" */
+                    fraudServiceProvider: string;
+                    /** e.g.["reason1", "reason2"] */
+                    decisionReasons: string[];
+                    /** e.g. 42 */
+                    riskScore: number;
+                };
+            };
+            errors?: {}[];
+        }
         type Nonce = {
             type: PaymentMethod.THREE_D_SECURE;
             value: string;
         };
-        type NonceProvider = (type: PaymentMethod, callback: Callback<Nonce | IError>) => void;
         enum PaymentMethod {
             THREE_D_SECURE = "THREE_D_SECURE"
         }
-        /** Parameters for a payment with Braintree */
-        type AdditionalData = DropIn.Request;
+        class BraintreeReceipt extends Receipt {
+            dropInResult: DropIn.Result;
+            paymentRequest: PaymentRequest;
+            constructor(paymentRequest: PaymentRequest, dropInResult: DropIn.Result);
+            refresh(paymentRequest: PaymentRequest, dropInResult: DropIn.Result): void;
+        }
         class Adapter implements CdvPurchase.Adapter {
             id: Platform;
             name: string;
             products: Product[];
-            receipts: Receipt[];
+            _receipts: BraintreeReceipt[];
+            get receipts(): Receipt[];
+            private context;
             log: Logger;
             androidBridge?: AndroidBridge.Bridge;
             options: AdapterOptions;
-            constructor(log: Logger, options: AdapterOptions);
+            constructor(context: Internal.AdapterContext, options: AdapterOptions);
             /**
              * Initialize the Braintree Adapter.
              */
@@ -1148,15 +1266,26 @@ declare namespace CdvPurchase {
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
             order(offer: Offer): Promise<undefined | IError>;
             finish(transaction: Transaction): Promise<undefined | IError>;
-            getNonce(paymentMethod: PaymentMethod): Promise<Nonce | IError>;
-            requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
-            receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
+            requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
+            receiptValidationBody(receipt: BraintreeReceipt): Validator.Request.Body | undefined;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
         }
     }
 }
 declare namespace CdvPurchase {
     namespace Braintree {
+        /** Parameters for a payment with Braintree */
+        /**
+         * Data for a Braintree payment request.
+         */
+        interface AdditionalData {
+            /**
+             * Specify the full DropIn Request parameters.
+             *
+             * When specified, all fields from PaymentRequest will be ignored.
+             */
+            dropInRequest?: DropIn.Request;
+        }
     }
 }
 declare namespace CdvPurchase {
@@ -1191,7 +1320,7 @@ declare namespace CdvPurchase {
                 private getClientToken;
                 /** Returns true on Android, the only platform supported by this Braintree bridge */
                 static isSupported(): boolean;
-                launchDropIn(dropInRequest: DropIn.Request): Promise<undefined | IError>;
+                launchDropIn(dropInRequest: DropIn.Request): Promise<DropIn.Result | IError>;
             }
         }
     }
@@ -2774,7 +2903,7 @@ declare namespace CdvPurchase {
                 /** Metadata about the user's device */
                 device?: CdvPurchase.Validator.DeviceInfo;
             }
-            type ApiValidatorBodyTransaction = ApiValidatorBodyTransactionApple | ApiValidatorBodyTransactionGoogle | ApiValidatorBodyTransactionWindows;
+            type ApiValidatorBodyTransaction = ApiValidatorBodyTransactionApple | ApiValidatorBodyTransactionGoogle | ApiValidatorBodyTransactionWindows | ApiValidatorBodyTransactionBraintree;
             /** Transaction type from an Apple powered device  */
             interface ApiValidatorBodyTransactionApple {
                 /** Value `"ios-appstore"` */
@@ -2841,14 +2970,20 @@ declare namespace CdvPurchase {
                  */
                 skuId: string;
             }
-            /** Transaction type from Stripe
-             *
-             * Currently unsupported. */
-            interface ApiValidatorBodyTransactionStripe {
-                /** Value `"stripe-charge"` */
-                type: 'stripe-charge';
-                /** Identifier of the Stripe charge. @required */
-                id?: string;
+            /** Transaction type from Braintree */
+            interface ApiValidatorBodyTransactionBraintree {
+                /** Value `"braintree"` */
+                type: Platform.BRAINTREE;
+                /** No need for an id, just set to a non-empty string */
+                id: string;
+                /** Payment method nonce */
+                paymentMethodNonce: string;
+                /** Type of payment method (only used for information) */
+                paymentMethodType?: string;
+                /** Description of the payment method (only used for information) */
+                paymentDescription?: string;
+                /** Data collected on the device */
+                deviceData: any;
             }
             /** Describe a discount */
             interface DiscountDefinition {
