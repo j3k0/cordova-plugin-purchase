@@ -29,7 +29,15 @@ namespace CdvPurchase
 
         /// ### `store.log.error(message)`
         /// Logs an error message, only if `store.verbosity` >= store.ERROR
-        error(o: any) { log(this.store.verbosity, LogLevel.ERROR, this.prefix, o); }
+        error(o: any) {
+            log(this.store.verbosity, LogLevel.ERROR, this.prefix, o);
+            // show the stack trace
+            try {
+                throw new Error(toString(o));
+            } catch (e) {
+                log(this.store.verbosity, LogLevel.ERROR, this.prefix, (e as Error).stack);
+            }
+        }
 
         /// ### `store.log.warn(message)`
         /// Logs a warning message, only if `store.verbosity` >= store.WARNING
@@ -68,6 +76,12 @@ namespace CdvPurchase
     }
 
     const LOG_LEVEL_STRING = ["QUIET", "ERROR", "WARNING", "INFO", "DEBUG"];
+
+    function toString(o: any) {
+        if (typeof o !== 'string')
+            o = JSON.stringify(o);
+        return o;
+    }
 
     function log(verbosity: boolean | LogLevel, level: LogLevel, prefix: string, o: any) {
         var maxLevel = verbosity === true ? 1 : verbosity;
