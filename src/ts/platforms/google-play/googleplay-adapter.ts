@@ -20,10 +20,10 @@ namespace CdvPurchase {
                     case Bridge.PurchaseState.PENDING:
                         return TransactionState.INITIATED;
                     case Bridge.PurchaseState.PURCHASED:
-                        if (isAcknowledged)
-                            return TransactionState.FINISHED;
-                        else
-                            return TransactionState.APPROVED;
+                        // if (isAcknowledged)
+                        // return TransactionState.FINISHED; (this prevents receipt validation...)
+                        // else
+                        return TransactionState.APPROVED;
                     case Bridge.PurchaseState.UNSPECIFIED_STATE:
                         return TransactionState.UNKNOWN_STATE;
                 }

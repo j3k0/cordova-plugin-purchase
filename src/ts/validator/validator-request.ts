@@ -94,6 +94,7 @@ namespace CdvPurchase {
                 | ApiValidatorBodyTransactionApple
                 | ApiValidatorBodyTransactionGoogle
                 | ApiValidatorBodyTransactionWindows
+                | ApiValidatorBodyTransactionBraintree
             //  | ApiValidatorBodyTransactionStripe;
                 ;
 
@@ -183,17 +184,39 @@ namespace CdvPurchase {
                 skuId: string;
             }
 
-            /** Transaction type from Stripe
+            /** Transaction type from Braintree */
+            export interface ApiValidatorBodyTransactionBraintree {
+
+                /** Value `"braintree"` */
+                type: Platform.BRAINTREE;
+
+                /** No need for an id, just set to a non-empty string */
+                id: string;
+
+                /** Payment method nonce */
+                paymentMethodNonce: string;
+
+                /** Type of payment method (only used for information) */
+                paymentMethodType?: string;
+
+                /** Description of the payment method (only used for information) */
+                paymentDescription?: string;
+
+                /** Data collected on the device */
+                deviceData: any;
+            }
+
+            /* Transaction type from Stripe
              *
-             * Currently unsupported. */
+             * Currently unsupported.
             export interface ApiValidatorBodyTransactionStripe {
 
-                /** Value `"stripe-charge"` */
+                /** Value `"stripe-charge"` *
                 type: 'stripe-charge';
 
-                /** Identifier of the Stripe charge. @required */
+                /** Identifier of the Stripe charge. @required *
                 id?: string;
-            }
+            }*/
 
             /** Describe a discount */
             export interface DiscountDefinition {

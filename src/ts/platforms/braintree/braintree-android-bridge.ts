@@ -90,7 +90,9 @@ namespace CdvPurchase {
                  * This method is called by the native side when the SDK requests a Client Token.
                  */
                 private getClientToken() {
+                    this.log.info("getClientToken()");
                     if (this.clientTokenProvider) {
+                        this.log.debug("clientTokenProvider set, calling.");
                         this.clientTokenProvider((value: string | IError) => {
                             if (typeof value === 'string') {
                                 window.cordova.exec(null, null, PLUGIN_ID, "onClientTokenSuccess", [value]);
@@ -101,6 +103,7 @@ namespace CdvPurchase {
                         });
                     }
                     else {
+                        this.log.debug("clientTokenProvider not set, retrying later...");
                         setTimeout(() => this.getClientToken(), 1000); // retry after 1s (over and over)
                     }
                 }
@@ -110,14 +113,15 @@ namespace CdvPurchase {
                     return window.cordova.platformId === 'android';
                 }
 
-                launchDropIn(dropInRequest: DropIn.Request): Promise<undefined | IError> {
+                launchDropIn(dropInRequest: DropIn.Request): Promise<DropIn.Result | IError> {
                     return new Promise(resolve => {
                         window.cordova.exec(
-                            function dropInSuccess(data: DropIn.Result) {
-                                // TODO: send the result back
-                                resolve(undefined);
+                            (result: DropIn.Result) => { // dropInSuccess
+                                this.log.info("dropInSuccess: " + JSON.stringify(result));
+                                resolve(result);
                             },
-                            function dropInFailure(err: string) {
+                            (err: string) => { // dropInFailure
+                                this.log.info("dropIFailure: " + err);
                                 const errCode = err.split("|")[0];
                                 const errMessage = err.split("|").slice(1).join('');
                                 if (errCode === "UserCanceledException") {

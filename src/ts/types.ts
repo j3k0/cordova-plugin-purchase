@@ -149,30 +149,6 @@
             requestPayment(payment: PaymentRequest, additionalData?: AdditionalData): Promise<undefined | IError>;
         }
 
-        /**
-         * Request for payment.
-         */
-        export interface PaymentRequest {
-            /**
-             * Platform that will handle the payment request.
-             */
-            platform: Platform;
-
-            /**
-             * Amount to pay.
-             */
-            amountMicros: number;
-
-            /**
-             * Currency.
-             */
-            currency?: string;
-
-            /**
-             * Description for the payment.
-             */
-            description?: string;
-        }
 
         export interface AdditionalData {
 
@@ -225,7 +201,7 @@
     export interface When {
 
         /**
-         * Register a function called when a product is updated.
+         * Register a function called when a product or receipt is updated.
          *
          * @deprecated - Use `productUpdated` or `receiptUpdated`.
          */

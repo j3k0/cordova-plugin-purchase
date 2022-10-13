@@ -52,7 +52,7 @@ namespace CdvPurchase
                             if (!po.options) {
                                 log.error('Options missing for Braintree initialization. Use {platform: Platform.BRAINTREE, options: {...}} in your call to store.initialize');
                             }
-                            return this.list.push(new Braintree.Adapter(context.log, po.options));
+                            return this.list.push(new Braintree.Adapter(context, po.options));
                         case Platform.TEST:
                         default:
                             return this.list.push(new Test.Adapter());
