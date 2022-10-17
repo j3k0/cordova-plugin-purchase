@@ -1,6 +1,9 @@
 namespace CdvPurchase {
     export namespace Braintree {
 
+        /** The Braintree customer identifier. Set it to allow reusing of payment methods. */
+        export let customerId: string | undefined;
+
         export interface AdapterOptions {
             
             /** Authorization key, as a direct string. */
@@ -12,22 +15,31 @@ namespace CdvPurchase {
             // /** Provides a nonce for a payment request. */
             // nonceProvider: NonceProvider;
 
-            /**
+            /*
              * Create a transaction server side.
              * 
              * @see https://developer.paypal.com/braintree/docs/start/hello-server
+             *
+             * serverCheckout?: ServerCheckout;
              */
-            serverCheckout?: ServerCheckout;
         }
-
-        export type ServerCheckout = (dropInRequest: DropIn.Request, dropInResult: DropIn.Result, callback: Callback<TransactionResultObject>) => void;
+        // export type ServerCheckout = (dropInRequest: DropIn.Request, dropInResult: DropIn.Result, callback: Callback<TransactionResultObject>) => void;
 
         export type ClientTokenProvider = (callback: Callback<string | IError>) => void;
 
-        export interface TransactionResultObject {
+        export interface TransactionObject {
             success: boolean;
             transaction?: ({
-                status: "authorized";
+                status: | 'authorization_expired'
+                        | 'authorized'
+                        | 'authorizing'
+                        | 'settlement_confirmed'
+                        | 'settlement_pending'
+                        | 'failed'
+                        | 'settled'
+                        | 'settling'
+                        | 'submitted_for_settlement'
+                        | 'voided';
             } | {
                 status: "processor_declined";
                 /** e.g. paypal or credit card */
@@ -40,9 +52,6 @@ namespace CdvPurchase {
                 processorResponseText: string;
                 /** e.g. "05 : NOT AUTHORISED" */
                 additionalProcessorResponse: string;
-            } | {
-                /** can void */
-                status: "submitted_for_settlement";
             } | {
                 status: "settlement_declined";
                 /** e.g. "4001" */
@@ -77,20 +86,63 @@ namespace CdvPurchase {
                     /** e.g. 42 */
                     riskScore: number;
                 }
+
+                customer: {
+                    id: string;
+                    company?: string | undefined;
+                    customFields?: any;
+                    email?: string | undefined;
+                    fax?: string | undefined;
+                    firstName?: string | undefined;
+                    lastName?: string | undefined;
+                    phone?: string | undefined;
+                    website?: string | undefined;
+                }
+
+                creditCard?: {
+                    bin: string;
+                    cardholderName?: string | undefined;
+                    cardType: string;
+                    commercial: Commercial;
+                    countryOfIssuance: string;
+                    customerLocation: CustomerLocation;
+                    debit: string;
+                    durbinRegulated: DurbinRegulated;
+                    expirationDate?: string | undefined;
+                    expirationMonth?: string | undefined;
+                    expirationYear?: string | undefined;
+                    healthcare: HealthCare;
+                    imageUrl?: string | undefined;
+                    issuingBank: string;
+                    last4: string;
+                    maskedNumber?: string | undefined;
+                    payroll: Payroll;
+                    prepaid: Prepaid;
+                    productId: string;
+                    token: string;
+                    uniqueNumberIdentifier: string;
+                }
             }
             errors?: {
             }[];
         }
 
-        export type Nonce = {
-            type: PaymentMethod.THREE_D_SECURE;
-            value: string;
-        };
-        // export type NonceProvider = (type: PaymentMethod, callback: Callback<Nonce | IError>) => void;
+        export type Commercial = 'Yes' | 'No' | 'Unknown';
+        export type CustomerLocation = 'US' | 'International';
+        export type Debit = 'Yes' | 'No' | 'Unknown';
+        export type DurbinRegulated = 'Yes' | 'No' | 'Unknown';
+        export type HealthCare = 'Yes' | 'No' | 'Unknown';
+        export type Payroll = 'Yes' | 'No' | 'Unknown';
+        export type Prepaid = 'Yes' | 'No' | 'Unknown';
 
-        export enum PaymentMethod {
-            THREE_D_SECURE = 'THREE_D_SECURE',
-        }
+        // export type Nonce = {
+        //     type: PaymentMethod.THREE_D_SECURE;
+        //     value: string;
+        // };
+        // export type NonceProvider = (type: PaymentMethod, callback: Callback<Nonce | IError>) => void;
+        // export enum PaymentMethod {
+        //     THREE_D_SECURE = 'THREE_D_SECURE',
+        // }
 
         export class BraintreeReceipt extends Receipt {
 
@@ -143,6 +195,7 @@ namespace CdvPurchase {
             private context: Internal.AdapterContext;
 
             log: Logger;
+            iosBridge?: IosBridge.Bridge;
             androidBridge?: AndroidBridge.Bridge;
             options: AdapterOptions;
 
@@ -158,7 +211,22 @@ namespace CdvPurchase {
             initialize(): Promise<IError | undefined> {
                 return new Promise(resolve => {
                     this.log.info("initialize()");
-                    if (AndroidBridge.Bridge.isSupported() && !this.androidBridge) {
+                    if (IosBridge.Bridge.isSupported()) {
+                        this.log.info("instantiating ios bridge...");
+                        this.iosBridge = new IosBridge.Bridge(this.log, (callback) => {
+                            if (this.options.tokenizationKey)
+                                callback(this.options.tokenizationKey);
+                            else if (this.options.clientTokenProvider)
+                                this.options.clientTokenProvider(callback);
+                            else
+                                callback({
+                                    code: ErrorCode.CLIENT_INVALID,
+                                    message: 'Braintree iOS Bridge requires a clientTokenProvider or tokenizationKey',
+                                })
+                        });
+                        this.iosBridge.initialize(this.context, resolve);
+                    }
+                    else if (AndroidBridge.Bridge.isSupported() && !this.androidBridge) {
                         this.log.info("instantiating android bridge...");
                         this.androidBridge = new AndroidBridge.Bridge(this.log);
                         this.log.info("calling android bridge -> initialize...");
@@ -177,21 +245,21 @@ namespace CdvPurchase {
             }
 
             async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
-                return products.map(p => ({ code: ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' } as IError));
+                return products.map(p => ({ code: ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'N/A' } as IError));
             }
 
             async order(offer: Offer): Promise<undefined | IError> {
                 return {
                     code: ErrorCode.UNKNOWN,
-                    message: 'TODO: Not implemented'
+                    message: 'N/A: Not implemented with Braintree'
                 } as IError;
             }
 
             async finish(transaction: Transaction): Promise<undefined | IError> {
-                return {
+                return; /* {
                     code: ErrorCode.UNKNOWN,
-                    message: 'TODO: Not implemented'
-                } as IError;
+                    message: 'N/A: Not implemented with Braintree'
+                } as IError; */
             }
 
             // async getNonce(paymentMethod: PaymentMethod): Promise<Nonce | IError> {
@@ -208,12 +276,21 @@ namespace CdvPurchase {
             //     });
             // }
 
+            private async launchDropIn(dropInRequest: DropIn.Request): Promise<DropIn.Result | IError> {
+                if (this.androidBridge) return this.androidBridge.launchDropIn(dropInRequest);
+                if (this.iosBridge) return this.iosBridge.launchDropIn(dropInRequest);
+                return {
+                    code: ErrorCode.PURCHASE,
+                    message: 'Braintree is not available',
+                }
+            }
+
             async requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
                 this.log.info("requestPayment()" + JSON.stringify(paymentRequest));
                 let dropInResult: DropIn.Result;
                 if (additionalData?.braintree?.dropInRequest) {
                     // User provided a full DropInRequest, just passing it through
-                    const response = await this.androidBridge?.launchDropIn(additionalData.braintree.dropInRequest);
+                    const response = await this.launchDropIn(additionalData.braintree.dropInRequest);
                     if (!response || (('code' in response) && ('message' in response))) {
                         return response;
                     }
@@ -259,7 +336,7 @@ namespace CdvPurchase {
                 */
                 else {
                     // No other payment method as the moment...
-                    const response = await this.androidBridge?.launchDropIn({});
+                    const response = await this.launchDropIn({});
                     if (!response || (('code' in response) && ('message' in response))) {
                         // Failed
                         this.log.warn("launchDropIn failed: " + JSON.stringify(response));
@@ -313,14 +390,22 @@ namespace CdvPurchase {
 
             async handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void> {
                 this.log.info("receipt validation response: " + JSON.stringify(response));
-                // return;
+                if (response?.data && ('transaction' in response.data)) {
+                    if (response.data.transaction.type === 'braintree') {
+                        const lCustomerId = response.data.transaction.data.transaction?.customer.id;
+                        if (lCustomerId && !customerId) {
+                            this.log.info("customerId updated: " + lCustomerId);
+                            customerId = lCustomerId;
+                        }
+                    }
+                }
             }
         }
 
-        function formatAmount(amountMicros: number): string {
-            const amountCents = '' + (amountMicros / 10000);
-            return (amountCents.slice(0, -2) || '0') + '.' + (amountCents.slice(-2, -1) || '0') + (amountCents.slice(-1) || '0');
-        }
+        // function formatAmount(amountMicros: number): string {
+        //     const amountCents = '' + (amountMicros / 10000);
+        //     return (amountCents.slice(0, -2) || '0') + '.' + (amountCents.slice(-2, -1) || '0') + (amountCents.slice(-1) || '0');
+        // }
 
         function isBraintreeReceipt(receipt: Receipt): receipt is BraintreeReceipt {
             return receipt.platform === Platform.BRAINTREE;

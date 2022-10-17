@@ -121,7 +121,7 @@ namespace CdvPurchase {
                                 resolve(result);
                             },
                             (err: string) => { // dropInFailure
-                                this.log.info("dropIFailure: " + err);
+                                this.log.info("dropInFailure: " + err);
                                 const errCode = err.split("|")[0];
                                 const errMessage = err.split("|").slice(1).join('');
                                 if (errCode === "UserCanceledException") {
@@ -322,27 +322,27 @@ namespace CdvPurchase {
             }
 
 
-            /**
-             * Options for the setupApplePay method.
-             */
-            interface ApplePayOptions {
-                /**
-                 * Apple Merchant ID can be obtained from Apple.
-                 */
-                merchantId: string;
+            // /**
+            //  * Options for the setupApplePay method.
+            //  */
+            // interface ApplePayOptions {
+            //     /**
+            //      * Apple Merchant ID can be obtained from Apple.
+            //      */
+            //     merchantId: string;
 
-                /**
-                 * 3 letter currency code ISO 4217
-                 */
-                currency: string;
+            //     /**
+            //      * 3 letter currency code ISO 4217
+            //      */
+            //     currency: string;
 
-                /**
-                 * 2 letter country code ISO 3166-1
-                 */
-                country: string;
+            //     /**
+            //      * 2 letter country code ISO 3166-1
+            //      */
+            //     country: string;
 
-                cardTypes: string[];
-            }
+            //     cardTypes: string[];
+            // }
 
             /**
              * Options for the presentDropInPaymentUI method.
@@ -376,99 +376,99 @@ namespace CdvPurchase {
                 requiredShippingContactFields: string[];
             }
 
-            /**
-             * Successful callback result for the presentDropInPaymentUI method.
-             */
-            interface PaymentUIResult {
+            // /**
+            //  * Successful callback result for the presentDropInPaymentUI method.
+            //  */
+            // interface PaymentUIResult {
 
-                /**
-                 * Indicates if the user used the cancel button to close the dialog without
-                 * completing the payment.
-                 */
-                userCancelled: boolean;
+            //     /**
+            //      * Indicates if the user used the cancel button to close the dialog without
+            //      * completing the payment.
+            //      */
+            //     userCancelled: boolean;
 
-                /**
-                 * The nonce for the payment transaction (if a payment was completed).
-                 */
-                nonce: string;
+            //     /**
+            //      * The nonce for the payment transaction (if a payment was completed).
+            //      */
+            //     nonce: string;
 
-                /**
-                 * The payment type (if a payment was completed).
-                 */
-                type: string;
+            //     /**
+            //      * The payment type (if a payment was completed).
+            //      */
+            //     type: string;
 
-                /**
-                 * A description of the payment method (if a payment was completed).
-                 */
-                localizedDescription: string;
+            //     /**
+            //      * A description of the payment method (if a payment was completed).
+            //      */
+            //     localizedDescription: string;
 
-                /**
-                 * Information about the credit card used to complete a payment (if a credit card was used).
-                 */
-                card: {
+            //     /**
+            //      * Information about the credit card used to complete a payment (if a credit card was used).
+            //      */
+            //     card: {
 
-                    /**
-                     * The last two digits of the credit card used.
-                     */
-                    lastTwo: string;
+            //         /**
+            //          * The last two digits of the credit card used.
+            //          */
+            //         lastTwo: string;
 
-                    /**
-                     * An enumerated value used to indicate the type of credit card used.
-                     *
-                     * Can be one of the following values:
-                     *
-                     * BTCardNetworkUnknown
-                     * BTCardNetworkAMEX
-                     * BTCardNetworkDinersClub
-                     * BTCardNetworkDiscover
-                     * BTCardNetworkMasterCard
-                     * BTCardNetworkVisa
-                     * BTCardNetworkJCB
-                     * BTCardNetworkLaser
-                     * BTCardNetworkMaestro
-                     * BTCardNetworkUnionPay
-                     * BTCardNetworkSolo
-                     * BTCardNetworkSwitch
-                     * BTCardNetworkUKMaestro
-                     */
-                    network: string;
-                };
+            //         /**
+            //          * An enumerated value used to indicate the type of credit card used.
+            //          *
+            //          * Can be one of the following values:
+            //          *
+            //          * BTCardNetworkUnknown
+            //          * BTCardNetworkAMEX
+            //          * BTCardNetworkDinersClub
+            //          * BTCardNetworkDiscover
+            //          * BTCardNetworkMasterCard
+            //          * BTCardNetworkVisa
+            //          * BTCardNetworkJCB
+            //          * BTCardNetworkLaser
+            //          * BTCardNetworkMaestro
+            //          * BTCardNetworkUnionPay
+            //          * BTCardNetworkSolo
+            //          * BTCardNetworkSwitch
+            //          * BTCardNetworkUKMaestro
+            //          */
+            //         network: string;
+            //     };
 
-                /**
-                 * Information about the PayPal account used to complete a payment (if a PayPal account was used).
-                 */
-                payPalAccount: {
-                    email: string;
-                    firstName: string;
-                    lastName: string;
-                    phone: string;
-                    billingAddress: string;
-                    shippingAddress: string;
-                    clientMetadataId: string;
-                    payerId: string;
-                };
+            //     /**
+            //      * Information about the PayPal account used to complete a payment (if a PayPal account was used).
+            //      */
+            //     payPalAccount: {
+            //         email: string;
+            //         firstName: string;
+            //         lastName: string;
+            //         phone: string;
+            //         billingAddress: string;
+            //         shippingAddress: string;
+            //         clientMetadataId: string;
+            //         payerId: string;
+            //     };
 
-                /**
-                 * Information about the Apple Pay card used to complete a payment (if Apple Pay was used).
-                 */
-                applePaycard: {
-                };
+            //     /**
+            //      * Information about the Apple Pay card used to complete a payment (if Apple Pay was used).
+            //      */
+            //     applePaycard: {
+            //     };
 
-                /**
-                 * Information about 3D Secure card used to complete a payment (if 3D Secure was used).
-                 */
-                threeDSecureInfo: {
-                    liabilityShifted: boolean;
-                    liabilityShiftPossible: boolean;
-                };
+            //     /**
+            //      * Information about 3D Secure card used to complete a payment (if 3D Secure was used).
+            //      */
+            //     threeDSecureInfo: {
+            //         liabilityShifted: boolean;
+            //         liabilityShiftPossible: boolean;
+            //     };
 
-                /**
-                 * Information about Venmo account used to complete a payment (if a Venmo account was used).
-                 */
-                venmoAccount: {
-                    username: string;
-                };
-            }
+            //     /**
+            //      * Information about Venmo account used to complete a payment (if a Venmo account was used).
+            //      */
+            //     venmoAccount: {
+            //         username: string;
+            //     };
+            // }
 
         }
     }

@@ -33,6 +33,7 @@ namespace CdvPurchase {
             }
 
             export type NativeTransaction =
+                | ({ type: 'braintree'; data: Braintree.TransactionObject})
                 | ({ type: 'windows-store-transaction' } & WindowsStore.WindowsSubscription)
                 | ({ type: 'ios-appstore'; } & (AppleAppStore.VerifyReceipt.AppleTransaction | AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt))
                 | ({ type: 'android-playstore'; } & GooglePlay.PublisherAPI.GooglePurchase)
