@@ -6,6 +6,9 @@
         /** An error triggered by the In-App Purchase plugin */
         export interface IError {
 
+            /** Indicates that the returned object is an error */
+            isError: true;
+
             /** See store.ERR_* for the available codes.
              *
              * https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#error-codes */

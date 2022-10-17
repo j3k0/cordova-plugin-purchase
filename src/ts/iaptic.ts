@@ -11,6 +11,9 @@ namespace CdvPurchase {
     apiKey: string;
   }
 
+  /**
+   * Helper to integrate with https://www.iaptic.com
+   */
   export class Iaptic {
 
     private store: CdvPurchase.Store;
@@ -42,10 +45,7 @@ namespace CdvPurchase {
           },
           error: err => {
             this.log.info('clientTokenProvider error: ' + JSON.stringify(err));
-            callback({
-              code: err as CdvPurchase.ErrorCode,
-              message: 'ERROR ' + err,
-            })
+            callback(storeError(err as CdvPurchase.ErrorCode, 'ERROR ' + err));
           },
         })
       }

@@ -60,10 +60,7 @@ namespace CdvPurchase {
             }
 
             async requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
-                return {
-                    code: ErrorCode.UNKNOWN,
-                    message: 'requestPayment not supported',
-                };
+                return storeError(ErrorCode.UNKNOWN, 'requestPayment not supported');
             }
         }
     }

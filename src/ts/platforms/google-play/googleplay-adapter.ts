@@ -140,10 +140,7 @@ namespace CdvPurchase {
 
                     const iabError = (err: string) => {
                         this.initialized = false;
-                        this.context.error({
-                            code: ErrorCode.SETUP,
-                            message: "Init failed - " + err
-                        });
+                        this.context.error(storeError(ErrorCode.SETUP, "Init failed - " + err));
                         this.retry.retry(() => this.initialize());
                     }
 
@@ -200,10 +197,7 @@ namespace CdvPurchase {
                         this.bridge.getAvailableProducts(inAppSkus, subsSkus, iabLoaded, (err: string) => {
                             // failed to load products, retry later.
                             this.retry.retry(go);
-                            this.context.error({
-                                code: ErrorCode.LOAD,
-                                message: 'Loading product info failed - ' + err + ' - retrying later...'
-                            });
+                            this.context.error(storeError(ErrorCode.LOAD, 'Loading product info failed - ' + err + ' - retrying later...'))
                         });
                     }
 
@@ -220,18 +214,18 @@ namespace CdvPurchase {
 
                     const firstProduct = transaction.products[0];
                     if (!firstProduct)
-                        return resolve({ code: ErrorCode.FINISH, message: 'Cannot finish a transaction with no product' });
+                        return resolve(storeError(ErrorCode.FINISH, 'Cannot finish a transaction with no product'));
 
                     const product = this._products.getProduct(firstProduct.productId);
                     if (!product)
-                        return resolve({ code: ErrorCode.FINISH, message: 'Cannot finish transaction, unknown product ' + firstProduct.productId });
+                        return resolve(storeError(ErrorCode.FINISH, 'Cannot finish transaction, unknown product ' + firstProduct.productId));
 
                     const receipt = this._receipts.find(r => r.hasTransaction(transaction));
                     if (!receipt)
-                        return resolve({ code: ErrorCode.FINISH, message: 'Cannot finish transaction, linked receipt not found.' });
+                        return resolve(storeError(ErrorCode.FINISH, 'Cannot finish transaction, linked receipt not found.'));
 
                     if (!receipt.purchaseToken)
-                        return resolve({ code: ErrorCode.FINISH, message: 'Cannot finish transaction, linked receipt contains no purchaseToken.' });
+                        return resolve(storeError(ErrorCode.FINISH, 'Cannot finish transaction, linked receipt contains no purchaseToken.'));
 
                     if (product.type === ProductType.NON_RENEWING_SUBSCRIPTION || product.type === ProductType.CONSUMABLE) {
                         if (!transaction.isConsumed)
@@ -287,7 +281,7 @@ namespace CdvPurchase {
                     }
                     const failure = (message: string, code?: number) => {
                         this.log.warn('getPurchases failed: ' + message + ' (' + code + ')');
-                        setTimeout(() => resolve({ code: code || ErrorCode.UNKNOWN, message }), 0);
+                        setTimeout(() => resolve(storeError(code || ErrorCode.UNKNOWN, message)), 0);
                     }
                     this.bridge.getPurchases(success, failure);
                 });
@@ -300,7 +294,7 @@ namespace CdvPurchase {
                     const buySuccess = () => resolve(undefined);
                     const buyFailed = (message: string, code?: ErrorCode): void => {
                         this.log.warn('Order failed: ' + JSON.stringify({message, code}));
-                        resolve({ code: code ?? ErrorCode.UNKNOWN, message });
+                        resolve(storeError(code ?? ErrorCode.UNKNOWN, message));
                     };
                     if (offer.product.type === ProductType.PAID_SUBSCRIPTION) {
                         const idAndToken = offer.id; // offerId contains the productId and token (format productId@offerToken)
@@ -358,10 +352,7 @@ namespace CdvPurchase {
             }
 
             async requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
-                return {
-                    code: ErrorCode.UNKNOWN,
-                    message: 'requestPayment not supported',
-                };
+                return storeError(ErrorCode.UNKNOWN, 'requestPayment not supported');
             }
 
         }

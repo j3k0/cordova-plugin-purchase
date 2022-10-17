@@ -67,4 +67,8 @@ namespace CdvPurchase {
         /** Error: Parameters are missing in a payment discount. */
         MISSING_OFFER_PARAMS = ERROR_CODES_BASE + 32,
     }
+
+    export function storeError(code: ErrorCode, message: string): IError {
+        return { isError: true, code, message };
+    }
 }

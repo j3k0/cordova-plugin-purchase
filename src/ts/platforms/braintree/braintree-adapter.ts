@@ -219,10 +219,7 @@ namespace CdvPurchase {
                             else if (this.options.clientTokenProvider)
                                 this.options.clientTokenProvider(callback);
                             else
-                                callback({
-                                    code: ErrorCode.CLIENT_INVALID,
-                                    message: 'Braintree iOS Bridge requires a clientTokenProvider or tokenizationKey',
-                                })
+                                callback(storeError(ErrorCode.CLIENT_INVALID, 'Braintree iOS Bridge requires a clientTokenProvider or tokenizationKey'));
                         });
                         this.iosBridge.initialize(this.context, resolve);
                     }
@@ -279,10 +276,7 @@ namespace CdvPurchase {
             private async launchDropIn(dropInRequest: DropIn.Request): Promise<DropIn.Result | IError> {
                 if (this.androidBridge) return this.androidBridge.launchDropIn(dropInRequest);
                 if (this.iosBridge) return this.iosBridge.launchDropIn(dropInRequest);
-                return {
-                    code: ErrorCode.PURCHASE,
-                    message: 'Braintree is not available',
-                }
+                return storeError(ErrorCode.PURCHASE, 'Braintree is not available');
             }
 
             async requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
@@ -349,10 +343,7 @@ namespace CdvPurchase {
 
                 this.log.info("launchDropIn success: " + JSON.stringify({ paymentRequest, dropInResult }));
                 if (!dropInResult.paymentMethodNonce?.nonce) {
-                    return {
-                        code: ErrorCode.BAD_RESPONSE,
-                        message: 'launchDropIn returned no paymentMethodNonce',
-                    };
+                    return storeError(ErrorCode.BAD_RESPONSE, 'launchDropIn returned no paymentMethodNonce');
                 }
 
                 let receipt = this._receipts.find(r => r.dropInResult.paymentMethodNonce?.nonce === dropInResult.paymentMethodNonce?.nonce);

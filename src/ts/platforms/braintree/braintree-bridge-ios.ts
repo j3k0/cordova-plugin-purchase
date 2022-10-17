@@ -35,16 +35,10 @@ namespace CdvPurchase {
                 this.log.info("dropInFailure: " + errorString);
                 const [errCode, errMessage] = errorString.split('|');
                 if (errCode === "UserCanceledException") {
-                    resolve({
-                        code: ErrorCode.PAYMENT_CANCELLED,
-                        message: errMessage,
-                    });
+                    resolve(storeError(ErrorCode.PAYMENT_CANCELLED, errMessage));
                 }
                 else {
-                    resolve({
-                        code: ErrorCode.UNKNOWN,
-                        message: 'ERROR ' + errCode + ': ' + errMessage,
-                    });
+                    resolve(storeError(ErrorCode.UNKNOWN, 'ERROR ' + errCode + ': ' + errMessage));
                 }
               }
               this.clientTokenProvider((clientToken) => {
