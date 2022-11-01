@@ -2,8 +2,6 @@
 
 > In-App Purchases for Cordova
 
-[![Build Status](https://travis-ci.org/j3k0/cordova-plugin-purchase.svg)](https://travis-ci.org/j3k0/cordova-plugin-purchase)
-
 ---
 
 Need professional help and support? [Contact Me](mailto:hoelt@fovea.cc).
@@ -22,21 +20,20 @@ for new features or priority bug fixes. Thank you!
 
 ## Summary
 
-This plugin allows **In-App Purchases** to be made from **Cordova, PhoneGap and Ionic** applications.
+This plugin allows **In-App Purchases** to be made from **Cordova, Ionic and Capacitor** applications.
 
 It lets you handle in-app purchases on many platforms with a single codebase.
 
 ### Features
 
-|  | ios | android | win-8 | win-10/uwp | mac |
+|  | AppStore (iOS / macOS) | Google Play | Windows 8 | Windows 10 / UWP | Braintree (iOS / Android) |
 |--|--|--|--|--|--|
 | consumables | ✅ | ✅ | ✅ | ✅ | ✅ |
-| non consumables | ✅ | ✅ | ✅ | ✅ | ✅ |
-| subscriptions | ✅ | ✅ | ✅ | ✅ | ✅ |
+| non consumables | ✅ | ✅ | ✅ | ✅ |  |
+| subscriptions | ✅ | ✅ | ✅ | ✅ |  |
 | restore purchases | ✅ | ✅ | ✅ | ✅ | ✅ |
-| [receipt validations](https://billing.fovea.cc) | ✅ | ✅ |  | ✅ | ✅ |
-| downloadable content | ✅ |   |   |   | ✅ |
-| introductory prices | ✅ | ✅ |   | ✅ | ✅ |
+| [receipt validations](https://www.iaptic.com) | ✅ | ✅ |  | ✅ | ✅ |
+| custom payments |   |   |   |   | ✅ |
 
 ### Supported platforms
 
@@ -58,15 +55,8 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 cordova plugin add cordova-plugin-purchase
 ```
 
-### Install the plugin (PhoneGap)
 
-Add the following to your `config.xml` file:
-
-```xml
-<gap:plugin name="cordova-plugin-purchase" source="npm" version="9.0.0"></gap:plugin>
-```
-
-### Install recommended plugins
+### Recommended plugins
 
 <details>
 <summary>
@@ -89,7 +79,7 @@ Install <strong>cordova-plugin-advanced-http</strong> (click for details).
 </summary>
 
 
-When making receipt validation requests, the purchase plugin uses by default the browser's ajax capabilities. This sometime causes issues with CORS restriction. CORS also imposes an extra back-and-forth with the server (the CORS preflight request) to ensure the server allows for such request to be made. By installing the [advanced-http plugin](https://github.com/silkimen/cordova-plugin-advanced-http), you get rid of those issue and benefit from the extra feature of this plugin (like advanced authentication option). Read the [advanced-http](https://github.com/silkimen/cordova-plugin-advanced-http) plugin documentation for details.
+When making receipt validation requests, the purchase plugin uses, by default, the browser's ajax capabilities. This sometime causes issues with CORS restriction. CORS also imposes an extra back-and-forth with the server (the CORS preflight request) to ensure the server allows for such request to be made. By installing the [advanced-http plugin](https://github.com/silkimen/cordova-plugin-advanced-http), you get rid of those issue and benefit from the extra feature of the the plugin, like advanced authentication option. Read the [advanced-http](https://github.com/silkimen/cordova-plugin-advanced-http) plugin documentation for details.
 </details>
 
 ### Setup your Application
@@ -98,8 +88,7 @@ See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wik
 
 ## Getting Started
 
-If you don't know much about In-App Purchases, you'll find a good overview
-on the subject from those guys:
+If you wish to learn more about In-App Purchases (IAP), you'll find a good overview on the subject from the various platforms documentation:
 
 * Apple:
    * [In-App Purchase Introduction](https://developer.apple.com/in-app-purchase/)
@@ -110,16 +99,16 @@ on the subject from those guys:
 * Microsoft
   * [Monetize with In-App Purchases](https://docs.microsoft.com/en-us/windows/uwp/monetize/in-app-purchases-and-trials)
 
-They all share the same concepts, so they are a good reads in all cases, with some advice that apply to all platforms.
+All platforms share the same concepts, so they are a good reads in all cases.
 
-To ease the beggining of your journey into the intimidating world of In-App Purchase with Cordova, we wrote a guide which hopefully will help you get things done: https://purchase.cordova.fovea.cc/
+To ease the beginning of your journey into the intimidating world of In-App Purchase with Cordova, we wrote a guide which hopefully will help you get things done: https://purchase.cordova.fovea.cc/
 
 In short, you'll have two main tasks to accomplish:
 
  1. Setup your application and In-App Products on AppStore, Play or Azure platforms using their respective web interfaces.
  2. Add In-App Purchase code to your application.
 
-For platform setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/wiki/Home) contains good information.
+For platform setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/wiki/Home) is a good starting point.
 
 For the code itself, the [API Documentation](doc/api.md) is a definitely a recommended read.
 

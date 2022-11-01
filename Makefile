@@ -81,7 +81,7 @@ typedoc-dev:
 	@echo "- Updating api-dev/"
 	@npm run typedoc-dev
 
-doc-api: build typedoc
+doc-api: build typedoc typedoc-dev
 	@echo "- Updating doc/api.md"
 	@echo "# API Documentation" > doc/api.md
 	@echo >> doc/api.md

@@ -1,0 +1,64 @@
+# Class: Bridge
+
+[Braintree](../modules/CdvPurchase.Braintree.md).[AndroidBridge](../modules/CdvPurchase.Braintree.AndroidBridge.md).Bridge
+
+Bridge to access native functions.
+
+This tries to export pretty raw functions from the underlying native SDKs.
+
+## Constructors
+
+### constructor
+
+• **new Bridge**(`log`)
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `log` | [`Logger`](CdvPurchase.Logger.md) |
+
+## Methods
+
+### initialize
+
+▸ **initialize**(`clientTokenProvider`, `callback`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `clientTokenProvider` | `string` \| [`ClientTokenProvider`](../modules/CdvPurchase.Braintree.AndroidBridge.md#clienttokenprovider) |
+| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\> |
+
+#### Returns
+
+`void`
+
+___
+
+### launchDropIn
+
+▸ **launchDropIn**(`dropInRequest`): `Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `dropInRequest` | [`Request`](../interfaces/CdvPurchase.Braintree.DropIn.Request.md) |
+
+#### Returns
+
+`Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
+
+___
+
+### isSupported
+
+▸ `Static` **isSupported**(): `boolean`
+
+Returns true on Android, the only platform supported by this Braintree bridge
+
+#### Returns
+
+`boolean`

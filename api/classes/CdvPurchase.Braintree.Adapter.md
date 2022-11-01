@@ -1,0 +1,253 @@
+# Class: Adapter
+
+[CdvPurchase](../modules/CdvPurchase.md).[Braintree](../modules/CdvPurchase.Braintree.md).Adapter
+
+## Implements
+
+- [`Adapter`](../interfaces/CdvPurchase.Adapter.md)
+
+## Constructors
+
+### constructor
+
+• **new Adapter**(`context`, `options`)
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `context` | `AdapterContext` |
+| `options` | [`AdapterOptions`](../interfaces/CdvPurchase.Braintree.AdapterOptions.md) |
+
+## Properties
+
+### \_receipts
+
+• **\_receipts**: [`BraintreeReceipt`](CdvPurchase.Braintree.BraintreeReceipt.md)[] = `[]`
+
+___
+
+### androidBridge
+
+• `Optional` **androidBridge**: [`Bridge`](CdvPurchase.Braintree.AndroidBridge.Bridge.md)
+
+___
+
+### id
+
+• **id**: [`Platform`](../enums/CdvPurchase.Platform.md) = `Platform.BRAINTREE`
+
+Platform identifier
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[id](../interfaces/CdvPurchase.Adapter.md#id)
+
+___
+
+### iosBridge
+
+• `Optional` **iosBridge**: [`Bridge`](CdvPurchase.Braintree.IosBridge.Bridge.md)
+
+___
+
+### log
+
+• **log**: [`Logger`](CdvPurchase.Logger.md)
+
+___
+
+### name
+
+• **name**: `string` = `'BrainTree'`
+
+Nice name for the adapter
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[name](../interfaces/CdvPurchase.Adapter.md#name)
+
+___
+
+### options
+
+• **options**: [`AdapterOptions`](../interfaces/CdvPurchase.Braintree.AdapterOptions.md)
+
+___
+
+### products
+
+• **products**: [`Product`](CdvPurchase.Product.md)[] = `[]`
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[products](../interfaces/CdvPurchase.Adapter.md#products)
+
+## Accessors
+
+### receipts
+
+• `get` **receipts**(): [`Receipt`](CdvPurchase.Receipt.md)[]
+
+List of purchase receipts.
+
+#### Returns
+
+[`Receipt`](CdvPurchase.Receipt.md)[]
+
+#### Implementation of
+
+CdvPurchase.Adapter.receipts
+
+## Methods
+
+### finish
+
+▸ **finish**(`transaction`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Finish a transaction.
+
+For non-consumables, this will acknowledge the purchase.
+For consumable, this will acknowledge and consume the purchase.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `transaction` | [`Transaction`](CdvPurchase.Transaction.md) |
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[finish](../interfaces/CdvPurchase.Adapter.md#finish)
+
+___
+
+### handleReceiptValidationResponse
+
+▸ **handleReceiptValidationResponse**(`receipt`, `response`): `Promise`<`void`\>
+
+Handle platform specific fields from receipt validation response.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `receipt` | [`Receipt`](CdvPurchase.Receipt.md) |
+| `response` | [`Payload`](../modules/CdvPurchase.Validator.Response.md#payload) |
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[handleReceiptValidationResponse](../interfaces/CdvPurchase.Adapter.md#handlereceiptvalidationresponse)
+
+___
+
+### initialize
+
+▸ **initialize**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Initialize the Braintree Adapter.
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[initialize](../interfaces/CdvPurchase.Adapter.md#initialize)
+
+___
+
+### load
+
+▸ **load**(`products`): `Promise`<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`Product`](CdvPurchase.Product.md))[]\>
+
+Load product definitions from the platform.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `products` | [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md)[] |
+
+#### Returns
+
+`Promise`<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`Product`](CdvPurchase.Product.md))[]\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[load](../interfaces/CdvPurchase.Adapter.md#load)
+
+___
+
+### order
+
+▸ **order**(`offer`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Initializes an order.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `offer` | [`Offer`](CdvPurchase.Offer.md) |
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[order](../interfaces/CdvPurchase.Adapter.md#order)
+
+___
+
+### receiptValidationBody
+
+▸ **receiptValidationBody**(`receipt`): `undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)
+
+Prepare for receipt validation
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `receipt` | [`BraintreeReceipt`](CdvPurchase.Braintree.BraintreeReceipt.md) |
+
+#### Returns
+
+`undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[receiptValidationBody](../interfaces/CdvPurchase.Adapter.md#receiptvalidationbody)
+
+___
+
+### requestPayment
+
+▸ **requestPayment**(`paymentRequest`, `additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Request a payment from the user
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `paymentRequest` | [`PaymentRequest`](../interfaces/CdvPurchase.PaymentRequest.md) |
+| `additionalData?` | [`AdditionalData`](../interfaces/CdvPurchase.AdditionalData.md) |
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[requestPayment](../interfaces/CdvPurchase.Adapter.md#requestpayment)
