@@ -1,5 +1,5 @@
 /// <reference path="validator/validator.ts" />
-/// <reference path="adapters.ts" />
+/// <reference path="internal/adapters.ts" />
 /// <reference path="log.ts" />
 /// <reference path="callbacks.ts" />
 /// <reference path="ready.ts" />
@@ -12,7 +12,7 @@ namespace CdvPurchase {
     let globalStore: Store;
 
     /**
-     * Main class of the purchase.
+     * Entry class of the plugin.
      */
     export class Store {
 
@@ -50,7 +50,7 @@ namespace CdvPurchase {
         }
 
         /** URL or implementation of the receipt validation service */
-        public validator: string | ValidatorFunction | ValidatorTarget | undefined;
+        public validator: string | Validator.Function | Validator.Target | undefined;
 
         /** When adding information to receipt validation requests, those can serve different functions:
          *
@@ -306,6 +306,14 @@ namespace CdvPurchase {
     }
 
     export let store: Store;
+
+    /**
+     * @internal
+     *
+     * This namespace contains things never meant for being used directly by the user of the plugin.
+     */
+    export namespace Internal {
+    }
 }
 
 setTimeout(() => {

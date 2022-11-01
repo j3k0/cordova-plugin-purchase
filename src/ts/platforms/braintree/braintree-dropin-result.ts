@@ -5,15 +5,15 @@ namespace CdvPurchase {
       export interface Result {
 
         /**
-         * The previously used {@link PaymentMethod} or {@code undefined} if there was no
+         * The previously used {@link PaymentMethod} or `undefined` if there was no
          * previous payment method. If the type is {@link PaymentMethod#GOOGLE_PAY} the Google
          * Pay flow will need to be performed by the user again at the time of checkout,
-         * {@link #paymentMethodNonce()} will be {@code undefined} in this case.
+         * {@link #paymentMethodNonce()} will be `undefined` in this case.
          */
         paymentMethodType?: PaymentMethod;
 
         /**
-         * The previous {@link PaymentMethodNonce} or {@code undefined} if there is no previous payment method
+         * The previous {@link PaymentMethodNonce} or `undefined` if there is no previous payment method
          * or the previous payment method was {@link com.braintreepayments.api.GooglePayCardNonce}.
          */
         paymentMethodNonce?: PaymentMethodNonce;

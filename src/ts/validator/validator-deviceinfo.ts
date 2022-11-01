@@ -38,6 +38,9 @@ namespace CdvPurchase {
             fingerprint?: string;
         }
 
+        /**
+         * @internal
+         */
         export namespace Internal {
 
             export interface PrivacyPolicyProvider {

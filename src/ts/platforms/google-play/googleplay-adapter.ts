@@ -91,7 +91,7 @@ namespace CdvPurchase {
             initialized = false;
 
             /** Used to retry failed commands */
-            retry = new Retry();
+            retry = new Internal.Retry();
 
             private context: Internal.AdapterContext;
             private log: Logger;

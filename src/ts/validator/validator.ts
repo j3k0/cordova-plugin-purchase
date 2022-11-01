@@ -1,16 +1,9 @@
 namespace CdvPurchase {
 
-    export type ValidatorCallback = (payload: Validator.Response.Payload) => void;
 
-    export interface ValidatorFunction {
-        (receipt: Receipt, callback: ValidatorCallback): void;
-    }
-
-    export interface ValidatorTarget {
-        url: string;
-        headers?: { [token: string]: string };
-    }
-
+    /**
+     * @internal
+     */
     export namespace Internal {
 
         export interface ReceiptResponse {
@@ -42,7 +35,7 @@ namespace CdvPurchase {
         }
 
         export interface ValidatorController {
-            get validator(): string | ValidatorFunction | ValidatorTarget | undefined;
+            get validator(): string | Validator.Function | Validator.Target | undefined;
             get localReceipts(): Receipt[];
             get adapters(): Adapters;
             get validator_privacy_policy(): PrivacyPolicyItem | PrivacyPolicyItem[] | undefined;
@@ -124,7 +117,7 @@ namespace CdvPurchase {
                 if (typeof this.controller.validator === 'function')
                     return this.runValidatorFunction(this.controller.validator, receipt, callback);
 
-                const target: ValidatorTarget = typeof this.controller.validator === 'string'
+                const target: Validator.Target = typeof this.controller.validator === 'string'
                     ? { url: this.controller.validator }
                     : this.controller.validator;
                 const body = this.buildRequestBody(receipt);
@@ -132,7 +125,7 @@ namespace CdvPurchase {
                 return this.runValidatorRequest(target, receipt, body, callback);
             }
 
-            private runValidatorFunction(validator: ValidatorFunction, receipt: Receipt, callback: Callback<ReceiptResponse>) {
+            private runValidatorFunction(validator: Validator.Function, receipt: Receipt, callback: Callback<ReceiptResponse>) {
                 try {
                     validator(receipt, (payload: Validator.Response.Payload) => callback({ receipt, payload }));
                 }
@@ -181,7 +174,7 @@ namespace CdvPurchase {
                 return body;
             }
 
-            private runValidatorRequest(target: ValidatorTarget, receipt: Receipt, body: Validator.Request.Body, callback: Callback<ReceiptResponse>) {
+            private runValidatorRequest(target: Validator.Target, receipt: Receipt, body: Validator.Request.Body, callback: Callback<ReceiptResponse>) {
 
                 CdvPurchase.Utils.ajax<Validator.Response.Payload>(this.log.child("Ajax"), {
                     url: target.url,
