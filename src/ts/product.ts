@@ -50,15 +50,14 @@ namespace CdvPurchase {
         }
 
         /**
-         * Find and return an offer for this product from its id
+         * Add an offer to this product.
          *
-         * If id isn't specified, returns the first offer.
-         *
-         * @param id - Identifier of the offer to return
+         * @internal
          */
         addOffer(offer: Offer) {
-            if (this.getOffer(offer.id)) return;
+            if (this.getOffer(offer.id)) return this;
             this.offers.push(offer);
+            return this;
         }
     }
 

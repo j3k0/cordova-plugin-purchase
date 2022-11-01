@@ -55,7 +55,7 @@ namespace CdvPurchase
                             return this.list.push(new Braintree.Adapter(context, po.options));
                         case Platform.TEST:
                         default:
-                            return this.list.push(new Test.Adapter());
+                            return this.list.push(new Test.Adapter(context));
                     }
                 });
             }
