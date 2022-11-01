@@ -1,70 +1,4 @@
 declare namespace CdvPurchase {
-    namespace Internal {
-        interface StoreAdapterDelegate {
-            approvedCallbacks: Callbacks<Transaction>;
-            finishedCallbacks: Callbacks<Transaction>;
-            updatedCallbacks: Callbacks<Product>;
-            updatedReceiptCallbacks: Callbacks<Receipt>;
-        }
-        class StoreAdapterListener implements AdapterListener {
-            delegate: StoreAdapterDelegate;
-            constructor(delegate: StoreAdapterDelegate);
-            lastTransactionState: {
-                [transactionToken: string]: TransactionState;
-            };
-            static makeTransactionToken(transaction: Transaction): string;
-            productsUpdated(platform: Platform, products: Product[]): void;
-            receiptsUpdated(platform: Platform, receipts: Receipt[]): void;
-        }
-    }
-}
-declare namespace CdvPurchase {
-    type PlatformWithOptions = {
-        platform: Platform.BRAINTREE;
-        options: Braintree.AdapterOptions;
-    } | {
-        platform: Platform.GOOGLE_PLAY;
-    } | {
-        platform: Platform.APPLE_APPSTORE;
-    } | {
-        platform: Platform.TEST;
-    } | {
-        platform: Platform.WINDOWS_STORE;
-    };
-    namespace Internal {
-        /** Adapter execution context */
-        interface AdapterContext {
-            /** Logger */
-            log: Logger;
-            /** Verbosity level */
-            verbosity: LogLevel;
-            /** Error reporting */
-            error: (error: IError) => void;
-            /** List of registered products */
-            registeredProducts: Internal.RegisteredProducts;
-            /** The events listener */
-            listener: AdapterListener;
-            /** Retrieves the application username */
-            getApplicationUsername: () => string | undefined;
-        }
-        /**
-         * The list of active platform adapters
-         */
-        class Adapters {
-            list: Adapter[];
-            add(log: Logger, adapters: (PlatformWithOptions)[], context: AdapterContext): void;
-            /**
-             * Initialize some platform adapters.
-             */
-            initialize(platforms: (Platform | PlatformWithOptions)[] | undefined, context: AdapterContext): Promise<IError[]>;
-            /**
-             * Retrieve a platform adapter.
-             */
-            find(platform: Platform): Adapter | undefined;
-        }
-    }
-}
-declare namespace CdvPurchase {
     /** Manage a list of callbacks */
     class Callbacks<T> {
         callbacks: Callback<T>[];
@@ -138,6 +72,28 @@ declare namespace CdvPurchase {
         INVALID_SIGNATURE,
         /** Error: Parameters are missing in a payment discount. */
         MISSING_OFFER_PARAMS
+    }
+    function storeError(code: ErrorCode, message: string): IError;
+}
+declare namespace CdvPurchase {
+    interface IapticConfig {
+        /** Default to https://validator.iaptic.com */
+        url?: string;
+        /** App Name */
+        appName: string;
+        /** Public API Key */
+        apiKey: string;
+    }
+    /**
+     * Helper to integrate with https://www.iaptic.com
+     */
+    class Iaptic {
+        private store;
+        log: Logger;
+        config: IapticConfig;
+        constructor(config: IapticConfig, store?: CdvPurchase.Store);
+        get braintreeClientTokenProvider(): CdvPurchase.Braintree.ClientTokenProvider;
+        get validator(): string;
     }
 }
 declare namespace CdvPurchase {
@@ -300,13 +256,11 @@ declare namespace CdvPurchase {
          */
         getOffer(id?: string): Offer | undefined;
         /**
-         * Find and return an offer for this product from its id
+         * Add an offer to this product.
          *
-         * If id isn't specified, returns the first offer.
-         *
-         * @param id - Identifier of the offer to return
+         * @internal
          */
-        addOffer(offer: Offer): void;
+        addOffer(offer: Offer): this;
     }
 }
 declare namespace CdvPurchase {
@@ -337,72 +291,8 @@ declare namespace CdvPurchase {
 }
 declare namespace CdvPurchase {
     /**
-     * Data provided to store.register()
+     * @internal
      */
-    interface IRegisterProduct {
-        /** Identifier of the product on the store */
-        id: string;
-        /**
-         * List of payment platforms the product is available on
-         *
-         * If you do not specify anything, the product is assumed to be available only on the
-         * default payment platform. (Apple AppStore on iOS, Google Play on Android)
-         */
-        platform: Platform;
-        /** Product type, should be one of the defined product types */
-        type: ProductType;
-        /**
-         * Name of the group your subscription product is a member of (default to "default").
-         *
-         * If you don't set anything, all subscription will be members of the same group.
-         */
-        group?: string;
-    }
-    namespace Internal {
-        class RegisteredProducts {
-            list: IRegisterProduct[];
-            find(platform: Platform, id: string): IRegisterProduct | undefined;
-            add(product: IRegisterProduct | IRegisterProduct[]): void;
-            byPlatform(): {
-                platform: Platform;
-                products: IRegisterProduct[];
-            }[];
-        }
-    }
-}
-declare namespace CdvPurchase {
-    /** Retry failed requests
-     *
-     * When setup and/or load failed, the plugin will retry over and over till it can connect
-     * to the store.
-     *
-     * However, to be nice with the battery, it'll double the retry timeout each time.
-     *
-     * Special case, when the device goes online, it'll trigger all retry callback in the queue.
-     */
-    class Retry<F extends Function = Function> {
-        maxTimeout: number;
-        minTimeout: number;
-        retryTimeout: number;
-        retries: {
-            tid: number;
-            fn: F;
-        }[];
-        constructor(minTimeout?: number, maxTimeout?: number);
-        retry(fn: F): void;
-    }
-}
-declare namespace CdvPurchase {
-    type ValidatorCallback = (payload: Validator.Response.Payload) => void;
-    interface ValidatorFunction {
-        (receipt: Receipt, callback: ValidatorCallback): void;
-    }
-    interface ValidatorTarget {
-        url: string;
-        headers?: {
-            [token: string]: string;
-        };
-    }
     namespace Internal {
         interface ReceiptResponse {
             receipt: Receipt;
@@ -417,7 +307,7 @@ declare namespace CdvPurchase {
             has(receipt: Receipt): boolean;
         }
         interface ValidatorController {
-            get validator(): string | ValidatorFunction | ValidatorTarget | undefined;
+            get validator(): string | Validator.Function | Validator.Target | undefined;
             get localReceipts(): Receipt[];
             get adapters(): Adapters;
             get validator_privacy_policy(): PrivacyPolicyItem | PrivacyPolicyItem[] | undefined;
@@ -449,9 +339,55 @@ declare namespace CdvPurchase {
     }
 }
 declare namespace CdvPurchase {
+    type PlatformWithOptions = {
+        platform: Platform.BRAINTREE;
+        options: Braintree.AdapterOptions;
+    } | {
+        platform: Platform.GOOGLE_PLAY;
+    } | {
+        platform: Platform.APPLE_APPSTORE;
+    } | {
+        platform: Platform.TEST;
+    } | {
+        platform: Platform.WINDOWS_STORE;
+    };
+    namespace Internal {
+        /** Adapter execution context */
+        interface AdapterContext {
+            /** Logger */
+            log: Logger;
+            /** Verbosity level */
+            verbosity: LogLevel;
+            /** Error reporting */
+            error: (error: IError) => void;
+            /** List of registered products */
+            registeredProducts: Internal.RegisteredProducts;
+            /** The events listener */
+            listener: AdapterListener;
+            /** Retrieves the application username */
+            getApplicationUsername: () => string | undefined;
+        }
+        /**
+         * The list of active platform adapters
+         */
+        class Adapters {
+            list: Adapter[];
+            add(log: Logger, adapters: (PlatformWithOptions)[], context: AdapterContext): void;
+            /**
+             * Initialize some platform adapters.
+             */
+            initialize(platforms: (Platform | PlatformWithOptions)[] | undefined, context: AdapterContext): Promise<IError[]>;
+            /**
+             * Retrieve a platform adapter.
+             */
+            find(platform: Platform): Adapter | undefined;
+        }
+    }
+}
+declare namespace CdvPurchase {
     const PLUGIN_VERSION = "13.0.0";
     /**
-     * Main class of the purchase.
+     * Entry class of the plugin.
      */
     class Store {
         /** The singleton store object */
@@ -469,7 +405,7 @@ declare namespace CdvPurchase {
         /** Get the application username as a string by either calling or returning Store.applicationUsername */
         getApplicationUsername(): string | undefined;
         /** URL or implementation of the receipt validation service */
-        validator: string | ValidatorFunction | ValidatorTarget | undefined;
+        validator: string | Validator.Function | Validator.Target | undefined;
         /** When adding information to receipt validation requests, those can serve different functions:
          *
          *  - handling support requests
@@ -562,6 +498,13 @@ declare namespace CdvPurchase {
         version: string;
     }
     let store: Store;
+    /**
+     * @internal
+     *
+     * This namespace contains things never meant for being used directly by the user of the plugin.
+     */
+    namespace Internal {
+    }
 }
 declare namespace CdvPurchase {
     class Transaction {
@@ -609,6 +552,8 @@ declare namespace CdvPurchase {
     type Callback<T> = (t: T) => void;
     /** An error triggered by the In-App Purchase plugin */
     interface IError {
+        /** Indicates that the returned object is an error */
+        isError: true;
         /** See store.ERR_* for the available codes.
          *
          * https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#error-codes */
@@ -822,6 +767,86 @@ declare namespace CdvPurchase {
         CUSTOMER_OTHER_REASON = "Customer.OtherReason",
         /** Subscription canceled for unknown reasons. */
         UNKNOWN = "Unknown"
+    }
+}
+declare namespace CdvPurchase {
+    namespace Internal {
+        interface StoreAdapterDelegate {
+            approvedCallbacks: Callbacks<Transaction>;
+            finishedCallbacks: Callbacks<Transaction>;
+            updatedCallbacks: Callbacks<Product>;
+            updatedReceiptCallbacks: Callbacks<Receipt>;
+        }
+        class StoreAdapterListener implements AdapterListener {
+            delegate: StoreAdapterDelegate;
+            constructor(delegate: StoreAdapterDelegate);
+            lastTransactionState: {
+                [transactionToken: string]: TransactionState;
+            };
+            static makeTransactionToken(transaction: Transaction): string;
+            productsUpdated(platform: Platform, products: Product[]): void;
+            receiptsUpdated(platform: Platform, receipts: Receipt[]): void;
+        }
+    }
+}
+declare namespace CdvPurchase {
+    /**
+     * Data provided to store.register()
+     */
+    interface IRegisterProduct {
+        /** Identifier of the product on the store */
+        id: string;
+        /**
+         * List of payment platforms the product is available on
+         *
+         * If you do not specify anything, the product is assumed to be available only on the
+         * default payment platform. (Apple AppStore on iOS, Google Play on Android)
+         */
+        platform: Platform;
+        /** Product type, should be one of the defined product types */
+        type: ProductType;
+        /**
+         * Name of the group your subscription product is a member of (default to "default").
+         *
+         * If you don't set anything, all subscription will be members of the same group.
+         */
+        group?: string;
+    }
+    namespace Internal {
+        class RegisteredProducts {
+            list: IRegisterProduct[];
+            find(platform: Platform, id: string): IRegisterProduct | undefined;
+            add(product: IRegisterProduct | IRegisterProduct[]): void;
+            byPlatform(): {
+                platform: Platform;
+                products: IRegisterProduct[];
+            }[];
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace Internal {
+        /**
+         * Retry failed requests
+         *
+         * When setup and/or load failed, the plugin will retry over and over till it can connect
+         * to the store.
+         *
+         * However, to be nice with the battery, it'll double the retry timeout each time.
+         *
+         * Special case, when the device goes online, it'll trigger all retry callback in the queue.
+         */
+        class Retry<F extends Function = Function> {
+            maxTimeout: number;
+            minTimeout: number;
+            retryTimeout: number;
+            retries: {
+                tid: number;
+                fn: F;
+            }[];
+            constructor(minTimeout?: number, maxTimeout?: number);
+            retry(fn: F): void;
+        }
     }
 }
 declare namespace CdvPurchase {
@@ -1166,24 +1191,19 @@ declare namespace CdvPurchase {
 }
 declare namespace CdvPurchase {
     namespace Braintree {
+        /** The Braintree customer identifier. Set it to allow reusing of payment methods. */
+        let customerId: string | undefined;
         interface AdapterOptions {
             /** Authorization key, as a direct string. */
             tokenizationKey?: string;
             /** Function used to retrieve a Client Token (used if no tokenizationKey are provided). */
             clientTokenProvider?: ClientTokenProvider;
-            /**
-             * Create a transaction server side.
-             *
-             * @see https://developer.paypal.com/braintree/docs/start/hello-server
-             */
-            serverCheckout?: ServerCheckout;
         }
-        type ServerCheckout = (dropInRequest: DropIn.Request, dropInResult: DropIn.Result, callback: Callback<TransactionResultObject>) => void;
         type ClientTokenProvider = (callback: Callback<string | IError>) => void;
-        interface TransactionResultObject {
+        interface TransactionObject {
             success: boolean;
             transaction?: ({
-                status: "authorized";
+                status: 'authorization_expired' | 'authorized' | 'authorizing' | 'settlement_confirmed' | 'settlement_pending' | 'failed' | 'settled' | 'settling' | 'submitted_for_settlement' | 'voided';
             } | {
                 status: "processor_declined";
                 /** e.g. paypal or credit card */
@@ -1196,9 +1216,6 @@ declare namespace CdvPurchase {
                 processorResponseText: string;
                 /** e.g. "05 : NOT AUTHORISED" */
                 additionalProcessorResponse: string;
-            } | {
-                /** can void */
-                status: "submitted_for_settlement";
             } | {
                 status: "settlement_declined";
                 /** e.g. "4001" */
@@ -1232,16 +1249,50 @@ declare namespace CdvPurchase {
                     /** e.g. 42 */
                     riskScore: number;
                 };
+                customer: {
+                    id: string;
+                    company?: string | undefined;
+                    customFields?: any;
+                    email?: string | undefined;
+                    fax?: string | undefined;
+                    firstName?: string | undefined;
+                    lastName?: string | undefined;
+                    phone?: string | undefined;
+                    website?: string | undefined;
+                };
+                creditCard?: {
+                    bin: string;
+                    cardholderName?: string | undefined;
+                    cardType: string;
+                    commercial: Commercial;
+                    countryOfIssuance: string;
+                    customerLocation: CustomerLocation;
+                    debit: string;
+                    durbinRegulated: DurbinRegulated;
+                    expirationDate?: string | undefined;
+                    expirationMonth?: string | undefined;
+                    expirationYear?: string | undefined;
+                    healthcare: HealthCare;
+                    imageUrl?: string | undefined;
+                    issuingBank: string;
+                    last4: string;
+                    maskedNumber?: string | undefined;
+                    payroll: Payroll;
+                    prepaid: Prepaid;
+                    productId: string;
+                    token: string;
+                    uniqueNumberIdentifier: string;
+                };
             };
             errors?: {}[];
         }
-        type Nonce = {
-            type: PaymentMethod.THREE_D_SECURE;
-            value: string;
-        };
-        enum PaymentMethod {
-            THREE_D_SECURE = "THREE_D_SECURE"
-        }
+        type Commercial = 'Yes' | 'No' | 'Unknown';
+        type CustomerLocation = 'US' | 'International';
+        type Debit = 'Yes' | 'No' | 'Unknown';
+        type DurbinRegulated = 'Yes' | 'No' | 'Unknown';
+        type HealthCare = 'Yes' | 'No' | 'Unknown';
+        type Payroll = 'Yes' | 'No' | 'Unknown';
+        type Prepaid = 'Yes' | 'No' | 'Unknown';
         class BraintreeReceipt extends Receipt {
             dropInResult: DropIn.Result;
             paymentRequest: PaymentRequest;
@@ -1256,6 +1307,7 @@ declare namespace CdvPurchase {
             get receipts(): Receipt[];
             private context;
             log: Logger;
+            iosBridge?: IosBridge.Bridge;
             androidBridge?: AndroidBridge.Bridge;
             options: AdapterOptions;
             constructor(context: Internal.AdapterContext, options: AdapterOptions);
@@ -1266,6 +1318,7 @@ declare namespace CdvPurchase {
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
             order(offer: Offer): Promise<undefined | IError>;
             finish(transaction: Transaction): Promise<undefined | IError>;
+            private launchDropIn;
             requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
             receiptValidationBody(receipt: BraintreeReceipt): Validator.Request.Body | undefined;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
@@ -1321,6 +1374,20 @@ declare namespace CdvPurchase {
                 /** Returns true on Android, the only platform supported by this Braintree bridge */
                 static isSupported(): boolean;
                 launchDropIn(dropInRequest: DropIn.Request): Promise<DropIn.Result | IError>;
+            }
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace Braintree {
+        namespace IosBridge {
+            class Bridge {
+                log: Logger;
+                clientTokenProvider: ClientTokenProvider;
+                constructor(log: Logger, clientTokenProvider: ClientTokenProvider);
+                initialize(verbosity: VerbosityProvider, callback: Callback<IError | undefined>): void;
+                launchDropIn(dropInRequest: DropIn.Request): Promise<DropIn.Result | IError>;
+                static isSupported(): boolean;
             }
         }
     }
@@ -1388,23 +1455,35 @@ declare namespace CdvPurchase {
         namespace DropIn {
             interface Result {
                 /**
-                 * The previously used {@link PaymentMethod} or {@code undefined} if there was no
+                 * The previously used {@link PaymentMethod} or `undefined` if there was no
                  * previous payment method. If the type is {@link PaymentMethod#GOOGLE_PAY} the Google
                  * Pay flow will need to be performed by the user again at the time of checkout,
-                 * {@link #paymentMethodNonce()} will be {@code undefined} in this case.
+                 * {@link #paymentMethodNonce()} will be `undefined` in this case.
                  */
                 paymentMethodType?: PaymentMethod;
                 /**
-                 * The previous {@link PaymentMethodNonce} or {@code undefined} if there is no previous payment method
+                 * The previous {@link PaymentMethodNonce} or `undefined` if there is no previous payment method
                  * or the previous payment method was {@link com.braintreepayments.api.GooglePayCardNonce}.
                  */
                 paymentMethodNonce?: PaymentMethodNonce;
                 /**
-                 * Device data.
+                 * A `deviceData` string that represents data about a customer's device.
+                 *
+                 * This is generated from Braintree's advanced fraud protection service.
+                 *
+                 * `deviceData` should be passed into server-side calls, such as `Transaction.sale`.
+                 * This enables you to collect data about a customer's device and correlate it with a session identifier on your server.
+                 *
+                 * Collecting and passing this data with transactions helps reduce decline rates and detect fraudulent transactions.
                  */
                 deviceData?: string;
                 /**
                  * A description of the payment method.
+                 *
+                 * - For cards, the last four digits of the card number.
+                 * - For PayPal, the email address associated with the account.
+                 * - For Venmo, the username associated with the account.
+                 * - For Apple Pay, the text "Apple Pay".
                  */
                 paymentDescription?: string;
             }
@@ -1423,10 +1502,28 @@ declare namespace CdvPurchase {
                 nonce: string;
                 /** true if this payment method is the default for the current customer, false otherwise. */
                 isDefault: boolean;
+                /**
+                 * The type of the tokenized data, e.g. PayPal, Venmo, MasterCard, Visa, Amex.
+                 *
+                 * (iOS Only)
+                 */
+                type?: string;
             }
+            /** Payment method used or selected by the user. */
             enum PaymentMethod {
-                AMEX = "AMEX",
+                /** Google only */
                 GOOGLE_PAY = "GOOGLE_PAY",
+                /** ios only */
+                LASER = "LASER",
+                /** ios only */
+                UK_MAESTRO = "UK_MAESTRO",
+                /** ios only */
+                SWITCH = "SWITCH",
+                /** ios only */
+                SOLOR = "SOLO",
+                /** ios only */
+                APPLE_PAY = "APPLE_PAY",
+                AMEX = "AMEX",
                 DINERS_CLUB = "DINERS_CLUB",
                 DISCOVER = "DISCOVER",
                 JCB = "JCB",
@@ -1823,7 +1920,7 @@ declare namespace CdvPurchase {
             /** Prevent double initialization */
             initialized: boolean;
             /** Used to retry failed commands */
-            retry: Retry<Function>;
+            retry: Internal.Retry<Function>;
             private context;
             private log;
             autoRefreshIntervalMillis: number;
@@ -2582,12 +2679,17 @@ declare namespace CdvPurchase {
     }
 }
 declare namespace CdvPurchase {
+    /** Test (or Mock) Adapter and related classes */
     namespace Test {
+        /** Test Adapter used for local testing with mock products */
         class Adapter implements CdvPurchase.Adapter {
             id: Platform;
             name: string;
             products: Product[];
             receipts: Receipt[];
+            private context;
+            private log;
+            constructor(context: Internal.AdapterContext);
             initialize(): Promise<IError | undefined>;
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
             order(offer: Offer): Promise<undefined | IError>;
@@ -2596,6 +2698,16 @@ declare namespace CdvPurchase {
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
         }
+    }
+}
+declare namespace CdvPurchase {
+    namespace Test {
+        /** A consumable product for which the purchase goes through */
+        const CONSUMABLE_OK: Product;
+        /** A consumable product for which the purchase will fail */
+        const CONSUMABLE_FAILING: Product;
+        /** List of all test products */
+        const TEST_PRODUCTS: Product[];
     }
 }
 declare namespace CdvPurchase {
@@ -2807,6 +2919,9 @@ declare namespace CdvPurchase {
             /** Best effort device fingerprint. Only when the "fraud" policy is enabled. */
             fingerprint?: string;
         }
+        /**
+         * @internal
+         */
         namespace Internal {
             interface PrivacyPolicyProvider {
                 get validator_privacy_policy(): undefined | string | string[];
@@ -3036,6 +3151,9 @@ declare namespace CdvPurchase {
                 };
             }
             type NativeTransaction = ({
+                type: 'braintree';
+                data: Braintree.TransactionObject;
+            }) | ({
                 type: 'windows-store-transaction';
             } & WindowsStore.WindowsSubscription) | ({
                 type: 'ios-appstore';
@@ -3066,6 +3184,16 @@ declare namespace CdvPurchase {
          * Dates stored as a ISO formatted string
          */
         type ISODate = string;
+        type Callback = (payload: Validator.Response.Payload) => void;
+        interface Function {
+            (receipt: Receipt, callback: Callback): void;
+        }
+        interface Target {
+            url: string;
+            headers?: {
+                [token: string]: string;
+            };
+        }
     }
 }
 declare namespace CdvPurchase {

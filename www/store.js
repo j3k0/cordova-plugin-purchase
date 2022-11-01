@@ -1,4 +1,10 @@
 "use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,124 +14,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var CdvPurchase;
-(function (CdvPurchase) {
-    let Internal;
-    (function (Internal) {
-        class StoreAdapterListener {
-            constructor(delegate) {
-                this.lastTransactionState = {};
-                this.delegate = delegate;
-            }
-            static makeTransactionToken(transaction) {
-                return transaction.platform + '|' + transaction.transactionId;
-            }
-            productsUpdated(platform, products) {
-                products.forEach(product => this.delegate.updatedCallbacks.trigger(product));
-            }
-            receiptsUpdated(platform, receipts) {
-                receipts.forEach(receipt => {
-                    this.delegate.updatedReceiptCallbacks.trigger(receipt);
-                    receipt.transactions.forEach(transaction => {
-                        const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
-                        const lastState = this.lastTransactionState[transactionToken];
-                        if (transaction.state === CdvPurchase.TransactionState.APPROVED) {
-                            this.delegate.approvedCallbacks.trigger(transaction); // better retrigger (so validation is rerun on potential update)
-                        }
-                        else if (lastState !== transaction.state) {
-                            if (transaction.state === CdvPurchase.TransactionState.FINISHED) {
-                                this.delegate.finishedCallbacks.trigger(transaction);
-                            }
-                        }
-                        this.lastTransactionState[transactionToken] = transaction.state;
-                    });
-                });
-            }
-        }
-        Internal.StoreAdapterListener = StoreAdapterListener;
-    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
-})(CdvPurchase || (CdvPurchase = {}));
-var CdvPurchase;
-(function (CdvPurchase) {
-    let Internal;
-    (function (Internal) {
-        /**
-         * The list of active platform adapters
-         */
-        class Adapters {
-            constructor() {
-                this.list = [];
-            }
-            add(log, adapters, context) {
-                adapters.forEach(po => {
-                    log.info("");
-                    if (this.find(po.platform))
-                        return;
-                    switch (po.platform) {
-                        case CdvPurchase.Platform.APPLE_APPSTORE:
-                            return this.list.push(new CdvPurchase.AppleAppStore.Adapter(context));
-                        case CdvPurchase.Platform.GOOGLE_PLAY:
-                            return this.list.push(new CdvPurchase.GooglePlay.Adapter(context));
-                        case CdvPurchase.Platform.BRAINTREE:
-                            if (!po.options) {
-                                log.error('Options missing for Braintree initialization. Use {platform: Platform.BRAINTREE, options: {...}} in your call to store.initialize');
-                            }
-                            return this.list.push(new CdvPurchase.Braintree.Adapter(context, po.options));
-                        case CdvPurchase.Platform.TEST:
-                        default:
-                            return this.list.push(new CdvPurchase.Test.Adapter());
-                    }
-                });
-            }
-            /**
-             * Initialize some platform adapters.
-             */
-            initialize(platforms = [CdvPurchase.Store.defaultPlatform()], context) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    const newPlatforms = platforms.map(p => typeof p === 'string' ? { platform: p } : p).filter(p => !this.find(p.platform));
-                    const log = context.log.child('Adapters');
-                    log.info("Adding platforms: " + JSON.stringify(newPlatforms));
-                    this.add(log, newPlatforms, context);
-                    const products = context.registeredProducts.byPlatform();
-                    const result = yield Promise.all(newPlatforms.map((platformToInit) => __awaiter(this, void 0, void 0, function* () {
-                        var _a, _b, _c;
-                        const platformProducts = (_c = (_b = (_a = products.filter(p => p.platform === platformToInit.platform)) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.products) !== null && _c !== void 0 ? _c : [];
-                        const adapter = this.find(platformToInit.platform);
-                        if (!adapter)
-                            return;
-                        log.info(`${adapter.name} initializing...`);
-                        const initResult = yield adapter.initialize();
-                        log.info(`${adapter.name} initialized. ${initResult && JSON.stringify(initResult)}`);
-                        if (initResult === null || initResult === void 0 ? void 0 : initResult.code)
-                            return initResult;
-                        log.info(`${adapter.name} products: ${JSON.stringify(platformProducts)}`);
-                        if (platformProducts.length === 0)
-                            return;
-                        const loadResult = yield adapter.load(platformProducts);
-                        log.info(`${adapter.name} loaded: ${JSON.stringify(loadResult)}`);
-                        const loadedProducts = loadResult.filter(p => p instanceof CdvPurchase.Product);
-                        context.listener.productsUpdated(platformToInit.platform, loadedProducts);
-                        return loadResult.filter(lr => 'code' in lr && 'message' in lr)[0];
-                    })));
-                    return result.filter(err => err);
-                });
-            }
-            /**
-             * Retrieve a platform adapter.
-             */
-            find(platform) {
-                return this.list.filter(a => a.id === platform)[0];
-            }
-        }
-        Internal.Adapters = Adapters;
-    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
-})(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
 (function (CdvPurchase) {
     /** Manage a list of callbacks */
@@ -220,6 +108,51 @@ var CdvPurchase;
         /** Error: Parameters are missing in a payment discount. */
         ErrorCode[ErrorCode["MISSING_OFFER_PARAMS"] = ERROR_CODES_BASE + 32] = "MISSING_OFFER_PARAMS";
     })(ErrorCode = CdvPurchase.ErrorCode || (CdvPurchase.ErrorCode = {}));
+    function storeError(code, message) {
+        return { isError: true, code, message };
+    }
+    CdvPurchase.storeError = storeError;
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    /**
+     * Helper to integrate with https://www.iaptic.com
+     */
+    class Iaptic {
+        constructor(config, store) {
+            this.config = config;
+            if (!config.url) {
+                config.url = 'https://validator.iaptic.com';
+            }
+            this.store = store !== null && store !== void 0 ? store : CdvPurchase.store;
+            this.log = this.store.log.child('Iaptic');
+        }
+        get braintreeClientTokenProvider() {
+            return callback => {
+                CdvPurchase.store.log.info('Calling Braintree clientTokenProvider');
+                CdvPurchase.Utils.ajax(this.log, {
+                    url: `${this.config.url}/v3/braintree/client-token?appName=${this.config.appName}&apiKey=${this.config.apiKey}`,
+                    method: 'POST',
+                    data: {
+                        applicationUsername: CdvPurchase.store.getApplicationUsername(),
+                        customerId: CdvPurchase.Braintree.customerId,
+                    },
+                    success: body => {
+                        this.log.info('clientTokenProvider success: ' + JSON.stringify(body));
+                        callback(body.clientToken);
+                    },
+                    error: err => {
+                        this.log.info('clientTokenProvider error: ' + JSON.stringify(err));
+                        callback(CdvPurchase.storeError(err, 'ERROR ' + err));
+                    },
+                });
+            };
+        }
+        get validator() {
+            return `${this.config.url}/v1/validate?appName=${this.config.appName}&apiKey=${this.config.apiKey}`;
+        }
+    }
+    CdvPurchase.Iaptic = Iaptic;
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
 (function (CdvPurchase) {
@@ -380,16 +313,15 @@ var CdvPurchase;
             return this.offers.find(o => o.id === id);
         }
         /**
-         * Find and return an offer for this product from its id
+         * Add an offer to this product.
          *
-         * If id isn't specified, returns the first offer.
-         *
-         * @param id - Identifier of the offer to return
+         * @internal
          */
         addOffer(offer) {
             if (this.getOffer(offer.id))
-                return;
+                return this;
             this.offers.push(offer);
+            return this;
         }
     }
     CdvPurchase.Product = Product;
@@ -440,83 +372,9 @@ var CdvPurchase;
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
 (function (CdvPurchase) {
-    let Internal;
-    (function (Internal) {
-        class RegisteredProducts {
-            constructor() {
-                this.list = [];
-            }
-            find(platform, id) {
-                return this.list.find(rp => rp.platform === platform && rp.id === id);
-            }
-            add(product) {
-                const products = Array.isArray(product) ? product : [product];
-                const newProducts = products.filter(p => !this.find(p.platform, p.id));
-                for (const p of newProducts)
-                    this.list.push(p);
-            }
-            byPlatform() {
-                const byPlatform = {};
-                this.list.forEach(p => {
-                    byPlatform[p.platform] = (byPlatform[p.platform] || []).concat(p);
-                });
-                return Object.keys(byPlatform).map(platform => ({
-                    platform: platform,
-                    products: byPlatform[platform]
-                }));
-            }
-        }
-        Internal.RegisteredProducts = RegisteredProducts;
-    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
-})(CdvPurchase || (CdvPurchase = {}));
-var CdvPurchase;
-(function (CdvPurchase) {
-    /** Retry failed requests
-     *
-     * When setup and/or load failed, the plugin will retry over and over till it can connect
-     * to the store.
-     *
-     * However, to be nice with the battery, it'll double the retry timeout each time.
-     *
-     * Special case, when the device goes online, it'll trigger all retry callback in the queue.
+    /**
+     * @internal
      */
-    class Retry {
-        constructor(minTimeout = 5000, maxTimeout = 120000) {
-            this.maxTimeout = 120000;
-            this.minTimeout = 5000;
-            this.retryTimeout = 5000;
-            this.retries = [];
-            this.minTimeout = minTimeout;
-            this.maxTimeout = maxTimeout;
-            this.retryTimeout = minTimeout;
-            document.addEventListener("online", () => {
-                const a = this.retries;
-                this.retries = [];
-                this.retryTimeout = this.minTimeout;
-                for (var i = 0; i < a.length; ++i) {
-                    clearTimeout(a[i].tid);
-                    a[i].fn.call(this);
-                }
-            }, false);
-        }
-        retry(fn) {
-            var tid = setTimeout(() => {
-                this.retries = this.retries.filter(function (o) {
-                    return tid !== o.tid;
-                });
-                fn();
-            }, this.retryTimeout);
-            this.retries.push({ tid: tid, fn: fn });
-            this.retryTimeout *= 2;
-            // Max out the waiting time to 2 minutes.
-            if (this.retryTimeout > this.maxTimeout)
-                this.retryTimeout = this.maxTimeout;
-        }
-    }
-    CdvPurchase.Retry = Retry;
-})(CdvPurchase || (CdvPurchase = {}));
-var CdvPurchase;
-(function (CdvPurchase) {
     let Internal;
     (function (Internal) {
         /** Queue of receipts to validate */
@@ -695,8 +553,83 @@ var CdvPurchase;
         }
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Internal;
+    (function (Internal) {
+        /**
+         * The list of active platform adapters
+         */
+        class Adapters {
+            constructor() {
+                this.list = [];
+            }
+            add(log, adapters, context) {
+                adapters.forEach(po => {
+                    log.info("");
+                    if (this.find(po.platform))
+                        return;
+                    switch (po.platform) {
+                        case CdvPurchase.Platform.APPLE_APPSTORE:
+                            return this.list.push(new CdvPurchase.AppleAppStore.Adapter(context));
+                        case CdvPurchase.Platform.GOOGLE_PLAY:
+                            return this.list.push(new CdvPurchase.GooglePlay.Adapter(context));
+                        case CdvPurchase.Platform.BRAINTREE:
+                            if (!po.options) {
+                                log.error('Options missing for Braintree initialization. Use {platform: Platform.BRAINTREE, options: {...}} in your call to store.initialize');
+                            }
+                            return this.list.push(new CdvPurchase.Braintree.Adapter(context, po.options));
+                        case CdvPurchase.Platform.TEST:
+                        default:
+                            return this.list.push(new CdvPurchase.Test.Adapter(context));
+                    }
+                });
+            }
+            /**
+             * Initialize some platform adapters.
+             */
+            initialize(platforms = [CdvPurchase.Store.defaultPlatform()], context) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    const newPlatforms = platforms.map(p => typeof p === 'string' ? { platform: p } : p).filter(p => !this.find(p.platform));
+                    const log = context.log.child('Adapters');
+                    log.info("Adding platforms: " + JSON.stringify(newPlatforms));
+                    this.add(log, newPlatforms, context);
+                    const products = context.registeredProducts.byPlatform();
+                    const result = yield Promise.all(newPlatforms.map((platformToInit) => __awaiter(this, void 0, void 0, function* () {
+                        var _a, _b, _c;
+                        const platformProducts = (_c = (_b = (_a = products.filter(p => p.platform === platformToInit.platform)) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.products) !== null && _c !== void 0 ? _c : [];
+                        const adapter = this.find(platformToInit.platform);
+                        if (!adapter)
+                            return;
+                        log.info(`${adapter.name} initializing...`);
+                        const initResult = yield adapter.initialize();
+                        log.info(`${adapter.name} initialized. ${initResult && JSON.stringify(initResult)}`);
+                        if (initResult === null || initResult === void 0 ? void 0 : initResult.code)
+                            return initResult;
+                        log.info(`${adapter.name} products: ${JSON.stringify(platformProducts)}`);
+                        if (platformProducts.length === 0)
+                            return;
+                        const loadResult = yield adapter.load(platformProducts);
+                        log.info(`${adapter.name} loaded: ${JSON.stringify(loadResult)}`);
+                        const loadedProducts = loadResult.filter(p => p instanceof CdvPurchase.Product);
+                        context.listener.productsUpdated(platformToInit.platform, loadedProducts);
+                        return loadResult.filter(lr => 'code' in lr && 'message' in lr)[0];
+                    })));
+                    return result.filter(err => err);
+                });
+            }
+            /**
+             * Retrieve a platform adapter.
+             */
+            find(platform) {
+                return this.list.filter(a => a.id === platform)[0];
+            }
+        }
+        Internal.Adapters = Adapters;
+    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
+})(CdvPurchase || (CdvPurchase = {}));
 /// <reference path="validator/validator.ts" />
-/// <reference path="adapters.ts" />
+/// <reference path="internal/adapters.ts" />
 /// <reference path="log.ts" />
 /// <reference path="callbacks.ts" />
 /// <reference path="ready.ts" />
@@ -706,7 +639,7 @@ var CdvPurchase;
     /** Singleton */
     let globalStore;
     /**
-     * Main class of the purchase.
+     * Entry class of the plugin.
      */
     class Store {
         constructor() {
@@ -1096,6 +1029,124 @@ var CdvPurchase;
         CancelationReason["UNKNOWN"] = "Unknown";
     })(CancelationReason = CdvPurchase.CancelationReason || (CdvPurchase.CancelationReason = {}));
 })(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Internal;
+    (function (Internal) {
+        class StoreAdapterListener {
+            constructor(delegate) {
+                this.lastTransactionState = {};
+                this.delegate = delegate;
+            }
+            static makeTransactionToken(transaction) {
+                return transaction.platform + '|' + transaction.transactionId;
+            }
+            productsUpdated(platform, products) {
+                products.forEach(product => this.delegate.updatedCallbacks.trigger(product));
+            }
+            receiptsUpdated(platform, receipts) {
+                receipts.forEach(receipt => {
+                    this.delegate.updatedReceiptCallbacks.trigger(receipt);
+                    receipt.transactions.forEach(transaction => {
+                        const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
+                        const lastState = this.lastTransactionState[transactionToken];
+                        if (transaction.state === CdvPurchase.TransactionState.APPROVED) {
+                            this.delegate.approvedCallbacks.trigger(transaction); // better retrigger (so validation is rerun on potential update)
+                        }
+                        else if (lastState !== transaction.state) {
+                            if (transaction.state === CdvPurchase.TransactionState.FINISHED) {
+                                this.delegate.finishedCallbacks.trigger(transaction);
+                            }
+                        }
+                        this.lastTransactionState[transactionToken] = transaction.state;
+                    });
+                });
+            }
+        }
+        Internal.StoreAdapterListener = StoreAdapterListener;
+    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Internal;
+    (function (Internal) {
+        class RegisteredProducts {
+            constructor() {
+                this.list = [];
+            }
+            find(platform, id) {
+                return this.list.find(rp => rp.platform === platform && rp.id === id);
+            }
+            add(product) {
+                const products = Array.isArray(product) ? product : [product];
+                const newProducts = products.filter(p => !this.find(p.platform, p.id));
+                for (const p of newProducts)
+                    this.list.push(p);
+            }
+            byPlatform() {
+                const byPlatform = {};
+                this.list.forEach(p => {
+                    byPlatform[p.platform] = (byPlatform[p.platform] || []).concat(p);
+                });
+                return Object.keys(byPlatform).map(platform => ({
+                    platform: platform,
+                    products: byPlatform[platform]
+                }));
+            }
+        }
+        Internal.RegisteredProducts = RegisteredProducts;
+    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Internal;
+    (function (Internal) {
+        /**
+         * Retry failed requests
+         *
+         * When setup and/or load failed, the plugin will retry over and over till it can connect
+         * to the store.
+         *
+         * However, to be nice with the battery, it'll double the retry timeout each time.
+         *
+         * Special case, when the device goes online, it'll trigger all retry callback in the queue.
+         */
+        class Retry {
+            constructor(minTimeout = 5000, maxTimeout = 120000) {
+                this.maxTimeout = 120000;
+                this.minTimeout = 5000;
+                this.retryTimeout = 5000;
+                this.retries = [];
+                this.minTimeout = minTimeout;
+                this.maxTimeout = maxTimeout;
+                this.retryTimeout = minTimeout;
+                document.addEventListener("online", () => {
+                    const a = this.retries;
+                    this.retries = [];
+                    this.retryTimeout = this.minTimeout;
+                    for (var i = 0; i < a.length; ++i) {
+                        clearTimeout(a[i].tid);
+                        a[i].fn.call(this);
+                    }
+                }, false);
+            }
+            retry(fn) {
+                var tid = setTimeout(() => {
+                    this.retries = this.retries.filter(function (o) {
+                        return tid !== o.tid;
+                    });
+                    fn();
+                }, this.retryTimeout);
+                this.retries.push({ tid: tid, fn: fn });
+                this.retryTimeout *= 2;
+                // Max out the waiting time to 2 minutes.
+                if (this.retryTimeout > this.maxTimeout)
+                    this.retryTimeout = this.maxTimeout;
+            }
+        }
+        Internal.Retry = Retry;
+    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
+})(CdvPurchase || (CdvPurchase = {}));
 /// <reference path="../../types.ts" />
 /// <reference path="../../product.ts" />
 /// <reference path="../../receipt.ts" />
@@ -1160,10 +1211,7 @@ var CdvPurchase;
             }
             requestPayment(payment, additionalData) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return {
-                        code: CdvPurchase.ErrorCode.UNKNOWN,
-                        message: 'requestPayment not supported',
-                    };
+                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'requestPayment not supported');
                 });
             }
         }
@@ -1199,11 +1247,14 @@ var CdvPurchase;
 (function (CdvPurchase) {
     let Braintree;
     (function (Braintree) {
+        // export type Nonce = {
+        //     type: PaymentMethod.THREE_D_SECURE;
+        //     value: string;
+        // };
         // export type NonceProvider = (type: PaymentMethod, callback: Callback<Nonce | IError>) => void;
-        let PaymentMethod;
-        (function (PaymentMethod) {
-            PaymentMethod["THREE_D_SECURE"] = "THREE_D_SECURE";
-        })(PaymentMethod = Braintree.PaymentMethod || (Braintree.PaymentMethod = {}));
+        // export enum PaymentMethod {
+        //     THREE_D_SECURE = 'THREE_D_SECURE',
+        // }
         class BraintreeReceipt extends CdvPurchase.Receipt {
             constructor(paymentRequest, dropInResult) {
                 // Now we have to send this to the server + the request
@@ -1252,7 +1303,19 @@ var CdvPurchase;
             initialize() {
                 return new Promise(resolve => {
                     this.log.info("initialize()");
-                    if (Braintree.AndroidBridge.Bridge.isSupported() && !this.androidBridge) {
+                    if (Braintree.IosBridge.Bridge.isSupported()) {
+                        this.log.info("instantiating ios bridge...");
+                        this.iosBridge = new Braintree.IosBridge.Bridge(this.log, (callback) => {
+                            if (this.options.tokenizationKey)
+                                callback(this.options.tokenizationKey);
+                            else if (this.options.clientTokenProvider)
+                                this.options.clientTokenProvider(callback);
+                            else
+                                callback(CdvPurchase.storeError(CdvPurchase.ErrorCode.CLIENT_INVALID, 'Braintree iOS Bridge requires a clientTokenProvider or tokenizationKey'));
+                        });
+                        this.iosBridge.initialize(this.context, resolve);
+                    }
+                    else if (Braintree.AndroidBridge.Bridge.isSupported() && !this.androidBridge) {
                         this.log.info("instantiating android bridge...");
                         this.androidBridge = new Braintree.AndroidBridge.Bridge(this.log);
                         this.log.info("calling android bridge -> initialize...");
@@ -1271,23 +1334,23 @@ var CdvPurchase;
             }
             load(products) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return products.map(p => ({ code: CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' }));
+                    return products.map(p => ({ code: CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'N/A' }));
                 });
             }
             order(offer) {
                 return __awaiter(this, void 0, void 0, function* () {
                     return {
                         code: CdvPurchase.ErrorCode.UNKNOWN,
-                        message: 'TODO: Not implemented'
+                        message: 'N/A: Not implemented with Braintree'
                     };
                 });
             }
             finish(transaction) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return {
-                        code: CdvPurchase.ErrorCode.UNKNOWN,
-                        message: 'TODO: Not implemented'
-                    };
+                    return; /* {
+                        code: ErrorCode.UNKNOWN,
+                        message: 'N/A: Not implemented with Braintree'
+                    } as IError; */
                 });
             }
             // async getNonce(paymentMethod: PaymentMethod): Promise<Nonce | IError> {
@@ -1303,14 +1366,23 @@ var CdvPurchase;
             //         }
             //     });
             // }
+            launchDropIn(dropInRequest) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    if (this.androidBridge)
+                        return this.androidBridge.launchDropIn(dropInRequest);
+                    if (this.iosBridge)
+                        return this.iosBridge.launchDropIn(dropInRequest);
+                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Braintree is not available');
+                });
+            }
             requestPayment(paymentRequest, additionalData) {
-                var _a, _b, _c, _d;
+                var _a, _b;
                 return __awaiter(this, void 0, void 0, function* () {
                     this.log.info("requestPayment()" + JSON.stringify(paymentRequest));
                     let dropInResult;
                     if ((_a = additionalData === null || additionalData === void 0 ? void 0 : additionalData.braintree) === null || _a === void 0 ? void 0 : _a.dropInRequest) {
                         // User provided a full DropInRequest, just passing it through
-                        const response = yield ((_b = this.androidBridge) === null || _b === void 0 ? void 0 : _b.launchDropIn(additionalData.braintree.dropInRequest));
+                        const response = yield this.launchDropIn(additionalData.braintree.dropInRequest);
                         if (!response || (('code' in response) && ('message' in response))) {
                             return response;
                         }
@@ -1356,7 +1428,7 @@ var CdvPurchase;
                     */
                     else {
                         // No other payment method as the moment...
-                        const response = yield ((_c = this.androidBridge) === null || _c === void 0 ? void 0 : _c.launchDropIn({}));
+                        const response = yield this.launchDropIn({});
                         if (!response || (('code' in response) && ('message' in response))) {
                             // Failed
                             this.log.warn("launchDropIn failed: " + JSON.stringify(response));
@@ -1366,11 +1438,8 @@ var CdvPurchase;
                         dropInResult = response;
                     }
                     this.log.info("launchDropIn success: " + JSON.stringify({ paymentRequest, dropInResult }));
-                    if (!((_d = dropInResult.paymentMethodNonce) === null || _d === void 0 ? void 0 : _d.nonce)) {
-                        return {
-                            code: CdvPurchase.ErrorCode.BAD_RESPONSE,
-                            message: 'launchDropIn returned no paymentMethodNonce',
-                        };
+                    if (!((_b = dropInResult.paymentMethodNonce) === null || _b === void 0 ? void 0 : _b.nonce)) {
+                        return CdvPurchase.storeError(CdvPurchase.ErrorCode.BAD_RESPONSE, 'launchDropIn returned no paymentMethodNonce');
                     }
                     let receipt = this._receipts.find(r => { var _a, _b; return ((_a = r.dropInResult.paymentMethodNonce) === null || _a === void 0 ? void 0 : _a.nonce) === ((_b = dropInResult.paymentMethodNonce) === null || _b === void 0 ? void 0 : _b.nonce); });
                     if (receipt) {
@@ -1406,17 +1475,26 @@ var CdvPurchase;
                 };
             }
             handleReceiptValidationResponse(receipt, response) {
+                var _a;
                 return __awaiter(this, void 0, void 0, function* () {
                     this.log.info("receipt validation response: " + JSON.stringify(response));
-                    // return;
+                    if ((response === null || response === void 0 ? void 0 : response.data) && ('transaction' in response.data)) {
+                        if (response.data.transaction.type === 'braintree') {
+                            const lCustomerId = (_a = response.data.transaction.data.transaction) === null || _a === void 0 ? void 0 : _a.customer.id;
+                            if (lCustomerId && !Braintree.customerId) {
+                                this.log.info("customerId updated: " + lCustomerId);
+                                Braintree.customerId = lCustomerId;
+                            }
+                        }
+                    }
                 });
             }
         }
         Braintree.Adapter = Adapter;
-        function formatAmount(amountMicros) {
-            const amountCents = '' + (amountMicros / 10000);
-            return (amountCents.slice(0, -2) || '0') + '.' + (amountCents.slice(-2, -1) || '0') + (amountCents.slice(-1) || '0');
-        }
+        // function formatAmount(amountMicros: number): string {
+        //     const amountCents = '' + (amountMicros / 10000);
+        //     return (amountCents.slice(0, -2) || '0') + '.' + (amountCents.slice(-2, -1) || '0') + (amountCents.slice(-1) || '0');
+        // }
         function isBraintreeReceipt(receipt) {
             return receipt.platform === CdvPurchase.Platform.BRAINTREE;
         }
@@ -1482,10 +1560,7 @@ var CdvPurchase;
                     }
                     catch (err) {
                         this.log.warn("initialization failed: " + (err === null || err === void 0 ? void 0 : err.message));
-                        callback({
-                            code: CdvPurchase.ErrorCode.SETUP,
-                            message: 'Failed to initialize Braintree Android Bridge: ' + (err === null || err === void 0 ? void 0 : err.message),
-                        });
+                        callback(CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, 'Failed to initialize Braintree Android Bridge: ' + (err === null || err === void 0 ? void 0 : err.message)));
                     }
                 }
                 /**
@@ -1521,33 +1596,158 @@ var CdvPurchase;
                             this.log.info("dropInSuccess: " + JSON.stringify(result));
                             resolve(result);
                         }, (err) => {
-                            this.log.info("dropIFailure: " + err);
+                            this.log.info("dropInFailure: " + err);
                             const errCode = err.split("|")[0];
                             const errMessage = err.split("|").slice(1).join('');
                             if (errCode === "UserCanceledException") {
-                                resolve({
-                                    code: CdvPurchase.ErrorCode.PAYMENT_CANCELLED,
-                                    message: errMessage,
-                                });
+                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_CANCELLED, errMessage));
                             }
                             else if (errCode === "AuthorizationException") {
-                                resolve({
-                                    code: CdvPurchase.ErrorCode.UNAUTHORIZED_REQUEST_DATA,
-                                    message: errMessage,
-                                });
+                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.UNAUTHORIZED_REQUEST_DATA, errMessage));
                             }
                             else {
-                                resolve({
-                                    code: CdvPurchase.ErrorCode.UNKNOWN,
-                                    message: err,
-                                });
+                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, err));
                             }
                         }, PLUGIN_ID, "launchDropIn", [dropInRequest]);
                     });
                 }
             }
             AndroidBridge.Bridge = Bridge;
+            // /**
+            //  * Successful callback result for the presentDropInPaymentUI method.
+            //  */
+            // interface PaymentUIResult {
+            //     /**
+            //      * Indicates if the user used the cancel button to close the dialog without
+            //      * completing the payment.
+            //      */
+            //     userCancelled: boolean;
+            //     /**
+            //      * The nonce for the payment transaction (if a payment was completed).
+            //      */
+            //     nonce: string;
+            //     /**
+            //      * The payment type (if a payment was completed).
+            //      */
+            //     type: string;
+            //     /**
+            //      * A description of the payment method (if a payment was completed).
+            //      */
+            //     localizedDescription: string;
+            //     /**
+            //      * Information about the credit card used to complete a payment (if a credit card was used).
+            //      */
+            //     card: {
+            //         /**
+            //          * The last two digits of the credit card used.
+            //          */
+            //         lastTwo: string;
+            //         /**
+            //          * An enumerated value used to indicate the type of credit card used.
+            //          *
+            //          * Can be one of the following values:
+            //          *
+            //          * BTCardNetworkUnknown
+            //          * BTCardNetworkAMEX
+            //          * BTCardNetworkDinersClub
+            //          * BTCardNetworkDiscover
+            //          * BTCardNetworkMasterCard
+            //          * BTCardNetworkVisa
+            //          * BTCardNetworkJCB
+            //          * BTCardNetworkLaser
+            //          * BTCardNetworkMaestro
+            //          * BTCardNetworkUnionPay
+            //          * BTCardNetworkSolo
+            //          * BTCardNetworkSwitch
+            //          * BTCardNetworkUKMaestro
+            //          */
+            //         network: string;
+            //     };
+            //     /**
+            //      * Information about the PayPal account used to complete a payment (if a PayPal account was used).
+            //      */
+            //     payPalAccount: {
+            //         email: string;
+            //         firstName: string;
+            //         lastName: string;
+            //         phone: string;
+            //         billingAddress: string;
+            //         shippingAddress: string;
+            //         clientMetadataId: string;
+            //         payerId: string;
+            //     };
+            //     /**
+            //      * Information about the Apple Pay card used to complete a payment (if Apple Pay was used).
+            //      */
+            //     applePaycard: {
+            //     };
+            //     /**
+            //      * Information about 3D Secure card used to complete a payment (if 3D Secure was used).
+            //      */
+            //     threeDSecureInfo: {
+            //         liabilityShifted: boolean;
+            //         liabilityShiftPossible: boolean;
+            //     };
+            //     /**
+            //      * Information about Venmo account used to complete a payment (if a Venmo account was used).
+            //      */
+            //     venmoAccount: {
+            //         username: string;
+            //     };
+            // }
         })(AndroidBridge = Braintree.AndroidBridge || (Braintree.AndroidBridge = {}));
+    })(Braintree = CdvPurchase.Braintree || (CdvPurchase.Braintree = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Braintree;
+    (function (Braintree) {
+        /**
+         * Cordova plugin ID for the braintree ios plugin.
+         */
+        const PLUGIN_ID = 'BraintreePlugin';
+        let IosBridge;
+        (function (IosBridge) {
+            class Bridge {
+                constructor(log, clientTokenProvider) {
+                    this.log = log.child("IosBridge");
+                    this.clientTokenProvider = clientTokenProvider;
+                }
+                initialize(verbosity, callback) {
+                    window.cordova.exec(null, null, "BraintreePlugin", "setVerbosity", [verbosity.verbosity]);
+                    window.cordova.exec(message => this.log.debug('(Native) ' + message), null, "BraintreePlugin", "setLogger", []);
+                    setTimeout(() => callback(undefined), 0);
+                }
+                launchDropIn(dropInRequest) {
+                    return new Promise(resolve => {
+                        const onSuccess = (result) => {
+                            this.log.info("dropInSuccess: " + JSON.stringify(result));
+                            resolve(result);
+                        };
+                        const onError = (errorString) => {
+                            this.log.info("dropInFailure: " + errorString);
+                            const [errCode, errMessage] = errorString.split('|');
+                            if (errCode === "UserCanceledException") {
+                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_CANCELLED, errMessage));
+                            }
+                            else {
+                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'ERROR ' + errCode + ': ' + errMessage));
+                            }
+                        };
+                        this.clientTokenProvider((clientToken) => {
+                            if (typeof clientToken === 'string')
+                                window.cordova.exec(onSuccess, onError, "BraintreePlugin", "launchDropInWithClientToken", [clientToken]);
+                            else // failed to get token
+                                resolve(clientToken);
+                        });
+                    });
+                }
+                static isSupported() {
+                    return window.cordova.platformId === 'ios';
+                }
+            }
+            IosBridge.Bridge = Bridge;
+        })(IosBridge = Braintree.IosBridge || (Braintree.IosBridge = {}));
     })(Braintree = CdvPurchase.Braintree || (CdvPurchase.Braintree = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -1572,10 +1772,22 @@ var CdvPurchase;
     (function (Braintree) {
         let DropIn;
         (function (DropIn) {
+            /** Payment method used or selected by the user. */
             let PaymentMethod;
             (function (PaymentMethod) {
-                PaymentMethod["AMEX"] = "AMEX";
+                /** Google only */
                 PaymentMethod["GOOGLE_PAY"] = "GOOGLE_PAY";
+                /** ios only */
+                PaymentMethod["LASER"] = "LASER";
+                /** ios only */
+                PaymentMethod["UK_MAESTRO"] = "UK_MAESTRO";
+                /** ios only */
+                PaymentMethod["SWITCH"] = "SWITCH";
+                /** ios only */
+                PaymentMethod["SOLOR"] = "SOLO";
+                /** ios only */
+                PaymentMethod["APPLE_PAY"] = "APPLE_PAY";
+                PaymentMethod["AMEX"] = "AMEX";
                 PaymentMethod["DINERS_CLUB"] = "DINERS_CLUB";
                 PaymentMethod["DISCOVER"] = "DISCOVER";
                 PaymentMethod["JCB"] = "JCB";
@@ -1707,7 +1919,7 @@ var CdvPurchase;
                 /** Prevent double initialization */
                 this.initialized = false;
                 /** Used to retry failed commands */
-                this.retry = new CdvPurchase.Retry();
+                this.retry = new CdvPurchase.Internal.Retry();
                 this.autoRefreshIntervalMillis = 0;
                 if (Adapter._instance)
                     throw new Error('GooglePlay adapter already initialized');
@@ -1743,10 +1955,7 @@ var CdvPurchase;
                         };
                         const iabError = (err) => {
                             this.initialized = false;
-                            this.context.error({
-                                code: CdvPurchase.ErrorCode.SETUP,
-                                message: "Init failed - " + err
-                            });
+                            this.context.error(CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, "Init failed - " + err));
                             this.retry.retry(() => this.initialize());
                         };
                         this.bridge.init(iabReady, iabError, iabOptions);
@@ -1795,10 +2004,7 @@ var CdvPurchase;
                         this.bridge.getAvailableProducts(inAppSkus, subsSkus, iabLoaded, (err) => {
                             // failed to load products, retry later.
                             this.retry.retry(go);
-                            this.context.error({
-                                code: CdvPurchase.ErrorCode.LOAD,
-                                message: 'Loading product info failed - ' + err + ' - retrying later...'
-                            });
+                            this.context.error(CdvPurchase.storeError(CdvPurchase.ErrorCode.LOAD, 'Loading product info failed - ' + err + ' - retrying later...'));
                         });
                     };
                     go();
@@ -1811,15 +2017,15 @@ var CdvPurchase;
                     const onFailure = (message, code) => resolve({ message, code });
                     const firstProduct = transaction.products[0];
                     if (!firstProduct)
-                        return resolve({ code: CdvPurchase.ErrorCode.FINISH, message: 'Cannot finish a transaction with no product' });
+                        return resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.FINISH, 'Cannot finish a transaction with no product'));
                     const product = this._products.getProduct(firstProduct.productId);
                     if (!product)
-                        return resolve({ code: CdvPurchase.ErrorCode.FINISH, message: 'Cannot finish transaction, unknown product ' + firstProduct.productId });
+                        return resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.FINISH, 'Cannot finish transaction, unknown product ' + firstProduct.productId));
                     const receipt = this._receipts.find(r => r.hasTransaction(transaction));
                     if (!receipt)
-                        return resolve({ code: CdvPurchase.ErrorCode.FINISH, message: 'Cannot finish transaction, linked receipt not found.' });
+                        return resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.FINISH, 'Cannot finish transaction, linked receipt not found.'));
                     if (!receipt.purchaseToken)
-                        return resolve({ code: CdvPurchase.ErrorCode.FINISH, message: 'Cannot finish transaction, linked receipt contains no purchaseToken.' });
+                        return resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.FINISH, 'Cannot finish transaction, linked receipt contains no purchaseToken.'));
                     if (product.type === CdvPurchase.ProductType.NON_RENEWING_SUBSCRIPTION || product.type === CdvPurchase.ProductType.CONSUMABLE) {
                         if (!transaction.isConsumed)
                             return this.bridge.consumePurchase(onSuccess, onFailure, receipt.purchaseToken);
@@ -1869,7 +2075,7 @@ var CdvPurchase;
                     };
                     const failure = (message, code) => {
                         this.log.warn('getPurchases failed: ' + message + ' (' + code + ')');
-                        setTimeout(() => resolve({ code: code || CdvPurchase.ErrorCode.UNKNOWN, message }), 0);
+                        setTimeout(() => resolve(CdvPurchase.storeError(code || CdvPurchase.ErrorCode.UNKNOWN, message)), 0);
                     };
                     this.bridge.getPurchases(success, failure);
                 });
@@ -1882,7 +2088,7 @@ var CdvPurchase;
                         const buySuccess = () => resolve(undefined);
                         const buyFailed = (message, code) => {
                             this.log.warn('Order failed: ' + JSON.stringify({ message, code }));
-                            resolve({ code: code !== null && code !== void 0 ? code : CdvPurchase.ErrorCode.UNKNOWN, message });
+                            resolve(CdvPurchase.storeError(code !== null && code !== void 0 ? code : CdvPurchase.ErrorCode.UNKNOWN, message));
                         };
                         if (offer.product.type === CdvPurchase.ProductType.PAID_SUBSCRIPTION) {
                             const idAndToken = offer.id; // offerId contains the productId and token (format productId@offerToken)
@@ -1946,10 +2152,7 @@ var CdvPurchase;
             }
             requestPayment(payment, additionalData) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return {
-                        code: CdvPurchase.ErrorCode.UNKNOWN,
-                        message: 'requestPayment not supported',
-                    };
+                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'requestPayment not supported');
                 });
             }
         }
@@ -2523,29 +2726,63 @@ var CdvPurchase;
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
 (function (CdvPurchase) {
+    /** Test (or Mock) Adapter and related classes */
     let Test;
     (function (Test) {
+        /** Test Adapter used for local testing with mock products */
         class Adapter {
-            constructor() {
+            constructor(context) {
                 this.id = CdvPurchase.Platform.TEST;
                 this.name = 'Test';
-                this.products = [];
+                this.products = Test.TEST_PRODUCTS;
                 this.receipts = [];
+                this.context = context;
+                this.log = context.log.child("Test");
             }
             initialize() {
                 return __awaiter(this, void 0, void 0, function* () { return; });
             }
             load(products) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return products.map(p => ({ code: CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'TODO' }));
+                    return products.map(p => {
+                        const product = Test.TEST_PRODUCTS.find(tp => tp.id === p.id && tp.type === p.type);
+                        if (product) {
+                            this.context.listener.productsUpdated(CdvPurchase.Platform.TEST, [product]);
+                            return product;
+                        }
+                        else {
+                            return { code: CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'This product is not available for purchase' };
+                        }
+                    });
                 });
             }
             order(offer) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return {
-                        code: CdvPurchase.ErrorCode.UNKNOWN,
-                        message: 'TODO: Not implemented'
-                    };
+                    // Purchasing products with "-fail-" in the id will fail.
+                    if (offer.product.id.indexOf("-fail-") > 0) {
+                        return {
+                            code: CdvPurchase.ErrorCode.PURCHASE,
+                            message: 'Purchase failed.'
+                        };
+                    }
+                    else {
+                        // purchase succeeded, let's generate a mock receipt.
+                        const receipt = new CdvPurchase.Receipt({
+                            platform: CdvPurchase.Platform.TEST,
+                            transactions: [{
+                                    platform: CdvPurchase.Platform.TEST,
+                                    products: [{
+                                            productId: offer.product.id,
+                                            offerId: offer.id,
+                                        }],
+                                    state: CdvPurchase.TransactionState.APPROVED,
+                                    transactionId: 'test-' + (new Date().getTime()),
+                                    isAcknowledged: false,
+                                }]
+                        });
+                        this.receipts.push(receipt);
+                        this.context.listener.receiptsUpdated(CdvPurchase.Platform.TEST, [receipt]);
+                    }
                 });
             }
             finish(transaction) {
@@ -2566,14 +2803,57 @@ var CdvPurchase;
             }
             requestPayment(payment, additionalData) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return {
-                        code: CdvPurchase.ErrorCode.UNKNOWN,
-                        message: 'requestPayment not supported',
-                    };
+                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'requestPayment not supported');
                 });
             }
         }
         Test.Adapter = Adapter;
+    })(Test = CdvPurchase.Test || (CdvPurchase.Test = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Test;
+    (function (Test) {
+        /** A consumable product for which the purchase goes through */
+        Test.CONSUMABLE_OK = new CdvPurchase.Product({
+            id: 'test-consumable',
+            platform: CdvPurchase.Platform.TEST,
+            type: CdvPurchase.ProductType.CONSUMABLE,
+        });
+        Test.CONSUMABLE_OK.title = 'Test Consumable';
+        Test.CONSUMABLE_OK.description = 'A consumable product that you can purchase';
+        Test.CONSUMABLE_OK.addOffer({
+            id: 'test-consumable-offer1',
+            pricingPhases: [{
+                    price: '$9.99',
+                    currency: 'USD',
+                    priceMicros: 9990000,
+                    paymentMode: CdvPurchase.PaymentMode.UP_FRONT,
+                    recurrenceMode: CdvPurchase.RecurrenceMode.NON_RECURRING,
+                }],
+            product: Test.CONSUMABLE_OK,
+        });
+        /** A consumable product for which the purchase will fail */
+        Test.CONSUMABLE_FAILING = new CdvPurchase.Product({
+            id: 'test-consumable-fail',
+            platform: CdvPurchase.Platform.TEST,
+            type: CdvPurchase.ProductType.CONSUMABLE,
+        });
+        Test.CONSUMABLE_FAILING.title = 'Failing Consumable';
+        Test.CONSUMABLE_FAILING.description = 'A consumable product that cannot be purchased';
+        Test.CONSUMABLE_FAILING.addOffer({
+            id: 'test-consumable-fail-offer1',
+            pricingPhases: [{
+                    price: '$1.99',
+                    currency: 'USD',
+                    priceMicros: 9990000,
+                    paymentMode: CdvPurchase.PaymentMode.UP_FRONT,
+                    recurrenceMode: CdvPurchase.RecurrenceMode.NON_RECURRING,
+                }],
+            product: Test.CONSUMABLE_FAILING,
+        });
+        /** List of all test products */
+        Test.TEST_PRODUCTS = [Test.CONSUMABLE_OK, Test.CONSUMABLE_FAILING];
     })(Test = CdvPurchase.Test || (CdvPurchase.Test = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -2621,10 +2901,7 @@ var CdvPurchase;
             }
             requestPayment(payment, additionalData) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return {
-                        code: CdvPurchase.ErrorCode.UNKNOWN,
-                        message: 'requestPayment not supported',
-                    };
+                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'requestPayment not supported');
                 });
             }
         }
@@ -2971,6 +3248,9 @@ var CdvPurchase;
 (function (CdvPurchase) {
     let Validator;
     (function (Validator) {
+        /**
+         * @internal
+         */
         let Internal;
         (function (Internal) {
             function isArray(arg) {
