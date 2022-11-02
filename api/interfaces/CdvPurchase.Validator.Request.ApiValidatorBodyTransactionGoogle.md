@@ -4,6 +4,16 @@
 
 Transaction type from a google powered device
 
+## Table of contents
+
+### Properties
+
+- [id](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionGoogle.md#id)
+- [purchaseToken](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionGoogle.md#purchasetoken)
+- [receipt](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionGoogle.md#receipt)
+- [signature](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionGoogle.md#signature)
+- [type](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionGoogle.md#type)
+
 ## Properties
 
 ### id

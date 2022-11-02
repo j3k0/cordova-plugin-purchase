@@ -10,6 +10,28 @@
 - [`Adapter`](../classes/CdvPurchase.Test.Adapter.md)
 - [`Adapter`](../classes/CdvPurchase.WindowsStore.Adapter.md)
 
+## Table of contents
+
+### Properties
+
+- [id](CdvPurchase.Adapter.md#id)
+- [name](CdvPurchase.Adapter.md#name)
+
+### Accessors
+
+- [products](CdvPurchase.Adapter.md#products)
+- [receipts](CdvPurchase.Adapter.md#receipts)
+
+### Methods
+
+- [finish](CdvPurchase.Adapter.md#finish)
+- [handleReceiptValidationResponse](CdvPurchase.Adapter.md#handlereceiptvalidationresponse)
+- [initialize](CdvPurchase.Adapter.md#initialize)
+- [load](CdvPurchase.Adapter.md#load)
+- [order](CdvPurchase.Adapter.md#order)
+- [receiptValidationBody](CdvPurchase.Adapter.md#receiptvalidationbody)
+- [requestPayment](CdvPurchase.Adapter.md#requestpayment)
+
 ## Properties
 
 ### id

@@ -8,6 +8,24 @@
 
   ↳ **`BraintreeReceipt`**
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.Braintree.BraintreeReceipt.md#constructor)
+
+### Properties
+
+- [dropInResult](CdvPurchase.Braintree.BraintreeReceipt.md#dropinresult)
+- [paymentRequest](CdvPurchase.Braintree.BraintreeReceipt.md#paymentrequest)
+- [platform](CdvPurchase.Braintree.BraintreeReceipt.md#platform)
+- [transactions](CdvPurchase.Braintree.BraintreeReceipt.md#transactions)
+
+### Methods
+
+- [hasTransaction](CdvPurchase.Braintree.BraintreeReceipt.md#hastransaction)
+- [refresh](CdvPurchase.Braintree.BraintreeReceipt.md#refresh)
+
 ## Constructors
 
 ### constructor

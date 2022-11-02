@@ -2,9 +2,16 @@
 
 [CdvPurchase](CdvPurchase.md).[Braintree](CdvPurchase.Braintree.md).AndroidBridge
 
-## Classes
+## Table of contents
+
+### Classes
 
 - [Bridge](../classes/CdvPurchase.Braintree.AndroidBridge.Bridge.md)
+
+### Type Aliases
+
+- [ClientTokenProvider](CdvPurchase.Braintree.AndroidBridge.md#clienttokenprovider)
+- [Message](CdvPurchase.Braintree.AndroidBridge.md#message)
 
 ## Type Aliases
 

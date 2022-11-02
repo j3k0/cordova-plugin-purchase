@@ -2,6 +2,27 @@
 
 [GooglePlay](../modules/CdvPurchase.GooglePlay.md).[Bridge](../modules/CdvPurchase.GooglePlay.Bridge.md).Purchase
 
+## Table of contents
+
+### Properties
+
+- [accountId](CdvPurchase.GooglePlay.Bridge.Purchase.md#accountid)
+- [acknowledged](CdvPurchase.GooglePlay.Bridge.Purchase.md#acknowledged)
+- [autoRenewing](CdvPurchase.GooglePlay.Bridge.Purchase.md#autorenewing)
+- [developerPayload](CdvPurchase.GooglePlay.Bridge.Purchase.md#developerpayload)
+- [getPurchaseState](CdvPurchase.GooglePlay.Bridge.Purchase.md#getpurchasestate)
+- [orderId](CdvPurchase.GooglePlay.Bridge.Purchase.md#orderid)
+- [packageName](CdvPurchase.GooglePlay.Bridge.Purchase.md#packagename)
+- [productId](CdvPurchase.GooglePlay.Bridge.Purchase.md#productid)
+- [productIds](CdvPurchase.GooglePlay.Bridge.Purchase.md#productids)
+- [profileId](CdvPurchase.GooglePlay.Bridge.Purchase.md#profileid)
+- [purchaseState](CdvPurchase.GooglePlay.Bridge.Purchase.md#purchasestate)
+- [purchaseTime](CdvPurchase.GooglePlay.Bridge.Purchase.md#purchasetime)
+- [purchaseToken](CdvPurchase.GooglePlay.Bridge.Purchase.md#purchasetoken)
+- [quantity](CdvPurchase.GooglePlay.Bridge.Purchase.md#quantity)
+- [receipt](CdvPurchase.GooglePlay.Bridge.Purchase.md#receipt)
+- [signature](CdvPurchase.GooglePlay.Bridge.Purchase.md#signature)
+
 ## Properties
 
 ### accountId

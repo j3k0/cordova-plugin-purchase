@@ -2,6 +2,13 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[Validator](../modules/CdvPurchase.Validator.md).Target
 
+## Table of contents
+
+### Properties
+
+- [headers](CdvPurchase.Validator.Target.md#headers)
+- [url](CdvPurchase.Validator.Target.md#url)
+
 ## Properties
 
 ### headers

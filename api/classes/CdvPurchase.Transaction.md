@@ -10,6 +10,28 @@
 
   ↳ [`Transaction`](CdvPurchase.GooglePlay.Transaction.md)
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.Transaction.md#constructor)
+
+### Properties
+
+- [expirationDate](CdvPurchase.Transaction.md#expirationdate)
+- [isAcknowledged](CdvPurchase.Transaction.md#isacknowledged)
+- [isConsumed](CdvPurchase.Transaction.md#isconsumed)
+- [isPending](CdvPurchase.Transaction.md#ispending)
+- [lastRenewalDate](CdvPurchase.Transaction.md#lastrenewaldate)
+- [platform](CdvPurchase.Transaction.md#platform)
+- [products](CdvPurchase.Transaction.md#products)
+- [purchaseDate](CdvPurchase.Transaction.md#purchasedate)
+- [purchaseId](CdvPurchase.Transaction.md#purchaseid)
+- [renewalIntent](CdvPurchase.Transaction.md#renewalintent)
+- [renewalIntentChangeDate](CdvPurchase.Transaction.md#renewalintentchangedate)
+- [state](CdvPurchase.Transaction.md#state)
+- [transactionId](CdvPurchase.Transaction.md#transactionid)
+
 ## Constructors
 
 ### constructor

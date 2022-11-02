@@ -2,6 +2,13 @@
 
 [GooglePlay](../modules/CdvPurchase.GooglePlay.md).[PublisherAPI](../modules/CdvPurchase.GooglePlay.PublisherAPI.md).GoogleErrorReason
 
+## Table of contents
+
+### Enumeration Members
+
+- [PURCHASE\_TOKEN\_NO\_LONGER\_VALID](CdvPurchase.GooglePlay.PublisherAPI.GoogleErrorReason.md#purchase_token_no_longer_valid)
+- [SUBSCRIPTION\_NO\_LONGER\_AVAILABLE](CdvPurchase.GooglePlay.PublisherAPI.GoogleErrorReason.md#subscription_no_longer_available)
+
 ## Enumeration Members
 
 ### PURCHASE\_TOKEN\_NO\_LONGER\_VALID

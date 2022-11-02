@@ -2,6 +2,8 @@
 
 [CdvPurchase](CdvPurchase.md).[Braintree](CdvPurchase.Braintree.md).IosBridge
 
-## Classes
+## Table of contents
+
+### Classes
 
 - [Bridge](../classes/CdvPurchase.Braintree.IosBridge.Bridge.md)

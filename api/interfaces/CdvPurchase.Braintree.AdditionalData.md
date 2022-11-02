@@ -4,6 +4,12 @@
 
 Data for a Braintree payment request.
 
+## Table of contents
+
+### Properties
+
+- [dropInRequest](CdvPurchase.Braintree.AdditionalData.md#dropinrequest)
+
 ## Properties
 
 ### dropInRequest

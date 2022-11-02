@@ -8,6 +8,23 @@
 
   ↳ **`SKOffer`**
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.AppleAppStore.SKOffer.md#constructor)
+
+### Properties
+
+- [id](CdvPurchase.AppleAppStore.SKOffer.md#id)
+- [pricingPhases](CdvPurchase.AppleAppStore.SKOffer.md#pricingphases)
+
+### Accessors
+
+- [platform](CdvPurchase.AppleAppStore.SKOffer.md#platform)
+- [productId](CdvPurchase.AppleAppStore.SKOffer.md#productid)
+- [productType](CdvPurchase.AppleAppStore.SKOffer.md#producttype)
+
 ## Constructors
 
 ### constructor
@@ -51,14 +68,44 @@ Pricing phases
 
 [Offer](CdvPurchase.Offer.md).[pricingPhases](CdvPurchase.Offer.md#pricingphases)
 
-___
+## Accessors
 
-### product
+### platform
 
-• **product**: [`Product`](CdvPurchase.Product.md)
+• `get` **platform**(): [`Platform`](../enums/CdvPurchase.Platform.md)
 
-Parent product
+#### Returns
+
+[`Platform`](../enums/CdvPurchase.Platform.md)
 
 #### Inherited from
 
-[Offer](CdvPurchase.Offer.md).[product](CdvPurchase.Offer.md#product)
+Offer.platform
+
+___
+
+### productId
+
+• `get` **productId**(): `string`
+
+#### Returns
+
+`string`
+
+#### Inherited from
+
+Offer.productId
+
+___
+
+### productType
+
+• `get` **productType**(): [`ProductType`](../enums/CdvPurchase.ProductType.md)
+
+#### Returns
+
+[`ProductType`](../enums/CdvPurchase.ProductType.md)
+
+#### Inherited from
+
+Offer.productType

@@ -2,6 +2,36 @@
 
 [AppleAppStore](../modules/CdvPurchase.AppleAppStore.md).[VerifyReceipt](../modules/CdvPurchase.AppleAppStore.VerifyReceipt.md).AppleTransaction
 
+## Table of contents
+
+### Properties
+
+- [app\_account\_token](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#app_account_token)
+- [cancellation\_date](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#cancellation_date)
+- [cancellation\_date\_ms](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#cancellation_date_ms)
+- [cancellation\_reason](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#cancellation_reason)
+- [expires\_date](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#expires_date)
+- [expires\_date\_ms](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#expires_date_ms)
+- [expires\_date\_pst](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#expires_date_pst)
+- [in\_app\_ownership\_type](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#in_app_ownership_type)
+- [is\_in\_intro\_offer\_period](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#is_in_intro_offer_period)
+- [is\_trial\_period](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#is_trial_period)
+- [is\_upgraded](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#is_upgraded)
+- [offer\_code\_ref\_name](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#offer_code_ref_name)
+- [original\_purchase\_date](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#original_purchase_date)
+- [original\_purchase\_date\_ms](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#original_purchase_date_ms)
+- [original\_purchase\_date\_pst](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#original_purchase_date_pst)
+- [original\_transaction\_id](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#original_transaction_id)
+- [product\_id](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#product_id)
+- [promotional\_offer\_id](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#promotional_offer_id)
+- [purchase\_date](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#purchase_date)
+- [purchase\_date\_ms](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#purchase_date_ms)
+- [purchase\_date\_pst](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#purchase_date_pst)
+- [quantity](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#quantity)
+- [subscription\_group\_identifier](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#subscription_group_identifier)
+- [transaction\_id](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#transaction_id)
+- [web\_order\_line\_item\_id](CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md#web_order_line_item_id)
+
 ## Properties
 
 ### app\_account\_token

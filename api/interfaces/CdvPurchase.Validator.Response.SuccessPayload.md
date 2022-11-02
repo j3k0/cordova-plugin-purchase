@@ -4,6 +4,13 @@
 
 Response from a validator endpoint
 
+## Table of contents
+
+### Properties
+
+- [data](CdvPurchase.Validator.Response.SuccessPayload.md#data)
+- [ok](CdvPurchase.Validator.Response.SuccessPayload.md#ok)
+
 ## Properties
 
 ### data

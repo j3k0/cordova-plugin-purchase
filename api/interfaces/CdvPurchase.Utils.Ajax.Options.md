@@ -10,6 +10,17 @@ Option for an external HTTP request
 | :------ |
 | `T` |
 
+## Table of contents
+
+### Properties
+
+- [customHeaders](CdvPurchase.Utils.Ajax.Options.md#customheaders)
+- [data](CdvPurchase.Utils.Ajax.Options.md#data)
+- [error](CdvPurchase.Utils.Ajax.Options.md#error)
+- [method](CdvPurchase.Utils.Ajax.Options.md#method)
+- [success](CdvPurchase.Utils.Ajax.Options.md#success)
+- [url](CdvPurchase.Utils.Ajax.Options.md#url)
+
 ## Properties
 
 ### customHeaders

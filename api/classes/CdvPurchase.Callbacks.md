@@ -10,6 +10,21 @@ Manage a list of callbacks
 | :------ |
 | `T` |
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.Callbacks.md#constructor)
+
+### Properties
+
+- [callbacks](CdvPurchase.Callbacks.md#callbacks)
+
+### Methods
+
+- [push](CdvPurchase.Callbacks.md#push)
+- [trigger](CdvPurchase.Callbacks.md#trigger)
+
 ## Constructors
 
 ### constructor

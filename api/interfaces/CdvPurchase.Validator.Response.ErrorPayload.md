@@ -4,6 +4,16 @@
 
 Error response from the validator endpoint
 
+## Table of contents
+
+### Properties
+
+- [code](CdvPurchase.Validator.Response.ErrorPayload.md#code)
+- [data](CdvPurchase.Validator.Response.ErrorPayload.md#data)
+- [message](CdvPurchase.Validator.Response.ErrorPayload.md#message)
+- [ok](CdvPurchase.Validator.Response.ErrorPayload.md#ok)
+- [status](CdvPurchase.Validator.Response.ErrorPayload.md#status)
+
 ## Properties
 
 ### code

@@ -4,6 +4,13 @@
 
 Whether or not the user intends to let the subscription auto-renew.
 
+## Table of contents
+
+### Enumeration Members
+
+- [LAPSE](CdvPurchase.RenewalIntent.md#lapse)
+- [RENEW](CdvPurchase.RenewalIntent.md#renew)
+
 ## Enumeration Members
 
 ### LAPSE

@@ -8,6 +8,29 @@ Test Adapter used for local testing with mock products
 
 - [`Adapter`](../interfaces/CdvPurchase.Adapter.md)
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.Test.Adapter.md#constructor)
+
+### Properties
+
+- [id](CdvPurchase.Test.Adapter.md#id)
+- [name](CdvPurchase.Test.Adapter.md#name)
+- [products](CdvPurchase.Test.Adapter.md#products)
+- [receipts](CdvPurchase.Test.Adapter.md#receipts)
+
+### Methods
+
+- [finish](CdvPurchase.Test.Adapter.md#finish)
+- [handleReceiptValidationResponse](CdvPurchase.Test.Adapter.md#handlereceiptvalidationresponse)
+- [initialize](CdvPurchase.Test.Adapter.md#initialize)
+- [load](CdvPurchase.Test.Adapter.md#load)
+- [order](CdvPurchase.Test.Adapter.md#order)
+- [receiptValidationBody](CdvPurchase.Test.Adapter.md#receiptvalidationbody)
+- [requestPayment](CdvPurchase.Test.Adapter.md#requestpayment)
+
 ## Constructors
 
 ### constructor
@@ -48,7 +71,7 @@ ___
 
 ### products
 
-• **products**: [`Product`](CdvPurchase.Product.md)[] = `TEST_PRODUCTS`
+• **products**: [`Product`](CdvPurchase.Product.md)[] = `[]`
 
 #### Implementation of
 

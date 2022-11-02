@@ -2,9 +2,16 @@
 
 [CdvPurchase](CdvPurchase.md).[Utils](CdvPurchase.Utils.md).Ajax
 
-## Interfaces
+## Table of contents
+
+### Interfaces
 
 - [Options](../interfaces/CdvPurchase.Utils.Ajax.Options.md)
+
+### Type Aliases
+
+- [ErrorCallback](CdvPurchase.Utils.Ajax.md#errorcallback)
+- [SuccessCallback](CdvPurchase.Utils.Ajax.md#successcallback)
 
 ## Type Aliases
 

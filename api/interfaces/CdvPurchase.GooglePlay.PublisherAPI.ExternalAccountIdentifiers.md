@@ -4,6 +4,14 @@
 
 User account identifier in the third-party service.
 
+## Table of contents
+
+### Properties
+
+- [externalAccountId](CdvPurchase.GooglePlay.PublisherAPI.ExternalAccountIdentifiers.md#externalaccountid)
+- [obfuscatedExternalAccountId](CdvPurchase.GooglePlay.PublisherAPI.ExternalAccountIdentifiers.md#obfuscatedexternalaccountid)
+- [obfuscatedExternalProfileId](CdvPurchase.GooglePlay.PublisherAPI.ExternalAccountIdentifiers.md#obfuscatedexternalprofileid)
+
 ## Properties
 
 ### externalAccountId

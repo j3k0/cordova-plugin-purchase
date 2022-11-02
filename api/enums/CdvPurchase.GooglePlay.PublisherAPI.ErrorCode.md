@@ -6,6 +6,12 @@ Those are actually HTTP status codes.
 
 Duplicated here for documentation purposes.
 
+## Table of contents
+
+### Enumeration Members
+
+- [GONE](CdvPurchase.GooglePlay.PublisherAPI.ErrorCode.md#gone)
+
 ## Enumeration Members
 
 ### GONE

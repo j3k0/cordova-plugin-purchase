@@ -4,6 +4,49 @@
 
 Entry class of the plugin.
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.Store.md#constructor)
+
+### Properties
+
+- [adapters](CdvPurchase.Store.md#adapters)
+- [applicationUsername](CdvPurchase.Store.md#applicationusername)
+- [log](CdvPurchase.Store.md#log)
+- [validator](CdvPurchase.Store.md#validator)
+- [validator\_privacy\_policy](CdvPurchase.Store.md#validator_privacy_policy)
+- [verbosity](CdvPurchase.Store.md#verbosity)
+- [version](CdvPurchase.Store.md#version)
+
+### Accessors
+
+- [localReceipts](CdvPurchase.Store.md#localreceipts)
+- [products](CdvPurchase.Store.md#products)
+- [verifiedReceipts](CdvPurchase.Store.md#verifiedreceipts)
+- [instance](CdvPurchase.Store.md#instance)
+
+### Methods
+
+- [error](CdvPurchase.Store.md#error)
+- [findInLocalReceipts](CdvPurchase.Store.md#findinlocalreceipts)
+- [findInVerifiedReceipts](CdvPurchase.Store.md#findinverifiedreceipts)
+- [finish](CdvPurchase.Store.md#finish)
+- [get](CdvPurchase.Store.md#get)
+- [getApplicationUsername](CdvPurchase.Store.md#getapplicationusername)
+- [initialize](CdvPurchase.Store.md#initialize)
+- [order](CdvPurchase.Store.md#order)
+- [ready](CdvPurchase.Store.md#ready)
+- [refresh](CdvPurchase.Store.md#refresh)
+- [register](CdvPurchase.Store.md#register)
+- [requestPayment](CdvPurchase.Store.md#requestpayment)
+- [restorePurchases](CdvPurchase.Store.md#restorepurchases)
+- [update](CdvPurchase.Store.md#update)
+- [verify](CdvPurchase.Store.md#verify)
+- [when](CdvPurchase.Store.md#when)
+- [defaultPlatform](CdvPurchase.Store.md#defaultplatform)
+
 ## Constructors
 
 ### constructor

@@ -8,6 +8,21 @@ Postal address for 3D Secure flows.
 
 https://braintree.github.io/braintree_ios/current/Classes/BTThreeDSecurePostalAddress.html
 
+## Table of contents
+
+### Properties
+
+- [countryCodeAlpha2](CdvPurchase.Braintree.ThreeDSecure.PostalAddress.md#countrycodealpha2)
+- [extendedAddress](CdvPurchase.Braintree.ThreeDSecure.PostalAddress.md#extendedaddress)
+- [givenName](CdvPurchase.Braintree.ThreeDSecure.PostalAddress.md#givenname)
+- [line3](CdvPurchase.Braintree.ThreeDSecure.PostalAddress.md#line3)
+- [locality](CdvPurchase.Braintree.ThreeDSecure.PostalAddress.md#locality)
+- [phoneNumber](CdvPurchase.Braintree.ThreeDSecure.PostalAddress.md#phonenumber)
+- [postalCode](CdvPurchase.Braintree.ThreeDSecure.PostalAddress.md#postalcode)
+- [region](CdvPurchase.Braintree.ThreeDSecure.PostalAddress.md#region)
+- [streetAddress](CdvPurchase.Braintree.ThreeDSecure.PostalAddress.md#streetaddress)
+- [surname](CdvPurchase.Braintree.ThreeDSecure.PostalAddress.md#surname)
+
 ## Properties
 
 ### countryCodeAlpha2

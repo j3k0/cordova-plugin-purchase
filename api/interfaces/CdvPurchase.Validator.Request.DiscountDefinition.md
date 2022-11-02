@@ -4,6 +4,18 @@
 
 Describe a discount
 
+## Table of contents
+
+### Properties
+
+- [id](CdvPurchase.Validator.Request.DiscountDefinition.md#id)
+- [paymentMode](CdvPurchase.Validator.Request.DiscountDefinition.md#paymentmode)
+- [period](CdvPurchase.Validator.Request.DiscountDefinition.md#period)
+- [periodUnit](CdvPurchase.Validator.Request.DiscountDefinition.md#periodunit)
+- [price](CdvPurchase.Validator.Request.DiscountDefinition.md#price)
+- [priceMicros](CdvPurchase.Validator.Request.DiscountDefinition.md#pricemicros)
+- [type](CdvPurchase.Validator.Request.DiscountDefinition.md#type)
+
 ## Properties
 
 ### id

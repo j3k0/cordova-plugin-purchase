@@ -6,6 +6,18 @@ Bridge to access native functions.
 
 This tries to export pretty raw functions from the underlying native SDKs.
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.Braintree.AndroidBridge.Bridge.md#constructor)
+
+### Methods
+
+- [initialize](CdvPurchase.Braintree.AndroidBridge.Bridge.md#initialize)
+- [launchDropIn](CdvPurchase.Braintree.AndroidBridge.Bridge.md#launchdropin)
+- [isSupported](CdvPurchase.Braintree.AndroidBridge.Bridge.md#issupported)
+
 ## Constructors
 
 ### constructor

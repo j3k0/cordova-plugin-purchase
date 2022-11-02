@@ -8,6 +8,25 @@
 
   ↳ **`ProductPurchaseExt`**
 
+## Table of contents
+
+### Properties
+
+- [acknowledgementState](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#acknowledgementstate)
+- [consumptionState](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#consumptionstate)
+- [developerPayload](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#developerpayload)
+- [kind](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#kind)
+- [obfuscatedExternalAccountId](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#obfuscatedexternalaccountid)
+- [obfuscatedExternalProfileId](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#obfuscatedexternalprofileid)
+- [orderId](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#orderid)
+- [productId](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#productid)
+- [purchaseState](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#purchasestate)
+- [purchaseTimeMillis](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#purchasetimemillis)
+- [purchaseToken](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#purchasetoken)
+- [purchaseType](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#purchasetype)
+- [quantity](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#quantity)
+- [regionCode](CdvPurchase.GooglePlay.PublisherAPI.ProductPurchaseExt.md#regioncode)
+
 ## Properties
 
 ### acknowledgementState

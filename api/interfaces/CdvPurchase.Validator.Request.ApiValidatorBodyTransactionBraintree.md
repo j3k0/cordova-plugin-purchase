@@ -4,6 +4,17 @@
 
 Transaction type from Braintree
 
+## Table of contents
+
+### Properties
+
+- [deviceData](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionBraintree.md#devicedata)
+- [id](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionBraintree.md#id)
+- [paymentDescription](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionBraintree.md#paymentdescription)
+- [paymentMethodNonce](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionBraintree.md#paymentmethodnonce)
+- [paymentMethodType](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionBraintree.md#paymentmethodtype)
+- [type](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionBraintree.md#type)
+
 ## Properties
 
 ### deviceData

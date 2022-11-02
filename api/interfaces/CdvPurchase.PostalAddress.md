@@ -4,6 +4,21 @@
 
 Postal address for payment requests.
 
+## Table of contents
+
+### Properties
+
+- [countryCode](CdvPurchase.PostalAddress.md#countrycode)
+- [givenName](CdvPurchase.PostalAddress.md#givenname)
+- [locality](CdvPurchase.PostalAddress.md#locality)
+- [phoneNumber](CdvPurchase.PostalAddress.md#phonenumber)
+- [postalCode](CdvPurchase.PostalAddress.md#postalcode)
+- [region](CdvPurchase.PostalAddress.md#region)
+- [streetAddress1](CdvPurchase.PostalAddress.md#streetaddress1)
+- [streetAddress2](CdvPurchase.PostalAddress.md#streetaddress2)
+- [streetAddress3](CdvPurchase.PostalAddress.md#streetaddress3)
+- [surname](CdvPurchase.PostalAddress.md#surname)
+
 ## Properties
 
 ### countryCode

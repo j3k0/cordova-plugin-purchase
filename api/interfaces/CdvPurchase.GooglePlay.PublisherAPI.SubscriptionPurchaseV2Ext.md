@@ -8,6 +8,24 @@
 
   ↳ **`SubscriptionPurchaseV2Ext`**
 
+## Table of contents
+
+### Properties
+
+- [acknowledgementState](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md#acknowledgementstate)
+- [canceledStateContext](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md#canceledstatecontext)
+- [externalAccountIdentifiers](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md#externalaccountidentifiers)
+- [kind](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md#kind)
+- [latestOrderId](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md#latestorderid)
+- [lineItems](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md#lineitems)
+- [linkedPurchaseToken](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md#linkedpurchasetoken)
+- [pausedStateContext](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md#pausedstatecontext)
+- [regionCode](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md#regioncode)
+- [startTime](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md#starttime)
+- [subscribeWithGoogleInfo](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md#subscribewithgoogleinfo)
+- [subscriptionState](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md#subscriptionstate)
+- [testPurchase](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md#testpurchase)
+
 ## Properties
 
 ### acknowledgementState

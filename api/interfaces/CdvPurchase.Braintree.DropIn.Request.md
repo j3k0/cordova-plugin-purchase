@@ -4,6 +4,19 @@
 
 A Braintree Drop-In Request
 
+## Table of contents
+
+### Properties
+
+- [allowVaultCardOverride](CdvPurchase.Braintree.DropIn.Request.md#allowvaultcardoverride)
+- [cardholderNameStatus](CdvPurchase.Braintree.DropIn.Request.md#cardholdernamestatus)
+- [disableCard](CdvPurchase.Braintree.DropIn.Request.md#disablecard)
+- [maskCardNumber](CdvPurchase.Braintree.DropIn.Request.md#maskcardnumber)
+- [maskSecurityCode](CdvPurchase.Braintree.DropIn.Request.md#masksecuritycode)
+- [threeDSecureRequest](CdvPurchase.Braintree.DropIn.Request.md#threedsecurerequest)
+- [vaultCardDefaultValue](CdvPurchase.Braintree.DropIn.Request.md#vaultcarddefaultvalue)
+- [vaultManager](CdvPurchase.Braintree.DropIn.Request.md#vaultmanager)
+
 ## Properties
 
 ### allowVaultCardOverride

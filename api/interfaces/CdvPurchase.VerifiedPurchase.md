@@ -4,6 +4,24 @@
 
 A purchase object returned by the receipt validator
 
+## Table of contents
+
+### Properties
+
+- [cancelationReason](CdvPurchase.VerifiedPurchase.md#cancelationreason)
+- [discountId](CdvPurchase.VerifiedPurchase.md#discountid)
+- [expiryDate](CdvPurchase.VerifiedPurchase.md#expirydate)
+- [id](CdvPurchase.VerifiedPurchase.md#id)
+- [isBillingRetryPeriod](CdvPurchase.VerifiedPurchase.md#isbillingretryperiod)
+- [isExpired](CdvPurchase.VerifiedPurchase.md#isexpired)
+- [isIntroPeriod](CdvPurchase.VerifiedPurchase.md#isintroperiod)
+- [isTrialPeriod](CdvPurchase.VerifiedPurchase.md#istrialperiod)
+- [lastRenewalDate](CdvPurchase.VerifiedPurchase.md#lastrenewaldate)
+- [priceConsentStatus](CdvPurchase.VerifiedPurchase.md#priceconsentstatus)
+- [purchaseDate](CdvPurchase.VerifiedPurchase.md#purchasedate)
+- [renewalIntent](CdvPurchase.VerifiedPurchase.md#renewalintent)
+- [renewalIntentChangeDate](CdvPurchase.VerifiedPurchase.md#renewalintentchangedate)
+
 ## Properties
 
 ### cancelationReason
@@ -11,8 +29,6 @@ A purchase object returned by the receipt validator
 • `Optional` **cancelationReason**: [`CancelationReason`](../enums/CdvPurchase.CancelationReason.md)
 
 The reason a subscription or purchase was cancelled.
-
-See href="#api-Types-CancelationReason">enum CancelationReason</a>.
 
 ___
 
@@ -88,8 +104,6 @@ ___
 
 Whether or not the user agreed or has been notified of a price change.
 
-See <a href="#api-Types-PriceConsentStatus">"enum PriceConsentStatus"</a>.
-
 ___
 
 ### purchaseDate
@@ -104,9 +118,7 @@ ___
 
 • `Optional` **renewalIntent**: `string`
 
-Renewal intent
-
-See <a href="#api-Types-RenewalIntent">enum RenewalIntent</a>
+Renewal intent.
 
 ___
 

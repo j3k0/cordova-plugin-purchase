@@ -4,6 +4,19 @@
 
 Request for payment.
 
+## Table of contents
+
+### Properties
+
+- [amountMicros](CdvPurchase.PaymentRequest.md#amountmicros)
+- [billingAddress](CdvPurchase.PaymentRequest.md#billingaddress)
+- [currency](CdvPurchase.PaymentRequest.md#currency)
+- [description](CdvPurchase.PaymentRequest.md#description)
+- [email](CdvPurchase.PaymentRequest.md#email)
+- [mobilePhoneNumber](CdvPurchase.PaymentRequest.md#mobilephonenumber)
+- [platform](CdvPurchase.PaymentRequest.md#platform)
+- [productIds](CdvPurchase.PaymentRequest.md#productids)
+
 ## Properties
 
 ### amountMicros

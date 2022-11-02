@@ -2,9 +2,23 @@
 
 [CdvPurchase](CdvPurchase.md).Utils
 
-## Namespaces
+## Table of contents
+
+### Namespaces
 
 - [Ajax](CdvPurchase.Utils.Ajax.md)
+
+### Functions
+
+- [ajax](CdvPurchase.Utils.md#ajax)
+- [callExternal](CdvPurchase.Utils.md#callexternal)
+- [debounce](CdvPurchase.Utils.md#debounce)
+- [delay](CdvPurchase.Utils.md#delay)
+- [formatBillingCycleEN](CdvPurchase.Utils.md#formatbillingcycleen)
+- [formatDurationEN](CdvPurchase.Utils.md#formatdurationen)
+- [md5](CdvPurchase.Utils.md#md5)
+- [nonEnumerable](CdvPurchase.Utils.md#nonenumerable)
+- [uuidv4](CdvPurchase.Utils.md#uuidv4)
 
 ## Functions
 
@@ -113,6 +127,51 @@ ___
 #### Returns
 
 `number`
+
+___
+
+### formatBillingCycleEN
+
+▸ **formatBillingCycleEN**(`pricingPhase`): `string`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `pricingPhase` | [`PricingPhase`](../interfaces/CdvPurchase.PricingPhase.md) |
+
+#### Returns
+
+`string`
+
+___
+
+### formatDurationEN
+
+▸ **formatDurationEN**(`iso?`, `options?`): `string`
+
+Format a simple ISO 8601 duration to plain English.
+
+This works for non-composite durations, i.e. that have a single unit with associated amount. For example: "P1Y" or "P3W".
+
+See https://en.wikipedia.org/wiki/ISO_8601#Durations
+
+This method is provided as a utility for getting simple things done quickly. In your application, you'll probably
+need some other method that supports multiple locales.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `iso?` | `string` | Duration formatted in IS0 8601 |
+| `options?` | `Object` | - |
+| `options.omitOne?` | `boolean` | - |
+
+#### Returns
+
+`string`
+
+The duration in plain english. Example: "1 year" or "3 weeks".
 
 ___
 

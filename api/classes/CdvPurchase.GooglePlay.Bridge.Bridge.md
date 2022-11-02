@@ -2,6 +2,31 @@
 
 [GooglePlay](../modules/CdvPurchase.GooglePlay.md).[Bridge](../modules/CdvPurchase.GooglePlay.Bridge.md).Bridge
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.GooglePlay.Bridge.Bridge.md#constructor)
+
+### Properties
+
+- [options](CdvPurchase.GooglePlay.Bridge.Bridge.md#options)
+
+### Methods
+
+- [acknowledgePurchase](CdvPurchase.GooglePlay.Bridge.Bridge.md#acknowledgepurchase)
+- [buy](CdvPurchase.GooglePlay.Bridge.Bridge.md#buy)
+- [consumePurchase](CdvPurchase.GooglePlay.Bridge.Bridge.md#consumepurchase)
+- [getAvailableProducts](CdvPurchase.GooglePlay.Bridge.Bridge.md#getavailableproducts)
+- [getPurchases](CdvPurchase.GooglePlay.Bridge.Bridge.md#getpurchases)
+- [init](CdvPurchase.GooglePlay.Bridge.Bridge.md#init)
+- [launchPriceChangeConfirmationFlow](CdvPurchase.GooglePlay.Bridge.Bridge.md#launchpricechangeconfirmationflow)
+- [listener](CdvPurchase.GooglePlay.Bridge.Bridge.md#listener)
+- [load](CdvPurchase.GooglePlay.Bridge.Bridge.md#load)
+- [manageBilling](CdvPurchase.GooglePlay.Bridge.Bridge.md#managebilling)
+- [manageSubscriptions](CdvPurchase.GooglePlay.Bridge.Bridge.md#managesubscriptions)
+- [subscribe](CdvPurchase.GooglePlay.Bridge.Bridge.md#subscribe)
+
 ## Constructors
 
 ### constructor

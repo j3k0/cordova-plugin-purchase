@@ -1,10 +1,4 @@
 "use strict";
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -129,7 +123,7 @@ var CdvPurchase;
         }
         get braintreeClientTokenProvider() {
             return callback => {
-                CdvPurchase.store.log.info('Calling Braintree clientTokenProvider');
+                this.log.info('Calling Braintree clientTokenProvider');
                 CdvPurchase.Utils.ajax(this.log, {
                     url: `${this.config.url}/v3/braintree/client-token?appName=${this.config.appName}&apiKey=${this.config.apiKey}`,
                     method: 'POST',
@@ -261,28 +255,12 @@ var CdvPurchase;
         };
     })(Utils = CdvPurchase.Utils || (CdvPurchase.Utils = {}));
 })(CdvPurchase || (CdvPurchase = {}));
-/// <reference path="utils/non-enumerable.ts" />
-var CdvPurchase;
-(function (CdvPurchase) {
-    class Offer {
-        constructor(options) {
-            this.id = options.id;
-            this.product = options.product;
-            this.pricingPhases = options.pricingPhases;
-            Object.defineProperty(this, 'productId', { enumerable: true, get: () => this.product.id });
-            Object.defineProperty(this, 'platform', { enumerable: true, get: () => this.product.platform });
-        }
-    }
-    __decorate([
-        CdvPurchase.Utils.nonEnumerable
-    ], Offer.prototype, "product", void 0);
-    CdvPurchase.Offer = Offer;
-})(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
 (function (CdvPurchase) {
     /** Product definition from a store */
     class Product {
         constructor(p) {
+            this.className = 'Product';
             /** Product title from the store. */
             this.title = '';
             /** Product full description from the store. */
@@ -328,6 +306,141 @@ var CdvPurchase;
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
 (function (CdvPurchase) {
+    /** Types of In-App-Products */
+    let ProductType;
+    (function (ProductType) {
+        /** Type: An consumable product, that can be purchased multiple time */
+        ProductType["CONSUMABLE"] = "consumable";
+        /** Type: A non-consumable product, that can purchased only once and the user keeps forever */
+        ProductType["NON_CONSUMABLE"] = "non consumable";
+        /** @deprecated use PAID_SUBSCRIPTION */
+        ProductType["FREE_SUBSCRIPTION"] = "free subscription";
+        /** Type: An auto-renewable subscription */
+        ProductType["PAID_SUBSCRIPTION"] = "paid subscription";
+        /** Type: An non-renewing subscription */
+        ProductType["NON_RENEWING_SUBSCRIPTION"] = "non renewing subscription";
+        /** Type: The application bundle */
+        ProductType["APPLICATION"] = "application";
+    })(ProductType = CdvPurchase.ProductType || (CdvPurchase.ProductType = {}));
+    /**
+     * Type of recurring payment
+     *
+     * - FINITE_RECURRING: Payment recurs for a fixed number of billing period set in `paymentPhase.cycles`.
+     * - INFINITE_RECURRING: Payment recurs for infinite billing periods unless cancelled.
+     * - NON_RECURRING: A one time charge that does not repeat.
+     */
+    let RecurrenceMode;
+    (function (RecurrenceMode) {
+        RecurrenceMode["NON_RECURRING"] = "NON_RECURRING";
+        RecurrenceMode["FINITE_RECURRING"] = "FINITE_RECURRING";
+        RecurrenceMode["INFINITE_RECURRING"] = "INFINITE_RECURRING";
+    })(RecurrenceMode = CdvPurchase.RecurrenceMode || (CdvPurchase.RecurrenceMode = {}));
+    let PaymentMode;
+    (function (PaymentMode) {
+        PaymentMode["PAY_AS_YOU_GO"] = "PayAsYouGo";
+        PaymentMode["UP_FRONT"] = "UpFront";
+        PaymentMode["FREE_TRIAL"] = "FreeTrial";
+    })(PaymentMode = CdvPurchase.PaymentMode || (CdvPurchase.PaymentMode = {}));
+    let Platform;
+    (function (Platform) {
+        /** Apple AppStore */
+        Platform["APPLE_APPSTORE"] = "ios-appstore";
+        /** Google Play */
+        Platform["GOOGLE_PLAY"] = "android-playstore";
+        /** Windows Store */
+        Platform["WINDOWS_STORE"] = "windows-store-transaction";
+        /** Braintree */
+        Platform["BRAINTREE"] = "braintree";
+        // /** Stripe */
+        // STRIPE = 'stripe',
+        /** Test platform */
+        Platform["TEST"] = "dummy-store";
+    })(Platform = CdvPurchase.Platform || (CdvPurchase.Platform = {}));
+    /** Possible states of a product */
+    let TransactionState;
+    (function (TransactionState) {
+        // REQUESTED = 'requested',
+        TransactionState["INITIATED"] = "initiated";
+        TransactionState["PENDING"] = "pending";
+        TransactionState["APPROVED"] = "approved";
+        TransactionState["CANCELLED"] = "cancelled";
+        TransactionState["FINISHED"] = "finished";
+        // OWNED = 'owned',
+        // EXPIRED = 'expired',
+        TransactionState["UNKNOWN_STATE"] = "";
+    })(TransactionState = CdvPurchase.TransactionState || (CdvPurchase.TransactionState = {}));
+    /** Whether or not the user intends to let the subscription auto-renew. */
+    let RenewalIntent;
+    (function (RenewalIntent) {
+        /** The user intends to let the subscription expire without renewing. */
+        RenewalIntent["LAPSE"] = "Lapse";
+        /** The user intends to renew the subscription. */
+        RenewalIntent["RENEW"] = "Renew";
+    })(RenewalIntent = CdvPurchase.RenewalIntent || (CdvPurchase.RenewalIntent = {}));
+    /** Whether or not the user was notified or agreed to a price change */
+    let PriceConsentStatus;
+    (function (PriceConsentStatus) {
+        PriceConsentStatus["NOTIFIED"] = "Notified";
+        PriceConsentStatus["AGREED"] = "Agreed";
+    })(PriceConsentStatus = CdvPurchase.PriceConsentStatus || (CdvPurchase.PriceConsentStatus = {}));
+    /** Reason why a subscription has been canceled */
+    let CancelationReason;
+    (function (CancelationReason) {
+        /** Not canceled */
+        CancelationReason["NOT_CANCELED"] = "";
+        /** Subscription canceled by the developer. */
+        CancelationReason["DEVELOPER"] = "Developer";
+        /** Subscription canceled by the system for an unspecified reason. */
+        CancelationReason["SYSTEM"] = "System";
+        /** Subscription upgraded or downgraded to a new subscription. */
+        CancelationReason["SYSTEM_REPLACED"] = "System.Replaced";
+        /** Product not available for purchase at the time of renewal. */
+        CancelationReason["SYSTEM_PRODUCT_UNAVAILABLE"] = "System.ProductUnavailable";
+        /** Billing error; for example customer’s payment information is no longer valid. */
+        CancelationReason["SYSTEM_BILLING_ERROR"] = "System.BillingError";
+        /** Transaction is gone; It has been deleted. */
+        CancelationReason["SYSTEM_DELETED"] = "System.Deleted";
+        /** Subscription canceled by the user for an unspecified reason. */
+        CancelationReason["CUSTOMER"] = "Customer";
+        /** Customer canceled their transaction due to an actual or perceived issue within your app. */
+        CancelationReason["CUSTOMER_TECHNICAL_ISSUES"] = "Customer.TechnicalIssues";
+        /** Customer did not agree to a recent price increase. See also priceConsentStatus. */
+        CancelationReason["CUSTOMER_PRICE_INCREASE"] = "Customer.PriceIncrease";
+        /** Customer canceled for cost-related reasons. */
+        CancelationReason["CUSTOMER_COST"] = "Customer.Cost";
+        /** Customer claimed to have found a better app. */
+        CancelationReason["CUSTOMER_FOUND_BETTER_APP"] = "Customer.FoundBetterApp";
+        /** Customer did not feel he is using this service enough. */
+        CancelationReason["CUSTOMER_NOT_USEFUL_ENOUGH"] = "Customer.NotUsefulEnough";
+        /** Subscription canceled for another reason; for example, if the customer made the purchase accidentally. */
+        CancelationReason["CUSTOMER_OTHER_REASON"] = "Customer.OtherReason";
+        /** Subscription canceled for unknown reasons. */
+        CancelationReason["UNKNOWN"] = "Unknown";
+    })(CancelationReason = CdvPurchase.CancelationReason || (CdvPurchase.CancelationReason = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+/// <reference path="utils/non-enumerable.ts" />
+/// <reference path="product.ts" />
+/// <reference path="types.ts" />
+var CdvPurchase;
+(function (CdvPurchase) {
+    class Offer {
+        constructor(options) {
+            this.className = 'Offer';
+            this.id = options.id;
+            this.pricingPhases = options.pricingPhases;
+            // Object.defineProperty(this, 'product', { enumerable: false, get: () => options.product });
+            Object.defineProperty(this, 'productId', { enumerable: true, get: () => options.product.id });
+            Object.defineProperty(this, 'productType', { enumerable: true, get: () => options.product.type });
+            Object.defineProperty(this, 'platform', { enumerable: true, get: () => options.product.platform });
+        }
+        get productId() { return ''; }
+        get productType() { return CdvPurchase.ProductType.APPLICATION; }
+        get platform() { return CdvPurchase.Platform.TEST; }
+    }
+    CdvPurchase.Offer = Offer;
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
     /** Ready callbacks */
     class ReadyCallbacks {
         constructor() {
@@ -355,6 +468,7 @@ var CdvPurchase;
 (function (CdvPurchase) {
     class Receipt {
         constructor(options) {
+            this.className = 'Receipt';
             this.platform = options.platform;
             this.transactions = options.transactions;
         }
@@ -830,11 +944,11 @@ var CdvPurchase;
         /** Place an order for a given offer */
         order(offer, additionalData) {
             return __awaiter(this, void 0, void 0, function* () {
-                const adapter = this.adapters.find(offer.product.platform);
+                const adapter = this.adapters.find(offer.platform);
                 if (!adapter)
                     return {
                         code: CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED,
-                        message: 'Adapter not found for this platform (' + offer.product.platform + ')',
+                        message: 'Adapter not found for this platform (' + offer.platform + ')',
                     };
                 return adapter.order(offer, additionalData || {});
             });
@@ -901,10 +1015,12 @@ setTimeout(() => {
     window.CdvPurchase = CdvPurchase;
     window.CdvPurchase.store = CdvPurchase.Store.instance;
 }, 0);
+/// <reference path="utils/format-billing-cycle.ts" />
 var CdvPurchase;
 (function (CdvPurchase) {
     class Transaction {
         constructor(platform) {
+            this.className = 'Transaction';
             /** Transaction identifier. */
             this.transactionId = '';
             /** State this transaction is in */
@@ -915,119 +1031,6 @@ var CdvPurchase;
         }
     }
     CdvPurchase.Transaction = Transaction;
-})(CdvPurchase || (CdvPurchase = {}));
-var CdvPurchase;
-(function (CdvPurchase) {
-    /** Types of In-App-Products */
-    let ProductType;
-    (function (ProductType) {
-        /** Type: An consumable product, that can be purchased multiple time */
-        ProductType["CONSUMABLE"] = "consumable";
-        /** Type: A non-consumable product, that can purchased only once and the user keeps forever */
-        ProductType["NON_CONSUMABLE"] = "non consumable";
-        /** @deprecated use PAID_SUBSCRIPTION */
-        ProductType["FREE_SUBSCRIPTION"] = "free subscription";
-        /** Type: An auto-renewable subscription */
-        ProductType["PAID_SUBSCRIPTION"] = "paid subscription";
-        /** Type: An non-renewing subscription */
-        ProductType["NON_RENEWING_SUBSCRIPTION"] = "non renewing subscription";
-        /** Type: The application bundle */
-        ProductType["APPLICATION"] = "application";
-    })(ProductType = CdvPurchase.ProductType || (CdvPurchase.ProductType = {}));
-    /**
-     * Type of recurring payment
-     *
-     * - FINITE_RECURRING: Payment recurs for a fixed number of billing period set in `paymentPhase.cycles`.
-     * - INFINITE_RECURRING: Payment recurs for infinite billing periods unless cancelled.
-     * - NON_RECURRING: A one time charge that does not repeat.
-     */
-    let RecurrenceMode;
-    (function (RecurrenceMode) {
-        RecurrenceMode["NON_RECURRING"] = "NON_RECURRING";
-        RecurrenceMode["FINITE_RECURRING"] = "FINITE_RECURRING";
-        RecurrenceMode["INFINITE_RECURRING"] = "INFINITE_RECURRING";
-    })(RecurrenceMode = CdvPurchase.RecurrenceMode || (CdvPurchase.RecurrenceMode = {}));
-    let PaymentMode;
-    (function (PaymentMode) {
-        PaymentMode["PAY_AS_YOU_GO"] = "PayAsYouGo";
-        PaymentMode["UP_FRONT"] = "UpFront";
-        PaymentMode["FREE_TRIAL"] = "FreeTrial";
-    })(PaymentMode = CdvPurchase.PaymentMode || (CdvPurchase.PaymentMode = {}));
-    let Platform;
-    (function (Platform) {
-        /** Apple AppStore */
-        Platform["APPLE_APPSTORE"] = "ios-appstore";
-        /** Google Play */
-        Platform["GOOGLE_PLAY"] = "android-playstore";
-        /** Windows Store */
-        Platform["WINDOWS_STORE"] = "windows-store-transaction";
-        /** Braintree */
-        Platform["BRAINTREE"] = "braintree";
-        // /** Stripe */
-        // STRIPE = 'stripe',
-        /** Test platform */
-        Platform["TEST"] = "dummy-store";
-    })(Platform = CdvPurchase.Platform || (CdvPurchase.Platform = {}));
-    /** Possible states of a product */
-    let TransactionState;
-    (function (TransactionState) {
-        // REQUESTED = 'requested',
-        TransactionState["INITIATED"] = "initiated";
-        TransactionState["APPROVED"] = "approved";
-        TransactionState["CANCELLED"] = "cancelled";
-        TransactionState["FINISHED"] = "finished";
-        // OWNED = 'owned',
-        // EXPIRED = 'expired',
-        TransactionState["UNKNOWN_STATE"] = "";
-    })(TransactionState = CdvPurchase.TransactionState || (CdvPurchase.TransactionState = {}));
-    /** Whether or not the user intends to let the subscription auto-renew. */
-    let RenewalIntent;
-    (function (RenewalIntent) {
-        /** The user intends to let the subscription expire without renewing. */
-        RenewalIntent["LAPSE"] = "Lapse";
-        /** The user intends to renew the subscription. */
-        RenewalIntent["RENEW"] = "Renew";
-    })(RenewalIntent = CdvPurchase.RenewalIntent || (CdvPurchase.RenewalIntent = {}));
-    /** Whether or not the user was notified or agreed to a price change */
-    let PriceConsentStatus;
-    (function (PriceConsentStatus) {
-        PriceConsentStatus["NOTIFIED"] = "Notified";
-        PriceConsentStatus["AGREED"] = "Agreed";
-    })(PriceConsentStatus = CdvPurchase.PriceConsentStatus || (CdvPurchase.PriceConsentStatus = {}));
-    /** Reason why a subscription has been canceled */
-    let CancelationReason;
-    (function (CancelationReason) {
-        /** Not canceled */
-        CancelationReason["NOT_CANCELED"] = "";
-        /** Subscription canceled by the developer. */
-        CancelationReason["DEVELOPER"] = "Developer";
-        /** Subscription canceled by the system for an unspecified reason. */
-        CancelationReason["SYSTEM"] = "System";
-        /** Subscription upgraded or downgraded to a new subscription. */
-        CancelationReason["SYSTEM_REPLACED"] = "System.Replaced";
-        /** Product not available for purchase at the time of renewal. */
-        CancelationReason["SYSTEM_PRODUCT_UNAVAILABLE"] = "System.ProductUnavailable";
-        /** Billing error; for example customer’s payment information is no longer valid. */
-        CancelationReason["SYSTEM_BILLING_ERROR"] = "System.BillingError";
-        /** Transaction is gone; It has been deleted. */
-        CancelationReason["SYSTEM_DELETED"] = "System.Deleted";
-        /** Subscription canceled by the user for an unspecified reason. */
-        CancelationReason["CUSTOMER"] = "Customer";
-        /** Customer canceled their transaction due to an actual or perceived issue within your app. */
-        CancelationReason["CUSTOMER_TECHNICAL_ISSUES"] = "Customer.TechnicalIssues";
-        /** Customer did not agree to a recent price increase. See also priceConsentStatus. */
-        CancelationReason["CUSTOMER_PRICE_INCREASE"] = "Customer.PriceIncrease";
-        /** Customer canceled for cost-related reasons. */
-        CancelationReason["CUSTOMER_COST"] = "Customer.Cost";
-        /** Customer claimed to have found a better app. */
-        CancelationReason["CUSTOMER_FOUND_BETTER_APP"] = "Customer.FoundBetterApp";
-        /** Customer did not feel he is using this service enough. */
-        CancelationReason["CUSTOMER_NOT_USEFUL_ENOUGH"] = "Customer.NotUsefulEnough";
-        /** Subscription canceled for another reason; for example, if the customer made the purchase accidentally. */
-        CancelationReason["CUSTOMER_OTHER_REASON"] = "Customer.OtherReason";
-        /** Subscription canceled for unknown reasons. */
-        CancelationReason["UNKNOWN"] = "Unknown";
-    })(CancelationReason = CdvPurchase.CancelationReason || (CdvPurchase.CancelationReason = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
 (function (CdvPurchase) {
@@ -2090,12 +2093,12 @@ var CdvPurchase;
                             this.log.warn('Order failed: ' + JSON.stringify({ message, code }));
                             resolve(CdvPurchase.storeError(code !== null && code !== void 0 ? code : CdvPurchase.ErrorCode.UNKNOWN, message));
                         };
-                        if (offer.product.type === CdvPurchase.ProductType.PAID_SUBSCRIPTION) {
+                        if (offer.productType === CdvPurchase.ProductType.PAID_SUBSCRIPTION) {
                             const idAndToken = offer.id; // offerId contains the productId and token (format productId@offerToken)
                             this.bridge.subscribe(buySuccess, buyFailed, idAndToken, additionalData);
                         }
                         else {
-                            this.bridge.buy(buySuccess, buyFailed, offer.product.id, additionalData);
+                            this.bridge.buy(buySuccess, buyFailed, offer.productId, additionalData);
                         }
                     });
                 });
@@ -2729,12 +2732,13 @@ var CdvPurchase;
     /** Test (or Mock) Adapter and related classes */
     let Test;
     (function (Test) {
+        const platform = CdvPurchase.Platform.TEST;
         /** Test Adapter used for local testing with mock products */
         class Adapter {
             constructor(context) {
                 this.id = CdvPurchase.Platform.TEST;
                 this.name = 'Test';
-                this.products = Test.TEST_PRODUCTS;
+                this.products = [];
                 this.receipts = [];
                 this.context = context;
                 this.log = context.log.child("Test");
@@ -2744,9 +2748,16 @@ var CdvPurchase;
             }
             load(products) {
                 return __awaiter(this, void 0, void 0, function* () {
+                    // let's test this active subscription
+                    if (products.find(p => p.id === Test.PAID_SUBSCRIPTION_ACTIVE.id)) {
+                        setTimeout(() => {
+                            this.reportActiveSubscription();
+                        }, 500); // it'll get reported in 500ms
+                    }
                     return products.map(p => {
                         const product = Test.TEST_PRODUCTS.find(tp => tp.id === p.id && tp.type === p.type);
-                        if (product) {
+                        if (product && this.products.indexOf(product) < 0) {
+                            this.products.push(product);
                             this.context.listener.productsUpdated(CdvPurchase.Platform.TEST, [product]);
                             return product;
                         }
@@ -2759,7 +2770,7 @@ var CdvPurchase;
             order(offer) {
                 return __awaiter(this, void 0, void 0, function* () {
                     // Purchasing products with "-fail-" in the id will fail.
-                    if (offer.product.id.indexOf("-fail-") > 0) {
+                    if (offer.id.indexOf("-fail-") > 0) {
                         return {
                             code: CdvPurchase.ErrorCode.PURCHASE,
                             message: 'Purchase failed.'
@@ -2767,18 +2778,17 @@ var CdvPurchase;
                     }
                     else {
                         // purchase succeeded, let's generate a mock receipt.
+                        const tr = new CdvPurchase.Transaction(platform);
+                        tr.products = [{
+                                productId: offer.productId,
+                                offerId: offer.id,
+                            }];
+                        tr.state = CdvPurchase.TransactionState.APPROVED;
+                        tr.transactionId = 'test-' + (new Date().getTime());
+                        tr.isAcknowledged = false;
                         const receipt = new CdvPurchase.Receipt({
-                            platform: CdvPurchase.Platform.TEST,
-                            transactions: [{
-                                    platform: CdvPurchase.Platform.TEST,
-                                    products: [{
-                                            productId: offer.product.id,
-                                            offerId: offer.id,
-                                        }],
-                                    state: CdvPurchase.TransactionState.APPROVED,
-                                    transactionId: 'test-' + (new Date().getTime()),
-                                    isAcknowledged: false,
-                                }]
+                            platform,
+                            transactions: [tr]
                         });
                         this.receipts.push(receipt);
                         this.context.listener.receiptsUpdated(CdvPurchase.Platform.TEST, [receipt]);
@@ -2806,6 +2816,45 @@ var CdvPurchase;
                     return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'requestPayment not supported');
                 });
             }
+            reportActiveSubscription() {
+                if (this.receipts.find(r => r.transactions[0].transactionId === transactionId(1))) {
+                    // already reported
+                    return;
+                }
+                const RENEWS_EVERY_MS = 2 * 60000; // 2 minutes
+                const receipt = new CdvPurchase.Receipt({
+                    platform,
+                    transactions: [],
+                });
+                function makeTransaction(n) {
+                    var _a, _b;
+                    const tr = new CdvPurchase.Transaction(platform);
+                    tr.products = [{
+                            productId: Test.PAID_SUBSCRIPTION_ACTIVE.id,
+                            offerId: Test.PAID_SUBSCRIPTION_ACTIVE.offers[0].id,
+                        }];
+                    tr.state = CdvPurchase.TransactionState.APPROVED;
+                    tr.transactionId = transactionId(n);
+                    tr.isAcknowledged = n == 1;
+                    tr.renewalIntent = CdvPurchase.RenewalIntent.RENEW;
+                    tr.lastRenewalDate = new Date();
+                    tr.expirationDate = new Date((+(((_b = (_a = receipt === null || receipt === void 0 ? void 0 : receipt.transactions) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.expirationDate) || new Date())) + RENEWS_EVERY_MS);
+                    return tr;
+                }
+                receipt.transactions.push(makeTransaction(1));
+                this.receipts.push(receipt);
+                this.context.listener.receiptsUpdated(CdvPurchase.Platform.TEST, [receipt]);
+                function transactionId(n) {
+                    return 'test-active-subscription-transaction-' + n;
+                }
+                let transactionNumber = 1;
+                setInterval(() => {
+                    this.log.info('auto-renewing the mock subscription');
+                    transactionNumber += 1;
+                    receipt.transactions.push(makeTransaction(transactionNumber));
+                    this.context.listener.receiptsUpdated(CdvPurchase.Platform.TEST, [receipt]);
+                }, RENEWS_EVERY_MS);
+            }
         }
         Test.Adapter = Adapter;
     })(Test = CdvPurchase.Test || (CdvPurchase.Test = {}));
@@ -2814,16 +2863,55 @@ var CdvPurchase;
 (function (CdvPurchase) {
     let Test;
     (function (Test) {
+        const platform = CdvPurchase.Platform.TEST;
         /** A consumable product for which the purchase goes through */
         Test.CONSUMABLE_OK = new CdvPurchase.Product({
+            platform,
             id: 'test-consumable',
-            platform: CdvPurchase.Platform.TEST,
             type: CdvPurchase.ProductType.CONSUMABLE,
         });
         Test.CONSUMABLE_OK.title = 'Test Consumable';
         Test.CONSUMABLE_OK.description = 'A consumable product that you can purchase';
-        Test.CONSUMABLE_OK.addOffer({
+        Test.CONSUMABLE_OK.addOffer(new CdvPurchase.Offer({
             id: 'test-consumable-offer1',
+            pricingPhases: [{
+                    price: '$4.99',
+                    currency: 'USD',
+                    priceMicros: 4990000,
+                    paymentMode: CdvPurchase.PaymentMode.UP_FRONT,
+                    recurrenceMode: CdvPurchase.RecurrenceMode.NON_RECURRING,
+                }],
+            product: Test.CONSUMABLE_OK,
+        }));
+        /** A consumable product for which the purchase will fail */
+        Test.CONSUMABLE_FAILING = new CdvPurchase.Product({
+            platform,
+            id: 'test-consumable-fail',
+            type: CdvPurchase.ProductType.CONSUMABLE,
+        });
+        Test.CONSUMABLE_FAILING.title = 'Failing Consumable';
+        Test.CONSUMABLE_FAILING.description = 'A consumable product that cannot be purchased';
+        Test.CONSUMABLE_FAILING.addOffer(new CdvPurchase.Offer({
+            id: 'test-consumable-fail-offer1',
+            pricingPhases: [{
+                    price: '$1.99',
+                    currency: 'USD',
+                    priceMicros: 1990000,
+                    paymentMode: CdvPurchase.PaymentMode.UP_FRONT,
+                    recurrenceMode: CdvPurchase.RecurrenceMode.NON_RECURRING,
+                }],
+            product: Test.CONSUMABLE_FAILING,
+        }));
+        /** A non-consumable product */
+        Test.NON_CONSUMABLE_OK = new CdvPurchase.Product({
+            platform,
+            id: 'test-non-consumable',
+            type: CdvPurchase.ProductType.NON_CONSUMABLE,
+        });
+        Test.NON_CONSUMABLE_OK.title = 'Non Consumable';
+        Test.NON_CONSUMABLE_OK.description = 'A non consumable product';
+        Test.NON_CONSUMABLE_OK.addOffer(new CdvPurchase.Offer({
+            id: 'test-non-consumable-offer1',
             pricingPhases: [{
                     price: '$9.99',
                     currency: 'USD',
@@ -2831,29 +2919,64 @@ var CdvPurchase;
                     paymentMode: CdvPurchase.PaymentMode.UP_FRONT,
                     recurrenceMode: CdvPurchase.RecurrenceMode.NON_RECURRING,
                 }],
-            product: Test.CONSUMABLE_OK,
+            product: Test.NON_CONSUMABLE_OK,
+        }));
+        /** A paid-subscription that auto-renews for the duration of the session */
+        Test.PAID_SUBSCRIPTION_OK = new CdvPurchase.Product({
+            platform,
+            id: 'test-subscription',
+            type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
         });
-        /** A consumable product for which the purchase will fail */
-        Test.CONSUMABLE_FAILING = new CdvPurchase.Product({
-            id: 'test-consumable-fail',
-            platform: CdvPurchase.Platform.TEST,
-            type: CdvPurchase.ProductType.CONSUMABLE,
-        });
-        Test.CONSUMABLE_FAILING.title = 'Failing Consumable';
-        Test.CONSUMABLE_FAILING.description = 'A consumable product that cannot be purchased';
-        Test.CONSUMABLE_FAILING.addOffer({
-            id: 'test-consumable-fail-offer1',
+        Test.PAID_SUBSCRIPTION_OK.title = 'A subscription product';
+        Test.PAID_SUBSCRIPTION_OK.description = 'An auto-renewing paid subscription with a trial period';
+        Test.PAID_SUBSCRIPTION_OK.addOffer(new CdvPurchase.Offer({
+            id: 'test-paid-subscription-offer1',
+            product: Test.PAID_SUBSCRIPTION_OK,
             pricingPhases: [{
-                    price: '$1.99',
+                    price: '$0.00',
                     currency: 'USD',
-                    priceMicros: 9990000,
-                    paymentMode: CdvPurchase.PaymentMode.UP_FRONT,
-                    recurrenceMode: CdvPurchase.RecurrenceMode.NON_RECURRING,
+                    priceMicros: 0,
+                    paymentMode: CdvPurchase.PaymentMode.FREE_TRIAL,
+                    recurrenceMode: CdvPurchase.RecurrenceMode.FINITE_RECURRING,
+                    billingCycles: 3,
+                    billingPeriod: 'P1W',
+                }, {
+                    price: '$4.99',
+                    currency: 'USD',
+                    priceMicros: 4990000,
+                    paymentMode: CdvPurchase.PaymentMode.PAY_AS_YOU_GO,
+                    recurrenceMode: CdvPurchase.RecurrenceMode.INFINITE_RECURRING,
+                    billingPeriod: 'P1M',
                 }],
-            product: Test.CONSUMABLE_FAILING,
+        }));
+        /** A paid-subscription that is already active when the app starts */
+        Test.PAID_SUBSCRIPTION_ACTIVE = new CdvPurchase.Product({
+            platform,
+            id: 'test-subscription-active',
+            type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
         });
+        Test.PAID_SUBSCRIPTION_ACTIVE.title = 'An owned subscription product';
+        Test.PAID_SUBSCRIPTION_ACTIVE.description = 'An active paid subscription';
+        Test.PAID_SUBSCRIPTION_ACTIVE.addOffer(new CdvPurchase.Offer({
+            id: 'test-paid-subscription-active-offer1',
+            product: Test.PAID_SUBSCRIPTION_ACTIVE,
+            pricingPhases: [{
+                    price: '$19.99',
+                    currency: 'USD',
+                    priceMicros: 19990000,
+                    paymentMode: CdvPurchase.PaymentMode.PAY_AS_YOU_GO,
+                    recurrenceMode: CdvPurchase.RecurrenceMode.INFINITE_RECURRING,
+                    billingPeriod: 'P1Y',
+                }],
+        }));
         /** List of all test products */
-        Test.TEST_PRODUCTS = [Test.CONSUMABLE_OK, Test.CONSUMABLE_FAILING];
+        Test.TEST_PRODUCTS = [
+            Test.CONSUMABLE_OK,
+            Test.CONSUMABLE_FAILING,
+            Test.NON_CONSUMABLE_OK,
+            Test.PAID_SUBSCRIPTION_OK,
+            Test.PAID_SUBSCRIPTION_ACTIVE,
+        ];
     })(Test = CdvPurchase.Test || (CdvPurchase.Test = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -3062,6 +3185,67 @@ var CdvPurchase;
             return debounced;
         }
         Utils.debounce = debounce;
+    })(Utils = CdvPurchase.Utils || (CdvPurchase.Utils = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Utils;
+    (function (Utils) {
+        function formatBillingCycleEN(pricingPhase) {
+            var _a;
+            const duration = Utils.formatDurationEN(pricingPhase.billingPeriod);
+            // format the number of cycles
+            switch (pricingPhase.recurrenceMode) {
+                case 'FINITE_RECURRING':
+                    if (((_a = pricingPhase.billingCycles) !== null && _a !== void 0 ? _a : 0) > 1)
+                        return `${pricingPhase.billingCycles}x ${Utils.formatDurationEN(pricingPhase.billingPeriod)}`;
+                    else
+                        return duration;
+                case 'NON_RECURRING':
+                    return 'for ' + Utils.formatDurationEN(pricingPhase.billingPeriod);
+                default: // INFINITE_RECURRING
+                    return 'every ' + Utils.formatDurationEN(pricingPhase.billingPeriod, { omitOne: true });
+            }
+        }
+        Utils.formatBillingCycleEN = formatBillingCycleEN;
+    })(Utils = CdvPurchase.Utils || (CdvPurchase.Utils = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Utils;
+    (function (Utils) {
+        /**
+         * Format a simple ISO 8601 duration to plain English.
+         *
+         * This works for non-composite durations, i.e. that have a single unit with associated amount. For example: "P1Y" or "P3W".
+         *
+         * See https://en.wikipedia.org/wiki/ISO_8601#Durations
+         *
+         * This method is provided as a utility for getting simple things done quickly. In your application, you'll probably
+         * need some other method that supports multiple locales.
+         *
+         * @param iso - Duration formatted in IS0 8601
+         * @return The duration in plain english. Example: "1 year" or "3 weeks".
+         */
+        function formatDurationEN(iso, options) {
+            if (!iso)
+                return '';
+            const l = iso.length;
+            const n = iso.slice(1, l - 1);
+            if (n === '1') {
+                if (options === null || options === void 0 ? void 0 : options.omitOne) {
+                    return ({ 'D': 'day', 'W': 'week', 'M': 'month', 'Y': 'year', }[iso[l - 1]]) || iso[l - 1];
+                }
+                else {
+                    return ({ 'D': '1 day', 'W': '1 week', 'M': '1 month', 'Y': '1 year', }[iso[l - 1]]) || iso[l - 1];
+                }
+            }
+            else {
+                const u = ({ 'D': 'days', 'W': 'weeks', 'M': 'months', 'Y': 'years', }[iso[l - 1]]) || iso[l - 1];
+                return `${n} ${u}`;
+            }
+        }
+        Utils.formatDurationEN = formatDurationEN;
     })(Utils = CdvPurchase.Utils || (CdvPurchase.Utils = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -3359,6 +3543,9 @@ var CdvPurchase;
 (function (CdvPurchase) {
     /** Receipt data as validated by the receipt validation server */
     class VerifiedReceipt {
+        /**
+         * @internal
+         */
         constructor(receipt, response) {
             var _a;
             this.id = response.id;
@@ -3370,7 +3557,11 @@ var CdvPurchase;
         }
         /** Platform this receipt originated from */
         get platform() { return this.sourceReceipt.platform; }
-        /** Update the receipt content */
+        /**
+         * Update the receipt content
+         *
+         * @internal
+         */
         set(receipt, response) {
             var _a;
             this.id = response.id;

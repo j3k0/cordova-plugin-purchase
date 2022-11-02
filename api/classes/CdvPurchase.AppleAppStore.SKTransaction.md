@@ -8,6 +8,28 @@
 
   ↳ **`SKTransaction`**
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.AppleAppStore.SKTransaction.md#constructor)
+
+### Properties
+
+- [expirationDate](CdvPurchase.AppleAppStore.SKTransaction.md#expirationdate)
+- [isAcknowledged](CdvPurchase.AppleAppStore.SKTransaction.md#isacknowledged)
+- [isConsumed](CdvPurchase.AppleAppStore.SKTransaction.md#isconsumed)
+- [isPending](CdvPurchase.AppleAppStore.SKTransaction.md#ispending)
+- [lastRenewalDate](CdvPurchase.AppleAppStore.SKTransaction.md#lastrenewaldate)
+- [platform](CdvPurchase.AppleAppStore.SKTransaction.md#platform)
+- [products](CdvPurchase.AppleAppStore.SKTransaction.md#products)
+- [purchaseDate](CdvPurchase.AppleAppStore.SKTransaction.md#purchasedate)
+- [purchaseId](CdvPurchase.AppleAppStore.SKTransaction.md#purchaseid)
+- [renewalIntent](CdvPurchase.AppleAppStore.SKTransaction.md#renewalintent)
+- [renewalIntentChangeDate](CdvPurchase.AppleAppStore.SKTransaction.md#renewalintentchangedate)
+- [state](CdvPurchase.AppleAppStore.SKTransaction.md#state)
+- [transactionId](CdvPurchase.AppleAppStore.SKTransaction.md#transactionid)
+
 ## Constructors
 
 ### constructor

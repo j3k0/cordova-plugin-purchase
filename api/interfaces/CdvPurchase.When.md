@@ -4,6 +4,17 @@
 
 Store events listener
 
+## Table of contents
+
+### Methods
+
+- [approved](CdvPurchase.When.md#approved)
+- [finished](CdvPurchase.When.md#finished)
+- [productUpdated](CdvPurchase.When.md#productupdated)
+- [receiptUpdated](CdvPurchase.When.md#receiptupdated)
+- [updated](CdvPurchase.When.md#updated)
+- [verified](CdvPurchase.When.md#verified)
+
 ## Methods
 
 ### approved

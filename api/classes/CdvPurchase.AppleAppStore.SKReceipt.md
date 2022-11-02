@@ -8,6 +8,21 @@
 
   ↳ **`SKReceipt`**
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.AppleAppStore.SKReceipt.md#constructor)
+
+### Properties
+
+- [platform](CdvPurchase.AppleAppStore.SKReceipt.md#platform)
+- [transactions](CdvPurchase.AppleAppStore.SKReceipt.md#transactions)
+
+### Methods
+
+- [hasTransaction](CdvPurchase.AppleAppStore.SKReceipt.md#hastransaction)
+
 ## Constructors
 
 ### constructor

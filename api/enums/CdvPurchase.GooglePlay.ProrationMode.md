@@ -6,6 +6,16 @@ Replace SKU ProrationMode.
 
 See https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode
 
+## Table of contents
+
+### Enumeration Members
+
+- [DEFERRED](CdvPurchase.GooglePlay.ProrationMode.md#deferred)
+- [IMMEDIATE\_AND\_CHARGE\_FULL\_PRICE](CdvPurchase.GooglePlay.ProrationMode.md#immediate_and_charge_full_price)
+- [IMMEDIATE\_AND\_CHARGE\_PRORATED\_PRICE](CdvPurchase.GooglePlay.ProrationMode.md#immediate_and_charge_prorated_price)
+- [IMMEDIATE\_WITHOUT\_PRORATION](CdvPurchase.GooglePlay.ProrationMode.md#immediate_without_proration)
+- [IMMEDIATE\_WITH\_TIME\_PRORATION](CdvPurchase.GooglePlay.ProrationMode.md#immediate_with_time_proration)
+
 ## Enumeration Members
 
 ### DEFERRED

@@ -2,6 +2,23 @@
 
 [Braintree](../modules/CdvPurchase.Braintree.md).[IosBridge](../modules/CdvPurchase.Braintree.IosBridge.md).Bridge
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.Braintree.IosBridge.Bridge.md#constructor)
+
+### Properties
+
+- [clientTokenProvider](CdvPurchase.Braintree.IosBridge.Bridge.md#clienttokenprovider)
+- [log](CdvPurchase.Braintree.IosBridge.Bridge.md#log)
+
+### Methods
+
+- [initialize](CdvPurchase.Braintree.IosBridge.Bridge.md#initialize)
+- [launchDropIn](CdvPurchase.Braintree.IosBridge.Bridge.md#launchdropin)
+- [isSupported](CdvPurchase.Braintree.IosBridge.Bridge.md#issupported)
+
 ## Constructors
 
 ### constructor

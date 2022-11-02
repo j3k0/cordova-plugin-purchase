@@ -18,6 +18,14 @@ response to fetch it and repeat the validation request to finalize the validatio
 
 Contact us if you need assistance with this integration.
 
+## Table of contents
+
+### Properties
+
+- [skuId](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionWindows.md#skuid)
+- [storeId](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionWindows.md#storeid)
+- [type](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionWindows.md#type)
+
 ## Properties
 
 ### skuId

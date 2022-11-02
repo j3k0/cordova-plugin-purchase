@@ -6,6 +6,43 @@
 
 - [`Adapter`](../interfaces/CdvPurchase.Adapter.md)
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.GooglePlay.Adapter.md#constructor)
+
+### Properties
+
+- [autoRefreshIntervalMillis](CdvPurchase.GooglePlay.Adapter.md#autorefreshintervalmillis)
+- [bridge](CdvPurchase.GooglePlay.Adapter.md#bridge)
+- [id](CdvPurchase.GooglePlay.Adapter.md#id)
+- [initialized](CdvPurchase.GooglePlay.Adapter.md#initialized)
+- [name](CdvPurchase.GooglePlay.Adapter.md#name)
+- [retry](CdvPurchase.GooglePlay.Adapter.md#retry)
+- [\_instance](CdvPurchase.GooglePlay.Adapter.md#_instance)
+
+### Accessors
+
+- [products](CdvPurchase.GooglePlay.Adapter.md#products)
+- [receipts](CdvPurchase.GooglePlay.Adapter.md#receipts)
+
+### Methods
+
+- [finish](CdvPurchase.GooglePlay.Adapter.md#finish)
+- [getPurchases](CdvPurchase.GooglePlay.Adapter.md#getpurchases)
+- [getSkusOf](CdvPurchase.GooglePlay.Adapter.md#getskusof)
+- [handleReceiptValidationResponse](CdvPurchase.GooglePlay.Adapter.md#handlereceiptvalidationresponse)
+- [initialize](CdvPurchase.GooglePlay.Adapter.md#initialize)
+- [load](CdvPurchase.GooglePlay.Adapter.md#load)
+- [onPriceChangeConfirmationResult](CdvPurchase.GooglePlay.Adapter.md#onpricechangeconfirmationresult)
+- [onPurchaseConsumed](CdvPurchase.GooglePlay.Adapter.md#onpurchaseconsumed)
+- [onPurchasesUpdated](CdvPurchase.GooglePlay.Adapter.md#onpurchasesupdated)
+- [onSetPurchases](CdvPurchase.GooglePlay.Adapter.md#onsetpurchases)
+- [order](CdvPurchase.GooglePlay.Adapter.md#order)
+- [receiptValidationBody](CdvPurchase.GooglePlay.Adapter.md#receiptvalidationbody)
+- [requestPayment](CdvPurchase.GooglePlay.Adapter.md#requestpayment)
+
 ## Constructors
 
 ### constructor

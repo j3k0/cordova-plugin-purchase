@@ -10,6 +10,15 @@ Google API error response payload
 
   ↳ [`GoogleSubscriptionGone`](CdvPurchase.GooglePlay.PublisherAPI.GoogleSubscriptionGone.md)
 
+## Table of contents
+
+### Properties
+
+- [code](CdvPurchase.GooglePlay.PublisherAPI.ErrorResponse_API.md#code)
+- [errors](CdvPurchase.GooglePlay.PublisherAPI.ErrorResponse_API.md#errors)
+- [kind](CdvPurchase.GooglePlay.PublisherAPI.ErrorResponse_API.md#kind)
+- [message](CdvPurchase.GooglePlay.PublisherAPI.ErrorResponse_API.md#message)
+
 ## Properties
 
 ### code

@@ -8,6 +8,24 @@
 
   ↳ **`Receipt`**
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.GooglePlay.Receipt.md#constructor)
+
+### Properties
+
+- [orderId](CdvPurchase.GooglePlay.Receipt.md#orderid)
+- [platform](CdvPurchase.GooglePlay.Receipt.md#platform)
+- [purchaseToken](CdvPurchase.GooglePlay.Receipt.md#purchasetoken)
+- [transactions](CdvPurchase.GooglePlay.Receipt.md#transactions)
+
+### Methods
+
+- [hasTransaction](CdvPurchase.GooglePlay.Receipt.md#hastransaction)
+- [refresh](CdvPurchase.GooglePlay.Receipt.md#refresh)
+
 ## Constructors
 
 ### constructor

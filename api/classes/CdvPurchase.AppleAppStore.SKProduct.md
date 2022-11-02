@@ -10,6 +10,29 @@ Product definition from a store
 
   ↳ **`SKProduct`**
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.AppleAppStore.SKProduct.md#constructor)
+
+### Properties
+
+- [description](CdvPurchase.AppleAppStore.SKProduct.md#description)
+- [id](CdvPurchase.AppleAppStore.SKProduct.md#id)
+- [offers](CdvPurchase.AppleAppStore.SKProduct.md#offers)
+- [platform](CdvPurchase.AppleAppStore.SKProduct.md#platform)
+- [title](CdvPurchase.AppleAppStore.SKProduct.md#title)
+- [type](CdvPurchase.AppleAppStore.SKProduct.md#type)
+
+### Accessors
+
+- [pricing](CdvPurchase.AppleAppStore.SKProduct.md#pricing)
+
+### Methods
+
+- [getOffer](CdvPurchase.AppleAppStore.SKProduct.md#getoffer)
+
 ## Constructors
 
 ### constructor

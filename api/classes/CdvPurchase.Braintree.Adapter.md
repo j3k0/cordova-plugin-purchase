@@ -6,6 +6,37 @@
 
 - [`Adapter`](../interfaces/CdvPurchase.Adapter.md)
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.Braintree.Adapter.md#constructor)
+
+### Properties
+
+- [\_receipts](CdvPurchase.Braintree.Adapter.md#_receipts)
+- [androidBridge](CdvPurchase.Braintree.Adapter.md#androidbridge)
+- [id](CdvPurchase.Braintree.Adapter.md#id)
+- [iosBridge](CdvPurchase.Braintree.Adapter.md#iosbridge)
+- [log](CdvPurchase.Braintree.Adapter.md#log)
+- [name](CdvPurchase.Braintree.Adapter.md#name)
+- [options](CdvPurchase.Braintree.Adapter.md#options)
+- [products](CdvPurchase.Braintree.Adapter.md#products)
+
+### Accessors
+
+- [receipts](CdvPurchase.Braintree.Adapter.md#receipts)
+
+### Methods
+
+- [finish](CdvPurchase.Braintree.Adapter.md#finish)
+- [handleReceiptValidationResponse](CdvPurchase.Braintree.Adapter.md#handlereceiptvalidationresponse)
+- [initialize](CdvPurchase.Braintree.Adapter.md#initialize)
+- [load](CdvPurchase.Braintree.Adapter.md#load)
+- [order](CdvPurchase.Braintree.Adapter.md#order)
+- [receiptValidationBody](CdvPurchase.Braintree.Adapter.md#receiptvalidationbody)
+- [requestPayment](CdvPurchase.Braintree.Adapter.md#requestpayment)
+
 ## Constructors
 
 ### constructor

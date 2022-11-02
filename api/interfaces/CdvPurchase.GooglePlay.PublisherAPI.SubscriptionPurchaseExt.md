@@ -8,6 +8,41 @@
 
   ↳ **`SubscriptionPurchaseExt`**
 
+## Table of contents
+
+### Properties
+
+- [acknowledgementState](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#acknowledgementstate)
+- [autoRenewing](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#autorenewing)
+- [autoResumeTimeMillis](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#autoresumetimemillis)
+- [cancelReason](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#cancelreason)
+- [cancelSurveyResult](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#cancelsurveyresult)
+- [countryCode](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#countrycode)
+- [developerPayload](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#developerpayload)
+- [emailAddress](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#emailaddress)
+- [expiryTimeMillis](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#expirytimemillis)
+- [externalAccountId](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#externalaccountid)
+- [familyName](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#familyname)
+- [givenName](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#givenname)
+- [introductoryPriceInfo](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#introductorypriceinfo)
+- [kind](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#kind)
+- [linkedPurchaseToken](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#linkedpurchasetoken)
+- [obfuscatedExternalAccountId](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#obfuscatedexternalaccountid)
+- [obfuscatedExternalProfileId](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#obfuscatedexternalprofileid)
+- [orderId](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#orderid)
+- [paymentState](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#paymentstate)
+- [priceAmountMicros](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#priceamountmicros)
+- [priceChange](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#pricechange)
+- [priceCurrencyCode](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#pricecurrencycode)
+- [productId](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#productid)
+- [profileId](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#profileid)
+- [profileName](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#profilename)
+- [promotionCode](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#promotioncode)
+- [promotionType](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#promotiontype)
+- [purchaseType](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#purchasetype)
+- [startTimeMillis](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#starttimemillis)
+- [userCancellationTimeMillis](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md#usercancellationtimemillis)
+
 ## Properties
 
 ### acknowledgementState

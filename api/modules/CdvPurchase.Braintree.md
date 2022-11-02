@@ -2,23 +2,40 @@
 
 [CdvPurchase](CdvPurchase.md).Braintree
 
-## Namespaces
+## Table of contents
+
+### Namespaces
 
 - [AndroidBridge](CdvPurchase.Braintree.AndroidBridge.md)
 - [DropIn](CdvPurchase.Braintree.DropIn.md)
 - [IosBridge](CdvPurchase.Braintree.IosBridge.md)
 - [ThreeDSecure](CdvPurchase.Braintree.ThreeDSecure.md)
 
-## Classes
+### Classes
 
 - [Adapter](../classes/CdvPurchase.Braintree.Adapter.md)
 - [BraintreeReceipt](../classes/CdvPurchase.Braintree.BraintreeReceipt.md)
 
-## Interfaces
+### Interfaces
 
 - [AdapterOptions](../interfaces/CdvPurchase.Braintree.AdapterOptions.md)
 - [AdditionalData](../interfaces/CdvPurchase.Braintree.AdditionalData.md)
 - [TransactionObject](../interfaces/CdvPurchase.Braintree.TransactionObject.md)
+
+### Type Aliases
+
+- [ClientTokenProvider](CdvPurchase.Braintree.md#clienttokenprovider)
+- [Commercial](CdvPurchase.Braintree.md#commercial)
+- [CustomerLocation](CdvPurchase.Braintree.md#customerlocation)
+- [Debit](CdvPurchase.Braintree.md#debit)
+- [DurbinRegulated](CdvPurchase.Braintree.md#durbinregulated)
+- [HealthCare](CdvPurchase.Braintree.md#healthcare)
+- [Payroll](CdvPurchase.Braintree.md#payroll)
+- [Prepaid](CdvPurchase.Braintree.md#prepaid)
+
+### Variables
+
+- [customerId](CdvPurchase.Braintree.md#customerid)
 
 ## Type Aliases
 

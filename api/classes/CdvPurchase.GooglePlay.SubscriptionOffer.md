@@ -8,6 +8,26 @@
 
   ↳ **`SubscriptionOffer`**
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.GooglePlay.SubscriptionOffer.md#constructor)
+
+### Properties
+
+- [id](CdvPurchase.GooglePlay.SubscriptionOffer.md#id)
+- [pricingPhases](CdvPurchase.GooglePlay.SubscriptionOffer.md#pricingphases)
+- [tags](CdvPurchase.GooglePlay.SubscriptionOffer.md#tags)
+- [token](CdvPurchase.GooglePlay.SubscriptionOffer.md#token)
+- [type](CdvPurchase.GooglePlay.SubscriptionOffer.md#type)
+
+### Accessors
+
+- [platform](CdvPurchase.GooglePlay.SubscriptionOffer.md#platform)
+- [productId](CdvPurchase.GooglePlay.SubscriptionOffer.md#productid)
+- [productType](CdvPurchase.GooglePlay.SubscriptionOffer.md#producttype)
+
 ## Constructors
 
 ### constructor
@@ -55,18 +75,6 @@ Pricing phases
 
 ___
 
-### product
-
-• **product**: [`Product`](CdvPurchase.Product.md)
-
-Parent product
-
-#### Inherited from
-
-[Offer](CdvPurchase.Offer.md).[product](CdvPurchase.Offer.md#product)
-
-___
-
 ### tags
 
 • **tags**: `string`[]
@@ -82,3 +90,45 @@ ___
 ### type
 
 • **type**: `string` = `'subs'`
+
+## Accessors
+
+### platform
+
+• `get` **platform**(): [`Platform`](../enums/CdvPurchase.Platform.md)
+
+#### Returns
+
+[`Platform`](../enums/CdvPurchase.Platform.md)
+
+#### Inherited from
+
+CdvPurchase.Offer.platform
+
+___
+
+### productId
+
+• `get` **productId**(): `string`
+
+#### Returns
+
+`string`
+
+#### Inherited from
+
+CdvPurchase.Offer.productId
+
+___
+
+### productType
+
+• `get` **productType**(): [`ProductType`](../enums/CdvPurchase.ProductType.md)
+
+#### Returns
+
+[`ProductType`](../enums/CdvPurchase.ProductType.md)
+
+#### Inherited from
+
+CdvPurchase.Offer.productType

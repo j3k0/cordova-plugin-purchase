@@ -2,6 +2,16 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).Platform
 
+## Table of contents
+
+### Enumeration Members
+
+- [APPLE\_APPSTORE](CdvPurchase.Platform.md#apple_appstore)
+- [BRAINTREE](CdvPurchase.Platform.md#braintree)
+- [GOOGLE\_PLAY](CdvPurchase.Platform.md#google_play)
+- [TEST](CdvPurchase.Platform.md#test)
+- [WINDOWS\_STORE](CdvPurchase.Platform.md#windows_store)
+
 ## Enumeration Members
 
 ### APPLE\_APPSTORE

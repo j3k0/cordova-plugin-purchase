@@ -2,6 +2,15 @@
 
 [Braintree](../modules/CdvPurchase.Braintree.md).[DropIn](../modules/CdvPurchase.Braintree.DropIn.md).Result
 
+## Table of contents
+
+### Properties
+
+- [deviceData](CdvPurchase.Braintree.DropIn.Result.md#devicedata)
+- [paymentDescription](CdvPurchase.Braintree.DropIn.Result.md#paymentdescription)
+- [paymentMethodNonce](CdvPurchase.Braintree.DropIn.Result.md#paymentmethodnonce)
+- [paymentMethodType](CdvPurchase.Braintree.DropIn.Result.md#paymentmethodtype)
+
 ## Properties
 
 ### deviceData

@@ -4,6 +4,15 @@
 
 Contains the introductory price information for a subscription.
 
+## Table of contents
+
+### Properties
+
+- [introductoryPriceAmountMicros](CdvPurchase.GooglePlay.PublisherAPI.IntroductoryPriceInfo.md#introductorypriceamountmicros)
+- [introductoryPriceCurrencyCode](CdvPurchase.GooglePlay.PublisherAPI.IntroductoryPriceInfo.md#introductorypricecurrencycode)
+- [introductoryPriceCycles](CdvPurchase.GooglePlay.PublisherAPI.IntroductoryPriceInfo.md#introductorypricecycles)
+- [introductoryPricePeriod](CdvPurchase.GooglePlay.PublisherAPI.IntroductoryPriceInfo.md#introductorypriceperiod)
+
 ## Properties
 
 ### introductoryPriceAmountMicros

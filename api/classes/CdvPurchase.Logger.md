@@ -2,6 +2,21 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).Logger
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.Logger.md#constructor)
+
+### Methods
+
+- [child](CdvPurchase.Logger.md#child)
+- [debug](CdvPurchase.Logger.md#debug)
+- [error](CdvPurchase.Logger.md#error)
+- [info](CdvPurchase.Logger.md#info)
+- [logCallbackException](CdvPurchase.Logger.md#logcallbackexception)
+- [warn](CdvPurchase.Logger.md#warn)
+
 ## Constructors
 
 ### constructor

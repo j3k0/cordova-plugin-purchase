@@ -2,16 +2,18 @@
 
 [CdvPurchase](CdvPurchase.md).[GooglePlay](CdvPurchase.GooglePlay.md).Bridge
 
-## Enumerations
+## Table of contents
+
+### Enumerations
 
 - [PurchaseState](../enums/CdvPurchase.GooglePlay.Bridge.PurchaseState.md)
 - [RecurrenceMode](../enums/CdvPurchase.GooglePlay.Bridge.RecurrenceMode.md)
 
-## Classes
+### Classes
 
 - [Bridge](../classes/CdvPurchase.GooglePlay.Bridge.Bridge.md)
 
-## Interfaces
+### Interfaces
 
 - [InAppProduct](../interfaces/CdvPurchase.GooglePlay.Bridge.InAppProduct.md)
 - [Options](../interfaces/CdvPurchase.GooglePlay.Bridge.Options.md)
@@ -19,6 +21,11 @@
 - [Purchase](../interfaces/CdvPurchase.GooglePlay.Bridge.Purchase.md)
 - [Subscription](../interfaces/CdvPurchase.GooglePlay.Bridge.Subscription.md)
 - [SubscriptionOffer](../interfaces/CdvPurchase.GooglePlay.Bridge.SubscriptionOffer.md)
+
+### Type Aliases
+
+- [ErrorCallback](CdvPurchase.GooglePlay.Bridge.md#errorcallback)
+- [Message](CdvPurchase.GooglePlay.Bridge.md#message)
 
 ## Type Aliases
 

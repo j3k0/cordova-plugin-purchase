@@ -4,6 +4,15 @@
 
 Transaction type from an Apple powered device
 
+## Table of contents
+
+### Properties
+
+- [appStoreReceipt](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionApple.md#appstorereceipt)
+- [id](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionApple.md#id)
+- [transactionReceipt](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionApple.md#transactionreceipt)
+- [type](CdvPurchase.Validator.Request.ApiValidatorBodyTransactionApple.md#type)
+
 ## Properties
 
 ### appStoreReceipt

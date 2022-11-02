@@ -2,12 +2,14 @@
 
 [CdvPurchase](CdvPurchase.md).[Braintree](CdvPurchase.Braintree.md).DropIn
 
-## Enumerations
+## Table of contents
+
+### Enumerations
 
 - [CardFormFieldStatus](../enums/CdvPurchase.Braintree.DropIn.CardFormFieldStatus.md)
 - [PaymentMethod](../enums/CdvPurchase.Braintree.DropIn.PaymentMethod.md)
 
-## Interfaces
+### Interfaces
 
 - [PaymentMethodNonce](../interfaces/CdvPurchase.Braintree.DropIn.PaymentMethodNonce.md)
 - [Request](../interfaces/CdvPurchase.Braintree.DropIn.Request.md)

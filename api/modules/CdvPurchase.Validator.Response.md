@@ -2,10 +2,17 @@
 
 [CdvPurchase](CdvPurchase.md).[Validator](CdvPurchase.Validator.md).Response
 
-## Interfaces
+## Table of contents
+
+### Interfaces
 
 - [ErrorPayload](../interfaces/CdvPurchase.Validator.Response.ErrorPayload.md)
 - [SuccessPayload](../interfaces/CdvPurchase.Validator.Response.SuccessPayload.md)
+
+### Type Aliases
+
+- [NativeTransaction](CdvPurchase.Validator.Response.md#nativetransaction)
+- [Payload](CdvPurchase.Validator.Response.md#payload)
 
 ## Type Aliases
 

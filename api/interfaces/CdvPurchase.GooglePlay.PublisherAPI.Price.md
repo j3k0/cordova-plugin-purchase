@@ -4,6 +4,13 @@
 
 Definition of a price, i.e. currency and units.
 
+## Table of contents
+
+### Properties
+
+- [currency](CdvPurchase.GooglePlay.PublisherAPI.Price.md#currency)
+- [priceMicros](CdvPurchase.GooglePlay.PublisherAPI.Price.md#pricemicros)
+
 ## Properties
 
 ### currency

@@ -2,6 +2,35 @@
 
 [AppleAppStore](../modules/CdvPurchase.AppleAppStore.md).[VerifyReceipt](../modules/CdvPurchase.AppleAppStore.VerifyReceipt.md).AppleVerifyReceiptResponseReceipt
 
+## Table of contents
+
+### Properties
+
+- [adam\_id](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#adam_id)
+- [app\_item\_id](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#app_item_id)
+- [application\_version](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#application_version)
+- [bundle\_id](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#bundle_id)
+- [download\_id](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#download_id)
+- [expiration\_date](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#expiration_date)
+- [expiration\_date\_ms](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#expiration_date_ms)
+- [expiration\_date\_pst](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#expiration_date_pst)
+- [in\_app](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#in_app)
+- [original\_application\_version](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#original_application_version)
+- [original\_purchase\_date](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#original_purchase_date)
+- [original\_purchase\_date\_ms](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#original_purchase_date_ms)
+- [original\_purchase\_date\_pst](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#original_purchase_date_pst)
+- [preorder\_date](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#preorder_date)
+- [preorder\_date\_ms](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#preorder_date_ms)
+- [preorder\_date\_pst](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#preorder_date_pst)
+- [receipt\_creation\_date](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#receipt_creation_date)
+- [receipt\_creation\_date\_ms](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#receipt_creation_date_ms)
+- [receipt\_creation\_date\_pst](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#receipt_creation_date_pst)
+- [receipt\_type](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#receipt_type)
+- [request\_date](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#request_date)
+- [request\_date\_ms](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#request_date_ms)
+- [request\_date\_pst](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#request_date_pst)
+- [version\_external\_identifier](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md#version_external_identifier)
+
 ## Properties
 
 ### adam\_id

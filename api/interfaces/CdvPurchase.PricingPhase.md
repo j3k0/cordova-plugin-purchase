@@ -8,6 +8,18 @@ Description of a phase for the pricing of a purchase.
 
 Product.pricingPhases
 
+## Table of contents
+
+### Properties
+
+- [billingCycles](CdvPurchase.PricingPhase.md#billingcycles)
+- [billingPeriod](CdvPurchase.PricingPhase.md#billingperiod)
+- [currency](CdvPurchase.PricingPhase.md#currency)
+- [paymentMode](CdvPurchase.PricingPhase.md#paymentmode)
+- [price](CdvPurchase.PricingPhase.md#price)
+- [priceMicros](CdvPurchase.PricingPhase.md#pricemicros)
+- [recurrenceMode](CdvPurchase.PricingPhase.md#recurrencemode)
+
 ## Properties
 
 ### billingCycles

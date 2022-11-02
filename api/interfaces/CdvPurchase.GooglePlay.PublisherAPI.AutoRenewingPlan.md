@@ -4,6 +4,12 @@
 
 Information related to an auto renewing plan.
 
+## Table of contents
+
+### Properties
+
+- [autoRenewEnabled](CdvPurchase.GooglePlay.PublisherAPI.AutoRenewingPlan.md#autorenewenabled)
+
 ## Properties
 
 ### autoRenewEnabled

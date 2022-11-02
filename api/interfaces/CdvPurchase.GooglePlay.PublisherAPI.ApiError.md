@@ -4,6 +4,16 @@
 
 Google API error
 
+## Table of contents
+
+### Properties
+
+- [domain](CdvPurchase.GooglePlay.PublisherAPI.ApiError.md#domain)
+- [location](CdvPurchase.GooglePlay.PublisherAPI.ApiError.md#location)
+- [locationType](CdvPurchase.GooglePlay.PublisherAPI.ApiError.md#locationtype)
+- [message](CdvPurchase.GooglePlay.PublisherAPI.ApiError.md#message)
+- [reason](CdvPurchase.GooglePlay.PublisherAPI.ApiError.md#reason)
+
 ## Properties
 
 ### domain

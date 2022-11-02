@@ -2,6 +2,14 @@
 
 [GooglePlay](../modules/CdvPurchase.GooglePlay.md).[Bridge](../modules/CdvPurchase.GooglePlay.Bridge.md).SubscriptionOffer
 
+## Table of contents
+
+### Properties
+
+- [pricing\_phases](CdvPurchase.GooglePlay.Bridge.SubscriptionOffer.md#pricing_phases)
+- [tags](CdvPurchase.GooglePlay.Bridge.SubscriptionOffer.md#tags)
+- [token](CdvPurchase.GooglePlay.Bridge.SubscriptionOffer.md#token)
+
 ## Properties
 
 ### pricing\_phases

@@ -5,6 +5,16 @@
 The reason a subscription expired.
 https://developer.apple.com/documentation/appstorereceipts/expiration_intent
 
+## Table of contents
+
+### Enumeration Members
+
+- [BILLING\_ERROR](CdvPurchase.AppleAppStore.VerifyReceipt.AppleExpirationIntent.md#billing_error)
+- [CANCELED](CdvPurchase.AppleAppStore.VerifyReceipt.AppleExpirationIntent.md#canceled)
+- [PRICE\_INCREASE](CdvPurchase.AppleAppStore.VerifyReceipt.AppleExpirationIntent.md#price_increase)
+- [PRODUCT\_NOT\_AVAILABLE](CdvPurchase.AppleAppStore.VerifyReceipt.AppleExpirationIntent.md#product_not_available)
+- [UNKNOWN](CdvPurchase.AppleAppStore.VerifyReceipt.AppleExpirationIntent.md#unknown)
+
 ## Enumeration Members
 
 ### BILLING\_ERROR

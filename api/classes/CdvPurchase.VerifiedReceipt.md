@@ -4,24 +4,20 @@
 
 Receipt data as validated by the receipt validation server
 
-## Constructors
+## Table of contents
 
-### constructor
+### Properties
 
-• **new VerifiedReceipt**(`receipt`, `response`)
+- [collection](CdvPurchase.VerifiedReceipt.md#collection)
+- [id](CdvPurchase.VerifiedReceipt.md#id)
+- [latestReceipt](CdvPurchase.VerifiedReceipt.md#latestreceipt)
+- [nativeTransactions](CdvPurchase.VerifiedReceipt.md#nativetransactions)
+- [sourceReceipt](CdvPurchase.VerifiedReceipt.md#sourcereceipt)
+- [warning](CdvPurchase.VerifiedReceipt.md#warning)
 
-#### Parameters
+### Accessors
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `receipt` | [`Receipt`](CdvPurchase.Receipt.md) | - |
-| `response` | `Object` | - |
-| `response.collection?` | [`VerifiedPurchase`](../interfaces/CdvPurchase.VerifiedPurchase.md)[] | The collection of purchases in this receipt.  An array of ValidatorPurchase |
-| `response.id` | `string` | Id of the product that have been validated |
-| `response.ineligible_for_intro_price?` | `string`[] | List of product ids for which intro price isn't available anymore |
-| `response.latest_receipt` | `boolean` | Tell the plugin that we've used the latest receipt |
-| `response.transaction` | [`NativeTransaction`](../modules/CdvPurchase.Validator.Response.md#nativetransaction) | Native transaction detail |
-| `response.warning?` | `string` | A warning message about this validation.  It might be present when the server had to fallback to a backup validation solution. |
+- [platform](CdvPurchase.VerifiedReceipt.md#platform)
 
 ## Properties
 
@@ -30,8 +26,6 @@ Receipt data as validated by the receipt validation server
 • **collection**: [`VerifiedPurchase`](../interfaces/CdvPurchase.VerifiedPurchase.md)[]
 
 The collection of purchases in this receipt.
-
-An array of ValidatorPurchase
 
 ___
 
@@ -47,7 +41,7 @@ ___
 
 • **latestReceipt**: `boolean`
 
-Tell the plugin that we've used the latest receipt
+True if we've used the latest receipt.
 
 ___
 
@@ -55,7 +49,7 @@ ___
 
 • **nativeTransactions**: [`NativeTransaction`](../modules/CdvPurchase.Validator.Response.md#nativetransaction)[]
 
-Native transactions detail
+Raw content from the platform's API.
 
 ___
 
@@ -76,7 +70,7 @@ Optional warning message about this validation.
 It might be present when the server had to fallback to a backup validation solution (like a cached response or using local validation only).
 This happens generally when communication with the platform's receipt validation service isn't possible (because it's down, there's a network issue, ...)
 
-Threat the content of this receipt accordingly.
+When a warning is present, you should threat the content of this receipt accordingly.
 
 ## Accessors
 
@@ -89,28 +83,3 @@ Platform this receipt originated from
 #### Returns
 
 [`Platform`](../enums/CdvPurchase.Platform.md)
-
-## Methods
-
-### set
-
-▸ **set**(`receipt`, `response`): `void`
-
-Update the receipt content
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `receipt` | [`Receipt`](CdvPurchase.Receipt.md) | - |
-| `response` | `Object` | - |
-| `response.collection?` | [`VerifiedPurchase`](../interfaces/CdvPurchase.VerifiedPurchase.md)[] | The collection of purchases in this receipt.  An array of ValidatorPurchase |
-| `response.id` | `string` | Id of the product that have been validated |
-| `response.ineligible_for_intro_price?` | `string`[] | List of product ids for which intro price isn't available anymore |
-| `response.latest_receipt` | `boolean` | Tell the plugin that we've used the latest receipt |
-| `response.transaction` | [`NativeTransaction`](../modules/CdvPurchase.Validator.Response.md#nativetransaction) | Native transaction detail |
-| `response.warning?` | `string` | A warning message about this validation.  It might be present when the server had to fallback to a backup validation solution. |
-
-#### Returns
-
-`void`

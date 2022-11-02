@@ -4,6 +4,16 @@
 
 Information associated with purchases made with 'Subscribe with Google'.
 
+## Table of contents
+
+### Properties
+
+- [emailAddress](CdvPurchase.GooglePlay.PublisherAPI.SubscribeWithGoogleInfo.md#emailaddress)
+- [familyName](CdvPurchase.GooglePlay.PublisherAPI.SubscribeWithGoogleInfo.md#familyname)
+- [givenName](CdvPurchase.GooglePlay.PublisherAPI.SubscribeWithGoogleInfo.md#givenname)
+- [profileId](CdvPurchase.GooglePlay.PublisherAPI.SubscribeWithGoogleInfo.md#profileid)
+- [profileName](CdvPurchase.GooglePlay.PublisherAPI.SubscribeWithGoogleInfo.md#profilename)
+
 ## Properties
 
 ### emailAddress

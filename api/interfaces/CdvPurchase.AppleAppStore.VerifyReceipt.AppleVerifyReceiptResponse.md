@@ -13,6 +13,19 @@ https://developer.apple.com/documentation/appstoreservernotifications/unified_re
 
   ↳ **`AppleVerifyReceiptResponse`**
 
+## Table of contents
+
+### Properties
+
+- [environment](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponse.md#environment)
+- [exception](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponse.md#exception)
+- [is-retryable](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponse.md#is-retryable)
+- [latest\_receipt](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponse.md#latest_receipt)
+- [latest\_receipt\_info](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponse.md#latest_receipt_info)
+- [pending\_renewal\_info](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponse.md#pending_renewal_info)
+- [receipt](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponse.md#receipt)
+- [status](CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponse.md#status)
+
 ## Properties
 
 ### environment

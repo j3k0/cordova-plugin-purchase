@@ -2,6 +2,16 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[GooglePlay](../modules/CdvPurchase.GooglePlay.md).AdditionalData
 
+## Table of contents
+
+### Properties
+
+- [accountId](CdvPurchase.GooglePlay.AdditionalData.md#accountid)
+- [offerToken](CdvPurchase.GooglePlay.AdditionalData.md#offertoken)
+- [oldPurchaseToken](CdvPurchase.GooglePlay.AdditionalData.md#oldpurchasetoken)
+- [profileId](CdvPurchase.GooglePlay.AdditionalData.md#profileid)
+- [prorationMode](CdvPurchase.GooglePlay.AdditionalData.md#prorationmode)
+
 ## Properties
 
 ### accountId

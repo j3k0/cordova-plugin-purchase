@@ -2,7 +2,9 @@
 
 cordova-plugin-purchase global namespace
 
-## Namespaces
+## Table of contents
+
+### Namespaces
 
 - [AppleAppStore](CdvPurchase.AppleAppStore.md)
 - [Braintree](CdvPurchase.Braintree.md)
@@ -12,7 +14,7 @@ cordova-plugin-purchase global namespace
 - [Validator](CdvPurchase.Validator.md)
 - [WindowsStore](CdvPurchase.WindowsStore.md)
 
-## Enumerations
+### Enumerations
 
 - [CancelationReason](../enums/CdvPurchase.CancelationReason.md)
 - [ErrorCode](../enums/CdvPurchase.ErrorCode.md)
@@ -25,7 +27,7 @@ cordova-plugin-purchase global namespace
 - [RenewalIntent](../enums/CdvPurchase.RenewalIntent.md)
 - [TransactionState](../enums/CdvPurchase.TransactionState.md)
 
-## Classes
+### Classes
 
 - [Callbacks](../classes/CdvPurchase.Callbacks.md)
 - [Iaptic](../classes/CdvPurchase.Iaptic.md)
@@ -38,7 +40,7 @@ cordova-plugin-purchase global namespace
 - [Transaction](../classes/CdvPurchase.Transaction.md)
 - [VerifiedReceipt](../classes/CdvPurchase.VerifiedReceipt.md)
 
-## Interfaces
+### Interfaces
 
 - [Adapter](../interfaces/CdvPurchase.Adapter.md)
 - [AdapterListener](../interfaces/CdvPurchase.AdapterListener.md)
@@ -52,6 +54,23 @@ cordova-plugin-purchase global namespace
 - [VerbosityProvider](../interfaces/CdvPurchase.VerbosityProvider.md)
 - [VerifiedPurchase](../interfaces/CdvPurchase.VerifiedPurchase.md)
 - [When](../interfaces/CdvPurchase.When.md)
+
+### Type Aliases
+
+- [Callback](CdvPurchase.md#callback)
+- [IErrorCallback](CdvPurchase.md#ierrorcallback)
+- [IPeriodUnit](CdvPurchase.md#iperiodunit)
+- [PlatformWithOptions](CdvPurchase.md#platformwithoptions)
+- [PrivacyPolicyItem](CdvPurchase.md#privacypolicyitem)
+
+### Variables
+
+- [PLUGIN\_VERSION](CdvPurchase.md#plugin_version)
+- [store](CdvPurchase.md#store)
+
+### Functions
+
+- [storeError](CdvPurchase.md#storeerror)
 
 ## Type Aliases
 

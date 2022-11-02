@@ -2,6 +2,21 @@
 
 [AppleAppStore](../modules/CdvPurchase.AppleAppStore.md).[VerifyReceipt](../modules/CdvPurchase.AppleAppStore.VerifyReceipt.md).ApplePendingRenewalInfo
 
+## Table of contents
+
+### Properties
+
+- [auto\_renew\_product\_id](CdvPurchase.AppleAppStore.VerifyReceipt.ApplePendingRenewalInfo.md#auto_renew_product_id)
+- [auto\_renew\_status](CdvPurchase.AppleAppStore.VerifyReceipt.ApplePendingRenewalInfo.md#auto_renew_status)
+- [expiration\_intent](CdvPurchase.AppleAppStore.VerifyReceipt.ApplePendingRenewalInfo.md#expiration_intent)
+- [grace\_period\_expires\_date](CdvPurchase.AppleAppStore.VerifyReceipt.ApplePendingRenewalInfo.md#grace_period_expires_date)
+- [grace\_period\_expires\_date\_ms](CdvPurchase.AppleAppStore.VerifyReceipt.ApplePendingRenewalInfo.md#grace_period_expires_date_ms)
+- [grace\_period\_expires\_date\_pst](CdvPurchase.AppleAppStore.VerifyReceipt.ApplePendingRenewalInfo.md#grace_period_expires_date_pst)
+- [is\_in\_billing\_retry\_period](CdvPurchase.AppleAppStore.VerifyReceipt.ApplePendingRenewalInfo.md#is_in_billing_retry_period)
+- [original\_transaction\_id](CdvPurchase.AppleAppStore.VerifyReceipt.ApplePendingRenewalInfo.md#original_transaction_id)
+- [price\_consent\_status](CdvPurchase.AppleAppStore.VerifyReceipt.ApplePendingRenewalInfo.md#price_consent_status)
+- [product\_id](CdvPurchase.AppleAppStore.VerifyReceipt.ApplePendingRenewalInfo.md#product_id)
+
 ## Properties
 
 ### auto\_renew\_product\_id

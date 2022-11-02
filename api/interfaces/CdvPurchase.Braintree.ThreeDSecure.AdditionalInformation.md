@@ -4,6 +4,51 @@
 
 Additional information for a 3DS lookup. Used in 3DS 2.0+ flows.
 
+## Table of contents
+
+### Properties
+
+- [accountAgeIndicator](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#accountageindicator)
+- [accountChangeDate](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#accountchangedate)
+- [accountChangeIndicator](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#accountchangeindicator)
+- [accountCreateDate](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#accountcreatedate)
+- [accountID](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#accountid)
+- [accountPurchases](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#accountpurchases)
+- [accountPwdChangeDate](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#accountpwdchangedate)
+- [accountPwdChangeIndicator](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#accountpwdchangeindicator)
+- [addCardAttempts](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#addcardattempts)
+- [addressMatch](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#addressmatch)
+- [authenticationIndicator](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#authenticationindicator)
+- [deliveryEmail](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#deliveryemail)
+- [deliveryTimeframe](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#deliverytimeframe)
+- [fraudActivity](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#fraudactivity)
+- [giftCardAmount](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#giftcardamount)
+- [giftCardCount](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#giftcardcount)
+- [giftCardCurrencyCode](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#giftcardcurrencycode)
+- [installment](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#installment)
+- [ipAddress](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#ipaddress)
+- [orderDescription](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#orderdescription)
+- [paymentAccountAge](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#paymentaccountage)
+- [paymentAccountIndicator](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#paymentaccountindicator)
+- [preorderDate](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#preorderdate)
+- [preorderIndicator](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#preorderindicator)
+- [productCode](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#productcode)
+- [purchaseDate](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#purchasedate)
+- [recurringEnd](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#recurringend)
+- [recurringFrequency](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#recurringfrequency)
+- [reorderIndicator](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#reorderindicator)
+- [sdkMaxTimeout](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#sdkmaxtimeout)
+- [shippingAddress](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#shippingaddress)
+- [shippingAddressUsageDate](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#shippingaddressusagedate)
+- [shippingAddressUsageIndicator](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#shippingaddressusageindicator)
+- [shippingMethodIndicator](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#shippingmethodindicator)
+- [shippingNameIndicator](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#shippingnameindicator)
+- [taxAmount](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#taxamount)
+- [transactionCountDay](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#transactioncountday)
+- [transactionCountYear](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#transactioncountyear)
+- [userAgent](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#useragent)
+- [workPhoneNumber](CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md#workphonenumber)
+
 ## Properties
 
 ### accountAgeIndicator

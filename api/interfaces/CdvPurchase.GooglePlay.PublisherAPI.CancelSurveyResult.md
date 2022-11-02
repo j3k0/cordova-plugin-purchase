@@ -4,6 +4,13 @@
 
 Result of the cancel survey when the subscription was canceled by the user.
 
+## Table of contents
+
+### Properties
+
+- [reason](CdvPurchase.GooglePlay.PublisherAPI.CancelSurveyResult.md#reason)
+- [reasonUserInput](CdvPurchase.GooglePlay.PublisherAPI.CancelSurveyResult.md#reasonuserinput)
+
 ## Properties
 
 ### reason

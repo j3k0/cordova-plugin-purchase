@@ -10,6 +10,29 @@ Product definition from a store
 
   ↳ **`GProduct`**
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.GooglePlay.GProduct.md#constructor)
+
+### Properties
+
+- [description](CdvPurchase.GooglePlay.GProduct.md#description)
+- [id](CdvPurchase.GooglePlay.GProduct.md#id)
+- [offers](CdvPurchase.GooglePlay.GProduct.md#offers)
+- [platform](CdvPurchase.GooglePlay.GProduct.md#platform)
+- [title](CdvPurchase.GooglePlay.GProduct.md#title)
+- [type](CdvPurchase.GooglePlay.GProduct.md#type)
+
+### Accessors
+
+- [pricing](CdvPurchase.GooglePlay.GProduct.md#pricing)
+
+### Methods
+
+- [getOffer](CdvPurchase.GooglePlay.GProduct.md#getoffer)
+
 ## Constructors
 
 ### constructor

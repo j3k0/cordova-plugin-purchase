@@ -4,6 +4,24 @@
 
 WindowsStore Subscription from Microsoft API
 
+## Table of contents
+
+### Properties
+
+- [autoRenew](CdvPurchase.WindowsStore.WindowsSubscription.md#autorenew)
+- [beneficiary](CdvPurchase.WindowsStore.WindowsSubscription.md#beneficiary)
+- [cancellationDate](CdvPurchase.WindowsStore.WindowsSubscription.md#cancellationdate)
+- [expirationTime](CdvPurchase.WindowsStore.WindowsSubscription.md#expirationtime)
+- [expirationTimeWithGrace](CdvPurchase.WindowsStore.WindowsSubscription.md#expirationtimewithgrace)
+- [id](CdvPurchase.WindowsStore.WindowsSubscription.md#id)
+- [isTrial](CdvPurchase.WindowsStore.WindowsSubscription.md#istrial)
+- [lastModified](CdvPurchase.WindowsStore.WindowsSubscription.md#lastmodified)
+- [market](CdvPurchase.WindowsStore.WindowsSubscription.md#market)
+- [productId](CdvPurchase.WindowsStore.WindowsSubscription.md#productid)
+- [recurrenceState](CdvPurchase.WindowsStore.WindowsSubscription.md#recurrencestate)
+- [skuId](CdvPurchase.WindowsStore.WindowsSubscription.md#skuid)
+- [startTime](CdvPurchase.WindowsStore.WindowsSubscription.md#starttime)
+
 ## Properties
 
 ### autoRenew

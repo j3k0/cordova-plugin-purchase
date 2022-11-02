@@ -2,12 +2,14 @@
 
 [CdvPurchase](CdvPurchase.md).[GooglePlay](CdvPurchase.GooglePlay.md).PublisherAPI
 
-## Enumerations
+## Table of contents
+
+### Enumerations
 
 - [ErrorCode](../enums/CdvPurchase.GooglePlay.PublisherAPI.ErrorCode.md)
 - [GoogleErrorReason](../enums/CdvPurchase.GooglePlay.PublisherAPI.GoogleErrorReason.md)
 
-## Interfaces
+### Interfaces
 
 - [ApiError](../interfaces/CdvPurchase.GooglePlay.PublisherAPI.ApiError.md)
 - [AutoRenewingPlan](../interfaces/CdvPurchase.GooglePlay.PublisherAPI.AutoRenewingPlan.md)
@@ -26,6 +28,19 @@
 - [SubscriptionPurchaseExt](../interfaces/CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseExt.md)
 - [SubscriptionPurchaseV2Ext](../interfaces/CdvPurchase.GooglePlay.PublisherAPI.SubscriptionPurchaseV2Ext.md)
 - [UserInitiatedCancellation](../interfaces/CdvPurchase.GooglePlay.PublisherAPI.UserInitiatedCancellation.md)
+
+### Type Aliases
+
+- [AcknowledgementState](CdvPurchase.GooglePlay.PublisherAPI.md#acknowledgementstate)
+- [CancelSurveyReason](CdvPurchase.GooglePlay.PublisherAPI.md#cancelsurveyreason)
+- [CanceledStateContext](CdvPurchase.GooglePlay.PublisherAPI.md#canceledstatecontext)
+- [DeveloperInitiatedCancellation](CdvPurchase.GooglePlay.PublisherAPI.md#developerinitiatedcancellation)
+- [GooglePurchase](CdvPurchase.GooglePlay.PublisherAPI.md#googlepurchase)
+- [ReplacementCancellation](CdvPurchase.GooglePlay.PublisherAPI.md#replacementcancellation)
+- [SubscriptionPurchaseLineItem](CdvPurchase.GooglePlay.PublisherAPI.md#subscriptionpurchaselineitem)
+- [SubscriptionState](CdvPurchase.GooglePlay.PublisherAPI.md#subscriptionstate)
+- [SystemInitiatedCancellation](CdvPurchase.GooglePlay.PublisherAPI.md#systeminitiatedcancellation)
+- [TestPurchase](CdvPurchase.GooglePlay.PublisherAPI.md#testpurchase)
 
 ## Type Aliases
 

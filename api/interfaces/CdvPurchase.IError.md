@@ -4,6 +4,14 @@
 
 An error triggered by the In-App Purchase plugin
 
+## Table of contents
+
+### Properties
+
+- [code](CdvPurchase.IError.md#code)
+- [isError](CdvPurchase.IError.md#iserror)
+- [message](CdvPurchase.IError.md#message)
+
 ## Properties
 
 ### code

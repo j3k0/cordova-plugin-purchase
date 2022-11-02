@@ -4,6 +4,18 @@
 
 The shipping method
 
+## Table of contents
+
+### Enumeration Members
+
+- [ELECTRONIC\_DELIVERY](CdvPurchase.Braintree.ThreeDSecure.ShippingMethod.md#electronic_delivery)
+- [EXPEDITED](CdvPurchase.Braintree.ThreeDSecure.ShippingMethod.md#expedited)
+- [GROUND](CdvPurchase.Braintree.ThreeDSecure.ShippingMethod.md#ground)
+- [PRIORITY](CdvPurchase.Braintree.ThreeDSecure.ShippingMethod.md#priority)
+- [SAME\_DAY](CdvPurchase.Braintree.ThreeDSecure.ShippingMethod.md#same_day)
+- [SHIP\_TO\_STORE](CdvPurchase.Braintree.ThreeDSecure.ShippingMethod.md#ship_to_store)
+- [UNSPECIFIED](CdvPurchase.Braintree.ThreeDSecure.ShippingMethod.md#unspecified)
+
 ## Enumeration Members
 
 ### ELECTRONIC\_DELIVERY

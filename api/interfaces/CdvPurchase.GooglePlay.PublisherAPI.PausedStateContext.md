@@ -4,6 +4,12 @@
 
 Information specific to a subscription in paused state.
 
+## Table of contents
+
+### Properties
+
+- [autoResumeTime](CdvPurchase.GooglePlay.PublisherAPI.PausedStateContext.md#autoresumetime)
+
 ## Properties
 
 ### autoResumeTime

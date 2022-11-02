@@ -2,6 +2,13 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[Braintree](../modules/CdvPurchase.Braintree.md).AdapterOptions
 
+## Table of contents
+
+### Properties
+
+- [clientTokenProvider](CdvPurchase.Braintree.AdapterOptions.md#clienttokenprovider)
+- [tokenizationKey](CdvPurchase.Braintree.AdapterOptions.md#tokenizationkey)
+
 ## Properties
 
 ### clientTokenProvider

@@ -4,6 +4,15 @@
 
 Data provided to store.register()
 
+## Table of contents
+
+### Properties
+
+- [group](CdvPurchase.IRegisterProduct.md#group)
+- [id](CdvPurchase.IRegisterProduct.md#id)
+- [platform](CdvPurchase.IRegisterProduct.md#platform)
+- [type](CdvPurchase.IRegisterProduct.md#type)
+
 ## Properties
 
 ### group

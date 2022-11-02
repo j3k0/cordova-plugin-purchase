@@ -2,6 +2,13 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).AdapterListener
 
+## Table of contents
+
+### Methods
+
+- [productsUpdated](CdvPurchase.AdapterListener.md#productsupdated)
+- [receiptsUpdated](CdvPurchase.AdapterListener.md#receiptsupdated)
+
 ## Methods
 
 ### productsUpdated

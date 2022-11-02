@@ -2,6 +2,12 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).VerbosityProvider
 
+## Table of contents
+
+### Properties
+
+- [verbosity](CdvPurchase.VerbosityProvider.md#verbosity)
+
 ## Properties
 
 ### verbosity

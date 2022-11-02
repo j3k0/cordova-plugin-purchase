@@ -2,13 +2,19 @@
 
 [CdvPurchase](CdvPurchase.md).WindowsStore
 
-## Classes
+## Table of contents
+
+### Classes
 
 - [Adapter](../classes/CdvPurchase.WindowsStore.Adapter.md)
 
-## Interfaces
+### Interfaces
 
 - [WindowsSubscription](../interfaces/CdvPurchase.WindowsStore.WindowsSubscription.md)
+
+### Type Aliases
+
+- [ISODate](CdvPurchase.WindowsStore.md#isodate)
 
 ## Type Aliases
 

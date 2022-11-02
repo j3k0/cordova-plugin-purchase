@@ -6,6 +6,29 @@
 
 - [`Adapter`](../interfaces/CdvPurchase.Adapter.md)
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.AppleAppStore.Adapter.md#constructor)
+
+### Properties
+
+- [id](CdvPurchase.AppleAppStore.Adapter.md#id)
+- [name](CdvPurchase.AppleAppStore.Adapter.md#name)
+- [products](CdvPurchase.AppleAppStore.Adapter.md#products)
+- [receipts](CdvPurchase.AppleAppStore.Adapter.md#receipts)
+
+### Methods
+
+- [finish](CdvPurchase.AppleAppStore.Adapter.md#finish)
+- [handleReceiptValidationResponse](CdvPurchase.AppleAppStore.Adapter.md#handlereceiptvalidationresponse)
+- [initialize](CdvPurchase.AppleAppStore.Adapter.md#initialize)
+- [load](CdvPurchase.AppleAppStore.Adapter.md#load)
+- [order](CdvPurchase.AppleAppStore.Adapter.md#order)
+- [receiptValidationBody](CdvPurchase.AppleAppStore.Adapter.md#receiptvalidationbody)
+- [requestPayment](CdvPurchase.AppleAppStore.Adapter.md#requestpayment)
+
 ## Constructors
 
 ### constructor

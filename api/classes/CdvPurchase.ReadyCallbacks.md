@@ -4,6 +4,22 @@
 
 Ready callbacks
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.ReadyCallbacks.md#constructor)
+
+### Properties
+
+- [isReady](CdvPurchase.ReadyCallbacks.md#isready)
+- [readyCallbacks](CdvPurchase.ReadyCallbacks.md#readycallbacks)
+
+### Methods
+
+- [add](CdvPurchase.ReadyCallbacks.md#add)
+- [trigger](CdvPurchase.ReadyCallbacks.md#trigger)
+
 ## Constructors
 
 ### constructor

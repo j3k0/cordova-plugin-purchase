@@ -8,6 +8,24 @@
 
   ↳ **`InAppOffer`**
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.GooglePlay.InAppOffer.md#constructor)
+
+### Properties
+
+- [id](CdvPurchase.GooglePlay.InAppOffer.md#id)
+- [pricingPhases](CdvPurchase.GooglePlay.InAppOffer.md#pricingphases)
+- [type](CdvPurchase.GooglePlay.InAppOffer.md#type)
+
+### Accessors
+
+- [platform](CdvPurchase.GooglePlay.InAppOffer.md#platform)
+- [productId](CdvPurchase.GooglePlay.InAppOffer.md#productid)
+- [productType](CdvPurchase.GooglePlay.InAppOffer.md#producttype)
+
 ## Constructors
 
 ### constructor
@@ -53,18 +71,48 @@ Pricing phases
 
 ___
 
-### product
-
-• **product**: [`Product`](CdvPurchase.Product.md)
-
-Parent product
-
-#### Inherited from
-
-[Offer](CdvPurchase.Offer.md).[product](CdvPurchase.Offer.md#product)
-
-___
-
 ### type
 
 • **type**: `string` = `'inapp'`
+
+## Accessors
+
+### platform
+
+• `get` **platform**(): [`Platform`](../enums/CdvPurchase.Platform.md)
+
+#### Returns
+
+[`Platform`](../enums/CdvPurchase.Platform.md)
+
+#### Inherited from
+
+CdvPurchase.Offer.platform
+
+___
+
+### productId
+
+• `get` **productId**(): `string`
+
+#### Returns
+
+`string`
+
+#### Inherited from
+
+CdvPurchase.Offer.productId
+
+___
+
+### productType
+
+• `get` **productType**(): [`ProductType`](../enums/CdvPurchase.ProductType.md)
+
+#### Returns
+
+[`ProductType`](../enums/CdvPurchase.ProductType.md)
+
+#### Inherited from
+
+CdvPurchase.Offer.productType

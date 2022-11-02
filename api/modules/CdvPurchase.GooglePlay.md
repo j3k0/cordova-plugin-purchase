@@ -2,16 +2,18 @@
 
 [CdvPurchase](CdvPurchase.md).GooglePlay
 
-## Namespaces
+## Table of contents
+
+### Namespaces
 
 - [Bridge](CdvPurchase.GooglePlay.Bridge.md)
 - [PublisherAPI](CdvPurchase.GooglePlay.PublisherAPI.md)
 
-## Enumerations
+### Enumerations
 
 - [ProrationMode](../enums/CdvPurchase.GooglePlay.ProrationMode.md)
 
-## Classes
+### Classes
 
 - [Adapter](../classes/CdvPurchase.GooglePlay.Adapter.md)
 - [GProduct](../classes/CdvPurchase.GooglePlay.GProduct.md)
@@ -21,9 +23,13 @@
 - [SubscriptionOffer](../classes/CdvPurchase.GooglePlay.SubscriptionOffer.md)
 - [Transaction](../classes/CdvPurchase.GooglePlay.Transaction.md)
 
-## Interfaces
+### Interfaces
 
 - [AdditionalData](../interfaces/CdvPurchase.GooglePlay.AdditionalData.md)
+
+### Type Aliases
+
+- [GOffer](CdvPurchase.GooglePlay.md#goffer)
 
 ## Type Aliases
 

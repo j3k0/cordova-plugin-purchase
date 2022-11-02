@@ -2,13 +2,15 @@
 
 [CdvPurchase](CdvPurchase.md).[Braintree](CdvPurchase.Braintree.md).ThreeDSecure
 
-## Enumerations
+## Table of contents
+
+### Enumerations
 
 - [AccountType](../enums/CdvPurchase.Braintree.ThreeDSecure.AccountType.md)
 - [ShippingMethod](../enums/CdvPurchase.Braintree.ThreeDSecure.ShippingMethod.md)
 - [Version](../enums/CdvPurchase.Braintree.ThreeDSecure.Version.md)
 
-## Interfaces
+### Interfaces
 
 - [AdditionalInformation](../interfaces/CdvPurchase.Braintree.ThreeDSecure.AdditionalInformation.md)
 - [PostalAddress](../interfaces/CdvPurchase.Braintree.ThreeDSecure.PostalAddress.md)

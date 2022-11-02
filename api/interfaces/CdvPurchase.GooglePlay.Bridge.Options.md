@@ -2,6 +2,17 @@
 
 [GooglePlay](../modules/CdvPurchase.GooglePlay.md).[Bridge](../modules/CdvPurchase.GooglePlay.Bridge.md).Options
 
+## Table of contents
+
+### Properties
+
+- [log](CdvPurchase.GooglePlay.Bridge.Options.md#log)
+- [onPriceChangeConfirmationResult](CdvPurchase.GooglePlay.Bridge.Options.md#onpricechangeconfirmationresult)
+- [onPurchaseConsumed](CdvPurchase.GooglePlay.Bridge.Options.md#onpurchaseconsumed)
+- [onPurchasesUpdated](CdvPurchase.GooglePlay.Bridge.Options.md#onpurchasesupdated)
+- [onSetPurchases](CdvPurchase.GooglePlay.Bridge.Options.md#onsetpurchases)
+- [showLog](CdvPurchase.GooglePlay.Bridge.Options.md#showlog)
+
 ## Properties
 
 ### log

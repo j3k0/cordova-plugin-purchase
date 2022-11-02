@@ -4,6 +4,23 @@
 
 Used to initialize a 3D Secure payment flow.
 
+## Table of contents
+
+### Properties
+
+- [accountType](CdvPurchase.Braintree.ThreeDSecure.Request.md#accounttype)
+- [additionalInformation](CdvPurchase.Braintree.ThreeDSecure.Request.md#additionalinformation)
+- [amount](CdvPurchase.Braintree.ThreeDSecure.Request.md#amount)
+- [billingAddress](CdvPurchase.Braintree.ThreeDSecure.Request.md#billingaddress)
+- [cardAddChallenge](CdvPurchase.Braintree.ThreeDSecure.Request.md#cardaddchallenge)
+- [challengeRequested](CdvPurchase.Braintree.ThreeDSecure.Request.md#challengerequested)
+- [email](CdvPurchase.Braintree.ThreeDSecure.Request.md#email)
+- [exemptionRequested](CdvPurchase.Braintree.ThreeDSecure.Request.md#exemptionrequested)
+- [mobilePhoneNumber](CdvPurchase.Braintree.ThreeDSecure.Request.md#mobilephonenumber)
+- [nonce](CdvPurchase.Braintree.ThreeDSecure.Request.md#nonce)
+- [shippingMethod](CdvPurchase.Braintree.ThreeDSecure.Request.md#shippingmethod)
+- [versionRequested](CdvPurchase.Braintree.ThreeDSecure.Request.md#versionrequested)
+
 ## Properties
 
 ### accountType

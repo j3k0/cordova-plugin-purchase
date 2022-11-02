@@ -4,6 +4,13 @@
 
 Information specific to cancellations initiated by users.
 
+## Table of contents
+
+### Properties
+
+- [cancelSurveyResult](CdvPurchase.GooglePlay.PublisherAPI.UserInitiatedCancellation.md#cancelsurveyresult)
+- [cancelTime](CdvPurchase.GooglePlay.PublisherAPI.UserInitiatedCancellation.md#canceltime)
+
 ## Properties
 
 ### cancelSurveyResult

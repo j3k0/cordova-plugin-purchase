@@ -2,6 +2,22 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[Validator](../modules/CdvPurchase.Validator.md).DeviceInfo
 
+## Table of contents
+
+### Properties
+
+- [cordova](CdvPurchase.Validator.DeviceInfo.md#cordova)
+- [fingerprint](CdvPurchase.Validator.DeviceInfo.md#fingerprint)
+- [ionic](CdvPurchase.Validator.DeviceInfo.md#ionic)
+- [isVirtual](CdvPurchase.Validator.DeviceInfo.md#isvirtual)
+- [manufacturer](CdvPurchase.Validator.DeviceInfo.md#manufacturer)
+- [model](CdvPurchase.Validator.DeviceInfo.md#model)
+- [platform](CdvPurchase.Validator.DeviceInfo.md#platform)
+- [plugin](CdvPurchase.Validator.DeviceInfo.md#plugin)
+- [serial](CdvPurchase.Validator.DeviceInfo.md#serial)
+- [uuid](CdvPurchase.Validator.DeviceInfo.md#uuid)
+- [version](CdvPurchase.Validator.DeviceInfo.md#version)
+
 ## Properties
 
 ### cordova

@@ -12,6 +12,21 @@
 
   ↳ [`Receipt`](CdvPurchase.GooglePlay.Receipt.md)
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.Receipt.md#constructor)
+
+### Properties
+
+- [platform](CdvPurchase.Receipt.md#platform)
+- [transactions](CdvPurchase.Receipt.md#transactions)
+
+### Methods
+
+- [hasTransaction](CdvPurchase.Receipt.md#hastransaction)
+
 ## Constructors
 
 ### constructor

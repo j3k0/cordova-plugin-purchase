@@ -12,6 +12,23 @@
 
   ↳ [`SubscriptionOffer`](CdvPurchase.GooglePlay.SubscriptionOffer.md)
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.Offer.md#constructor)
+
+### Properties
+
+- [id](CdvPurchase.Offer.md#id)
+- [pricingPhases](CdvPurchase.Offer.md#pricingphases)
+
+### Accessors
+
+- [platform](CdvPurchase.Offer.md#platform)
+- [productId](CdvPurchase.Offer.md#productid)
+- [productType](CdvPurchase.Offer.md#producttype)
+
 ## Constructors
 
 ### constructor
@@ -43,10 +60,32 @@ ___
 
 Pricing phases
 
+## Accessors
+
+### platform
+
+• `get` **platform**(): [`Platform`](../enums/CdvPurchase.Platform.md)
+
+#### Returns
+
+[`Platform`](../enums/CdvPurchase.Platform.md)
+
 ___
 
-### product
+### productId
 
-• **product**: [`Product`](CdvPurchase.Product.md)
+• `get` **productId**(): `string`
 
-Parent product
+#### Returns
+
+`string`
+
+___
+
+### productType
+
+• `get` **productType**(): [`ProductType`](../enums/CdvPurchase.ProductType.md)
+
+#### Returns
+
+[`ProductType`](../enums/CdvPurchase.ProductType.md)

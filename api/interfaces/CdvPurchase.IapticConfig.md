@@ -2,6 +2,14 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).IapticConfig
 
+## Table of contents
+
+### Properties
+
+- [apiKey](CdvPurchase.IapticConfig.md#apikey)
+- [appName](CdvPurchase.IapticConfig.md#appname)
+- [url](CdvPurchase.IapticConfig.md#url)
+
 ## Properties
 
 ### apiKey

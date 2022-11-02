@@ -4,6 +4,22 @@
 
 Helper to integrate with https://www.iaptic.com
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.Iaptic.md#constructor)
+
+### Properties
+
+- [config](CdvPurchase.Iaptic.md#config)
+- [log](CdvPurchase.Iaptic.md#log)
+
+### Accessors
+
+- [braintreeClientTokenProvider](CdvPurchase.Iaptic.md#braintreeclienttokenprovider)
+- [validator](CdvPurchase.Iaptic.md#validator)
+
 ## Constructors
 
 ### constructor

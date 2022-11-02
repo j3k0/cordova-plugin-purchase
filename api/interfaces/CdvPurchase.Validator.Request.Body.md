@@ -4,6 +4,29 @@
 
 Body of a receipt validation request
 
+## Table of contents
+
+### Properties
+
+- [additionalData](CdvPurchase.Validator.Request.Body.md#additionaldata)
+- [billingPeriod](CdvPurchase.Validator.Request.Body.md#billingperiod)
+- [billingPeriodUnit](CdvPurchase.Validator.Request.Body.md#billingperiodunit)
+- [countryCode](CdvPurchase.Validator.Request.Body.md#countrycode)
+- [currency](CdvPurchase.Validator.Request.Body.md#currency)
+- [device](CdvPurchase.Validator.Request.Body.md#device)
+- [group](CdvPurchase.Validator.Request.Body.md#group)
+- [id](CdvPurchase.Validator.Request.Body.md#id)
+- [introPriceMicros](CdvPurchase.Validator.Request.Body.md#intropricemicros)
+- [introPricePeriod](CdvPurchase.Validator.Request.Body.md#intropriceperiod)
+- [introPricePeriodUnit](CdvPurchase.Validator.Request.Body.md#intropriceperiodunit)
+- [license](CdvPurchase.Validator.Request.Body.md#license)
+- [offers](CdvPurchase.Validator.Request.Body.md#offers)
+- [priceMicros](CdvPurchase.Validator.Request.Body.md#pricemicros)
+- [transaction](CdvPurchase.Validator.Request.Body.md#transaction)
+- [trialPeriod](CdvPurchase.Validator.Request.Body.md#trialperiod)
+- [trialPeriodUnit](CdvPurchase.Validator.Request.Body.md#trialperiodunit)
+- [type](CdvPurchase.Validator.Request.Body.md#type)
+
 ## Properties
 
 ### additionalData

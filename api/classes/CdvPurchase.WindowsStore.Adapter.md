@@ -6,6 +6,29 @@
 
 - [`Adapter`](../interfaces/CdvPurchase.Adapter.md)
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.WindowsStore.Adapter.md#constructor)
+
+### Properties
+
+- [id](CdvPurchase.WindowsStore.Adapter.md#id)
+- [name](CdvPurchase.WindowsStore.Adapter.md#name)
+- [products](CdvPurchase.WindowsStore.Adapter.md#products)
+- [receipts](CdvPurchase.WindowsStore.Adapter.md#receipts)
+
+### Methods
+
+- [finish](CdvPurchase.WindowsStore.Adapter.md#finish)
+- [handleReceiptValidationResponse](CdvPurchase.WindowsStore.Adapter.md#handlereceiptvalidationresponse)
+- [initialize](CdvPurchase.WindowsStore.Adapter.md#initialize)
+- [load](CdvPurchase.WindowsStore.Adapter.md#load)
+- [order](CdvPurchase.WindowsStore.Adapter.md#order)
+- [receiptValidationBody](CdvPurchase.WindowsStore.Adapter.md#receiptvalidationbody)
+- [requestPayment](CdvPurchase.WindowsStore.Adapter.md#requestpayment)
+
 ## Constructors
 
 ### constructor

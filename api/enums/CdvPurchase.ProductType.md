@@ -4,6 +4,17 @@
 
 Types of In-App-Products
 
+## Table of contents
+
+### Enumeration Members
+
+- [APPLICATION](CdvPurchase.ProductType.md#application)
+- [CONSUMABLE](CdvPurchase.ProductType.md#consumable)
+- [FREE\_SUBSCRIPTION](CdvPurchase.ProductType.md#free_subscription)
+- [NON\_CONSUMABLE](CdvPurchase.ProductType.md#non_consumable)
+- [NON\_RENEWING\_SUBSCRIPTION](CdvPurchase.ProductType.md#non_renewing_subscription)
+- [PAID\_SUBSCRIPTION](CdvPurchase.ProductType.md#paid_subscription)
+
 ## Enumeration Members
 
 ### APPLICATION

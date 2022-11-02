@@ -8,6 +8,34 @@
 
   ↳ **`Transaction`**
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.GooglePlay.Transaction.md#constructor)
+
+### Properties
+
+- [expirationDate](CdvPurchase.GooglePlay.Transaction.md#expirationdate)
+- [isAcknowledged](CdvPurchase.GooglePlay.Transaction.md#isacknowledged)
+- [isConsumed](CdvPurchase.GooglePlay.Transaction.md#isconsumed)
+- [isPending](CdvPurchase.GooglePlay.Transaction.md#ispending)
+- [lastRenewalDate](CdvPurchase.GooglePlay.Transaction.md#lastrenewaldate)
+- [nativePurchase](CdvPurchase.GooglePlay.Transaction.md#nativepurchase)
+- [platform](CdvPurchase.GooglePlay.Transaction.md#platform)
+- [products](CdvPurchase.GooglePlay.Transaction.md#products)
+- [purchaseDate](CdvPurchase.GooglePlay.Transaction.md#purchasedate)
+- [purchaseId](CdvPurchase.GooglePlay.Transaction.md#purchaseid)
+- [renewalIntent](CdvPurchase.GooglePlay.Transaction.md#renewalintent)
+- [renewalIntentChangeDate](CdvPurchase.GooglePlay.Transaction.md#renewalintentchangedate)
+- [state](CdvPurchase.GooglePlay.Transaction.md#state)
+- [transactionId](CdvPurchase.GooglePlay.Transaction.md#transactionid)
+
+### Methods
+
+- [refresh](CdvPurchase.GooglePlay.Transaction.md#refresh)
+- [toState](CdvPurchase.GooglePlay.Transaction.md#tostate)
+
 ## Constructors
 
 ### constructor

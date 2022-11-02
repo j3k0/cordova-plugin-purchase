@@ -2,6 +2,23 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[GooglePlay](../modules/CdvPurchase.GooglePlay.md).Products
 
+## Table of contents
+
+### Constructors
+
+- [constructor](CdvPurchase.GooglePlay.Products.md#constructor)
+
+### Properties
+
+- [offers](CdvPurchase.GooglePlay.Products.md#offers)
+- [products](CdvPurchase.GooglePlay.Products.md#products)
+
+### Methods
+
+- [addProduct](CdvPurchase.GooglePlay.Products.md#addproduct)
+- [getOffer](CdvPurchase.GooglePlay.Products.md#getoffer)
+- [getProduct](CdvPurchase.GooglePlay.Products.md#getproduct)
+
 ## Constructors
 
 ### constructor

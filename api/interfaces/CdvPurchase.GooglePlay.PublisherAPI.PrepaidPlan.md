@@ -4,6 +4,12 @@
 
 Information related to a prepaid plan.
 
+## Table of contents
+
+### Properties
+
+- [allowExtendAfterTime](CdvPurchase.GooglePlay.PublisherAPI.PrepaidPlan.md#allowextendaftertime)
+
 ## Properties
 
 ### allowExtendAfterTime

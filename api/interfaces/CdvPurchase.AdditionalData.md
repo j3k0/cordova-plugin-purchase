@@ -2,6 +2,14 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).AdditionalData
 
+## Table of contents
+
+### Properties
+
+- [applicationUsername](CdvPurchase.AdditionalData.md#applicationusername)
+- [braintree](CdvPurchase.AdditionalData.md#braintree)
+- [googlePlay](CdvPurchase.AdditionalData.md#googleplay)
+
 ## Properties
 
 ### applicationUsername

@@ -4,6 +4,13 @@
 
 Information provided by the user when they complete the subscription cancellation flow (cancellation reason survey).
 
+## Table of contents
+
+### Properties
+
+- [cancelSurveyReason](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionCancelSurveyResult.md#cancelsurveyreason)
+- [userInputCancelReason](CdvPurchase.GooglePlay.PublisherAPI.SubscriptionCancelSurveyResult.md#userinputcancelreason)
+
 ## Properties
 
 ### cancelSurveyReason

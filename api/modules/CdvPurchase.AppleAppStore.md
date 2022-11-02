@@ -2,11 +2,13 @@
 
 [CdvPurchase](CdvPurchase.md).AppleAppStore
 
-## Namespaces
+## Table of contents
+
+### Namespaces
 
 - [VerifyReceipt](CdvPurchase.AppleAppStore.VerifyReceipt.md)
 
-## Classes
+### Classes
 
 - [Adapter](../classes/CdvPurchase.AppleAppStore.Adapter.md)
 - [SKOffer](../classes/CdvPurchase.AppleAppStore.SKOffer.md)

@@ -2,6 +2,42 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).ErrorCode
 
+## Table of contents
+
+### Enumeration Members
+
+- [BAD\_RESPONSE](CdvPurchase.ErrorCode.md#bad_response)
+- [CLIENT\_INVALID](CdvPurchase.ErrorCode.md#client_invalid)
+- [CLOUD\_SERVICE\_NETWORK\_CONNECTION\_FAILED](CdvPurchase.ErrorCode.md#cloud_service_network_connection_failed)
+- [CLOUD\_SERVICE\_PERMISSION\_DENIED](CdvPurchase.ErrorCode.md#cloud_service_permission_denied)
+- [CLOUD\_SERVICE\_REVOKED](CdvPurchase.ErrorCode.md#cloud_service_revoked)
+- [COMMUNICATION](CdvPurchase.ErrorCode.md#communication)
+- [DOWNLOAD](CdvPurchase.ErrorCode.md#download)
+- [FINISH](CdvPurchase.ErrorCode.md#finish)
+- [INVALID\_OFFER\_IDENTIFIER](CdvPurchase.ErrorCode.md#invalid_offer_identifier)
+- [INVALID\_OFFER\_PRICE](CdvPurchase.ErrorCode.md#invalid_offer_price)
+- [INVALID\_PRODUCT\_ID](CdvPurchase.ErrorCode.md#invalid_product_id)
+- [INVALID\_SIGNATURE](CdvPurchase.ErrorCode.md#invalid_signature)
+- [LOAD](CdvPurchase.ErrorCode.md#load)
+- [LOAD\_RECEIPTS](CdvPurchase.ErrorCode.md#load_receipts)
+- [MISSING\_OFFER\_PARAMS](CdvPurchase.ErrorCode.md#missing_offer_params)
+- [MISSING\_TOKEN](CdvPurchase.ErrorCode.md#missing_token)
+- [PAYMENT\_CANCELLED](CdvPurchase.ErrorCode.md#payment_cancelled)
+- [PAYMENT\_EXPIRED](CdvPurchase.ErrorCode.md#payment_expired)
+- [PAYMENT\_INVALID](CdvPurchase.ErrorCode.md#payment_invalid)
+- [PAYMENT\_NOT\_ALLOWED](CdvPurchase.ErrorCode.md#payment_not_allowed)
+- [PRIVACY\_ACKNOWLEDGEMENT\_REQUIRED](CdvPurchase.ErrorCode.md#privacy_acknowledgement_required)
+- [PRODUCT\_NOT\_AVAILABLE](CdvPurchase.ErrorCode.md#product_not_available)
+- [PURCHASE](CdvPurchase.ErrorCode.md#purchase)
+- [REFRESH](CdvPurchase.ErrorCode.md#refresh)
+- [REFRESH\_RECEIPTS](CdvPurchase.ErrorCode.md#refresh_receipts)
+- [SETUP](CdvPurchase.ErrorCode.md#setup)
+- [SUBSCRIPTIONS\_NOT\_AVAILABLE](CdvPurchase.ErrorCode.md#subscriptions_not_available)
+- [SUBSCRIPTION\_UPDATE\_NOT\_AVAILABLE](CdvPurchase.ErrorCode.md#subscription_update_not_available)
+- [UNAUTHORIZED\_REQUEST\_DATA](CdvPurchase.ErrorCode.md#unauthorized_request_data)
+- [UNKNOWN](CdvPurchase.ErrorCode.md#unknown)
+- [VERIFICATION\_FAILED](CdvPurchase.ErrorCode.md#verification_failed)
+
 ## Enumeration Members
 
 ### BAD\_RESPONSE
