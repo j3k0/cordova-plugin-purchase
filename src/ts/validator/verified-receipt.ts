@@ -11,15 +11,17 @@ namespace CdvPurchase {
 
         /**
          * The collection of purchases in this receipt.
-         *
-         * An array of ValidatorPurchase
          */
         collection: VerifiedPurchase[];
 
-        /** Tell the plugin that we've used the latest receipt */
+        /**
+         * True if we've used the latest receipt.
+         */
         latestReceipt: boolean;
 
-        /** Native transactions detail */
+        /**
+         * Raw content from the platform's API.
+         */
         nativeTransactions: Validator.Response.NativeTransaction[];
 
         /**
@@ -28,13 +30,18 @@ namespace CdvPurchase {
          * It might be present when the server had to fallback to a backup validation solution (like a cached response or using local validation only).
          * This happens generally when communication with the platform's receipt validation service isn't possible (because it's down, there's a network issue, ...)
          *
-         * Threat the content of this receipt accordingly.
+         * When a warning is present, you should threat the content of this receipt accordingly.
          */
         warning?: string;
 
-        /** Id of the product that have been validated. Used internally. */
+        /**
+         * Id of the product that have been validated. Used internally.
+         */
         id: string;
 
+        /**
+         * @internal
+         */
         constructor(receipt: Receipt, response: Validator.Response.SuccessPayload['data']) {
             this.id = response.id;
             this.sourceReceipt = receipt;
@@ -44,7 +51,11 @@ namespace CdvPurchase {
             this.warning = response.warning;
         }
 
-        /** Update the receipt content */
+        /**
+         * Update the receipt content
+         *
+         * @internal
+         */
         set(receipt: Receipt, response: Validator.Response.SuccessPayload['data']) {
             this.id = response.id;
             this.sourceReceipt = receipt;
@@ -70,17 +81,13 @@ namespace CdvPurchase {
         /** True when a subscription is expired. */
         isExpired?: boolean;
 
-        /** Renewal intent
-         *
-         * See <a href="#api-Types-RenewalIntent">enum RenewalIntent</a> */
+        /** Renewal intent. */
         renewalIntent?: string;
 
         /** Date the renewal intent was updated by the user. */
         renewalIntentChangeDate?: number;
 
-        /** The reason a subscription or purchase was cancelled.
-         *
-         * See href="#api-Types-CancelationReason">enum CancelationReason</a>. */
+        /** The reason a subscription or purchase was cancelled. */
         cancelationReason?: CancelationReason;
 
         /** True when a subscription a subscription is in the grace period after a failed attempt to collect payment */
@@ -97,9 +104,7 @@ namespace CdvPurchase {
          * Correspond to the product's offerId. When undefined it means there is only one offer for the given product. */
         discountId?: string;
 
-        /** Whether or not the user agreed or has been notified of a price change.
-         *
-         * See <a href="#api-Types-PriceConsentStatus">"enum PriceConsentStatus"</a>. */
+        /** Whether or not the user agreed or has been notified of a price change. */
         priceConsentStatus?: PriceConsentStatus;
 
         /** Last time a subscription was renewed. */

@@ -320,3 +320,5 @@ setTimeout(() => {
     window.CdvPurchase = CdvPurchase;
     window.CdvPurchase.store = CdvPurchase.Store.instance;
 }, 0);
+
+/// <reference path="utils/format-billing-cycle.ts" />

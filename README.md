@@ -28,23 +28,27 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 
 |  | AppStore (iOS / macOS) | Google Play | Windows 8 | Windows 10 / UWP | Braintree (iOS / Android) |
 |--|--|--|--|--|--|
-| consumables | ✅ | ✅ | ✅ | ✅ | ✅ |
-| non consumables | ✅ | ✅ | ✅ | ✅ |  |
-| subscriptions | ✅ | ✅ | ✅ | ✅ |  |
-| restore purchases | ✅ | ✅ | ✅ | ✅ | ✅ |
-| [receipt validations](https://www.iaptic.com) | ✅ | ✅ |  | ✅ | ✅ |
+| consumables |  | ✅ |  |  | ✅ |
+| non consumables |  | ✅ |  |  |  |
+| subscriptions |  | ✅ |  |  |  |
+| restore purchases |  | ✅ |  |  | ✅ |
+| [receipt validations](https://www.iaptic.com) |  | ✅ |  |  | ✅ |
 | custom payments |   |   |   |   | ✅ |
 
 ### Supported platforms
 
  - **iOS** version 6.0 or higher.
+   - with Braintree
  - **Android** version 2.2 (API level 8) or higher
    - with Google Play client version 3.9.16 or higher
+   - with Braintree
+<!--
  - **Windows** Store/Phone 8.1 or higher
  - **Windows 10 Mobile**
  - **macOS** version 10
  - **Xbox One**
    - (and any platform supporting Microsoft's UWP)
+-->
 
 
 ## Installation
@@ -52,7 +56,7 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 ### Install the plugin (Cordova)
 
 ```sh
-cordova plugin add cordova-plugin-purchase
+cordova plugin add "https://github.com/j3k0/cordova-plugin-purchase.git#v13"
 ```
 
 
@@ -109,16 +113,7 @@ In short, you'll have two main tasks to accomplish:
  2. Add In-App Purchase code to your application.
 
 For platform setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/wiki/Home) is a good starting point.
-
-For the code itself, the [API Documentation](doc/api.md) is a definitely a recommended read.
-
-## Documentation
-
- - [Guide](https://purchase.cordova.fovea.cc/)
- - [API Documentation](doc/api.md)
- - [Documentation for iOS](doc/ios.md)
- - [Documentation for Android](doc/android.md)
- - [Documentation for Windows](doc/windows.md)
+There's a specific page for the [version 13] release(./wiki/Version-13).
 
 ## Extra Resources
 
@@ -129,19 +124,17 @@ For the code itself, the [API Documentation](doc/api.md) is a definitely a recom
 
 ### Extensions
 
-Have a very simple need? Maybe this will help.
-
+ - [Braintree SDK](https://github.com/j3k0/cordova-plugin-purchase-braintree)
+   - Add the Braintree SDK to your application, enable Braintree on iOS and Android.
  - [Simple Non-Renewing Subscriptions](https://github.com/j3k0/cordova-non-renewing-subscription)
    - The easiest way to integrate purchase into an app that only needs a non-renewing subscription.
 
 ### Subscriptions
 
 For proper subscription support, you need a receipt validation server. You can
-implement your own or use [Fovea's receipt validation service](https://billing.fovea.cc).
+implement your own or use [Iaptic's receipt validation service](https://www.iaptic.com).
 
 # Contribute
-
- - [Contributor Guide](doc/contributor-guide.md)
 
 ### Contributors:
 
@@ -165,7 +158,7 @@ implement your own or use [Fovea's receipt validation service](https://billing.f
 
 The MIT License
 
-Copyright (c) 2014-2019, Jean-Christophe Hoelt and contributors
+Copyright (c) 2014-, Jean-Christophe HOELT and contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

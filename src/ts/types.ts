@@ -190,6 +190,7 @@
     export enum TransactionState {
         // REQUESTED = 'requested',
         INITIATED = 'initiated',
+        PENDING = 'pending',
         APPROVED = 'approved',
         CANCELLED = 'cancelled',
         FINISHED = 'finished',
