@@ -296,12 +296,12 @@ namespace CdvPurchase {
                         this.log.warn('Order failed: ' + JSON.stringify({message, code}));
                         resolve(storeError(code ?? ErrorCode.UNKNOWN, message));
                     };
-                    if (offer.product.type === ProductType.PAID_SUBSCRIPTION) {
+                    if (offer.productType === ProductType.PAID_SUBSCRIPTION) {
                         const idAndToken = offer.id; // offerId contains the productId and token (format productId@offerToken)
                         this.bridge.subscribe(buySuccess, buyFailed, idAndToken, additionalData);
                     }
                     else {
-                        this.bridge.buy(buySuccess, buyFailed, offer.product.id, additionalData);
+                        this.bridge.buy(buySuccess, buyFailed, offer.productId, additionalData);
                     }
                 });
             }

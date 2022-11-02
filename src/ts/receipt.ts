@@ -2,6 +2,8 @@ namespace CdvPurchase
 {
     export class Receipt {
 
+        private className: 'Receipt' = 'Receipt';
+
         /** Platform that generated the receipt */
         platform: Platform;
 

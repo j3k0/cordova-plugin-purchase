@@ -2,6 +2,8 @@ namespace CdvPurchase
 {
     export class Transaction {
 
+        private className: 'Transaction' = 'Transaction';
+
         /** Platform this transaction was created on */
         platform: Platform;
 

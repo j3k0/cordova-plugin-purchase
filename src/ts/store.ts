@@ -240,10 +240,10 @@ namespace CdvPurchase {
 
         /** Place an order for a given offer */
         async order(offer: Offer, additionalData?: AdditionalData): Promise<IError | undefined> {
-            const adapter = this.adapters.find(offer.product.platform);
+            const adapter = this.adapters.find(offer.platform);
             if (!adapter) return {
                 code: ErrorCode.PAYMENT_NOT_ALLOWED,
-                message: 'Adapter not found for this platform (' + offer.product.platform + ')',
+                message: 'Adapter not found for this platform (' + offer.platform + ')',
             } as IError;
             return adapter.order(offer, additionalData || {});
         }

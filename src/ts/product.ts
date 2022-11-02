@@ -3,6 +3,8 @@ namespace CdvPurchase {
     /** Product definition from a store */
     export class Product {
 
+        private className: 'Product' = 'Product';
+
         /** Platform this product is available from */
         platform: Platform;
 
