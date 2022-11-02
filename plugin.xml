@@ -127,6 +127,12 @@ SOFTWARE.
       <source-file src="src/android/cc/fovea/Constants.java" target-dir="src/cc/fovea" />
     </platform>
 
+    <platform name="browser">
+      <js-module src="www/store.js" name="CdvPurchase">
+        <clobbers target="CdvPurchase" />
+      </js-module>
+    </platform>
+
     <!-- windows -->
 	<platform name="windows">
 		<js-module src="www/store.js" name="CdvPurchase">

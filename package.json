@@ -31,7 +31,7 @@
     "fovea"
   ],
   "scripts": {
-    "typedoc": "typedoc --hideGenerator --excludePrivate --excludeProtected --excludeInternal --disableSources --readme src/ts/README.md --hideBreadcrumbs true --hideInPageTOC true --out api --pretty --plugin typedoc-plugin-markdown --theme markdown --basePath src/ts src/ts/store.ts",
+    "typedoc": "typedoc --hideGenerator --excludePrivate --excludeProtected --excludeInternal --disableSources --readme src/ts/README.md --hideBreadcrumbs true --hideInPageTOC false --out api --pretty --plugin typedoc-plugin-markdown --theme markdown --basePath src/ts src/ts/store.ts",
     "typedoc-dev": "typedoc --hideGenerator --readme src/ts/README.md --out api-dev --pretty --plugin typedoc-plugin-markdown --theme markdown --basePath src/ts src/ts/store.ts"
   },
   "author": "Jean-Christophe Hoelt <hoelt@fovea.cc>",
