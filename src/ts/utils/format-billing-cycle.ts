@@ -7,13 +7,13 @@ namespace CdvPurchase {
       switch (pricingPhase.recurrenceMode) {
         case 'FINITE_RECURRING':
           if ((pricingPhase.billingCycles ?? 0) > 1)
-            return `${pricingPhase.billingCycles} times ${duration}`;
+            return `${pricingPhase.billingCycles}x ${formatDurationEN(pricingPhase.billingPeriod)}`;
           else
             return duration;
         case 'NON_RECURRING':
-          return 'for ' + duration;
+          return 'for ' + formatDurationEN(pricingPhase.billingPeriod);
         default:// INFINITE_RECURRING
-          return 'every ' + duration;
+          return 'every ' + formatDurationEN(pricingPhase.billingPeriod, { omitOne: true });
       }
     }
   }

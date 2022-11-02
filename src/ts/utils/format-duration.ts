@@ -14,12 +14,17 @@ namespace CdvPurchase {
      * @param iso - Duration formatted in IS0 8601
      * @return The duration in plain english. Example: "1 year" or "3 weeks".
      */
-    export function formatDurationEN(iso?: string): string {
+    export function formatDurationEN(iso?: string, options?: {omitOne?: boolean}): string {
       if (!iso) return '';
       const l = iso.length;
       const n = iso.slice(1, l - 1);
       if (n === '1') {
-        return ({ 'D': '1 day', 'W': '1 week', 'M': '1 month', 'Y': '1 year', }[iso[l - 1]]) || iso[l - 1];
+        if (options?.omitOne) {
+          return ({ 'D': 'day', 'W': 'week', 'M': 'month', 'Y': 'year', }[iso[l - 1]]) || iso[l - 1];
+        }
+        else {
+          return ({ 'D': '1 day', 'W': '1 week', 'M': '1 month', 'Y': '1 year', }[iso[l - 1]]) || iso[l - 1];
+        }
       }
       else {
         const u = ({ 'D': 'days', 'W': 'weeks', 'M': 'months', 'Y': 'years', }[iso[l - 1]]) || iso[l - 1];

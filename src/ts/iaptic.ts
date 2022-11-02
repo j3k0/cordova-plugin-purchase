@@ -31,7 +31,7 @@ namespace CdvPurchase {
 
     get braintreeClientTokenProvider(): CdvPurchase.Braintree.ClientTokenProvider {
       return callback => {
-        store.log.info('Calling Braintree clientTokenProvider');
+        this.log.info('Calling Braintree clientTokenProvider');
         Utils.ajax(this.log, {
           url: `${this.config.url}/v3/braintree/client-token?appName=${this.config.appName}&apiKey=${this.config.apiKey}`,
           method: 'POST',
