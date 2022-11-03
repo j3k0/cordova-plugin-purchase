@@ -5,7 +5,7 @@ namespace CdvPurchase {
         export let customerId: string | undefined;
 
         export interface AdapterOptions {
-            
+
             /** Authorization key, as a direct string. */
             tokenizationKey?: string;
 
@@ -17,7 +17,7 @@ namespace CdvPurchase {
 
             /*
              * Create a transaction server side.
-             * 
+             *
              * @see https://developer.paypal.com/braintree/docs/start/hello-server
              *
              * serverCheckout?: ServerCheckout;
@@ -66,7 +66,7 @@ namespace CdvPurchase {
                 /**
                  * Each merchant account can only process transactions for a single currency.
                  * Setting which merchant account to use will also determine which currency the transaction is processed with.
-                 * 
+                 *
                  * e.g. "USD"
                  */
                 currencyIsoCode: string;
@@ -187,6 +187,7 @@ namespace CdvPurchase {
 
             id = Platform.BRAINTREE;
             name = 'BrainTree';
+            ready = false;
             products: Product[] = [];
 
             _receipts: BraintreeReceipt[] = [];
@@ -203,6 +204,10 @@ namespace CdvPurchase {
                 this.context = context;
                 this.log = context.log.child("Braintree");
                 this.options = options;
+            }
+
+            get isSupported(): boolean {
+                return IosBridge.Bridge.isSupported() || AndroidBridge.Bridge.isSupported();
             }
 
             /**
@@ -242,14 +247,11 @@ namespace CdvPurchase {
             }
 
             async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
-                return products.map(p => ({ code: ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'N/A' } as IError));
+                return products.map(p => storeError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'N/A'));
             }
 
             async order(offer: Offer): Promise<undefined | IError> {
-                return {
-                    code: ErrorCode.UNKNOWN,
-                    message: 'N/A: Not implemented with Braintree'
-                } as IError;
+                return storeError(ErrorCode.UNKNOWN, 'N/A: Not implemented with Braintree');
             }
 
             async finish(transaction: Transaction): Promise<undefined | IError> {
@@ -257,6 +259,10 @@ namespace CdvPurchase {
                     code: ErrorCode.UNKNOWN,
                     message: 'N/A: Not implemented with Braintree'
                 } as IError; */
+            }
+
+            async manageSubscriptions(): Promise<IError | undefined> {
+                return storeError(ErrorCode.SETUP, 'N/A: manageSubscriptions() is not available with Braintree');
             }
 
             // async getNonce(paymentMethod: PaymentMethod): Promise<Nonce | IError> {

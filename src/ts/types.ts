@@ -98,6 +98,13 @@
             name: string;
 
             /**
+             * true after the platform has been successfully initialized.
+             *
+             * The value is set by the "Adapters" class (which is responsible for initializing adapters).
+             */
+            ready: boolean;
+
+            /**
              * List of products managed by the adapter.
              */
             get products(): Product[];
@@ -106,6 +113,11 @@
              * List of purchase receipts.
              */
             get receipts(): Receipt[];
+
+            /**
+             * Returns true is the adapter is supported on this device.
+             */
+            get isSupported(): boolean;
 
             /**
              * Initializes a platform adapter.
@@ -150,6 +162,11 @@
              * Request a payment from the user
              */
             requestPayment(payment: PaymentRequest, additionalData?: AdditionalData): Promise<undefined | IError>;
+
+            /**
+             * Open the platforms' subscription management interface.
+             */
+            manageSubscriptions(): Promise<IError | undefined>;
         }
 
 
@@ -183,7 +200,7 @@
             // STRIPE = 'stripe',
 
             /** Test platform */
-            TEST = 'dummy-store',
+            TEST = 'test',
         }
 
     /** Possible states of a product */

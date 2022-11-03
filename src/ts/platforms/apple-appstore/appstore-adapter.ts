@@ -25,29 +25,28 @@ namespace CdvPurchase {
 
             id = Platform.APPLE_APPSTORE;
             name = 'AppStore';
+            ready = false;
             products: SKProduct[] = [];
             receipts: SKReceipt[] = [];
 
             constructor(context: Internal.AdapterContext) {}
 
+            get isSupported(): boolean {
+                return false;
+            }
+
             async initialize(): Promise<IError | undefined> { return; }
 
             async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
-                return products.map(p => ({ code: ErrorCode.LOAD, message: 'Not implemented' } as IError));
+                return products.map(p => storeError(ErrorCode.LOAD, 'Not implemented'));
             }
 
             async order(offer: Offer): Promise<undefined | IError> {
-                return {
-                    code: ErrorCode.UNKNOWN,
-                    message: 'TODO: Not implemented'
-                } as IError;
+                return storeError(ErrorCode.UNKNOWN, 'TODO: Not implemented');
             }
 
             async finish(transaction: Transaction): Promise<undefined | IError> {
-                return {
-                    code: ErrorCode.UNKNOWN,
-                    message: 'TODO: Not implemented'
-                } as IError;
+                return storeError(ErrorCode.UNKNOWN, 'TODO: Not implemented');
             }
 
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined {
@@ -61,6 +60,10 @@ namespace CdvPurchase {
 
             async requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
                 return storeError(ErrorCode.UNKNOWN, 'requestPayment not supported');
+            }
+
+            async manageSubscriptions(): Promise<IError | undefined> {
+                return storeError(ErrorCode.UNKNOWN, 'TODO: Not implemented');
             }
         }
     }

@@ -77,6 +77,9 @@ namespace CdvPurchase {
             /** Adapter name */
             name = 'GooglePlay';
 
+            /** Has the adapter been successfully initialized */
+            ready = false;
+
             /** List of products managed by the GooglePlay adapter */
             get products(): GProduct[] { return this._products.products; }
             private _products: Products = new Products();
@@ -108,6 +111,11 @@ namespace CdvPurchase {
             }
 
             private initializationPromise?: Promise<undefined | IError>;
+
+            /** Returns true on Android, the only platform supported by this adapter */
+            get isSupported(): boolean {
+                return window.cordova.platformId === 'android';
+            }
 
             async initialize(): Promise<undefined | IError> {
 
@@ -178,10 +186,7 @@ namespace CdvPurchase {
                                 return this._products.addProduct(registeredProduct, validProduct);
                             }
                             else {
-                                return {
-                                    code: ErrorCode.INVALID_PRODUCT_ID,
-                                    message: `Product with id ${registeredProduct.id} not found.`,
-                                } as IError;
+                                return storeError(ErrorCode.INVALID_PRODUCT_ID, `Product with id ${registeredProduct.id} not found.`);
                             }
                         });
                         resolve(ret);
@@ -210,7 +215,7 @@ namespace CdvPurchase {
                 return new Promise(resolve => {
 
                     const onSuccess = () => resolve(undefined);
-                    const onFailure = (message: string, code?: ErrorCode) => resolve({ message, code } as IError);
+                    const onFailure = (message: string, code?: ErrorCode) => resolve(storeError(code || ErrorCode.UNKNOWN, message));
 
                     const firstProduct = transaction.products[0];
                     if (!firstProduct)
@@ -353,6 +358,11 @@ namespace CdvPurchase {
 
             async requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
                 return storeError(ErrorCode.UNKNOWN, 'requestPayment not supported');
+            }
+
+            async manageSubscriptions(): Promise<IError | undefined> {
+                this.bridge.manageSubscriptions();
+                return;
             }
 
         }

@@ -64,14 +64,16 @@ namespace CdvPurchase {
             }
 
             /** Add/update a verified receipt from the server response */
-            private addVerifiedReceipt(receipt: Receipt, data: Validator.Response.SuccessPayload['data']): VerifiedReceipt {
+            addVerifiedReceipt(receipt: Receipt, data: Validator.Response.SuccessPayload['data']): VerifiedReceipt {
                 for (const vr of this.verifiedReceipts) {
                     if (vr.platform === receipt.platform && vr.id === data.id) {
                         // update existing receipt
+                        this.log.debug("Updating existing receipt.")
                         vr.set(receipt, data);
                         return vr;
                     }
                 }
+                this.log.debug("Register a new  verified receipt.")
                 const newVR = new VerifiedReceipt(receipt, data);
                 this.verifiedReceipts.push(newVR);
                 return newVR;
@@ -113,6 +115,10 @@ namespace CdvPurchase {
 
             private runOnReceipt(receipt: Receipt, callback: Callback<ReceiptResponse>) {
 
+                if (receipt.platform === Platform.TEST) {
+                    this.log.debug('Using Test Adapter mock verify function.');
+                    return Test.Adapter.verify(receipt, callback);
+                }
                 if (!this.controller.validator) return;
                 if (typeof this.controller.validator === 'function')
                     return this.runValidatorFunction(this.controller.validator, receipt, callback);

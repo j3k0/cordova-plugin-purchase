@@ -189,10 +189,21 @@ namespace CdvPurchase {
             return this.adapters.find(platform)?.products.find(p => p.id === productId);
         }
 
-        /** List of all receipts present on the device */
+        /**
+         * List of all receipts as present on the device.
+         */
         get localReceipts(): Receipt[] {
             // concatenate products all all active platforms
             return ([] as Receipt[]).concat(...this.adapters.list.map(a => a.receipts));
+        }
+
+        /** List of all transaction from the local receipts. */
+        get localTransactions(): Transaction[] {
+            const ret: Transaction[] = [];
+            for (const receipt of this.localReceipts) {
+                ret.push(...receipt.transactions);
+            }
+            return ret;
         }
 
         /** List of receipts verified with the receipt validation service.
@@ -200,6 +211,18 @@ namespace CdvPurchase {
          * Those receipt contains more information and are generally more up-to-date than the local ones. */
         get verifiedReceipts(): VerifiedReceipt[] {
             return this._validator.verifiedReceipts;
+        }
+
+        /** List of all purchases from the verified receipts. */
+        get verifiedPurchases(): VerifiedPurchase[] {
+            const ret: VerifiedPurchase[] = [];
+            for (const receipt of this.verifiedReceipts) {
+                ret.push(...receipt.collection.map(p => ({
+                    platform: receipt.platform,
+                    ...p,
+                })));
+            }
+            return ret;
         }
 
         /**
@@ -241,11 +264,10 @@ namespace CdvPurchase {
         /** Place an order for a given offer */
         async order(offer: Offer, additionalData?: AdditionalData): Promise<IError | undefined> {
             const adapter = this.adapters.find(offer.platform);
-            if (!adapter) return {
-                code: ErrorCode.PAYMENT_NOT_ALLOWED,
-                message: 'Adapter not found for this platform (' + offer.platform + ')',
-            } as IError;
-            return adapter.order(offer, additionalData || {});
+            if (!adapter) return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found for this platform (' + offer.platform + ')');
+            const ret = await adapter.order(offer, additionalData || {});
+            if (ret && 'isError' in ret) store.error(ret);
+            return ret;
         }
 
         /** Request a payment */
@@ -279,6 +301,12 @@ namespace CdvPurchase {
 
         async restorePurchases() {
             // TODO
+        }
+
+        async manageSubscriptions(platform?: Platform): Promise<IError | undefined> {
+            const adapter = this.adapters.findReady(platform);
+            if (!adapter) return storeError(ErrorCode.SETUP, "Found no adapter ready to handle 'manageSubscription'");
+            return adapter.manageSubscriptions();
         }
 
         /**

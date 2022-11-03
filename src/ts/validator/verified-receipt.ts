@@ -69,6 +69,8 @@ namespace CdvPurchase {
     /** A purchase object returned by the receipt validator */
     export interface VerifiedPurchase {
 
+        platform?: Platform;
+
         /** Product identifier */
         id: string;
 

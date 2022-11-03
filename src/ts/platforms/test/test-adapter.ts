@@ -4,12 +4,34 @@ namespace CdvPurchase {
     export namespace Test {
 
         const platform = Platform.TEST;
+        let verifiedPurchases: VerifiedPurchase[] = [];
+
+        function updateVerifiedPurchases(tr: Transaction) {
+            tr.products.forEach(p => {
+                const existing = verifiedPurchases.find(v => p.productId === v.id);
+                const attributes: VerifiedPurchase = {
+                    id: p.productId,
+                    purchaseDate: tr.purchaseDate?.getTime(),
+                    expiryDate: tr.expirationDate?.getTime(),
+                    lastRenewalDate: tr.lastRenewalDate?.getTime(),
+                    renewalIntent: tr.renewalIntent,
+                    renewalIntentChangeDate: tr.renewalIntentChangeDate?.getTime(),
+                }
+                if (existing) {
+                    Object.assign(existing, attributes);
+                }
+                else {
+                    verifiedPurchases.push(attributes);
+                }
+            });
+        }
 
         /** Test Adapter used for local testing with mock products */
         export class Adapter implements CdvPurchase.Adapter {
 
             id = Platform.TEST;
             name = 'Test';
+            ready = false;
             products: Product[] = [];
             receipts: Receipt[] = [];
 
@@ -19,6 +41,10 @@ namespace CdvPurchase {
             constructor(context: Internal.AdapterContext) {
                 this.context = context;
                 this.log = context.log.child("Test");
+            }
+
+            get isSupported(): boolean {
+                return true;
             }
 
             async initialize(): Promise<IError | undefined> { return; }
@@ -40,43 +66,68 @@ namespace CdvPurchase {
                         return product;
                     }
                     else {
-                        return { code: ErrorCode.PRODUCT_NOT_AVAILABLE, message: 'This product is not available for purchase' } as IError;
+                        return storeError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'This product is not available for purchase');
                     }
                 });
+            }
+
+            private receiptFor(productId: string) {
+                const matching = this.receipts.filter(r => r.lastTransaction().products[0].productId === productId);
+                matching.sort((a, b) => (+(b.lastTransaction().purchaseDate ?? 0) - +(a.lastTransaction().purchaseDate || 0)));
+                // returned the receipt containing the last transaction
+                return matching[0];
             }
 
             async order(offer: Offer): Promise<undefined | IError> {
                 // Purchasing products with "-fail-" in the id will fail.
                 if (offer.id.indexOf("-fail-") > 0) {
-                    return {
-                        code: ErrorCode.PURCHASE,
-                        message: 'Purchase failed.'
-                    } as IError;
+                    return storeError(ErrorCode.PURCHASE, 'Purchase failed.');
                 }
-                else {
-                    // purchase succeeded, let's generate a mock receipt.
-                    const tr = new Transaction(platform);
-                    tr.products = [{
-                        productId: offer.productId,
-                        offerId: offer.id,
-                    }];
-                    tr.state = TransactionState.APPROVED;
-                    tr.transactionId = 'test-' + (new Date().getTime());
-                    tr.isAcknowledged = false;
-                    const receipt = new Receipt({
-                        platform,
-                        transactions: [tr]
-                    });
-                    this.receipts.push(receipt);
-                    this.context.listener.receiptsUpdated(Platform.TEST, [receipt]);
+                if (offer.productType !== ProductType.CONSUMABLE) {
+                    // a receipt containing a transaction with the given product.
+                    const receipt = this.receiptFor(offer.productId);
+                    if (receipt) {
+                        const now = +new Date();
+                        if (receipt.lastTransaction().isConsumed || +(receipt.lastTransaction().expirationDate ?? now) >= now) {
+                            return storeError(ErrorCode.PURCHASE, 'Product already owned');
+                        }
+                    }
                 }
+                const response = prompt(`Do you want to purchase ${offer.productId} for ${offer.pricingPhases[0].price}?\nEnter "Y" to confirm.\nEnter "E" to fail with an error.\Anything else to cancel.`);
+                if (response?.toUpperCase() === 'E') return storeError(ErrorCode.PURCHASE, 'Purchase failed');
+                if (response?.toUpperCase() !== 'Y') return storeError(ErrorCode.PAYMENT_CANCELLED, 'Purchase flow has been cancelled by the user');
+                // purchase succeeded, let's generate a mock receipt.
+                const tr = new Transaction(platform);
+                tr.products = [{
+                    productId: offer.productId,
+                    offerId: offer.id,
+                }];
+                tr.state = TransactionState.APPROVED;
+                tr.purchaseDate = new Date();
+                tr.transactionId = offer.productId + '-' + (new Date().getTime());
+                tr.isAcknowledged = false;
+                updateVerifiedPurchases(tr);
+                const receipt = new Receipt({
+                    platform,
+                    transactions: [tr]
+                });
+                this.receipts.push(receipt);
+                this.context.listener.receiptsUpdated(Platform.TEST, [receipt]);
             }
 
-            async finish(transaction: Transaction): Promise<undefined | IError> {
-                return {
-                    code: ErrorCode.UNKNOWN,
-                    message: 'TODO: Not implemented'
-                } as IError;
+            finish(transaction: Transaction): Promise<undefined | IError> {
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        transaction.state = TransactionState.FINISHED;
+                        transaction.isAcknowledged = true;
+                        updateVerifiedPurchases(transaction);
+                        const product = this.products.find(p => transaction.products[0].productId === p.id);
+                        if (product?.type === ProductType.CONSUMABLE) transaction.isConsumed = true;
+                        const receipts = this.receipts.filter(r => r.hasTransaction(transaction));
+                        this.context.listener.receiptsUpdated(platform, receipts);
+                        resolve(undefined);
+                    }, 500);
+                });
             }
 
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined {
@@ -89,6 +140,11 @@ namespace CdvPurchase {
 
             async requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
                 return storeError(ErrorCode.UNKNOWN, 'requestPayment not supported');
+            }
+
+            async manageSubscriptions(): Promise<IError | undefined> {
+                alert('Pseudo subscription management interface. Close it when you are done.')
+                return;
             }
 
             private reportActiveSubscription() {
@@ -114,8 +170,11 @@ namespace CdvPurchase {
                     tr.transactionId = transactionId(n);
                     tr.isAcknowledged = n == 1;
                     tr.renewalIntent = RenewalIntent.RENEW;
-                    tr.lastRenewalDate = new Date();
-                    tr.expirationDate = new Date((+(receipt?.transactions?.[0]?.expirationDate || new Date())) + RENEWS_EVERY_MS);
+                    const firstPurchase = +(receipt?.transactions?.[0]?.purchaseDate || new Date());
+                    tr.purchaseDate = new Date(firstPurchase);
+                    tr.lastRenewalDate = new Date(firstPurchase + RENEWS_EVERY_MS * (n - 1));
+                    tr.expirationDate = new Date(firstPurchase + RENEWS_EVERY_MS * n);
+                    updateVerifiedPurchases(tr);
                     return tr;
                 }
                 receipt.transactions.push(makeTransaction(1));
@@ -133,6 +192,23 @@ namespace CdvPurchase {
                     receipt.transactions.push(makeTransaction(transactionNumber));
                     this.context.listener.receiptsUpdated(Platform.TEST, [receipt]);
                 }, RENEWS_EVERY_MS);
+            }
+
+            static verify(receipt: Receipt, callback: Callback<Internal.ReceiptResponse>) {
+                setTimeout(() => {
+                    callback({
+                        receipt,
+                        payload: {
+                            ok: true,
+                            data: {
+                                id: receipt.transactions[0].products[0].productId,
+                                latest_receipt: true,
+                                transaction: { type: 'test' },
+                                collection: verifiedPurchases,
+                            }
+                        }
+                    });
+                }, 500);
             }
         }
     }

@@ -37,6 +37,11 @@ namespace CdvPurchase
          */
         export class Adapters {
 
+            /**
+             * List of instantiated adapters.
+             *
+             * They are added to this list by "initialize()".
+             */
             public list: Adapter[] = [];
 
             add(log: Logger, adapters: (PlatformWithOptions)[], context: AdapterContext) {
@@ -74,8 +79,10 @@ namespace CdvPurchase
                     const adapter = this.find(platformToInit.platform);
                     if (!adapter) return;
                     log.info(`${adapter.name} initializing...`);
+                    if (!adapter.isSupported) return; // skip unsupported adapters
                     const initResult = await adapter.initialize();
-                    log.info(`${adapter.name} initialized. ${initResult && JSON.stringify(initResult)}`);
+                    adapter.ready = true;
+                    log.info(`${adapter.name} initialized. ${initResult ? JSON.stringify(initResult) : ''}`);
                     if (initResult?.code) return initResult;
                     log.info(`${adapter.name} products: ${JSON.stringify(platformProducts)}`);
                     if (platformProducts.length === 0) return;
@@ -93,6 +100,18 @@ namespace CdvPurchase
              */
             find(platform: Platform): Adapter | undefined {
                 return this.list.filter(a => a.id === platform)[0];
+            }
+
+            /**
+             * Retrieve the first platform adapter in the ready state, if any.
+             *
+             * You can optionally force the platform adapter you are looking for.
+             *
+             * Useful for methods that accept an optional "platform" argument, so they either act
+             * on the only active adapter or on the one selected by the user, if it's ready.
+             */
+            findReady(platform?: Platform): Adapter | undefined {
+                return this.list.filter(adapter => (!platform || adapter.id === platform) && adapter.ready)[0];
             }
         }
     }

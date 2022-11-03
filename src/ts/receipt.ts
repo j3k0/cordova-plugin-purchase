@@ -25,5 +25,9 @@ namespace CdvPurchase
         hasTransaction(value: Transaction) {
             return !!this.transactions.find(t => t === value);
         }
+
+        lastTransaction() {
+            return this.transactions[this.transactions.length - 1];
+        }
     }
 }
