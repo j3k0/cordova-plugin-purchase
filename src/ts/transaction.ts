@@ -45,6 +45,12 @@ namespace CdvPurchase
         /** State this transaction is in */
         state: TransactionState = TransactionState.UNKNOWN_STATE;
 
+        /** Amount paid by the user, if known, in micro units. Divide by 1,000,000 for value. */
+        amountMicros?: number;
+
+        /** Currency used to pay for the transaction, if known. */
+        currency?: string;
+
         /** Purchased products */
         products: {
 

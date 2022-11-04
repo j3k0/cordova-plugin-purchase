@@ -179,6 +179,8 @@ namespace CdvPurchase {
                 transaction.products = paymentRequest.productIds.map(productId => ({ productId }));
                 transaction.state = TransactionState.APPROVED;
                 transaction.transactionId = dropInResult.paymentMethodNonce?.nonce ?? `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
+                transaction.amountMicros = paymentRequest.amountMicros;
+                transaction.currency = paymentRequest.currency;
             }
         }
 
