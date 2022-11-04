@@ -147,7 +147,7 @@ namespace CdvPurchase {
         async update() {
             // Load products metadata
             for (const registration of this.registeredProducts.byPlatform()) {
-                const products = await this.adapters.find(registration.platform)?.load(registration.products);
+                const products = await this.adapters.findReady(registration.platform)?.load(registration.products);
                 products?.forEach(p => {
                     if (p instanceof Product) this.updatedCallbacks.trigger(p);
                 });
@@ -258,8 +258,8 @@ namespace CdvPurchase {
 
         /** Place an order for a given offer */
         async order(offer: Offer, additionalData?: AdditionalData): Promise<IError | undefined> {
-            const adapter = this.adapters.find(offer.platform);
-            if (!adapter) return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found for this platform (' + offer.platform + ')');
+            const adapter = this.adapters.findReady(offer.platform);
+            if (!adapter) return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + offer.platform + ')');
             const ret = await adapter.order(offer, additionalData || {});
             if (ret && 'isError' in ret) store.error(ret);
             return ret;
@@ -267,8 +267,8 @@ namespace CdvPurchase {
 
         /** Request a payment */
         async requestPayment(paymentRequest: PaymentRequest, additionalData?: AdditionalData): Promise<IError | undefined> {
-            const adapter = this.adapters.find(paymentRequest.platform);
-            if (!adapter) return;
+            const adapter = this.adapters.findReady(paymentRequest.platform);
+            if (!adapter) return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + paymentRequest.platform + ')');
             return adapter.requestPayment(paymentRequest, additionalData);
         }
 
