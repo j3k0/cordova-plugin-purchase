@@ -22,6 +22,7 @@
 ### Methods
 
 - [hasTransaction](CdvPurchase.AppleAppStore.SKReceipt.md#hastransaction)
+- [lastTransaction](CdvPurchase.AppleAppStore.SKReceipt.md#lasttransaction)
 
 ## Constructors
 
@@ -84,3 +85,17 @@ List of transactions contained in the receipt
 #### Inherited from
 
 [Receipt](CdvPurchase.Receipt.md).[hasTransaction](CdvPurchase.Receipt.md#hastransaction)
+
+___
+
+### lastTransaction
+
+▸ **lastTransaction**(): [`Transaction`](CdvPurchase.Transaction.md)
+
+#### Returns
+
+[`Transaction`](CdvPurchase.Transaction.md)
+
+#### Inherited from
+
+[Receipt](CdvPurchase.Receipt.md).[lastTransaction](CdvPurchase.Receipt.md#lasttransaction)

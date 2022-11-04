@@ -22,9 +22,11 @@
 - [name](CdvPurchase.Braintree.Adapter.md#name)
 - [options](CdvPurchase.Braintree.Adapter.md#options)
 - [products](CdvPurchase.Braintree.Adapter.md#products)
+- [ready](CdvPurchase.Braintree.Adapter.md#ready)
 
 ### Accessors
 
+- [isSupported](CdvPurchase.Braintree.Adapter.md#issupported)
 - [receipts](CdvPurchase.Braintree.Adapter.md#receipts)
 
 ### Methods
@@ -33,6 +35,7 @@
 - [handleReceiptValidationResponse](CdvPurchase.Braintree.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.Braintree.Adapter.md#initialize)
 - [load](CdvPurchase.Braintree.Adapter.md#load)
+- [manageSubscriptions](CdvPurchase.Braintree.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.Braintree.Adapter.md#order)
 - [receiptValidationBody](CdvPurchase.Braintree.Adapter.md#receiptvalidationbody)
 - [requestPayment](CdvPurchase.Braintree.Adapter.md#requestpayment)
@@ -114,7 +117,37 @@ ___
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[products](../interfaces/CdvPurchase.Adapter.md#products)
 
+___
+
+### ready
+
+• **ready**: `boolean` = `false`
+
+true after the platform has been successfully initialized.
+
+The value is set by the "Adapters" class (which is responsible for initializing adapters).
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[ready](../interfaces/CdvPurchase.Adapter.md#ready)
+
 ## Accessors
+
+### isSupported
+
+• `get` **isSupported**(): `boolean`
+
+Returns true is the adapter is supported on this device.
+
+#### Returns
+
+`boolean`
+
+#### Implementation of
+
+CdvPurchase.Adapter.isSupported
+
+___
 
 ### receipts
 
@@ -215,6 +248,22 @@ Load product definitions from the platform.
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[load](../interfaces/CdvPurchase.Adapter.md#load)
+
+___
+
+### manageSubscriptions
+
+▸ **manageSubscriptions**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Open the platforms' subscription management interface.
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[manageSubscriptions](../interfaces/CdvPurchase.Adapter.md#managesubscriptions)
 
 ___
 

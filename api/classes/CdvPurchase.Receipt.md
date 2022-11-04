@@ -26,6 +26,7 @@
 ### Methods
 
 - [hasTransaction](CdvPurchase.Receipt.md#hastransaction)
+- [lastTransaction](CdvPurchase.Receipt.md#lasttransaction)
 
 ## Constructors
 
@@ -72,3 +73,13 @@ List of transactions contained in the receipt
 #### Returns
 
 `boolean`
+
+___
+
+### lastTransaction
+
+▸ **lastTransaction**(): [`Transaction`](CdvPurchase.Transaction.md)
+
+#### Returns
+
+[`Transaction`](CdvPurchase.Transaction.md)

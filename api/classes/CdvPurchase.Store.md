@@ -23,12 +23,15 @@ Entry class of the plugin.
 ### Accessors
 
 - [localReceipts](CdvPurchase.Store.md#localreceipts)
+- [localTransactions](CdvPurchase.Store.md#localtransactions)
 - [products](CdvPurchase.Store.md#products)
+- [verifiedPurchases](CdvPurchase.Store.md#verifiedpurchases)
 - [verifiedReceipts](CdvPurchase.Store.md#verifiedreceipts)
 - [instance](CdvPurchase.Store.md#instance)
 
 ### Methods
 
+- [canPurchase](CdvPurchase.Store.md#canpurchase)
 - [error](CdvPurchase.Store.md#error)
 - [findInLocalReceipts](CdvPurchase.Store.md#findinlocalreceipts)
 - [findInVerifiedReceipts](CdvPurchase.Store.md#findinverifiedreceipts)
@@ -36,7 +39,9 @@ Entry class of the plugin.
 - [get](CdvPurchase.Store.md#get)
 - [getApplicationUsername](CdvPurchase.Store.md#getapplicationusername)
 - [initialize](CdvPurchase.Store.md#initialize)
+- [manageSubscriptions](CdvPurchase.Store.md#managesubscriptions)
 - [order](CdvPurchase.Store.md#order)
+- [owned](CdvPurchase.Store.md#owned)
 - [ready](CdvPurchase.Store.md#ready)
 - [refresh](CdvPurchase.Store.md#refresh)
 - [register](CdvPurchase.Store.md#register)
@@ -118,11 +123,23 @@ ___
 
 • `get` **localReceipts**(): [`Receipt`](CdvPurchase.Receipt.md)[]
 
-List of all receipts present on the device
+List of all receipts as present on the device.
 
 #### Returns
 
 [`Receipt`](CdvPurchase.Receipt.md)[]
+
+___
+
+### localTransactions
+
+• `get` **localTransactions**(): [`Transaction`](CdvPurchase.Transaction.md)[]
+
+List of all transaction from the local receipts.
+
+#### Returns
+
+[`Transaction`](CdvPurchase.Transaction.md)[]
 
 ___
 
@@ -135,6 +152,18 @@ List of all active products
 #### Returns
 
 [`Product`](CdvPurchase.Product.md)[]
+
+___
+
+### verifiedPurchases
+
+• `get` **verifiedPurchases**(): [`VerifiedPurchase`](../interfaces/CdvPurchase.VerifiedPurchase.md)[]
+
+List of all purchases from the verified receipts.
+
+#### Returns
+
+[`VerifiedPurchase`](../interfaces/CdvPurchase.VerifiedPurchase.md)[]
 
 ___
 
@@ -164,6 +193,24 @@ The singleton store object
 
 ## Methods
 
+### canPurchase
+
+▸ **canPurchase**(`offer`): `boolean`
+
+Return true if a product or offer can be purchased
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `offer` | [`Product`](CdvPurchase.Product.md) \| [`Offer`](CdvPurchase.Offer.md) |
+
+#### Returns
+
+`boolean`
+
+___
+
 ### error
 
 ▸ **error**(`error`): `void`
@@ -184,7 +231,7 @@ ___
 
 ▸ **findInLocalReceipts**(`product`): `undefined` \| [`Transaction`](CdvPurchase.Transaction.md)
 
-Find the latest transaction for a givne product, from those reported by the device.
+Find the latest transaction for a given product, from those reported by the device.
 
 #### Parameters
 
@@ -283,6 +330,22 @@ Call to initialize the in-app purchase plugin.
 
 ___
 
+### manageSubscriptions
+
+▸ **manageSubscriptions**(`platform?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `platform?` | [`Platform`](../enums/CdvPurchase.Platform.md) |
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+___
+
 ### order
 
 ▸ **order**(`offer`, `additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
@@ -299,6 +362,24 @@ Place an order for a given offer
 #### Returns
 
 `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+___
+
+### owned
+
+▸ **owned**(`product`): `boolean`
+
+Return true if a product is owned
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `product` | [`Product`](CdvPurchase.Product.md) |
+
+#### Returns
+
+`boolean`
 
 ___
 

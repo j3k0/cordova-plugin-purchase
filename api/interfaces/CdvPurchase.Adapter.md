@@ -16,9 +16,11 @@
 
 - [id](CdvPurchase.Adapter.md#id)
 - [name](CdvPurchase.Adapter.md#name)
+- [ready](CdvPurchase.Adapter.md#ready)
 
 ### Accessors
 
+- [isSupported](CdvPurchase.Adapter.md#issupported)
 - [products](CdvPurchase.Adapter.md#products)
 - [receipts](CdvPurchase.Adapter.md#receipts)
 
@@ -28,6 +30,7 @@
 - [handleReceiptValidationResponse](CdvPurchase.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.Adapter.md#initialize)
 - [load](CdvPurchase.Adapter.md#load)
+- [manageSubscriptions](CdvPurchase.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.Adapter.md#order)
 - [receiptValidationBody](CdvPurchase.Adapter.md#receiptvalidationbody)
 - [requestPayment](CdvPurchase.Adapter.md#requestpayment)
@@ -48,7 +51,29 @@ ___
 
 Nice name for the adapter
 
+___
+
+### ready
+
+• **ready**: `boolean`
+
+true after the platform has been successfully initialized.
+
+The value is set by the "Adapters" class (which is responsible for initializing adapters).
+
 ## Accessors
+
+### isSupported
+
+• `get` **isSupported**(): `boolean`
+
+Returns true is the adapter is supported on this device.
+
+#### Returns
+
+`boolean`
+
+___
 
 ### products
 
@@ -147,6 +172,18 @@ Load product definitions from the platform.
 #### Returns
 
 `Promise`<([`IError`](CdvPurchase.IError.md) \| [`Product`](../classes/CdvPurchase.Product.md))[]\>
+
+___
+
+### manageSubscriptions
+
+▸ **manageSubscriptions**(): `Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+
+Open the platforms' subscription management interface.
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 ___
 

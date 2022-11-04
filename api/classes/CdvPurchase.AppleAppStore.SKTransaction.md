@@ -16,6 +16,8 @@
 
 ### Properties
 
+- [amountMicros](CdvPurchase.AppleAppStore.SKTransaction.md#amountmicros)
+- [currency](CdvPurchase.AppleAppStore.SKTransaction.md#currency)
 - [expirationDate](CdvPurchase.AppleAppStore.SKTransaction.md#expirationdate)
 - [isAcknowledged](CdvPurchase.AppleAppStore.SKTransaction.md#isacknowledged)
 - [isConsumed](CdvPurchase.AppleAppStore.SKTransaction.md#isconsumed)
@@ -47,6 +49,30 @@
 [Transaction](CdvPurchase.Transaction.md).[constructor](CdvPurchase.Transaction.md#constructor)
 
 ## Properties
+
+### amountMicros
+
+• `Optional` **amountMicros**: `number`
+
+Amount paid by the user, if known, in micro units. Divide by 1,000,000 for value.
+
+#### Inherited from
+
+[Transaction](CdvPurchase.Transaction.md).[amountMicros](CdvPurchase.Transaction.md#amountmicros)
+
+___
+
+### currency
+
+• `Optional` **currency**: `string`
+
+Currency used to pay for the transaction, if known.
+
+#### Inherited from
+
+[Transaction](CdvPurchase.Transaction.md).[currency](CdvPurchase.Transaction.md#currency)
+
+___
 
 ### expirationDate
 

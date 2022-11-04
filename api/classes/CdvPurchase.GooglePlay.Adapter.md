@@ -19,11 +19,13 @@
 - [id](CdvPurchase.GooglePlay.Adapter.md#id)
 - [initialized](CdvPurchase.GooglePlay.Adapter.md#initialized)
 - [name](CdvPurchase.GooglePlay.Adapter.md#name)
+- [ready](CdvPurchase.GooglePlay.Adapter.md#ready)
 - [retry](CdvPurchase.GooglePlay.Adapter.md#retry)
 - [\_instance](CdvPurchase.GooglePlay.Adapter.md#_instance)
 
 ### Accessors
 
+- [isSupported](CdvPurchase.GooglePlay.Adapter.md#issupported)
 - [products](CdvPurchase.GooglePlay.Adapter.md#products)
 - [receipts](CdvPurchase.GooglePlay.Adapter.md#receipts)
 
@@ -35,6 +37,7 @@
 - [handleReceiptValidationResponse](CdvPurchase.GooglePlay.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.GooglePlay.Adapter.md#initialize)
 - [load](CdvPurchase.GooglePlay.Adapter.md#load)
+- [manageSubscriptions](CdvPurchase.GooglePlay.Adapter.md#managesubscriptions)
 - [onPriceChangeConfirmationResult](CdvPurchase.GooglePlay.Adapter.md#onpricechangeconfirmationresult)
 - [onPurchaseConsumed](CdvPurchase.GooglePlay.Adapter.md#onpurchaseconsumed)
 - [onPurchasesUpdated](CdvPurchase.GooglePlay.Adapter.md#onpurchasesupdated)
@@ -104,6 +107,18 @@ Adapter name
 
 ___
 
+### ready
+
+• **ready**: `boolean` = `false`
+
+Has the adapter been successfully initialized
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[ready](../interfaces/CdvPurchase.Adapter.md#ready)
+
+___
+
 ### retry
 
 • **retry**: `Retry`<`Function`\>
@@ -117,6 +132,22 @@ ___
 ▪ `Static` **\_instance**: [`Adapter`](CdvPurchase.GooglePlay.Adapter.md)
 
 ## Accessors
+
+### isSupported
+
+• `get` **isSupported**(): `boolean`
+
+Returns true on Android, the only platform supported by this adapter
+
+#### Returns
+
+`boolean`
+
+#### Implementation of
+
+CdvPurchase.Adapter.isSupported
+
+___
 
 ### products
 
@@ -274,6 +305,22 @@ Load product definitions from the platform.
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[load](../interfaces/CdvPurchase.Adapter.md#load)
+
+___
+
+### manageSubscriptions
+
+▸ **manageSubscriptions**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Open the platforms' subscription management interface.
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[manageSubscriptions](../interfaces/CdvPurchase.Adapter.md#managesubscriptions)
 
 ___
 

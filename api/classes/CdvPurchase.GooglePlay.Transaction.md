@@ -16,6 +16,8 @@
 
 ### Properties
 
+- [amountMicros](CdvPurchase.GooglePlay.Transaction.md#amountmicros)
+- [currency](CdvPurchase.GooglePlay.Transaction.md#currency)
 - [expirationDate](CdvPurchase.GooglePlay.Transaction.md#expirationdate)
 - [isAcknowledged](CdvPurchase.GooglePlay.Transaction.md#isacknowledged)
 - [isConsumed](CdvPurchase.GooglePlay.Transaction.md#isconsumed)
@@ -53,6 +55,30 @@
 [Transaction](CdvPurchase.Transaction.md).[constructor](CdvPurchase.Transaction.md#constructor)
 
 ## Properties
+
+### amountMicros
+
+• `Optional` **amountMicros**: `number`
+
+Amount paid by the user, if known, in micro units. Divide by 1,000,000 for value.
+
+#### Inherited from
+
+[Transaction](CdvPurchase.Transaction.md).[amountMicros](CdvPurchase.Transaction.md#amountmicros)
+
+___
+
+### currency
+
+• `Optional` **currency**: `string`
+
+Currency used to pay for the transaction, if known.
+
+#### Inherited from
+
+[Transaction](CdvPurchase.Transaction.md).[currency](CdvPurchase.Transaction.md#currency)
+
+___
 
 ### expirationDate
 

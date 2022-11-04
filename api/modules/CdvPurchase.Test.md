@@ -2,7 +2,7 @@
 
 [CdvPurchase](CdvPurchase.md).Test
 
-Test (or Mock) Adapter and related classes
+Test Adapter and related classes.
 
 ## Table of contents
 
@@ -25,7 +25,10 @@ Test (or Mock) Adapter and related classes
 
 • `Const` **CONSUMABLE\_FAILING**: [`Product`](../classes/CdvPurchase.Product.md)
 
-A consumable product for which the purchase will fail
+A consumable product for which the purchase will always fail.
+
+id: "test-consumable-fail"
+type: ProductType.CONSUMABLE
 
 ___
 
@@ -33,7 +36,10 @@ ___
 
 • `Const` **CONSUMABLE\_OK**: [`Product`](../classes/CdvPurchase.Product.md)
 
-A consumable product for which the purchase goes through
+A valid consumable product.
+
+id: "test-consumable"
+type: ProductType.CONSUMABLE
 
 ___
 
@@ -41,7 +47,10 @@ ___
 
 • `Const` **NON\_CONSUMABLE\_OK**: [`Product`](../classes/CdvPurchase.Product.md)
 
-A non-consumable product
+A valid non-consumable product.
+
+id: "test-non-consumable"
+type: ProductType.NON_CONSUMABLE
 
 ___
 
@@ -49,7 +58,12 @@ ___
 
 • `Const` **PAID\_SUBSCRIPTION\_ACTIVE**: [`Product`](../classes/CdvPurchase.Product.md)
 
-A paid-subscription that is already active when the app starts
+A paid-subscription that is already active when the app starts.
+
+It behaves as if the user subscribed on a different device. It will renew forever.
+
+id: "test-subscription-active"
+type: ProductType.PAID_SUBSCRIPTION
 
 ___
 
@@ -57,7 +71,13 @@ ___
 
 • `Const` **PAID\_SUBSCRIPTION\_OK**: [`Product`](../classes/CdvPurchase.Product.md)
 
-A paid-subscription that auto-renews for the duration of the session
+A paid-subscription that auto-renews for the duration of the session.
+
+This subscription has a free trial period, that renews every week, 3 times.
+It then costs $4.99 per month.
+
+id: "test-subscription"
+type: ProductType.PAID_SUBSCRIPTION
 
 ___
 
@@ -65,4 +85,6 @@ ___
 
 • `Const` **TEST\_PRODUCTS**: [`Product`](../classes/CdvPurchase.Product.md)[]
 
-List of all test products
+List of all recognized test products for the Test Adapter.
+
+Register those products at startup with `store.register()` to activate them.

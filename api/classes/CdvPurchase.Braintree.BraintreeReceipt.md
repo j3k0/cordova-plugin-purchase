@@ -24,6 +24,7 @@
 ### Methods
 
 - [hasTransaction](CdvPurchase.Braintree.BraintreeReceipt.md#hastransaction)
+- [lastTransaction](CdvPurchase.Braintree.BraintreeReceipt.md#lasttransaction)
 - [refresh](CdvPurchase.Braintree.BraintreeReceipt.md#refresh)
 
 ## Constructors
@@ -98,6 +99,20 @@ List of transactions contained in the receipt
 #### Inherited from
 
 [Receipt](CdvPurchase.Receipt.md).[hasTransaction](CdvPurchase.Receipt.md#hastransaction)
+
+___
+
+### lastTransaction
+
+▸ **lastTransaction**(): [`Transaction`](CdvPurchase.Transaction.md)
+
+#### Returns
+
+[`Transaction`](CdvPurchase.Transaction.md)
+
+#### Inherited from
+
+[Receipt](CdvPurchase.Receipt.md).[lastTransaction](CdvPurchase.Receipt.md#lasttransaction)
 
 ___
 

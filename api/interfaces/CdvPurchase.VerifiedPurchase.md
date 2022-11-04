@@ -17,6 +17,7 @@ A purchase object returned by the receipt validator
 - [isIntroPeriod](CdvPurchase.VerifiedPurchase.md#isintroperiod)
 - [isTrialPeriod](CdvPurchase.VerifiedPurchase.md#istrialperiod)
 - [lastRenewalDate](CdvPurchase.VerifiedPurchase.md#lastrenewaldate)
+- [platform](CdvPurchase.VerifiedPurchase.md#platform)
 - [priceConsentStatus](CdvPurchase.VerifiedPurchase.md#priceconsentstatus)
 - [purchaseDate](CdvPurchase.VerifiedPurchase.md#purchasedate)
 - [renewalIntent](CdvPurchase.VerifiedPurchase.md#renewalintent)
@@ -95,6 +96,12 @@ ___
 • `Optional` **lastRenewalDate**: `number`
 
 Last time a subscription was renewed.
+
+___
+
+### platform
+
+• `Optional` **platform**: [`Platform`](../enums/CdvPurchase.Platform.md)
 
 ___
 

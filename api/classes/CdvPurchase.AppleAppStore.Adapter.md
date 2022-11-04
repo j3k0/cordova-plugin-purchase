@@ -17,7 +17,12 @@
 - [id](CdvPurchase.AppleAppStore.Adapter.md#id)
 - [name](CdvPurchase.AppleAppStore.Adapter.md#name)
 - [products](CdvPurchase.AppleAppStore.Adapter.md#products)
+- [ready](CdvPurchase.AppleAppStore.Adapter.md#ready)
 - [receipts](CdvPurchase.AppleAppStore.Adapter.md#receipts)
+
+### Accessors
+
+- [isSupported](CdvPurchase.AppleAppStore.Adapter.md#issupported)
 
 ### Methods
 
@@ -25,6 +30,7 @@
 - [handleReceiptValidationResponse](CdvPurchase.AppleAppStore.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.AppleAppStore.Adapter.md#initialize)
 - [load](CdvPurchase.AppleAppStore.Adapter.md#load)
+- [manageSubscriptions](CdvPurchase.AppleAppStore.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.AppleAppStore.Adapter.md#order)
 - [receiptValidationBody](CdvPurchase.AppleAppStore.Adapter.md#receiptvalidationbody)
 - [requestPayment](CdvPurchase.AppleAppStore.Adapter.md#requestpayment)
@@ -77,6 +83,20 @@ ___
 
 ___
 
+### ready
+
+• **ready**: `boolean` = `false`
+
+true after the platform has been successfully initialized.
+
+The value is set by the "Adapters" class (which is responsible for initializing adapters).
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[ready](../interfaces/CdvPurchase.Adapter.md#ready)
+
+___
+
 ### receipts
 
 • **receipts**: [`SKReceipt`](CdvPurchase.AppleAppStore.SKReceipt.md)[] = `[]`
@@ -84,6 +104,22 @@ ___
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[receipts](../interfaces/CdvPurchase.Adapter.md#receipts)
+
+## Accessors
+
+### isSupported
+
+• `get` **isSupported**(): `boolean`
+
+Returns true is the adapter is supported on this device.
+
+#### Returns
+
+`boolean`
+
+#### Implementation of
+
+CdvPurchase.Adapter.isSupported
 
 ## Methods
 
@@ -176,6 +212,22 @@ Load product definitions from the platform.
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[load](../interfaces/CdvPurchase.Adapter.md#load)
+
+___
+
+### manageSubscriptions
+
+▸ **manageSubscriptions**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Open the platforms' subscription management interface.
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[manageSubscriptions](../interfaces/CdvPurchase.Adapter.md#managesubscriptions)
 
 ___
 

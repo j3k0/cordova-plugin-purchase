@@ -17,7 +17,12 @@
 - [id](CdvPurchase.WindowsStore.Adapter.md#id)
 - [name](CdvPurchase.WindowsStore.Adapter.md#name)
 - [products](CdvPurchase.WindowsStore.Adapter.md#products)
+- [ready](CdvPurchase.WindowsStore.Adapter.md#ready)
 - [receipts](CdvPurchase.WindowsStore.Adapter.md#receipts)
+
+### Accessors
+
+- [isSupported](CdvPurchase.WindowsStore.Adapter.md#issupported)
 
 ### Methods
 
@@ -25,6 +30,7 @@
 - [handleReceiptValidationResponse](CdvPurchase.WindowsStore.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.WindowsStore.Adapter.md#initialize)
 - [load](CdvPurchase.WindowsStore.Adapter.md#load)
+- [manageSubscriptions](CdvPurchase.WindowsStore.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.WindowsStore.Adapter.md#order)
 - [receiptValidationBody](CdvPurchase.WindowsStore.Adapter.md#receiptvalidationbody)
 - [requestPayment](CdvPurchase.WindowsStore.Adapter.md#requestpayment)
@@ -71,6 +77,20 @@ ___
 
 ___
 
+### ready
+
+• **ready**: `boolean` = `false`
+
+true after the platform has been successfully initialized.
+
+The value is set by the "Adapters" class (which is responsible for initializing adapters).
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[ready](../interfaces/CdvPurchase.Adapter.md#ready)
+
+___
+
 ### receipts
 
 • **receipts**: [`Receipt`](CdvPurchase.Receipt.md)[] = `[]`
@@ -78,6 +98,22 @@ ___
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[receipts](../interfaces/CdvPurchase.Adapter.md#receipts)
+
+## Accessors
+
+### isSupported
+
+• `get` **isSupported**(): `boolean`
+
+Returns true is the adapter is supported on this device.
+
+#### Returns
+
+`boolean`
+
+#### Implementation of
+
+CdvPurchase.Adapter.isSupported
 
 ## Methods
 
@@ -170,6 +206,22 @@ Load product definitions from the platform.
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[load](../interfaces/CdvPurchase.Adapter.md#load)
+
+___
+
+### manageSubscriptions
+
+▸ **manageSubscriptions**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Open the platforms' subscription management interface.
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[manageSubscriptions](../interfaces/CdvPurchase.Adapter.md#managesubscriptions)
 
 ___
 

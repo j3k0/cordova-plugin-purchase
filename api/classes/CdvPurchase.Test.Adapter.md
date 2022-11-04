@@ -2,7 +2,15 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[Test](../modules/CdvPurchase.Test.md).Adapter
 
-Test Adapter used for local testing with mock products
+Test Adapter used for local testing with mock products.
+
+This adapter simulates a payment platform that supports both In-App Products and Payment Requests.
+
+The list of supported In-App Products
+
+**`See`**
+
+[TEST_PRODUCTS](../modules/CdvPurchase.Test.md#test_products)
 
 ## Implements
 
@@ -19,7 +27,12 @@ Test Adapter used for local testing with mock products
 - [id](CdvPurchase.Test.Adapter.md#id)
 - [name](CdvPurchase.Test.Adapter.md#name)
 - [products](CdvPurchase.Test.Adapter.md#products)
+- [ready](CdvPurchase.Test.Adapter.md#ready)
 - [receipts](CdvPurchase.Test.Adapter.md#receipts)
+
+### Accessors
+
+- [isSupported](CdvPurchase.Test.Adapter.md#issupported)
 
 ### Methods
 
@@ -27,9 +40,11 @@ Test Adapter used for local testing with mock products
 - [handleReceiptValidationResponse](CdvPurchase.Test.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.Test.Adapter.md#initialize)
 - [load](CdvPurchase.Test.Adapter.md#load)
+- [manageSubscriptions](CdvPurchase.Test.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.Test.Adapter.md#order)
 - [receiptValidationBody](CdvPurchase.Test.Adapter.md#receiptvalidationbody)
 - [requestPayment](CdvPurchase.Test.Adapter.md#requestpayment)
+- [verify](CdvPurchase.Test.Adapter.md#verify)
 
 ## Constructors
 
@@ -79,6 +94,20 @@ ___
 
 ___
 
+### ready
+
+• **ready**: `boolean` = `false`
+
+true after the platform has been successfully initialized.
+
+The value is set by the "Adapters" class (which is responsible for initializing adapters).
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[ready](../interfaces/CdvPurchase.Adapter.md#ready)
+
+___
+
 ### receipts
 
 • **receipts**: [`Receipt`](CdvPurchase.Receipt.md)[] = `[]`
@@ -86,6 +115,22 @@ ___
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[receipts](../interfaces/CdvPurchase.Adapter.md#receipts)
+
+## Accessors
+
+### isSupported
+
+• `get` **isSupported**(): `boolean`
+
+Returns true is the adapter is supported on this device.
+
+#### Returns
+
+`boolean`
+
+#### Implementation of
+
+CdvPurchase.Adapter.isSupported
 
 ## Methods
 
@@ -181,6 +226,22 @@ Load product definitions from the platform.
 
 ___
 
+### manageSubscriptions
+
+▸ **manageSubscriptions**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Open the platforms' subscription management interface.
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[manageSubscriptions](../interfaces/CdvPurchase.Adapter.md#managesubscriptions)
+
+___
+
 ### order
 
 ▸ **order**(`offer`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
@@ -227,7 +288,7 @@ ___
 
 ### requestPayment
 
-▸ **requestPayment**(`payment`, `additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **requestPayment**(`paymentRequest`, `additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Request a payment from the user
 
@@ -235,7 +296,7 @@ Request a payment from the user
 
 | Name | Type |
 | :------ | :------ |
-| `payment` | [`PaymentRequest`](../interfaces/CdvPurchase.PaymentRequest.md) |
+| `paymentRequest` | [`PaymentRequest`](../interfaces/CdvPurchase.PaymentRequest.md) |
 | `additionalData?` | [`AdditionalData`](../interfaces/CdvPurchase.AdditionalData.md) |
 
 #### Returns
@@ -245,3 +306,20 @@ Request a payment from the user
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[requestPayment](../interfaces/CdvPurchase.Adapter.md#requestpayment)
+
+___
+
+### verify
+
+▸ `Static` **verify**(`receipt`, `callback`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `receipt` | [`Receipt`](CdvPurchase.Receipt.md) |
+| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<`ReceiptResponse`\> |
+
+#### Returns
+
+`void`

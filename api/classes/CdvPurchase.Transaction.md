@@ -18,6 +18,8 @@
 
 ### Properties
 
+- [amountMicros](CdvPurchase.Transaction.md#amountmicros)
+- [currency](CdvPurchase.Transaction.md#currency)
 - [expirationDate](CdvPurchase.Transaction.md#expirationdate)
 - [isAcknowledged](CdvPurchase.Transaction.md#isacknowledged)
 - [isConsumed](CdvPurchase.Transaction.md#isconsumed)
@@ -45,6 +47,22 @@
 | `platform` | [`Platform`](../enums/CdvPurchase.Platform.md) |
 
 ## Properties
+
+### amountMicros
+
+• `Optional` **amountMicros**: `number`
+
+Amount paid by the user, if known, in micro units. Divide by 1,000,000 for value.
+
+___
+
+### currency
+
+• `Optional` **currency**: `string`
+
+Currency used to pay for the transaction, if known.
+
+___
 
 ### expirationDate
 

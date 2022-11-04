@@ -40,7 +40,7 @@ ___
 
 ### TEST
 
-• **TEST** = ``"dummy-store"``
+• **TEST** = ``"test"``
 
 Test platform
 
