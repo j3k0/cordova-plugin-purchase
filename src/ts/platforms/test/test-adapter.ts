@@ -1,6 +1,8 @@
 namespace CdvPurchase {
 
-    /** Test (or Mock) Adapter and related classes */
+    /**
+     * Test Adapter and related classes.
+     */
     export namespace Test {
 
         const platform = Platform.TEST;
@@ -26,7 +28,15 @@ namespace CdvPurchase {
             });
         }
 
-        /** Test Adapter used for local testing with mock products */
+        /**
+         * Test Adapter used for local testing with mock products.
+         *
+         * This adapter simulates a payment platform that supports both In-App Products and Payment Requests.
+         *
+         * The list of supported In-App Products
+         *
+         * @see {@link Test.TEST_PRODUCTS}
+         */
         export class Adapter implements CdvPurchase.Adapter {
 
             id = Platform.TEST;
@@ -71,28 +81,16 @@ namespace CdvPurchase {
                 });
             }
 
-            private receiptFor(productId: string) {
-                const matching = this.receipts.filter(r => r.lastTransaction().products[0].productId === productId);
-                matching.sort((a, b) => (+(b.lastTransaction().purchaseDate ?? 0) - +(a.lastTransaction().purchaseDate || 0)));
-                // returned the receipt containing the last transaction
-                return matching[0];
-            }
-
             async order(offer: Offer): Promise<undefined | IError> {
                 // Purchasing products with "-fail-" in the id will fail.
                 if (offer.id.indexOf("-fail-") > 0) {
                     return storeError(ErrorCode.PURCHASE, 'Purchase failed.');
                 }
-                if (offer.productType !== ProductType.CONSUMABLE) {
-                    // a receipt containing a transaction with the given product.
-                    const receipt = this.receiptFor(offer.productId);
-                    if (receipt) {
-                        const now = +new Date();
-                        if (receipt.lastTransaction().isConsumed || +(receipt.lastTransaction().expirationDate ?? now) >= now) {
-                            return storeError(ErrorCode.PURCHASE, 'Product already owned');
-                        }
-                    }
+                const product = this.products.find(p => p.id === offer.productId);
+                if (!Internal.LocalReceipts.canPurchase(this.receipts, product)) {
+                    return storeError(ErrorCode.PURCHASE, 'Product already owned');
                 }
+                // a receipt containing a transaction with the given product.
                 const response = prompt(`Do you want to purchase ${offer.productId} for ${offer.pricingPhases[0].price}?\nEnter "Y" to confirm.\nEnter "E" to fail with an error.\Anything else to cancel.`);
                 if (response?.toUpperCase() === 'E') return storeError(ErrorCode.PURCHASE, 'Purchase failed');
                 if (response?.toUpperCase() !== 'Y') return storeError(ErrorCode.PAYMENT_CANCELLED, 'Purchase flow has been cancelled by the user');
@@ -138,8 +136,23 @@ namespace CdvPurchase {
                 return;
             }
 
-            async requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
-                return storeError(ErrorCode.UNKNOWN, 'requestPayment not supported');
+            async requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
+
+                const response = prompt(`Mock payment of ${paymentRequest.amountMicros / 1000000} ${paymentRequest.currency}. Enter "Y" to confirm. Enter "E" to trigger an error.`);
+                if (response?.toUpperCase() === 'E') return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Payment not allowed');
+                if (response?.toUpperCase() !== 'Y') return;
+                const transaction = new Transaction(Platform.TEST);
+                transaction.purchaseDate = new Date();
+                transaction.products = paymentRequest.productIds.map(productId => ({ productId }));
+                transaction.state = TransactionState.APPROVED;
+                transaction.transactionId = 'payment-' + new Date().getTime();
+                transaction.amountMicros = paymentRequest.amountMicros;
+                transaction.currency = paymentRequest.currency;
+                const receipt = new Receipt({ platform, transactions: [transaction] });
+                this.receipts.push(receipt);
+                setTimeout(() => {
+                    this.context.listener.receiptsUpdated(platform, [receipt]);
+                }, 400);
             }
 
             async manageSubscriptions(): Promise<IError | undefined> {
@@ -201,7 +214,7 @@ namespace CdvPurchase {
                         payload: {
                             ok: true,
                             data: {
-                                id: receipt.transactions[0].products[0].productId,
+                                id: receipt.transactions[0]?.products[0]?.productId,
                                 latest_receipt: true,
                                 transaction: { type: 'test' },
                                 collection: verifiedPurchases,

@@ -215,50 +215,45 @@ namespace CdvPurchase {
 
         /** List of all purchases from the verified receipts. */
         get verifiedPurchases(): VerifiedPurchase[] {
-            const ret: VerifiedPurchase[] = [];
+            const indexed: { [key: string]: VerifiedPurchase } = {};
             for (const receipt of this.verifiedReceipts) {
-                ret.push(...receipt.collection.map(p => ({
-                    platform: receipt.platform,
-                    ...p,
-                })));
+                for (const purchase of receipt.collection) {
+                    const key = receipt.platform + ':' + purchase.id;
+                    const existing = indexed[key];
+                    if (!existing || (existing && (existing.lastRenewalDate ?? existing.purchaseDate ?? 0) < (purchase.lastRenewalDate ?? purchase.purchaseDate ?? 0))) {
+                        indexed[key] = { ...purchase, platform: receipt.platform };
+                    }
+                }
             }
-            return ret;
+            return Object.keys(indexed).map(key => indexed[key]);
         }
 
         /**
          * Find the last verified purchase for a given product, from those verified by the receipt validator.
          */
         findInVerifiedReceipts(product: Product): VerifiedPurchase | undefined {
-            let found: VerifiedPurchase | undefined;
-            for (const receipt of this.verifiedReceipts) {
-                if (receipt.platform !== product.platform) continue;
-                for (const purchase of receipt.collection) {
-                    if (purchase.id === product.id) {
-                        if ((found?.purchaseDate ?? 0) < (purchase.purchaseDate ?? 1))
-                            found = purchase;
-                    }
-                }
-            }
-            return found;
+            return Internal.VerifiedReceipts.find(this.verifiedReceipts, product);
         }
 
         /**
-         * Find the latest transaction for a givne product, from those reported by the device.
+         * Find the latest transaction for a given product, from those reported by the device.
          */
         findInLocalReceipts(product: Product): Transaction | undefined {
-            let found: Transaction | undefined;
-            for (const receipt of this.localReceipts) {
-                if (receipt.platform !== product.platform) continue;
-                for (const transaction of receipt.transactions) {
-                    for (const trProducts of transaction.products) {
-                        if (trProducts.productId === product.id) {
-                            if ((transaction.purchaseDate ?? 0) < (found?.purchaseDate ?? 1))
-                                found = transaction;
-                        }
-                    }
-                }
-            }
-            return found;
+            return Internal.LocalReceipts.find(this.localReceipts, product);
+        }
+
+        /** Return true if a product or offer can be purchased */
+        canPurchase(offer: Offer | Product) {
+            const product = (offer instanceof Offer) ? this.get(offer.productId, offer.platform) : offer;
+            return Internal.LocalReceipts.canPurchase(this.localReceipts, product);
+        }
+
+        /** Return true if a product is owned */
+        owned(product: Product) {
+            return Internal.owned(product, {
+                verifiedReceipts: this.validator ? this.verifiedReceipts : undefined,
+                localReceipts: this.localReceipts,
+            });
         }
 
         /** Place an order for a given offer */

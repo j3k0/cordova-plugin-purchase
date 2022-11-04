@@ -3,7 +3,12 @@ namespace CdvPurchase {
 
     const platform = Platform.TEST;
 
-    /** A consumable product for which the purchase goes through */
+    /**
+     * A valid consumable product.
+     *
+     * id: "test-consumable"
+     * type: ProductType.CONSUMABLE
+     */
     export const CONSUMABLE_OK = new Product({
       platform,
       id: 'test-consumable',
@@ -23,7 +28,12 @@ namespace CdvPurchase {
       product: CONSUMABLE_OK,
     }));
 
-    /** A consumable product for which the purchase will fail */
+    /**
+     * A consumable product for which the purchase will always fail.
+     *
+     * id: "test-consumable-fail"
+     * type: ProductType.CONSUMABLE
+     */
     export const CONSUMABLE_FAILING = new Product({
       platform,
       id: 'test-consumable-fail',
@@ -43,7 +53,12 @@ namespace CdvPurchase {
       product: CONSUMABLE_FAILING,
     }));
 
-    /** A non-consumable product */
+    /**
+     * A valid non-consumable product.
+     *
+     * id: "test-non-consumable"
+     * type: ProductType.NON_CONSUMABLE
+     */
     export const NON_CONSUMABLE_OK = new Product({
       platform,
       id: 'test-non-consumable',
@@ -63,7 +78,15 @@ namespace CdvPurchase {
       product: NON_CONSUMABLE_OK,
     }));
 
-    /** A paid-subscription that auto-renews for the duration of the session */
+    /**
+     * A paid-subscription that auto-renews for the duration of the session.
+     *
+     * This subscription has a free trial period, that renews every week, 3 times.
+     * It then costs $4.99 per month.
+     *
+     * id: "test-subscription"
+     * type: ProductType.PAID_SUBSCRIPTION
+     */
     export const PAID_SUBSCRIPTION_OK = new Product({
       platform,
       id: 'test-subscription',
@@ -92,7 +115,14 @@ namespace CdvPurchase {
       }],
     }));
 
-    /** A paid-subscription that is already active when the app starts */
+    /**
+     * A paid-subscription that is already active when the app starts.
+     *
+     * It behaves as if the user subscribed on a different device. It will renew forever.
+     *
+     * id: "test-subscription-active"
+     * type: ProductType.PAID_SUBSCRIPTION
+     */
     export const PAID_SUBSCRIPTION_ACTIVE = new Product({
       platform,
       id: 'test-subscription-active',
@@ -113,7 +143,11 @@ namespace CdvPurchase {
       }],
     }));
 
-    /** List of all test products */
+    /**
+     * List of all recognized test products for the Test Adapter.
+     *
+     * Register those products at startup with `store.register()` to activate them.
+     */
     export const TEST_PRODUCTS: Product[] = [
       CONSUMABLE_OK,
       CONSUMABLE_FAILING,
