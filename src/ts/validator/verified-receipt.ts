@@ -1,5 +1,15 @@
 namespace CdvPurchase {
 
+    /** @internal */
+    export namespace Internal {
+        /**
+         * Set of function used to provide a nicer API (or more backward compatible)
+         */
+        export interface VerifiedReceiptDecorator {
+            finish(receipt: VerifiedReceipt): Promise<void>;
+        }
+    }
+
     /** Receipt data as validated by the receipt validation server */
     export class VerifiedReceipt {
 
@@ -42,13 +52,14 @@ namespace CdvPurchase {
         /**
          * @internal
          */
-        constructor(receipt: Receipt, response: Validator.Response.SuccessPayload['data']) {
+        constructor(receipt: Receipt, response: Validator.Response.SuccessPayload['data'], decorator: Internal.VerifiedReceiptDecorator) {
             this.id = response.id;
             this.sourceReceipt = receipt;
             this.collection = response.collection ?? [];
             this.latestReceipt = response.latest_receipt;
             this.nativeTransactions = [response.transaction];
             this.warning = response.warning;
+            Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
         }
 
         /**
@@ -64,6 +75,9 @@ namespace CdvPurchase {
             this.nativeTransactions = [response.transaction];
             this.warning = response.warning;
         }
+
+        /** Finish all transactions in the receipt */
+        async finish(): Promise<void> {}
     }
 
     /** A purchase object returned by the receipt validator */

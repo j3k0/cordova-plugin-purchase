@@ -358,7 +358,7 @@ namespace CdvPurchase {
                 return; // Nothing specific to do on GooglePlay
             }
 
-            async requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
+            async requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined> {
                 return storeError(ErrorCode.UNKNOWN, 'requestPayment not supported');
             }
 

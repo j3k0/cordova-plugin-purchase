@@ -149,7 +149,7 @@ namespace CdvPurchase {
             public dropInResult: DropIn.Result;
             public paymentRequest: PaymentRequest;
 
-            constructor(paymentRequest: PaymentRequest, dropInResult: DropIn.Result, decorator: Internal.TransactionDecorator) {
+            constructor(paymentRequest: PaymentRequest, dropInResult: DropIn.Result, decorator: Internal.TransactionDecorator & Internal.ReceiptDecorator) {
 
                 // Now we have to send this to the server + the request
                 // result.paymentDescription; // "1111"
@@ -287,15 +287,14 @@ namespace CdvPurchase {
                 return storeError(ErrorCode.PURCHASE, 'Braintree is not available');
             }
 
-            async requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
+            async requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined> {
+
                 this.log.info("requestPayment()" + JSON.stringify(paymentRequest));
                 let dropInResult: DropIn.Result;
                 if (additionalData?.braintree?.dropInRequest) {
                     // User provided a full DropInRequest, just passing it through
                     const response = await this.launchDropIn(additionalData.braintree.dropInRequest);
-                    if (!response || (('code' in response) && ('message' in response))) {
-                        return response;
-                    }
+                    if (!dropInResponseIsOK(response)) return dropInResponseError(this.log, response);
                     dropInResult = response;
                 }
                 /*
@@ -339,13 +338,7 @@ namespace CdvPurchase {
                 else {
                     // No other payment method as the moment...
                     const response = await this.launchDropIn({});
-                    if (!response || (('code' in response) && ('message' in response))) {
-                        // Failed
-                        this.log.warn("launchDropIn failed: " + JSON.stringify(response));
-                        return response;
-                    }
-
-                    // Success
+                    if (!dropInResponseIsOK(response)) return dropInResponseError(this.log, response);
                     dropInResult = response;
                 }
 
@@ -363,6 +356,7 @@ namespace CdvPurchase {
                     this.receipts.push(receipt);
                 }
                 this.context.listener.receiptsUpdated(Platform.BRAINTREE, [receipt]);
+                return receipt.transactions[0];
             }
 
             receiptValidationBody(receipt: BraintreeReceipt): Validator.Request.Body | undefined {
@@ -408,6 +402,22 @@ namespace CdvPurchase {
 
         function isBraintreeReceipt(receipt: Receipt): receipt is BraintreeReceipt {
             return receipt.platform === Platform.BRAINTREE;
+        }
+
+        const dropInResponseIsOK = (response?: DropIn.Result | IError): response is DropIn.Result => {
+            return (!!response) && !('code' in response && 'message' in response);
+        }
+
+        const dropInResponseError = (log: Logger, response?: IError): IError => {
+            if (!response) {
+                log.warn("launchDropIn failed: no response");
+                return storeError(ErrorCode.BAD_RESPONSE, 'Braintree failed to launch drop in');
+            }
+            else {
+                // Failed
+                log.warn("launchDropIn failed: " + JSON.stringify(response));
+                return response;
+            }
         }
     }
 }

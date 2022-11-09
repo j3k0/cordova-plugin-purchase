@@ -163,7 +163,7 @@
             /**
              * Request a payment from the user
              */
-            requestPayment(payment: PaymentRequest, additionalData?: AdditionalData): Promise<undefined | IError>;
+            requestPayment(payment: PaymentRequest, additionalData?: AdditionalData): Promise<IError | Transaction | undefined>;
 
             /**
              * Open the platforms' subscription management interface.

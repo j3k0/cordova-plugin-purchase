@@ -41,6 +41,7 @@ namespace CdvPurchase {
             get validator_privacy_policy(): PrivacyPolicyItem | PrivacyPolicyItem[] | undefined;
             getApplicationUsername(): string | undefined;
             get verifiedCallbacks(): Callbacks<VerifiedReceipt>;
+            finish(receipt:VerifiedReceipt): Promise<void>;
         }
 
         /** Handles communication with the remote receipt validation service */
@@ -74,7 +75,7 @@ namespace CdvPurchase {
                     }
                 }
                 this.log.debug("Register a new  verified receipt.")
-                const newVR = new VerifiedReceipt(receipt, data);
+                const newVR = new VerifiedReceipt(receipt, data, this.controller);
                 this.verifiedReceipts.push(newVR);
                 return newVR;
             }

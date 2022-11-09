@@ -72,11 +72,32 @@ namespace CdvPurchase
             offerId?: string;
         }[] = [];
 
-        /** Finish a transaction */
-        async finish(): Promise<void> {}
+        /**
+         * Finish a transaction.
+         *
+         * When the application has delivered the product, it should finalizes the order.
+         * Only after that, money will be transferred to your account.
+         * This method ensures that no customers is charged for a product that couldn't be delivered.
+         *
+         * @example
+         * store.when()
+         *   .approved(transaction => transaction.verify())
+         *   .verified(receipt => receipt.finish())
+         */
+        async finish(): Promise<void> {} // actual implementation in the constructor
 
-        /** Verify a transaction */
-        async verify(): Promise<void> {}
+        /**
+         * Verify a transaction.
+         *
+         * This will trigger a call to the receipt validation service for the attached receipt.
+         * Once the receipt has been verified, you can finish the transaction.
+         *
+         * @example
+         * store.when()
+         *   .approved(transaction => transaction.verify())
+         *   .verified(receipt => receipt.finish())
+         */
+        async verify(): Promise<void> {} // actual implementation in the constructor
 
         /** @internal */
         constructor(platform: Platform, decorator: Internal.TransactionDecorator) {

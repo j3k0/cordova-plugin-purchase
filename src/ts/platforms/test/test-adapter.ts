@@ -139,7 +139,7 @@ namespace CdvPurchase {
                 return;
             }
 
-            async requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError> {
+            async requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined> {
 
                 const response = prompt(`Mock payment of ${paymentRequest.amountMicros / 1000000} ${paymentRequest.currency}. Enter "Y" to confirm. Enter "E" to trigger an error.`);
                 if (response?.toUpperCase() === 'E') return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Payment not allowed');
@@ -156,6 +156,7 @@ namespace CdvPurchase {
                 setTimeout(() => {
                     this.context.listener.receiptsUpdated(platform, [receipt]);
                 }, 400);
+                return transaction;
             }
 
             async manageSubscriptions(): Promise<IError | undefined> {

@@ -1,5 +1,83 @@
 namespace CdvPurchase {
 
+  export class PaymentRequestPromise {
+
+    private failedCallbacks = new Internal.PromiseLike<IError>();
+    failed(callback: Callback<IError>): PaymentRequestPromise {
+      this.failedCallbacks.push(callback);
+      return this;
+    }
+
+    private initiatedCallbacks = new Internal.PromiseLike<Transaction>();
+    initiated(callback: Callback<Transaction>): PaymentRequestPromise {
+      this.initiatedCallbacks.push(callback);
+      return this;
+    }
+
+    private approvedCallbacks = new Internal.PromiseLike<Transaction>();
+    approved(callback: Callback<Transaction>): PaymentRequestPromise {
+      this.approvedCallbacks.push(callback);
+      return this;
+    }
+
+    private finishedCallbacks = new Internal.PromiseLike<Transaction>();
+    finished(callback: Callback<Transaction>): PaymentRequestPromise {
+      this.finishedCallbacks.push(callback);
+      return this;
+    }
+
+    private cancelledCallback = new Internal.PromiseLike<void>();
+    cancelled(callback: Callback<void>): PaymentRequestPromise {
+      this.cancelledCallback.push(callback);
+      return this;
+    }
+
+    /** @internal */
+    trigger(argument?: IError | Transaction): PaymentRequestPromise {
+      if (!argument) {
+        this.cancelledCallback.resolve();
+      }
+      else if ('isError' in argument) {
+        this.failedCallbacks.resolve(argument);
+      }
+      else {
+        switch(argument.state) {
+          case TransactionState.INITIATED: this.initiatedCallbacks.resolve(argument); break;
+          case TransactionState.APPROVED: this.approvedCallbacks.resolve(argument); break;
+          case TransactionState.FINISHED: this.finishedCallbacks.resolve(argument); break;
+        }
+      }
+      return this;
+    }
+
+    /**
+     * Return a failed promise.
+     *
+     * @internal
+     */
+    static failed(code: ErrorCode, message: string) {
+      return new PaymentRequestPromise().trigger(storeError(code, message));
+    }
+
+    /**
+     * Return a failed promise.
+     *
+     * @internal
+     */
+    static cancelled() {
+      return new PaymentRequestPromise().trigger();
+    }
+
+    /**
+     * Return an initiated transaction.
+     *
+     * @internal
+     */
+    static initiated(transaction: Transaction) {
+      return new PaymentRequestPromise().trigger(transaction);
+    }
+  }
+
   /**
    * Request for payment.
    *

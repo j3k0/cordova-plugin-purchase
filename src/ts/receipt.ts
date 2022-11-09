@@ -4,7 +4,8 @@ namespace CdvPurchase
     /** @internal */
     export namespace Internal {
         export interface ReceiptDecorator {
-            verify(receiptOrTransaction: Transaction | Receipt): Promise<void>;
+            verify(receipt: Receipt): Promise<void>;
+            finish(receipt: Receipt): Promise<void>;
         }
     }
 
@@ -21,11 +22,15 @@ namespace CdvPurchase
         /** Verify a receipt */
         async verify(): Promise<void> {}
 
+        /** Finish all transactions in a receipt */
+        async finish(): Promise<void> {}
+
         /** @internal */
         constructor(options: { platform: Platform, transactions: Transaction[] }, decorator: Internal.ReceiptDecorator) {
             this.platform = options.platform;
             this.transactions = options.transactions;
             Object.defineProperty(this, 'verify', { 'enumerable': false, get() { return () => decorator.verify(this); } });
+            Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
         }
 
         /** Return true if the receipt contains the given transaction */

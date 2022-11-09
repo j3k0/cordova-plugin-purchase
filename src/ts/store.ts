@@ -156,6 +156,9 @@ namespace CdvPurchase {
         /** Internal implementation of the receipt validation service integration */
         private _validator: Internal.Validator;
 
+        /** Monitor state changes for transactions */
+        private transactionStateMonitors: Internal.TransactionStateMonitors;
+
         constructor() {
             this.listener = new Internal.StoreAdapterListener({
                 updatedCallbacks: this.updatedCallbacks,
@@ -163,6 +166,7 @@ namespace CdvPurchase {
                 approvedCallbacks: this.approvedCallbacks,
                 finishedCallbacks: this.finishedCallbacks,
             });
+            this.transactionStateMonitors = new Internal.TransactionStateMonitors(this.when());
 
             const store = this;
             this._validator = new Internal.Validator({
@@ -172,6 +176,7 @@ namespace CdvPurchase {
                 get validator() { return store.validator; },
                 get validator_privacy_policy() { return store.validator_privacy_policy; },
                 verifiedCallbacks: this.verifiedCallbacks,
+                finish: (receipt: VerifiedReceipt) => this.finish(receipt),
             }, this.log);
         }
 
@@ -246,12 +251,14 @@ namespace CdvPurchase {
         /** Register a callback to be called when the plugin is ready. */
         ready(cb: Callback<void>): void { this._readyCallbacks.add(cb); }
 
-        /** Setup events listener.
+        /**
+         * Setup events listener.
          *
          * @example
          * store.when()
          *      .productUpdated(product => updateUI(product))
-         *      .approved(transaction => store.finish(transaction));
+         *      .approved(transaction => transaction.verify())
+         *      .verified(receipt => receipt.finish());
          */
         when() {
             const ret: When = {
@@ -266,6 +273,13 @@ namespace CdvPurchase {
             return ret;
         }
 
+        startMonitor(transaction: Transaction, onChange: Callback<TransactionState>) {
+            this.transactionStateMonitors.start(transaction, onChange);
+        }
+
+        stopMonitor(transaction: Transaction, onChange: Callback<TransactionState>) {
+            this.transactionStateMonitors.stop(transaction, onChange);
+        }
 
         /** List of all active products */
         get products(): Product[] {
@@ -350,14 +364,26 @@ namespace CdvPurchase {
         }
 
         /** Request a payment */
-        async requestPayment(paymentRequest: PaymentRequest, additionalData?: AdditionalData): Promise<IError | undefined> {
+        requestPayment(paymentRequest: PaymentRequest, additionalData?: AdditionalData): PaymentRequestPromise {
             const adapter = this.adapters.findReady(paymentRequest.platform);
-            if (!adapter) return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + paymentRequest.platform + ')');
-            return adapter.requestPayment(paymentRequest, additionalData);
+            if (!adapter)
+                return PaymentRequestPromise.failed(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + paymentRequest.platform + ')');
+            const promise = new PaymentRequestPromise();
+            adapter.requestPayment(paymentRequest, additionalData).then(result => {
+                promise.trigger(result);
+                if (result instanceof Transaction) {
+                    const onStateChange = (state: TransactionState) => {
+                        promise.trigger(result);
+                        if (result.state === TransactionState.FINISHED) this.stopMonitor(result, onStateChange);
+                    }
+                    this.startMonitor(result, onStateChange);
+                }
+            });
+            return promise;
         }
 
         /** Verify a receipt or transacting with the receipt validation service. */
-        private async verify(receiptOrTransaction: Transaction | Receipt) {
+        private async verify(receiptOrTransaction: Receipt | Transaction) {
             this._validator.add(receiptOrTransaction);
 
             // Run validation after 50ms, so if the same receipt is to be validated multiple times it will just create one call.
