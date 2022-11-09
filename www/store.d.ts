@@ -414,7 +414,7 @@ declare namespace CdvPurchase {
         /**
          * Request a payment from the user
          */
-        requestPayment(payment: PaymentRequest, additionalData?: AdditionalData): Promise<undefined | IError>;
+        requestPayment(payment: PaymentRequest, additionalData?: AdditionalData): Promise<IError | Transaction | undefined>;
         /**
          * Open the platforms' subscription management interface.
          */
@@ -571,6 +571,38 @@ declare namespace CdvPurchase {
     }
 }
 declare namespace CdvPurchase {
+    class PaymentRequestPromise {
+        private failedCallbacks;
+        failed(callback: Callback<IError>): PaymentRequestPromise;
+        private initiatedCallbacks;
+        initiated(callback: Callback<Transaction>): PaymentRequestPromise;
+        private approvedCallbacks;
+        approved(callback: Callback<Transaction>): PaymentRequestPromise;
+        private finishedCallbacks;
+        finished(callback: Callback<Transaction>): PaymentRequestPromise;
+        private cancelledCallback;
+        cancelled(callback: Callback<void>): PaymentRequestPromise;
+        /** @internal */
+        trigger(argument?: IError | Transaction): PaymentRequestPromise;
+        /**
+         * Return a failed promise.
+         *
+         * @internal
+         */
+        static failed(code: ErrorCode, message: string): PaymentRequestPromise;
+        /**
+         * Return a failed promise.
+         *
+         * @internal
+         */
+        static cancelled(): PaymentRequestPromise;
+        /**
+         * Return an initiated transaction.
+         *
+         * @internal
+         */
+        static initiated(transaction: Transaction): PaymentRequestPromise;
+    }
     /**
      * Request for payment.
      *
@@ -666,7 +698,8 @@ declare namespace CdvPurchase {
     /** @internal */
     namespace Internal {
         interface ReceiptDecorator {
-            verify(receiptOrTransaction: Transaction | Receipt): Promise<void>;
+            verify(receipt: Receipt): Promise<void>;
+            finish(receipt: Receipt): Promise<void>;
         }
     }
     class Receipt {
@@ -677,6 +710,8 @@ declare namespace CdvPurchase {
         transactions: Transaction[];
         /** Verify a receipt */
         verify(): Promise<void>;
+        /** Finish all transactions in a receipt */
+        finish(): Promise<void>;
         /** @internal */
         constructor(options: {
             platform: Platform;
@@ -712,6 +747,7 @@ declare namespace CdvPurchase {
             get validator_privacy_policy(): PrivacyPolicyItem | PrivacyPolicyItem[] | undefined;
             getApplicationUsername(): string | undefined;
             get verifiedCallbacks(): Callbacks<VerifiedReceipt>;
+            finish(receipt: VerifiedReceipt): Promise<void>;
         }
         /** Handles communication with the remote receipt validation service */
         class Validator {
@@ -966,6 +1002,8 @@ declare namespace CdvPurchase {
         private errorCallbacks;
         /** Internal implementation of the receipt validation service integration */
         private _validator;
+        /** Monitor state changes for transactions */
+        private transactionStateMonitors;
         constructor();
         /**
          * Register a product.
@@ -1002,14 +1040,18 @@ declare namespace CdvPurchase {
         update(): Promise<void>;
         /** Register a callback to be called when the plugin is ready. */
         ready(cb: Callback<void>): void;
-        /** Setup events listener.
+        /**
+         * Setup events listener.
          *
          * @example
          * store.when()
          *      .productUpdated(product => updateUI(product))
-         *      .approved(transaction => store.finish(transaction));
+         *      .approved(transaction => transaction.verify())
+         *      .verified(receipt => receipt.finish());
          */
         when(): When;
+        startMonitor(transaction: Transaction, onChange: Callback<TransactionState>): void;
+        stopMonitor(transaction: Transaction, onChange: Callback<TransactionState>): void;
         /** List of all active products */
         get products(): Product[];
         /** Find a product from its id and platform */
@@ -1048,7 +1090,7 @@ declare namespace CdvPurchase {
         /** Place an order for a given offer */
         order(offer: Offer, additionalData?: AdditionalData): Promise<IError | undefined>;
         /** Request a payment */
-        requestPayment(paymentRequest: PaymentRequest, additionalData?: AdditionalData): Promise<IError | undefined>;
+        requestPayment(paymentRequest: PaymentRequest, additionalData?: AdditionalData): PaymentRequestPromise;
         /** Verify a receipt or transacting with the receipt validation service. */
         private verify;
         /** Finalize a transaction */
@@ -1129,9 +1171,30 @@ declare namespace CdvPurchase {
             /** Offer identifier, if known */
             offerId?: string;
         }[];
-        /** Finish a transaction */
+        /**
+         * Finish a transaction.
+         *
+         * When the application has delivered the product, it should finalizes the order.
+         * Only after that, money will be transferred to your account.
+         * This method ensures that no customers is charged for a product that couldn't be delivered.
+         *
+         * @example
+         * store.when()
+         *   .approved(transaction => transaction.verify())
+         *   .verified(receipt => receipt.finish())
+         */
         finish(): Promise<void>;
-        /** Verify a transaction */
+        /**
+         * Verify a transaction.
+         *
+         * This will trigger a call to the receipt validation service for the attached receipt.
+         * Once the receipt has been verified, you can finish the transaction.
+         *
+         * @example
+         * store.when()
+         *   .approved(transaction => transaction.verify())
+         *   .verified(receipt => receipt.finish())
+         */
         verify(): Promise<void>;
         /** @internal */
         constructor(platform: Platform, decorator: Internal.TransactionDecorator);
@@ -1201,6 +1264,20 @@ declare namespace CdvPurchase {
     }
 }
 declare namespace CdvPurchase {
+    namespace Internal {
+        class PromiseLike<T> {
+            resolved: boolean;
+            resolvedArgument?: T;
+            /** List of registered callbacks */
+            callbacks: Callback<T>[];
+            /** Add a callback to the list */
+            push(callback: Callback<T>): void;
+            /** Call all registered callbacks with the given value */
+            resolve(value: T): void;
+        }
+    }
+}
+declare namespace CdvPurchase {
     /**
      * Data provided to store.register()
      */
@@ -1261,6 +1338,20 @@ declare namespace CdvPurchase {
     }
 }
 declare namespace CdvPurchase {
+    /** @internal */
+    namespace Internal {
+        /** Helper class to monitor changes in transaction states */
+        class TransactionStateMonitors {
+            private monitors;
+            private findMonitors;
+            constructor(when: When);
+            private callOnChange;
+            start(transaction: Transaction, onChange: Callback<TransactionState>): void;
+            stop(transaction: Transaction, onChange: Callback<TransactionState>): void;
+        }
+    }
+}
+declare namespace CdvPurchase {
     namespace Internal {
         /** Analyze the list of local receipts. */
         class VerifiedReceipts {
@@ -1304,7 +1395,7 @@ declare namespace CdvPurchase {
             finish(transaction: Transaction): Promise<undefined | IError>;
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
-            requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
+            requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
         }
     }
@@ -1730,7 +1821,7 @@ declare namespace CdvPurchase {
         class BraintreeReceipt extends Receipt {
             dropInResult: DropIn.Result;
             paymentRequest: PaymentRequest;
-            constructor(paymentRequest: PaymentRequest, dropInResult: DropIn.Result, decorator: Internal.TransactionDecorator);
+            constructor(paymentRequest: PaymentRequest, dropInResult: DropIn.Result, decorator: Internal.TransactionDecorator & Internal.ReceiptDecorator);
             refresh(paymentRequest: PaymentRequest, dropInResult: DropIn.Result, decorator: Internal.TransactionDecorator): void;
         }
         class Adapter implements CdvPurchase.Adapter {
@@ -1756,7 +1847,7 @@ declare namespace CdvPurchase {
             finish(transaction: Transaction): Promise<undefined | IError>;
             manageSubscriptions(): Promise<IError | undefined>;
             private launchDropIn;
-            requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
+            requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             receiptValidationBody(receipt: BraintreeReceipt): Validator.Request.Body | undefined;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
         }
@@ -2394,7 +2485,7 @@ declare namespace CdvPurchase {
              */
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
             handleReceiptValidationResponse(receipt: CdvPurchase.Receipt, response: Validator.Response.Payload): Promise<void>;
-            requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
+            requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
         }
     }
@@ -3154,7 +3245,7 @@ declare namespace CdvPurchase {
             finish(transaction: Transaction): Promise<undefined | IError>;
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
-            requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
+            requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
             private reportActiveSubscription;
             static verify(receipt: Receipt, callback: Callback<Internal.ReceiptResponse>): void;
@@ -3259,7 +3350,7 @@ declare namespace CdvPurchase {
             finish(transaction: Transaction): Promise<undefined | IError>;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
-            requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<undefined | IError>;
+            requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
         }
     }
@@ -3777,6 +3868,15 @@ declare namespace CdvPurchase {
     }
 }
 declare namespace CdvPurchase {
+    /** @internal */
+    namespace Internal {
+        /**
+         * Set of function used to provide a nicer API (or more backward compatible)
+         */
+        interface VerifiedReceiptDecorator {
+            finish(receipt: VerifiedReceipt): Promise<void>;
+        }
+    }
     /** Receipt data as validated by the receipt validation server */
     class VerifiedReceipt {
         /** Platform this receipt originated from */
@@ -3811,13 +3911,15 @@ declare namespace CdvPurchase {
         /**
          * @internal
          */
-        constructor(receipt: Receipt, response: Validator.Response.SuccessPayload['data']);
+        constructor(receipt: Receipt, response: Validator.Response.SuccessPayload['data'], decorator: Internal.VerifiedReceiptDecorator);
         /**
          * Update the receipt content
          *
          * @internal
          */
         set(receipt: Receipt, response: Validator.Response.SuccessPayload['data']): void;
+        /** Finish all transactions in the receipt */
+        finish(): Promise<void>;
     }
     /** A purchase object returned by the receipt validator */
     interface VerifiedPurchase {

@@ -525,6 +525,86 @@ var CdvPurchase;
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
 (function (CdvPurchase) {
+    class PaymentRequestPromise {
+        constructor() {
+            this.failedCallbacks = new CdvPurchase.Internal.PromiseLike();
+            this.initiatedCallbacks = new CdvPurchase.Internal.PromiseLike();
+            this.approvedCallbacks = new CdvPurchase.Internal.PromiseLike();
+            this.finishedCallbacks = new CdvPurchase.Internal.PromiseLike();
+            this.cancelledCallback = new CdvPurchase.Internal.PromiseLike();
+        }
+        failed(callback) {
+            this.failedCallbacks.push(callback);
+            return this;
+        }
+        initiated(callback) {
+            this.initiatedCallbacks.push(callback);
+            return this;
+        }
+        approved(callback) {
+            this.approvedCallbacks.push(callback);
+            return this;
+        }
+        finished(callback) {
+            this.finishedCallbacks.push(callback);
+            return this;
+        }
+        cancelled(callback) {
+            this.cancelledCallback.push(callback);
+            return this;
+        }
+        /** @internal */
+        trigger(argument) {
+            if (!argument) {
+                this.cancelledCallback.resolve();
+            }
+            else if ('isError' in argument) {
+                this.failedCallbacks.resolve(argument);
+            }
+            else {
+                switch (argument.state) {
+                    case CdvPurchase.TransactionState.INITIATED:
+                        this.initiatedCallbacks.resolve(argument);
+                        break;
+                    case CdvPurchase.TransactionState.APPROVED:
+                        this.approvedCallbacks.resolve(argument);
+                        break;
+                    case CdvPurchase.TransactionState.FINISHED:
+                        this.finishedCallbacks.resolve(argument);
+                        break;
+                }
+            }
+            return this;
+        }
+        /**
+         * Return a failed promise.
+         *
+         * @internal
+         */
+        static failed(code, message) {
+            return new PaymentRequestPromise().trigger(CdvPurchase.storeError(code, message));
+        }
+        /**
+         * Return a failed promise.
+         *
+         * @internal
+         */
+        static cancelled() {
+            return new PaymentRequestPromise().trigger();
+        }
+        /**
+         * Return an initiated transaction.
+         *
+         * @internal
+         */
+        static initiated(transaction) {
+            return new PaymentRequestPromise().trigger(transaction);
+        }
+    }
+    CdvPurchase.PaymentRequestPromise = PaymentRequestPromise;
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
     class Receipt {
         /** @internal */
         constructor(options, decorator) {
@@ -532,9 +612,12 @@ var CdvPurchase;
             this.platform = options.platform;
             this.transactions = options.transactions;
             Object.defineProperty(this, 'verify', { 'enumerable': false, get() { return () => decorator.verify(this); } });
+            Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
         }
         /** Verify a receipt */
         async verify() { }
+        /** Finish all transactions in a receipt */
+        async finish() { }
         /** Return true if the receipt contains the given transaction */
         hasTransaction(value) {
             return !!this.transactions.find(t => t === value);
@@ -595,7 +678,7 @@ var CdvPurchase;
                     }
                 }
                 this.log.debug("Register a new  verified receipt.");
-                const newVR = new CdvPurchase.VerifiedReceipt(receipt, data);
+                const newVR = new CdvPurchase.VerifiedReceipt(receipt, data, this.controller);
                 this.verifiedReceipts.push(newVR);
                 return newVR;
             }
@@ -963,6 +1046,7 @@ var CdvPurchase;
                 approvedCallbacks: this.approvedCallbacks,
                 finishedCallbacks: this.finishedCallbacks,
             });
+            this.transactionStateMonitors = new CdvPurchase.Internal.TransactionStateMonitors(this.when());
             const store = this;
             this._validator = new CdvPurchase.Internal.Validator({
                 adapters: this.adapters,
@@ -971,6 +1055,7 @@ var CdvPurchase;
                 get validator() { return store.validator; },
                 get validator_privacy_policy() { return store.validator_privacy_policy; },
                 verifiedCallbacks: this.verifiedCallbacks,
+                finish: (receipt) => this.finish(receipt),
             }, this.log);
         }
         /**
@@ -1059,12 +1144,14 @@ var CdvPurchase;
         }
         /** Register a callback to be called when the plugin is ready. */
         ready(cb) { this._readyCallbacks.add(cb); }
-        /** Setup events listener.
+        /**
+         * Setup events listener.
          *
          * @example
          * store.when()
          *      .productUpdated(product => updateUI(product))
-         *      .approved(transaction => store.finish(transaction));
+         *      .approved(transaction => transaction.verify())
+         *      .verified(receipt => receipt.finish());
          */
         when() {
             const ret = {
@@ -1077,6 +1164,12 @@ var CdvPurchase;
                 verified: (cb) => (this.verifiedCallbacks.push(cb), ret),
             };
             return ret;
+        }
+        startMonitor(transaction, onChange) {
+            this.transactionStateMonitors.start(transaction, onChange);
+        }
+        stopMonitor(transaction, onChange) {
+            this.transactionStateMonitors.stop(transaction, onChange);
         }
         /** List of all active products */
         get products() {
@@ -1153,11 +1246,23 @@ var CdvPurchase;
             return ret;
         }
         /** Request a payment */
-        async requestPayment(paymentRequest, additionalData) {
+        requestPayment(paymentRequest, additionalData) {
             const adapter = this.adapters.findReady(paymentRequest.platform);
             if (!adapter)
-                return CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + paymentRequest.platform + ')');
-            return adapter.requestPayment(paymentRequest, additionalData);
+                return CdvPurchase.PaymentRequestPromise.failed(CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + paymentRequest.platform + ')');
+            const promise = new CdvPurchase.PaymentRequestPromise();
+            adapter.requestPayment(paymentRequest, additionalData).then(result => {
+                promise.trigger(result);
+                if (result instanceof CdvPurchase.Transaction) {
+                    const onStateChange = (state) => {
+                        promise.trigger(result);
+                        if (result.state === CdvPurchase.TransactionState.FINISHED)
+                            this.stopMonitor(result, onStateChange);
+                    };
+                    this.startMonitor(result, onStateChange);
+                }
+            });
+            return promise;
         }
         /** Verify a receipt or transacting with the receipt validation service. */
         async verify(receiptOrTransaction) {
@@ -1233,10 +1338,31 @@ var CdvPurchase;
             Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
             Object.defineProperty(this, 'verify', { 'enumerable': false, get() { return () => decorator.verify(this); } });
         }
-        /** Finish a transaction */
-        async finish() { }
-        /** Verify a transaction */
-        async verify() { }
+        /**
+         * Finish a transaction.
+         *
+         * When the application has delivered the product, it should finalizes the order.
+         * Only after that, money will be transferred to your account.
+         * This method ensures that no customers is charged for a product that couldn't be delivered.
+         *
+         * @example
+         * store.when()
+         *   .approved(transaction => transaction.verify())
+         *   .verified(receipt => receipt.finish())
+         */
+        async finish() { } // actual implementation in the constructor
+        /**
+         * Verify a transaction.
+         *
+         * This will trigger a call to the receipt validation service for the attached receipt.
+         * Once the receipt has been verified, you can finish the transaction.
+         *
+         * @example
+         * store.when()
+         *   .approved(transaction => transaction.verify())
+         *   .verified(receipt => receipt.finish())
+         */
+        async verify() { } // actual implementation in the constructor
     }
     CdvPurchase.Transaction = Transaction;
 })(CdvPurchase || (CdvPurchase = {}));
@@ -1364,6 +1490,36 @@ var CdvPurchase;
 (function (CdvPurchase) {
     let Internal;
     (function (Internal) {
+        class PromiseLike {
+            constructor() {
+                this.resolved = false;
+                /** List of registered callbacks */
+                this.callbacks = [];
+            }
+            /** Add a callback to the list */
+            push(callback) {
+                if (this.resolved)
+                    setTimeout(callback, 0, this.resolvedArgument);
+                else
+                    this.callbacks.push(callback);
+            }
+            /** Call all registered callbacks with the given value */
+            resolve(value) {
+                if (this.resolved)
+                    return; // do not resolve twice
+                this.resolved = true;
+                this.resolvedArgument = value;
+                this.callbacks.forEach(cb => setTimeout(cb, 0, value));
+                this.callbacks = [];
+            }
+        }
+        Internal.PromiseLike = PromiseLike;
+    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Internal;
+    (function (Internal) {
         class RegisteredProducts {
             constructor() {
                 this.list = [];
@@ -1439,6 +1595,35 @@ var CdvPurchase;
             }
         }
         Internal.Retry = Retry;
+    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    /** @internal */
+    let Internal;
+    (function (Internal) {
+        /** Helper class to monitor changes in transaction states */
+        class TransactionStateMonitors {
+            constructor(when) {
+                this.monitors = [];
+                when
+                    .approved(transaction => this.callOnChange(transaction))
+                    .finished(transaction => this.callOnChange(transaction));
+            }
+            findMonitors(transaction) {
+                return this.monitors.filter(monitor => monitor.transaction === transaction);
+            }
+            callOnChange(transaction) {
+                this.findMonitors(transaction).forEach(monitor => monitor.onChange(transaction.state));
+            }
+            start(transaction, onChange) {
+                this.monitors.push({ transaction, onChange });
+            }
+            stop(transaction, onChange) {
+                this.monitors = this.monitors.filter(m => m.transaction !== transaction || m.onChange !== onChange);
+            }
+        }
+        Internal.TransactionStateMonitors = TransactionStateMonitors;
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -1721,9 +1906,8 @@ var CdvPurchase;
                 if ((_a = additionalData === null || additionalData === void 0 ? void 0 : additionalData.braintree) === null || _a === void 0 ? void 0 : _a.dropInRequest) {
                     // User provided a full DropInRequest, just passing it through
                     const response = await this.launchDropIn(additionalData.braintree.dropInRequest);
-                    if (!response || (('code' in response) && ('message' in response))) {
-                        return response;
-                    }
+                    if (!dropInResponseIsOK(response))
+                        return dropInResponseError(this.log, response);
                     dropInResult = response;
                 }
                 /*
@@ -1767,12 +1951,8 @@ var CdvPurchase;
                 else {
                     // No other payment method as the moment...
                     const response = await this.launchDropIn({});
-                    if (!response || (('code' in response) && ('message' in response))) {
-                        // Failed
-                        this.log.warn("launchDropIn failed: " + JSON.stringify(response));
-                        return response;
-                    }
-                    // Success
+                    if (!dropInResponseIsOK(response))
+                        return dropInResponseError(this.log, response);
                     dropInResult = response;
                 }
                 this.log.info("launchDropIn success: " + JSON.stringify({ paymentRequest, dropInResult }));
@@ -1788,6 +1968,7 @@ var CdvPurchase;
                     this.receipts.push(receipt);
                 }
                 this.context.listener.receiptsUpdated(CdvPurchase.Platform.BRAINTREE, [receipt]);
+                return receipt.transactions[0];
             }
             receiptValidationBody(receipt) {
                 var _a, _b, _c, _d;
@@ -1833,6 +2014,20 @@ var CdvPurchase;
         function isBraintreeReceipt(receipt) {
             return receipt.platform === CdvPurchase.Platform.BRAINTREE;
         }
+        const dropInResponseIsOK = (response) => {
+            return (!!response) && !('code' in response && 'message' in response);
+        };
+        const dropInResponseError = (log, response) => {
+            if (!response) {
+                log.warn("launchDropIn failed: no response");
+                return CdvPurchase.storeError(CdvPurchase.ErrorCode.BAD_RESPONSE, 'Braintree failed to launch drop in');
+            }
+            else {
+                // Failed
+                log.warn("launchDropIn failed: " + JSON.stringify(response));
+                return response;
+            }
+        };
     })(Braintree = CdvPurchase.Braintree || (CdvPurchase.Braintree = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -3207,6 +3402,7 @@ var CdvPurchase;
                 setTimeout(() => {
                     this.context.listener.receiptsUpdated(platform, [receipt]);
                 }, 400);
+                return transaction;
             }
             async manageSubscriptions() {
                 alert('Pseudo subscription management interface. Close it when you are done.');
@@ -4039,7 +4235,7 @@ var CdvPurchase;
         /**
          * @internal
          */
-        constructor(receipt, response) {
+        constructor(receipt, response, decorator) {
             var _a;
             this.id = response.id;
             this.sourceReceipt = receipt;
@@ -4047,6 +4243,7 @@ var CdvPurchase;
             this.latestReceipt = response.latest_receipt;
             this.nativeTransactions = [response.transaction];
             this.warning = response.warning;
+            Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
         }
         /** Platform this receipt originated from */
         get platform() { return this.sourceReceipt.platform; }
@@ -4064,6 +4261,8 @@ var CdvPurchase;
             this.nativeTransactions = [response.transaction];
             this.warning = response.warning;
         }
+        /** Finish all transactions in the receipt */
+        async finish() { }
     }
     CdvPurchase.VerifiedReceipt = VerifiedReceipt;
 })(CdvPurchase || (CdvPurchase = {}));

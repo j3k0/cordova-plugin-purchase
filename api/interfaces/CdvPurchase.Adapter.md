@@ -228,7 +228,7 @@ ___
 
 ### requestPayment
 
-▸ **requestPayment**(`payment`, `additionalData?`): `Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+▸ **requestPayment**(`payment`, `additionalData?`): `Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md) \| [`Transaction`](../classes/CdvPurchase.Transaction.md)\>
 
 Request a payment from the user
 
@@ -241,4 +241,4 @@ Request a payment from the user
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+`Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md) \| [`Transaction`](../classes/CdvPurchase.Transaction.md)\>

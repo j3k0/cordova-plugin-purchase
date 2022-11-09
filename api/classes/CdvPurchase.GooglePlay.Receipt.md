@@ -19,6 +19,7 @@
 
 ### Methods
 
+- [finish](CdvPurchase.GooglePlay.Receipt.md#finish)
 - [hasTransaction](CdvPurchase.GooglePlay.Receipt.md#hastransaction)
 - [lastTransaction](CdvPurchase.GooglePlay.Receipt.md#lasttransaction)
 - [refreshPurchase](CdvPurchase.GooglePlay.Receipt.md#refreshpurchase)
@@ -65,6 +66,22 @@ List of transactions contained in the receipt, ordered by date ascending.
 [Receipt](CdvPurchase.Receipt.md).[transactions](CdvPurchase.Receipt.md#transactions)
 
 ## Methods
+
+### finish
+
+▸ **finish**(): `Promise`<`void`\>
+
+Finish all transactions in a receipt
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Inherited from
+
+[Receipt](CdvPurchase.Receipt.md).[finish](CdvPurchase.Receipt.md#finish)
+
+___
 
 ### hasTransaction
 

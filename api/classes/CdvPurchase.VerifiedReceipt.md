@@ -19,6 +19,10 @@ Receipt data as validated by the receipt validation server
 
 - [platform](CdvPurchase.VerifiedReceipt.md#platform)
 
+### Methods
+
+- [finish](CdvPurchase.VerifiedReceipt.md#finish)
+
 ## Properties
 
 ### collection
@@ -83,3 +87,15 @@ Platform this receipt originated from
 #### Returns
 
 [`Platform`](../enums/CdvPurchase.Platform.md)
+
+## Methods
+
+### finish
+
+▸ **finish**(): `Promise`<`void`\>
+
+Finish all transactions in the receipt
+
+#### Returns
+
+`Promise`<`void`\>

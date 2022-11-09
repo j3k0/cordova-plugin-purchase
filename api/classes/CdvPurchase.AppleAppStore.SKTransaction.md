@@ -222,7 +222,19 @@ Transaction identifier.
 
 ▸ **finish**(): `Promise`<`void`\>
 
-Finish a transaction
+Finish a transaction.
+
+When the application has delivered the product, it should finalizes the order.
+Only after that, money will be transferred to your account.
+This method ensures that no customers is charged for a product that couldn't be delivered.
+
+**`Example`**
+
+```ts
+store.when()
+  .approved(transaction => transaction.verify())
+  .verified(receipt => receipt.finish())
+```
 
 #### Returns
 
@@ -238,7 +250,18 @@ ___
 
 ▸ **verify**(): `Promise`<`void`\>
 
-Verify a transaction
+Verify a transaction.
+
+This will trigger a call to the receipt validation service for the attached receipt.
+Once the receipt has been verified, you can finish the transaction.
+
+**`Example`**
+
+```ts
+store.when()
+  .approved(transaction => transaction.verify())
+  .verified(receipt => receipt.finish())
+```
 
 #### Returns
 

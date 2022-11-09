@@ -45,6 +45,8 @@ Entry class of the plugin.
 - [register](CdvPurchase.Store.md#register)
 - [requestPayment](CdvPurchase.Store.md#requestpayment)
 - [restorePurchases](CdvPurchase.Store.md#restorepurchases)
+- [startMonitor](CdvPurchase.Store.md#startmonitor)
+- [stopMonitor](CdvPurchase.Store.md#stopmonitor)
 - [update](CdvPurchase.Store.md#update)
 - [when](CdvPurchase.Store.md#when)
 - [defaultPlatform](CdvPurchase.Store.md#defaultplatform)
@@ -483,7 +485,7 @@ ___
 
 ### requestPayment
 
-▸ **requestPayment**(`paymentRequest`, `additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **requestPayment**(`paymentRequest`, `additionalData?`): [`PaymentRequestPromise`](CdvPurchase.PaymentRequestPromise.md)
 
 Request a payment
 
@@ -496,7 +498,7 @@ Request a payment
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+[`PaymentRequestPromise`](CdvPurchase.PaymentRequestPromise.md)
 
 ___
 
@@ -507,6 +509,40 @@ ___
 #### Returns
 
 `Promise`<`void`\>
+
+___
+
+### startMonitor
+
+▸ **startMonitor**(`transaction`, `onChange`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `transaction` | [`Transaction`](CdvPurchase.Transaction.md) |
+| `onChange` | [`Callback`](../modules/CdvPurchase.md#callback)<[`TransactionState`](../enums/CdvPurchase.TransactionState.md)\> |
+
+#### Returns
+
+`void`
+
+___
+
+### stopMonitor
+
+▸ **stopMonitor**(`transaction`, `onChange`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `transaction` | [`Transaction`](CdvPurchase.Transaction.md) |
+| `onChange` | [`Callback`](../modules/CdvPurchase.md#callback)<[`TransactionState`](../enums/CdvPurchase.TransactionState.md)\> |
+
+#### Returns
+
+`void`
 
 ___
 
@@ -533,7 +569,8 @@ Setup events listener.
 ```ts
 store.when()
      .productUpdated(product => updateUI(product))
-     .approved(transaction => store.finish(transaction));
+     .approved(transaction => transaction.verify())
+     .verified(receipt => receipt.finish());
 ```
 
 #### Returns

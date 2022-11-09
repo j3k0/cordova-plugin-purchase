@@ -23,6 +23,7 @@
 
 ### Methods
 
+- [finish](CdvPurchase.Braintree.BraintreeReceipt.md#finish)
 - [hasTransaction](CdvPurchase.Braintree.BraintreeReceipt.md#hastransaction)
 - [lastTransaction](CdvPurchase.Braintree.BraintreeReceipt.md#lasttransaction)
 - [refresh](CdvPurchase.Braintree.BraintreeReceipt.md#refresh)
@@ -40,7 +41,7 @@
 | :------ | :------ |
 | `paymentRequest` | [`PaymentRequest`](../interfaces/CdvPurchase.PaymentRequest.md) |
 | `dropInResult` | [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md) |
-| `decorator` | `TransactionDecorator` |
+| `decorator` | `TransactionDecorator` & `ReceiptDecorator` |
 
 #### Overrides
 
@@ -83,6 +84,22 @@ List of transactions contained in the receipt, ordered by date ascending.
 [Receipt](CdvPurchase.Receipt.md).[transactions](CdvPurchase.Receipt.md#transactions)
 
 ## Methods
+
+### finish
+
+▸ **finish**(): `Promise`<`void`\>
+
+Finish all transactions in a receipt
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Inherited from
+
+[Receipt](CdvPurchase.Receipt.md).[finish](CdvPurchase.Receipt.md#finish)
+
+___
 
 ### hasTransaction
 

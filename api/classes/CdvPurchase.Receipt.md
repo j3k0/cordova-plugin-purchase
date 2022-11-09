@@ -21,6 +21,7 @@
 
 ### Methods
 
+- [finish](CdvPurchase.Receipt.md#finish)
 - [hasTransaction](CdvPurchase.Receipt.md#hastransaction)
 - [lastTransaction](CdvPurchase.Receipt.md#lasttransaction)
 - [verify](CdvPurchase.Receipt.md#verify)
@@ -42,6 +43,18 @@ ___
 List of transactions contained in the receipt, ordered by date ascending.
 
 ## Methods
+
+### finish
+
+▸ **finish**(): `Promise`<`void`\>
+
+Finish all transactions in a receipt
+
+#### Returns
+
+`Promise`<`void`\>
+
+___
 
 ### hasTransaction
 

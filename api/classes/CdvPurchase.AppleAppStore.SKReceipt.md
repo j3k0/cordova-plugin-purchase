@@ -17,6 +17,7 @@
 
 ### Methods
 
+- [finish](CdvPurchase.AppleAppStore.SKReceipt.md#finish)
 - [hasTransaction](CdvPurchase.AppleAppStore.SKReceipt.md#hastransaction)
 - [lastTransaction](CdvPurchase.AppleAppStore.SKReceipt.md#lasttransaction)
 - [verify](CdvPurchase.AppleAppStore.SKReceipt.md#verify)
@@ -46,6 +47,22 @@ List of transactions contained in the receipt, ordered by date ascending.
 [Receipt](CdvPurchase.Receipt.md).[transactions](CdvPurchase.Receipt.md#transactions)
 
 ## Methods
+
+### finish
+
+▸ **finish**(): `Promise`<`void`\>
+
+Finish all transactions in a receipt
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Inherited from
+
+[Receipt](CdvPurchase.Receipt.md).[finish](CdvPurchase.Receipt.md#finish)
+
+___
 
 ### hasTransaction
 

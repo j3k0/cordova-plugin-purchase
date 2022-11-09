@@ -44,6 +44,7 @@ const {store, ProductType, Platform, LogLevel} = CdvPurchase;
 - [Iaptic](../classes/CdvPurchase.Iaptic.md)
 - [Logger](../classes/CdvPurchase.Logger.md)
 - [Offer](../classes/CdvPurchase.Offer.md)
+- [PaymentRequestPromise](../classes/CdvPurchase.PaymentRequestPromise.md)
 - [Product](../classes/CdvPurchase.Product.md)
 - [Receipt](../classes/CdvPurchase.Receipt.md)
 - [Store](../classes/CdvPurchase.Store.md)
