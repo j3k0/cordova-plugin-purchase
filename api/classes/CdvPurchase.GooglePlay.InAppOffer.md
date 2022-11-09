@@ -2,6 +2,8 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[GooglePlay](../modules/CdvPurchase.GooglePlay.md).InAppOffer
 
+One of the available offers to purchase a given product
+
 ## Hierarchy
 
 - [`Offer`](CdvPurchase.Offer.md)
@@ -9,10 +11,6 @@
   ↳ **`InAppOffer`**
 
 ## Table of contents
-
-### Constructors
-
-- [constructor](CdvPurchase.GooglePlay.InAppOffer.md#constructor)
 
 ### Properties
 
@@ -22,28 +20,14 @@
 
 ### Accessors
 
+- [canPurchase](CdvPurchase.GooglePlay.InAppOffer.md#canpurchase)
 - [platform](CdvPurchase.GooglePlay.InAppOffer.md#platform)
 - [productId](CdvPurchase.GooglePlay.InAppOffer.md#productid)
 - [productType](CdvPurchase.GooglePlay.InAppOffer.md#producttype)
 
-## Constructors
+### Methods
 
-### constructor
-
-• **new InAppOffer**(`options`)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `options` | `Object` |
-| `options.id` | `string` |
-| `options.pricingPhases` | [`PricingPhase`](../interfaces/CdvPurchase.PricingPhase.md)[] |
-| `options.product` | [`Product`](CdvPurchase.Product.md) |
-
-#### Inherited from
-
-[Offer](CdvPurchase.Offer.md).[constructor](CdvPurchase.Offer.md#constructor)
+- [order](CdvPurchase.GooglePlay.InAppOffer.md#order)
 
 ## Properties
 
@@ -77,9 +61,27 @@ ___
 
 ## Accessors
 
+### canPurchase
+
+• `get` **canPurchase**(): `boolean`
+
+true if the offer can be purchased.
+
+#### Returns
+
+`boolean`
+
+#### Inherited from
+
+CdvPurchase.Offer.canPurchase
+
+___
+
 ### platform
 
 • `get` **platform**(): [`Platform`](../enums/CdvPurchase.Platform.md)
+
+Platform this offer is available from
 
 #### Returns
 
@@ -95,6 +97,8 @@ ___
 
 • `get` **productId**(): `string`
 
+Identifier of the product related to this offer
+
 #### Returns
 
 `string`
@@ -109,6 +113,8 @@ ___
 
 • `get` **productType**(): [`ProductType`](../enums/CdvPurchase.ProductType.md)
 
+Type of the product related to this offer
+
 #### Returns
 
 [`ProductType`](../enums/CdvPurchase.ProductType.md)
@@ -116,3 +122,31 @@ ___
 #### Inherited from
 
 CdvPurchase.Offer.productType
+
+## Methods
+
+### order
+
+▸ **order**(`additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Initiate a purchase of this offer.
+
+**`Example`**
+
+```ts
+store.get("my-product").getOffer().order();
+```
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `additionalData?` | [`AdditionalData`](../interfaces/CdvPurchase.AdditionalData.md) |
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Inherited from
+
+[Offer](CdvPurchase.Offer.md).[order](CdvPurchase.Offer.md#order)

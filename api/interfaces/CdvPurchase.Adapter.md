@@ -2,6 +2,8 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).Adapter
 
+Adapter for a payment or in-app purchase platform
+
 ## Implemented by
 
 - [`Adapter`](../classes/CdvPurchase.AppleAppStore.Adapter.md)

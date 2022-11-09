@@ -23,7 +23,13 @@
 
 ### constructor
 
-• **new Products**()
+• **new Products**(`decorator`)
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `decorator` | `ProductDecorator` & `OfferDecorator` |
 
 ## Properties
 

@@ -12,10 +12,6 @@
 
 ## Table of contents
 
-### Constructors
-
-- [constructor](CdvPurchase.Transaction.md#constructor)
-
 ### Properties
 
 - [amountMicros](CdvPurchase.Transaction.md#amountmicros)
@@ -34,17 +30,10 @@
 - [state](CdvPurchase.Transaction.md#state)
 - [transactionId](CdvPurchase.Transaction.md#transactionid)
 
-## Constructors
+### Methods
 
-### constructor
-
-• **new Transaction**(`platform`)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `platform` | [`Platform`](../enums/CdvPurchase.Platform.md) |
+- [finish](CdvPurchase.Transaction.md#finish)
+- [verify](CdvPurchase.Transaction.md#verify)
 
 ## Properties
 
@@ -114,7 +103,7 @@ ___
 
 ### products
 
-• **products**: { `offerId?`: `string` ; `productId`: `string`  }[] = `[]`
+• **products**: { `id`: `string` ; `offerId?`: `string`  }[] = `[]`
 
 Purchased products
 
@@ -168,3 +157,27 @@ ___
 • **transactionId**: `string` = `''`
 
 Transaction identifier.
+
+## Methods
+
+### finish
+
+▸ **finish**(): `Promise`<`void`\>
+
+Finish a transaction
+
+#### Returns
+
+`Promise`<`void`\>
+
+___
+
+### verify
+
+▸ **verify**(): `Promise`<`void`\>
+
+Verify a transaction
+
+#### Returns
+
+`Promise`<`void`\>

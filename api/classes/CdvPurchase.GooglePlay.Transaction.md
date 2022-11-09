@@ -35,24 +35,27 @@
 
 ### Methods
 
+- [finish](CdvPurchase.GooglePlay.Transaction.md#finish)
 - [refresh](CdvPurchase.GooglePlay.Transaction.md#refresh)
+- [verify](CdvPurchase.GooglePlay.Transaction.md#verify)
 - [toState](CdvPurchase.GooglePlay.Transaction.md#tostate)
 
 ## Constructors
 
 ### constructor
 
-• **new Transaction**(`purchase`)
+• **new Transaction**(`purchase`, `decorator`)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `purchase` | [`Purchase`](../interfaces/CdvPurchase.GooglePlay.Bridge.Purchase.md) |
+| `decorator` | `TransactionDecorator` |
 
 #### Overrides
 
-[Transaction](CdvPurchase.Transaction.md).[constructor](CdvPurchase.Transaction.md#constructor)
+CdvPurchase.Transaction.constructor
 
 ## Properties
 
@@ -160,7 +163,7 @@ ___
 
 ### products
 
-• **products**: { `offerId?`: `string` ; `productId`: `string`  }[] = `[]`
+• **products**: { `id`: `string` ; `offerId?`: `string`  }[] = `[]`
 
 Purchased products
 
@@ -245,6 +248,22 @@ Transaction identifier.
 
 ## Methods
 
+### finish
+
+▸ **finish**(): `Promise`<`void`\>
+
+Finish a transaction
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Inherited from
+
+[Transaction](CdvPurchase.Transaction.md).[finish](CdvPurchase.Transaction.md#finish)
+
+___
+
 ### refresh
 
 ▸ **refresh**(`purchase`): `void`
@@ -260,6 +279,22 @@ Refresh the value in the transaction based on the native purchase update
 #### Returns
 
 `void`
+
+___
+
+### verify
+
+▸ **verify**(): `Promise`<`void`\>
+
+Verify a transaction
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Inherited from
+
+[Transaction](CdvPurchase.Transaction.md).[verify](CdvPurchase.Transaction.md#verify)
 
 ___
 

@@ -2,6 +2,8 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).ErrorCode
 
+Error codes
+
 ## Table of contents
 
 ### Enumeration Members

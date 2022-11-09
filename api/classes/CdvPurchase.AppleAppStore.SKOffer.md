@@ -2,6 +2,8 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[AppleAppStore](../modules/CdvPurchase.AppleAppStore.md).SKOffer
 
+One of the available offers to purchase a given product
+
 ## Hierarchy
 
 - [`Offer`](CdvPurchase.Offer.md)
@@ -10,10 +12,6 @@
 
 ## Table of contents
 
-### Constructors
-
-- [constructor](CdvPurchase.AppleAppStore.SKOffer.md#constructor)
-
 ### Properties
 
 - [id](CdvPurchase.AppleAppStore.SKOffer.md#id)
@@ -21,28 +19,14 @@
 
 ### Accessors
 
+- [canPurchase](CdvPurchase.AppleAppStore.SKOffer.md#canpurchase)
 - [platform](CdvPurchase.AppleAppStore.SKOffer.md#platform)
 - [productId](CdvPurchase.AppleAppStore.SKOffer.md#productid)
 - [productType](CdvPurchase.AppleAppStore.SKOffer.md#producttype)
 
-## Constructors
+### Methods
 
-### constructor
-
-• **new SKOffer**(`options`)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `options` | `Object` |
-| `options.id` | `string` |
-| `options.pricingPhases` | [`PricingPhase`](../interfaces/CdvPurchase.PricingPhase.md)[] |
-| `options.product` | [`Product`](CdvPurchase.Product.md) |
-
-#### Inherited from
-
-[Offer](CdvPurchase.Offer.md).[constructor](CdvPurchase.Offer.md#constructor)
+- [order](CdvPurchase.AppleAppStore.SKOffer.md#order)
 
 ## Properties
 
@@ -70,9 +54,27 @@ Pricing phases
 
 ## Accessors
 
+### canPurchase
+
+• `get` **canPurchase**(): `boolean`
+
+true if the offer can be purchased.
+
+#### Returns
+
+`boolean`
+
+#### Inherited from
+
+Offer.canPurchase
+
+___
+
 ### platform
 
 • `get` **platform**(): [`Platform`](../enums/CdvPurchase.Platform.md)
+
+Platform this offer is available from
 
 #### Returns
 
@@ -88,6 +90,8 @@ ___
 
 • `get` **productId**(): `string`
 
+Identifier of the product related to this offer
+
 #### Returns
 
 `string`
@@ -102,6 +106,8 @@ ___
 
 • `get` **productType**(): [`ProductType`](../enums/CdvPurchase.ProductType.md)
 
+Type of the product related to this offer
+
 #### Returns
 
 [`ProductType`](../enums/CdvPurchase.ProductType.md)
@@ -109,3 +115,31 @@ ___
 #### Inherited from
 
 Offer.productType
+
+## Methods
+
+### order
+
+▸ **order**(`additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Initiate a purchase of this offer.
+
+**`Example`**
+
+```ts
+store.get("my-product").getOffer().order();
+```
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `additionalData?` | [`AdditionalData`](../interfaces/CdvPurchase.AdditionalData.md) |
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Inherited from
+
+[Offer](CdvPurchase.Offer.md).[order](CdvPurchase.Offer.md#order)

@@ -16,8 +16,6 @@ help:
 	@echo ""
 	@echo "extra targets"
 	@echo "    todo .............. Find TODO in the code."
-	@echo "    doc-api ........... Generate API documentation into doc/api.md"
-	@echo "    doc-contrib ....... Generate Contributor Guide into doc/contributor-guide.md"
 	@echo "    typedoc ........... Generate public API reference into api/"
 	@echo "    typedoc-dev ....... Generate developer API reference into api-dev/"
 	@echo "    compile ........... Just compile the typescript code into javascript"
@@ -81,23 +79,7 @@ typedoc-dev:
 	@echo "- Updating api-dev/"
 	@npm run typedoc-dev
 
-doc-api: build typedoc typedoc-dev
-	@echo "- Updating doc/api.md"
-	@echo "# API Documentation" > doc/api.md
-	@echo >> doc/api.md
-	@echo "*(generated from source files using \`make doc-api)\`*" >> doc/api.md
-	@echo >> doc/api.md
-	@cat www/store.js | grep -E "[\w^]//:" | cut -d: -f2- | cut -d\  -f2- >> doc/api.md
-
-doc-contrib: build
-	@echo "- Updating doc/contributor-guide.md"
-	@echo "# Contributor Guide" > doc/contributor-guide.md
-	@echo >> doc/contributor-guide.md
-	@echo "*(generated from source files using \`make doc-contrib)\`*" >> doc/contributor-guide.md
-	@echo >> doc/contributor-guide.md
-	@cat www/store.js | grep -E "[\w^]//!" | cut -d! -f2- | cut -d\  -f2- >> doc/contributor-guide.md
-
-doc: doc-api doc-contrib
+doc: typedoc typedoc-dev
 
 clean:
 	@find . -name '*~' -exec rm '{}' ';'

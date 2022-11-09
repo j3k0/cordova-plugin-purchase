@@ -4,6 +4,25 @@
 
 Request for payment.
 
+Use with [requestPayment](../classes/CdvPurchase.Store.md#requestpayment) to initiate a payment for a given amount.
+
+**`Example`**
+
+```ts
+const {store, Platform, ErrorCode} = CdvPurchase;
+ store.requestPayment({
+   platform: Platform.BRAINTREE,
+   productIds: ['my-product-1', 'my-product-2'],
+   amountMicros: 1990000,
+   currency: 'USD',
+   description: 'This this the description of the payment request',
+ }).then((result) => {
+   if (result && result.isError && result.code !== ErrorCode.PAYMENT_CANCELLED) {
+     alert(result.message);
+   }
+ });
+```
+
 ## Table of contents
 
 ### Properties
@@ -23,7 +42,7 @@ Request for payment.
 
 • **amountMicros**: `number`
 
-Amount to pay.
+Amount to pay. Required.
 
 ___
 
@@ -40,6 +59,8 @@ ___
 • `Optional` **currency**: `string`
 
 Currency.
+
+Some payment platforms only support one currency thus do not require this field.
 
 ___
 

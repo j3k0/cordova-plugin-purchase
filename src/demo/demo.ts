@@ -9,7 +9,7 @@ namespace CdvPurchase
 
         function demo() {
 
-            const store = CdvPurchase.Store.instance;
+            const store = CdvPurchase.store;
 
             // shortcuts
             const ProductType = CdvPurchase.ProductType;
@@ -32,7 +32,7 @@ namespace CdvPurchase
             store.when()
                 .approved(transaction => store.verify(transaction))
                 .verified(receipt => store.finish(receipt))
-                .finished(transaction => console.log('Products owned: ' + transaction.products.map(p => p.productId).join(',')))
+                .finished(transaction => console.log('Products owned: ' + transaction.products.map(p => p.id).join(',')))
                 .receiptUpdated(r => updatePurchases(r))
                 .productUpdated(p => updateUI(p));
 
@@ -51,6 +51,13 @@ namespace CdvPurchase
                 });
 
             function updatePurchases(receipt: CdvPurchase.Receipt) {
+                receipt.transactions.forEach(transaction => {
+                    transaction.products.forEach(trProduct => {
+                        const product = store.get(trProduct.id);
+                        if (product && product.owned) {
+                        }
+                    });
+                });
             }
 
             function updateUI(product: CdvPurchase.Product) {
@@ -62,10 +69,7 @@ namespace CdvPurchase
             }
 
             function placeOrder() {
-
-                const offer = store.get("subscription1")?.getOffer();
-                if (!offer) return;
-                store.order(offer)
+                store.get("subscription1")?.getOffer()?.order()
                     .then(result => {
                         if (result) {
                             console.log("ERROR. Failed to place order. " + result.code + ": " + result.message);
@@ -76,6 +80,36 @@ namespace CdvPurchase
                     });
             }
 
+            function manageSubscriptions() {
+                store.manageSubscriptions(Platform.GOOGLE_PLAY);
+            }
+
         }
     }
+}
+
+
+function tutorial2() {
+
+const { store, ProductType, Platform } = CdvPurchase;
+store.register([{
+    type: ProductType.NON_CONSUMABLE,
+    id: 'test-non-consumable',
+    platform: Platform.TEST,
+}]);
+
+store.when()
+    .approved(transaction => {
+        unlockFeature();
+        transaction.finish();
+    });
+store.initialize([Platform.TEST]);
+
+function unlockFeature() {
+    alert('full version unlocked');
+}
+
+function buy() {
+    CdvPurchase.store.get('test-non-consumable').getOffer().order();
+}
 }

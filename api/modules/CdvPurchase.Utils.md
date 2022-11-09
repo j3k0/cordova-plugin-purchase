@@ -11,9 +11,6 @@
 ### Functions
 
 - [ajax](CdvPurchase.Utils.md#ajax)
-- [callExternal](CdvPurchase.Utils.md#callexternal)
-- [debounce](CdvPurchase.Utils.md#debounce)
-- [delay](CdvPurchase.Utils.md#delay)
 - [formatBillingCycleEN](CdvPurchase.Utils.md#formatbillingcycleen)
 - [formatDurationEN](CdvPurchase.Utils.md#formatdurationen)
 - [md5](CdvPurchase.Utils.md#md5)
@@ -55,84 +52,23 @@ Only supports JSON requests.
 
 ___
 
-### callExternal
-
-▸ **callExternal**<`F`\>(`log`, `name`, `callback`, ...`args`): `void`
-
-Calls an user-registered callback.
-
-Won't throw exceptions, only logs errors.
-
-**`Example`**
-
-```js
-Utils.callExternal(store.log, "ajax.error", options.error, 404, "Not found");
-```
-
-#### Type parameters
-
-| Name | Type |
-| :------ | :------ |
-| `F` | extends `Function` = `Function` |
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `log` | [`Logger`](../classes/CdvPurchase.Logger.md) | - |
-| `name` | `string` | a short string describing the callback |
-| `callback` | `undefined` \| `F` | the callback to call (won't fail if undefined) |
-| `...args` | `any` | - |
-
-#### Returns
-
-`void`
-
-___
-
-### debounce
-
-▸ **debounce**(`fn`, `wait`): () => `void`
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `fn` | () => `void` |
-| `wait` | `number` |
-
-#### Returns
-
-`fn`
-
-▸ (): `void`
-
-##### Returns
-
-`void`
-
-___
-
-### delay
-
-▸ **delay**(`fn`, `wait`): `number`
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `fn` | () => `void` |
-| `wait` | `number` |
-
-#### Returns
-
-`number`
-
-___
-
 ### formatBillingCycleEN
 
 ▸ **formatBillingCycleEN**(`pricingPhase`): `string`
+
+Generate a plain english version of the billing cycle in a pricing phase.
+
+Example outputs:
+
+- "3x 1 month": for `FINITE_RECURRING`, 3 cycles, period "P1M"
+- "for 1 year": for `NON_RECURRING`, period "P1Y"
+- "every week": for `INFINITE_RECURRING, period "P1W"
+
+**`Example`**
+
+```ts
+Utils.formatBillingCycleEN(offer.pricingPhases[0])
+```
 
 #### Parameters
 

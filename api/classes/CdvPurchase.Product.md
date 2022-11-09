@@ -14,10 +14,6 @@ Product definition from a store
 
 ## Table of contents
 
-### Constructors
-
-- [constructor](CdvPurchase.Product.md#constructor)
-
 ### Properties
 
 - [description](CdvPurchase.Product.md#description)
@@ -29,23 +25,13 @@ Product definition from a store
 
 ### Accessors
 
+- [canPurchase](CdvPurchase.Product.md#canpurchase)
+- [owned](CdvPurchase.Product.md#owned)
 - [pricing](CdvPurchase.Product.md#pricing)
 
 ### Methods
 
 - [getOffer](CdvPurchase.Product.md#getoffer)
-
-## Constructors
-
-### constructor
-
-• **new Product**(`p`)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `p` | [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md) |
 
 ## Properties
 
@@ -96,6 +82,30 @@ ___
 Type of product (subscription, consumable, etc.)
 
 ## Accessors
+
+### canPurchase
+
+• `get` **canPurchase**(): `boolean`
+
+Returns true if the product can be purchased.
+
+#### Returns
+
+`boolean`
+
+___
+
+### owned
+
+• `get` **owned**(): `boolean`
+
+Returns true if the product is owned.
+
+#### Returns
+
+`boolean`
+
+___
 
 ### pricing
 

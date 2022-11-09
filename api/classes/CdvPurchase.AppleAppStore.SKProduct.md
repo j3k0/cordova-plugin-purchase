@@ -12,10 +12,6 @@ Product definition from a store
 
 ## Table of contents
 
-### Constructors
-
-- [constructor](CdvPurchase.AppleAppStore.SKProduct.md#constructor)
-
 ### Properties
 
 - [description](CdvPurchase.AppleAppStore.SKProduct.md#description)
@@ -27,27 +23,13 @@ Product definition from a store
 
 ### Accessors
 
+- [canPurchase](CdvPurchase.AppleAppStore.SKProduct.md#canpurchase)
+- [owned](CdvPurchase.AppleAppStore.SKProduct.md#owned)
 - [pricing](CdvPurchase.AppleAppStore.SKProduct.md#pricing)
 
 ### Methods
 
 - [getOffer](CdvPurchase.AppleAppStore.SKProduct.md#getoffer)
-
-## Constructors
-
-### constructor
-
-• **new SKProduct**(`p`)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `p` | [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md) |
-
-#### Inherited from
-
-[Product](CdvPurchase.Product.md).[constructor](CdvPurchase.Product.md#constructor)
 
 ## Properties
 
@@ -122,6 +104,38 @@ Type of product (subscription, consumable, etc.)
 [Product](CdvPurchase.Product.md).[type](CdvPurchase.Product.md#type)
 
 ## Accessors
+
+### canPurchase
+
+• `get` **canPurchase**(): `boolean`
+
+Returns true if the product can be purchased.
+
+#### Returns
+
+`boolean`
+
+#### Inherited from
+
+Product.canPurchase
+
+___
+
+### owned
+
+• `get` **owned**(): `boolean`
+
+Returns true if the product is owned.
+
+#### Returns
+
+`boolean`
+
+#### Inherited from
+
+Product.owned
+
+___
 
 ### pricing
 

@@ -10,10 +10,6 @@
 
 ## Table of contents
 
-### Constructors
-
-- [constructor](CdvPurchase.AppleAppStore.SKReceipt.md#constructor)
-
 ### Properties
 
 - [platform](CdvPurchase.AppleAppStore.SKReceipt.md#platform)
@@ -23,24 +19,7 @@
 
 - [hasTransaction](CdvPurchase.AppleAppStore.SKReceipt.md#hastransaction)
 - [lastTransaction](CdvPurchase.AppleAppStore.SKReceipt.md#lasttransaction)
-
-## Constructors
-
-### constructor
-
-• **new SKReceipt**(`options`)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `options` | `Object` |
-| `options.platform` | [`Platform`](../enums/CdvPurchase.Platform.md) |
-| `options.transactions` | [`Transaction`](CdvPurchase.Transaction.md)[] |
-
-#### Inherited from
-
-[Receipt](CdvPurchase.Receipt.md).[constructor](CdvPurchase.Receipt.md#constructor)
+- [verify](CdvPurchase.AppleAppStore.SKReceipt.md#verify)
 
 ## Properties
 
@@ -60,7 +39,7 @@ ___
 
 • **transactions**: [`Transaction`](CdvPurchase.Transaction.md)[]
 
-List of transactions contained in the receipt
+List of transactions contained in the receipt, ordered by date ascending.
 
 #### Inherited from
 
@@ -71,6 +50,8 @@ List of transactions contained in the receipt
 ### hasTransaction
 
 ▸ **hasTransaction**(`value`): `boolean`
+
+Return true if the receipt contains the given transaction
 
 #### Parameters
 
@@ -92,6 +73,8 @@ ___
 
 ▸ **lastTransaction**(): [`Transaction`](CdvPurchase.Transaction.md)
 
+Return the last transaction in this receipt
+
 #### Returns
 
 [`Transaction`](CdvPurchase.Transaction.md)
@@ -99,3 +82,19 @@ ___
 #### Inherited from
 
 [Receipt](CdvPurchase.Receipt.md).[lastTransaction](CdvPurchase.Receipt.md#lasttransaction)
+
+___
+
+### verify
+
+▸ **verify**(): `Promise`<`void`\>
+
+Verify a receipt
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Inherited from
+
+[Receipt](CdvPurchase.Receipt.md).[verify](CdvPurchase.Receipt.md#verify)

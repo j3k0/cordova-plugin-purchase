@@ -2,6 +2,8 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[WindowsStore](../modules/CdvPurchase.WindowsStore.md).Adapter
 
+Adapter for a payment or in-app purchase platform
+
 ## Implements
 
 - [`Adapter`](../interfaces/CdvPurchase.Adapter.md)

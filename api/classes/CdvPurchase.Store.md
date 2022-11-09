@@ -12,7 +12,6 @@ Entry class of the plugin.
 
 ### Properties
 
-- [adapters](CdvPurchase.Store.md#adapters)
 - [applicationUsername](CdvPurchase.Store.md#applicationusername)
 - [log](CdvPurchase.Store.md#log)
 - [validator](CdvPurchase.Store.md#validator)
@@ -27,16 +26,15 @@ Entry class of the plugin.
 - [products](CdvPurchase.Store.md#products)
 - [verifiedPurchases](CdvPurchase.Store.md#verifiedpurchases)
 - [verifiedReceipts](CdvPurchase.Store.md#verifiedreceipts)
-- [instance](CdvPurchase.Store.md#instance)
 
 ### Methods
 
-- [canPurchase](CdvPurchase.Store.md#canpurchase)
 - [error](CdvPurchase.Store.md#error)
 - [findInLocalReceipts](CdvPurchase.Store.md#findinlocalreceipts)
 - [findInVerifiedReceipts](CdvPurchase.Store.md#findinverifiedreceipts)
 - [finish](CdvPurchase.Store.md#finish)
 - [get](CdvPurchase.Store.md#get)
+- [getAdapter](CdvPurchase.Store.md#getadapter)
 - [getApplicationUsername](CdvPurchase.Store.md#getapplicationusername)
 - [initialize](CdvPurchase.Store.md#initialize)
 - [manageSubscriptions](CdvPurchase.Store.md#managesubscriptions)
@@ -48,7 +46,6 @@ Entry class of the plugin.
 - [requestPayment](CdvPurchase.Store.md#requestpayment)
 - [restorePurchases](CdvPurchase.Store.md#restorepurchases)
 - [update](CdvPurchase.Store.md#update)
-- [verify](CdvPurchase.Store.md#verify)
 - [when](CdvPurchase.Store.md#when)
 - [defaultPlatform](CdvPurchase.Store.md#defaultplatform)
 
@@ -59,14 +56,6 @@ Entry class of the plugin.
 • **new Store**()
 
 ## Properties
-
-### adapters
-
-• **adapters**: `Adapters`
-
-Payment platform adapters
-
-___
 
 ### applicationUsername
 
@@ -90,6 +79,31 @@ ___
 
 URL or implementation of the receipt validation service
 
+**`Example`**
+
+Define the validator as a string
+```ts
+CdvPurchase.store.validator = "https://validator.iaptic.com/v1/validate?appName=test"
+```
+
+**`Example`**
+
+Define the validator as a function
+```ts
+CdvPurchase.store.validator = (receipt, callback) => {
+  callback({
+    ok: true,
+    data: {
+      // see CdvPurchase.Validator.Response.Payload for details
+    }
+  })
+}
+```
+
+**`See`**
+
+[Payload](../modules/CdvPurchase.Validator.Response.md#payload)
+
 ___
 
 ### validator\_privacy\_policy
@@ -103,13 +117,35 @@ When adding information to receipt validation requests, those can serve differen
  - analytics
  - tracking
 
+Make sure the value your select is in line with your application's privacy policy and your users' tracking preference.
+
+**`Example`**
+
+```ts
+CdvPurchase.store.validator_privacy_policy = [
+  'fraud', 'support', 'analytics', 'tracking'
+]
+```
+
 ___
 
 ### verbosity
 
 • **verbosity**: [`LogLevel`](../enums/CdvPurchase.LogLevel.md) = `LogLevel.ERROR`
 
-Verbosity level for log
+Verbosity level used by the plugin logger
+
+Set to:
+
+ - LogLevel.QUIET or 0 to disable all logging (default)
+ - LogLevel.ERROR or 1 to show only error messages
+ - LogLevel.WARNING or 2 to show warnings and errors
+ - LogLevel.INFO or 3 to also show information messages
+ - LogLevel.DEBUG or 4 to enable internal debugging messages.
+
+**`See`**
+
+[LogLevel](../enums/CdvPurchase.LogLevel.md)
 
 ___
 
@@ -179,37 +215,7 @@ Those receipt contains more information and are generally more up-to-date than t
 
 [`VerifiedReceipt`](CdvPurchase.VerifiedReceipt.md)[]
 
-___
-
-### instance
-
-• `Static` `get` **instance**(): [`Store`](CdvPurchase.Store.md)
-
-The singleton store object
-
-#### Returns
-
-[`Store`](CdvPurchase.Store.md)
-
 ## Methods
-
-### canPurchase
-
-▸ **canPurchase**(`offer`): `boolean`
-
-Return true if a product or offer can be purchased
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `offer` | [`Product`](CdvPurchase.Product.md) \| [`Offer`](CdvPurchase.Offer.md) |
-
-#### Returns
-
-`boolean`
-
-___
 
 ### error
 
@@ -300,11 +306,35 @@ Find a product from its id and platform
 
 ___
 
+### getAdapter
+
+▸ **getAdapter**(`platform`): `undefined` \| [`Adapter`](../interfaces/CdvPurchase.Adapter.md)
+
+Retrieve a platform adapter.
+
+The platform adapter has to have been initialized before.
+
+**`See`**
+
+[initialize](CdvPurchase.Store.md#initialize)
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `platform` | [`Platform`](../enums/CdvPurchase.Platform.md) |
+
+#### Returns
+
+`undefined` \| [`Adapter`](../interfaces/CdvPurchase.Adapter.md)
+
+___
+
 ### getApplicationUsername
 
 ▸ **getApplicationUsername**(): `undefined` \| `string`
 
-Get the application username as a string by either calling or returning Store.applicationUsername
+Get the application username as a string by either calling or returning [applicationUsername](CdvPurchase.Store.md#applicationusername)
 
 #### Returns
 
@@ -373,9 +403,9 @@ Return true if a product is owned
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `product` | [`Product`](CdvPurchase.Product.md) |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `product` | `string` \| { `id`: `string` ; `platform?`: [`Platform`](../enums/CdvPurchase.Platform.md)  } | The product object or identifier of the product. |
 
 #### Returns
 
@@ -419,7 +449,25 @@ ___
 
 ▸ **register**(`product`): `void`
 
-Register a product
+Register a product.
+
+**`Example`**
+
+```ts
+store.register([{
+      id: 'subscription1',
+      type: ProductType.PAID_SUBSCRIPTION,
+      platform: Platform.APPLE_APPSTORE,
+  }, {
+      id: 'subscription1',
+      type: ProductType.PAID_SUBSCRIPTION,
+      platform: Platform.GOOGLE_PLAY,
+  }, {
+      id: 'consumable1',
+      type: ProductType.CONSUMABLE,
+      platform: Platform.BRAINTREE,
+  }]);
+```
 
 #### Parameters
 
@@ -467,24 +515,6 @@ ___
 ▸ **update**(): `Promise`<`void`\>
 
 Call to refresh the price of products and status of purchases.
-
-#### Returns
-
-`Promise`<`void`\>
-
-___
-
-### verify
-
-▸ **verify**(`receiptOrTransaction`): `Promise`<`void`\>
-
-Verify a receipt or transacting with the receipt validation service.
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `receiptOrTransaction` | [`Receipt`](CdvPurchase.Receipt.md) \| [`Transaction`](CdvPurchase.Transaction.md) |
 
 #### Returns
 

@@ -2,7 +2,18 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).Iaptic
 
-Helper to integrate with https://www.iaptic.com
+Integrate with https://www.iaptic.com/
+
+**`Example`**
+
+```ts
+const iaptic = new CdvPurchase.Iaptic({
+  url: 'https://validator.iaptic.com',
+  appName: 'test',
+  apiKey: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+});
+store.validator = iaptic.validator;
+```
 
 ## Table of contents
 
@@ -51,6 +62,23 @@ ___
 
 • `get` **braintreeClientTokenProvider**(): [`ClientTokenProvider`](../modules/CdvPurchase.Braintree.md#clienttokenprovider)
 
+Provides a client token generated on iaptic's servers
+
+Can be passed to the Braintree Adapter at initialization.
+
+**`Example`**
+
+```ts
+store.initialize([
+  {
+    platform: Platform.BRAINTREE,
+    options: {
+      clientTokenProvider: iaptic.braintreeClientTokenProvider
+    }
+  }
+]);
+```
+
 #### Returns
 
 [`ClientTokenProvider`](../modules/CdvPurchase.Braintree.md#clienttokenprovider)
@@ -60,6 +88,8 @@ ___
 ### validator
 
 • `get` **validator**(): `string`
+
+Validator URL
 
 #### Returns
 

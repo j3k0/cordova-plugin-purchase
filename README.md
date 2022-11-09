@@ -105,7 +105,7 @@ If you wish to learn more about In-App Purchases (IAP), you'll find a good overv
 
 All platforms share the same concepts, so they are a good reads in all cases.
 
-To ease the beginning of your journey into the intimidating world of In-App Purchase with Cordova, we wrote a guide which hopefully will help you get things done: https://purchase.cordova.fovea.cc/
+To ease the beginning of your journey into the intimidating world of In-App Purchase with Cordova, we wrote a guide which hopefully will help you get things done: [Guide: Cordova In-App Purchase Plugin - v13.0](https://purchase.cordova.fovea.cc/v/v13.0/)
 
 In short, you'll have two main tasks to accomplish:
 

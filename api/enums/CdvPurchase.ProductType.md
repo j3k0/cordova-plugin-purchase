@@ -2,7 +2,7 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).ProductType
 
-Types of In-App-Products
+Types of In-App Products
 
 ## Table of contents
 

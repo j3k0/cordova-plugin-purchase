@@ -12,79 +12,46 @@ Test Adapter and related classes.
 
 ### Variables
 
-- [CONSUMABLE\_FAILING](CdvPurchase.Test.md#consumable_failing)
-- [CONSUMABLE\_OK](CdvPurchase.Test.md#consumable_ok)
-- [NON\_CONSUMABLE\_OK](CdvPurchase.Test.md#non_consumable_ok)
-- [PAID\_SUBSCRIPTION\_ACTIVE](CdvPurchase.Test.md#paid_subscription_active)
-- [PAID\_SUBSCRIPTION\_OK](CdvPurchase.Test.md#paid_subscription_ok)
-- [TEST\_PRODUCTS](CdvPurchase.Test.md#test_products)
+- [testProducts](CdvPurchase.Test.md#testproducts)
+- [testProductsArray](CdvPurchase.Test.md#testproductsarray)
 
 ## Variables
 
-### CONSUMABLE\_FAILING
+### testProducts
 
-• `Const` **CONSUMABLE\_FAILING**: [`Product`](../classes/CdvPurchase.Product.md)
+• `Const` **testProducts**: `Object`
 
-A consumable product for which the purchase will always fail.
+Definition of the test products.
 
-id: "test-consumable-fail"
-type: ProductType.CONSUMABLE
+#### Type declaration
 
-___
-
-### CONSUMABLE\_OK
-
-• `Const` **CONSUMABLE\_OK**: [`Product`](../classes/CdvPurchase.Product.md)
-
-A valid consumable product.
-
-id: "test-consumable"
-type: ProductType.CONSUMABLE
-
-___
-
-### NON\_CONSUMABLE\_OK
-
-• `Const` **NON\_CONSUMABLE\_OK**: [`Product`](../classes/CdvPurchase.Product.md)
-
-A valid non-consumable product.
-
-id: "test-non-consumable"
-type: ProductType.NON_CONSUMABLE
-
-___
-
-### PAID\_SUBSCRIPTION\_ACTIVE
-
-• `Const` **PAID\_SUBSCRIPTION\_ACTIVE**: [`Product`](../classes/CdvPurchase.Product.md)
-
-A paid-subscription that is already active when the app starts.
-
-It behaves as if the user subscribed on a different device. It will renew forever.
-
-id: "test-subscription-active"
-type: ProductType.PAID_SUBSCRIPTION
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `CONSUMABLE` | { `id`: `string` = 'test-consumable'; `platform`: [`Platform`](../enums/CdvPurchase.Platform.md) ; `type`: [`ProductType`](../enums/CdvPurchase.ProductType.md) = ProductType.CONSUMABLE } | A valid consumable product.  - id: "test-consumable" - type: ProductType.CONSUMABLE |
+| `CONSUMABLE.id` | `string` | - |
+| `CONSUMABLE.platform` | [`Platform`](../enums/CdvPurchase.Platform.md) | - |
+| `CONSUMABLE.type` | [`ProductType`](../enums/CdvPurchase.ProductType.md) | - |
+| `CONSUMABLE_FAILING` | { `id`: `string` = 'test-consumable-fail'; `platform`: [`Platform`](../enums/CdvPurchase.Platform.md) ; `type`: [`ProductType`](../enums/CdvPurchase.ProductType.md) = ProductType.CONSUMABLE } | A consumable product for which the purchase will always fail.  - id: "test-consumable-fail" - type: ProductType.CONSUMABLE |
+| `CONSUMABLE_FAILING.id` | `string` | - |
+| `CONSUMABLE_FAILING.platform` | [`Platform`](../enums/CdvPurchase.Platform.md) | - |
+| `CONSUMABLE_FAILING.type` | [`ProductType`](../enums/CdvPurchase.ProductType.md) | - |
+| `NON_CONSUMABLE` | { `id`: `string` = 'test-non-consumable'; `platform`: [`Platform`](../enums/CdvPurchase.Platform.md) ; `type`: [`ProductType`](../enums/CdvPurchase.ProductType.md) = ProductType.NON\_CONSUMABLE } | A valid non-consumable product.  - id: "test-non-consumable" - type: ProductType.NON_CONSUMABLE |
+| `NON_CONSUMABLE.id` | `string` | - |
+| `NON_CONSUMABLE.platform` | [`Platform`](../enums/CdvPurchase.Platform.md) | - |
+| `NON_CONSUMABLE.type` | [`ProductType`](../enums/CdvPurchase.ProductType.md) | - |
+| `PAID_SUBSCRIPTION` | { `id`: `string` = 'test-subscription'; `platform`: [`Platform`](../enums/CdvPurchase.Platform.md) ; `type`: [`ProductType`](../enums/CdvPurchase.ProductType.md) = ProductType.PAID\_SUBSCRIPTION } | A paid-subscription that auto-renews for the duration of the session.  This subscription has a free trial period, that renews every week, 3 times. It then costs $4.99 per month.  - id: "test-subscription" - type: ProductType.PAID_SUBSCRIPTION |
+| `PAID_SUBSCRIPTION.id` | `string` | - |
+| `PAID_SUBSCRIPTION.platform` | [`Platform`](../enums/CdvPurchase.Platform.md) | - |
+| `PAID_SUBSCRIPTION.type` | [`ProductType`](../enums/CdvPurchase.ProductType.md) | - |
+| `PAID_SUBSCRIPTION_ACTIVE` | { `id`: `string` = 'test-subscription-active'; `platform`: [`Platform`](../enums/CdvPurchase.Platform.md) ; `type`: [`ProductType`](../enums/CdvPurchase.ProductType.md) = ProductType.PAID\_SUBSCRIPTION } | A paid-subscription that is already active when the app starts.  It behaves as if the user subscribed on a different device. It will renew forever.  - id: "test-subscription-active" - type: ProductType.PAID_SUBSCRIPTION |
+| `PAID_SUBSCRIPTION_ACTIVE.id` | `string` | - |
+| `PAID_SUBSCRIPTION_ACTIVE.platform` | [`Platform`](../enums/CdvPurchase.Platform.md) | - |
+| `PAID_SUBSCRIPTION_ACTIVE.type` | [`ProductType`](../enums/CdvPurchase.ProductType.md) | - |
 
 ___
 
-### PAID\_SUBSCRIPTION\_OK
+### testProductsArray
 
-• `Const` **PAID\_SUBSCRIPTION\_OK**: [`Product`](../classes/CdvPurchase.Product.md)
+• `Const` **testProductsArray**: [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md)[]
 
-A paid-subscription that auto-renews for the duration of the session.
-
-This subscription has a free trial period, that renews every week, 3 times.
-It then costs $4.99 per month.
-
-id: "test-subscription"
-type: ProductType.PAID_SUBSCRIPTION
-
-___
-
-### TEST\_PRODUCTS
-
-• `Const` **TEST\_PRODUCTS**: [`Product`](../classes/CdvPurchase.Product.md)[]
-
-List of all recognized test products for the Test Adapter.
-
-Register those products at startup with `store.register()` to activate them.
+List of test products definitions as an array.

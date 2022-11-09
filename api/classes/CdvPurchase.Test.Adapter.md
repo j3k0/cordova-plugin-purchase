@@ -10,7 +10,7 @@ The list of supported In-App Products
 
 **`See`**
 
-[TEST_PRODUCTS](../modules/CdvPurchase.Test.md#test_products)
+Test.TEST_PRODUCTS
 
 ## Implements
 

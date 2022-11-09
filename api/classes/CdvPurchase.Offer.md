@@ -2,6 +2,8 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).Offer
 
+One of the available offers to purchase a given product
+
 ## Hierarchy
 
 - **`Offer`**
@@ -14,10 +16,6 @@
 
 ## Table of contents
 
-### Constructors
-
-- [constructor](CdvPurchase.Offer.md#constructor)
-
 ### Properties
 
 - [id](CdvPurchase.Offer.md#id)
@@ -25,24 +23,14 @@
 
 ### Accessors
 
+- [canPurchase](CdvPurchase.Offer.md#canpurchase)
 - [platform](CdvPurchase.Offer.md#platform)
 - [productId](CdvPurchase.Offer.md#productid)
 - [productType](CdvPurchase.Offer.md#producttype)
 
-## Constructors
+### Methods
 
-### constructor
-
-• **new Offer**(`options`)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `options` | `Object` |
-| `options.id` | `string` |
-| `options.pricingPhases` | [`PricingPhase`](../interfaces/CdvPurchase.PricingPhase.md)[] |
-| `options.product` | [`Product`](CdvPurchase.Product.md) |
+- [order](CdvPurchase.Offer.md#order)
 
 ## Properties
 
@@ -62,9 +50,23 @@ Pricing phases
 
 ## Accessors
 
+### canPurchase
+
+• `get` **canPurchase**(): `boolean`
+
+true if the offer can be purchased.
+
+#### Returns
+
+`boolean`
+
+___
+
 ### platform
 
 • `get` **platform**(): [`Platform`](../enums/CdvPurchase.Platform.md)
+
+Platform this offer is available from
 
 #### Returns
 
@@ -76,6 +78,8 @@ ___
 
 • `get` **productId**(): `string`
 
+Identifier of the product related to this offer
+
 #### Returns
 
 `string`
@@ -86,6 +90,32 @@ ___
 
 • `get` **productType**(): [`ProductType`](../enums/CdvPurchase.ProductType.md)
 
+Type of the product related to this offer
+
 #### Returns
 
 [`ProductType`](../enums/CdvPurchase.ProductType.md)
+
+## Methods
+
+### order
+
+▸ **order**(`additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Initiate a purchase of this offer.
+
+**`Example`**
+
+```ts
+store.get("my-product").getOffer().order();
+```
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `additionalData?` | [`AdditionalData`](../interfaces/CdvPurchase.AdditionalData.md) |
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>

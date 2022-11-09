@@ -26,12 +26,13 @@
 - [hasTransaction](CdvPurchase.Braintree.BraintreeReceipt.md#hastransaction)
 - [lastTransaction](CdvPurchase.Braintree.BraintreeReceipt.md#lasttransaction)
 - [refresh](CdvPurchase.Braintree.BraintreeReceipt.md#refresh)
+- [verify](CdvPurchase.Braintree.BraintreeReceipt.md#verify)
 
 ## Constructors
 
 ### constructor
 
-• **new BraintreeReceipt**(`paymentRequest`, `dropInResult`)
+• **new BraintreeReceipt**(`paymentRequest`, `dropInResult`, `decorator`)
 
 #### Parameters
 
@@ -39,10 +40,11 @@
 | :------ | :------ |
 | `paymentRequest` | [`PaymentRequest`](../interfaces/CdvPurchase.PaymentRequest.md) |
 | `dropInResult` | [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md) |
+| `decorator` | `TransactionDecorator` |
 
 #### Overrides
 
-[Receipt](CdvPurchase.Receipt.md).[constructor](CdvPurchase.Receipt.md#constructor)
+Receipt.constructor
 
 ## Properties
 
@@ -74,7 +76,7 @@ ___
 
 • **transactions**: [`Transaction`](CdvPurchase.Transaction.md)[]
 
-List of transactions contained in the receipt
+List of transactions contained in the receipt, ordered by date ascending.
 
 #### Inherited from
 
@@ -85,6 +87,8 @@ List of transactions contained in the receipt
 ### hasTransaction
 
 ▸ **hasTransaction**(`value`): `boolean`
+
+Return true if the receipt contains the given transaction
 
 #### Parameters
 
@@ -106,6 +110,8 @@ ___
 
 ▸ **lastTransaction**(): [`Transaction`](CdvPurchase.Transaction.md)
 
+Return the last transaction in this receipt
+
 #### Returns
 
 [`Transaction`](CdvPurchase.Transaction.md)
@@ -118,7 +124,7 @@ ___
 
 ### refresh
 
-▸ **refresh**(`paymentRequest`, `dropInResult`): `void`
+▸ **refresh**(`paymentRequest`, `dropInResult`, `decorator`): `void`
 
 #### Parameters
 
@@ -126,7 +132,24 @@ ___
 | :------ | :------ |
 | `paymentRequest` | [`PaymentRequest`](../interfaces/CdvPurchase.PaymentRequest.md) |
 | `dropInResult` | [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md) |
+| `decorator` | `TransactionDecorator` |
 
 #### Returns
 
 `void`
+
+___
+
+### verify
+
+▸ **verify**(): `Promise`<`void`\>
+
+Verify a receipt
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Inherited from
+
+[Receipt](CdvPurchase.Receipt.md).[verify](CdvPurchase.Receipt.md#verify)

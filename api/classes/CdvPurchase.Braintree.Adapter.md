@@ -2,6 +2,8 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[Braintree](../modules/CdvPurchase.Braintree.md).Adapter
 
+Adapter for a payment or in-app purchase platform
+
 ## Implements
 
 - [`Adapter`](../interfaces/CdvPurchase.Adapter.md)

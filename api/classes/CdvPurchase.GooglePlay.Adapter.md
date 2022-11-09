@@ -2,6 +2,8 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[GooglePlay](../modules/CdvPurchase.GooglePlay.md).Adapter
 
+Adapter for a payment or in-app purchase platform
+
 ## Implements
 
 - [`Adapter`](../interfaces/CdvPurchase.Adapter.md)

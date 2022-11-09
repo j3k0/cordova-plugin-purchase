@@ -54,7 +54,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `verbosity` | [`VerbosityProvider`](../interfaces/CdvPurchase.VerbosityProvider.md) |
+| `verbosity` | `VerbosityProvider` |
 | `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\> |
 
 #### Returns

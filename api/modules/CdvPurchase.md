@@ -1,6 +1,18 @@
 # Namespace: CdvPurchase
 
-cordova-plugin-purchase global namespace
+Namespace for the cordova-plugin-purchase plugin.
+
+All classes, enumerations and variables defined by the plugin are in this namespace.
+
+Throughout the documentation, in order to keep examples readable, we omit the `CdvPurchase` prefix.
+
+When you see, for example `ProductType.PAID_SUBSCRIPTION`, it refers to `CdvPurchase.ProductType.PAID_SUBSCRIPTION`.
+
+In the files that interact with the plugin, I recommend creating those shortcuts (and more if needed):
+
+```ts
+const {store, ProductType, Platform, LogLevel} = CdvPurchase;
+```
 
 ## Table of contents
 
@@ -29,12 +41,10 @@ cordova-plugin-purchase global namespace
 
 ### Classes
 
-- [Callbacks](../classes/CdvPurchase.Callbacks.md)
 - [Iaptic](../classes/CdvPurchase.Iaptic.md)
 - [Logger](../classes/CdvPurchase.Logger.md)
 - [Offer](../classes/CdvPurchase.Offer.md)
 - [Product](../classes/CdvPurchase.Product.md)
-- [ReadyCallbacks](../classes/CdvPurchase.ReadyCallbacks.md)
 - [Receipt](../classes/CdvPurchase.Receipt.md)
 - [Store](../classes/CdvPurchase.Store.md)
 - [Transaction](../classes/CdvPurchase.Transaction.md)
@@ -43,22 +53,20 @@ cordova-plugin-purchase global namespace
 ### Interfaces
 
 - [Adapter](../interfaces/CdvPurchase.Adapter.md)
-- [AdapterListener](../interfaces/CdvPurchase.AdapterListener.md)
 - [AdditionalData](../interfaces/CdvPurchase.AdditionalData.md)
+- [Console](../interfaces/CdvPurchase.Console.md)
 - [IError](../interfaces/CdvPurchase.IError.md)
 - [IRegisterProduct](../interfaces/CdvPurchase.IRegisterProduct.md)
 - [IapticConfig](../interfaces/CdvPurchase.IapticConfig.md)
 - [PaymentRequest](../interfaces/CdvPurchase.PaymentRequest.md)
 - [PostalAddress](../interfaces/CdvPurchase.PostalAddress.md)
 - [PricingPhase](../interfaces/CdvPurchase.PricingPhase.md)
-- [VerbosityProvider](../interfaces/CdvPurchase.VerbosityProvider.md)
 - [VerifiedPurchase](../interfaces/CdvPurchase.VerifiedPurchase.md)
 - [When](../interfaces/CdvPurchase.When.md)
 
 ### Type Aliases
 
 - [Callback](CdvPurchase.md#callback)
-- [IErrorCallback](CdvPurchase.md#ierrorcallback)
 - [IPeriodUnit](CdvPurchase.md#iperiodunit)
 - [PlatformWithOptions](CdvPurchase.md#platformwithoptions)
 - [PrivacyPolicyItem](CdvPurchase.md#privacypolicyitem)
@@ -67,10 +75,6 @@ cordova-plugin-purchase global namespace
 
 - [PLUGIN\_VERSION](CdvPurchase.md#plugin_version)
 - [store](CdvPurchase.md#store)
-
-### Functions
-
-- [storeError](CdvPurchase.md#storeerror)
 
 ## Type Aliases
 
@@ -102,35 +106,23 @@ Callback
 
 ___
 
-### IErrorCallback
-
-Ƭ **IErrorCallback**: (`err?`: [`IError`](../interfaces/CdvPurchase.IError.md)) => `void`
-
-#### Type declaration
-
-▸ (`err?`): `void`
-
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `err?` | [`IError`](../interfaces/CdvPurchase.IError.md) |
-
-##### Returns
-
-`void`
-
-___
-
 ### IPeriodUnit
 
 Ƭ **IPeriodUnit**: ``"Minute"`` \| ``"Hour"`` \| ``"Day"`` \| ``"Week"`` \| ``"Month"`` \| ``"Year"``
+
+Unit for measuring durations
 
 ___
 
 ### PlatformWithOptions
 
 Ƭ **PlatformWithOptions**: { `options`: [`AdapterOptions`](../interfaces/CdvPurchase.Braintree.AdapterOptions.md) ; `platform`: [`BRAINTREE`](../enums/CdvPurchase.Platform.md#braintree)  } \| { `platform`: [`GOOGLE_PLAY`](../enums/CdvPurchase.Platform.md#google_play)  } \| { `platform`: [`APPLE_APPSTORE`](../enums/CdvPurchase.Platform.md#apple_appstore)  } \| { `platform`: [`TEST`](../enums/CdvPurchase.Platform.md#test)  } \| { `platform`: [`WINDOWS_STORE`](../enums/CdvPurchase.Platform.md#windows_store)  }
+
+Used to initialize a platform with some options
+
+**`See`**
+
+[initialize](../classes/CdvPurchase.Store.md#initialize)
 
 ___
 
@@ -144,25 +136,12 @@ ___
 
 • `Const` **PLUGIN\_VERSION**: ``"13.0.0"``
 
+Current release number of the plugin.
+
 ___
 
 ### store
 
 • **store**: [`Store`](../classes/CdvPurchase.Store.md)
 
-## Functions
-
-### storeError
-
-▸ **storeError**(`code`, `message`): [`IError`](../interfaces/CdvPurchase.IError.md)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `code` | [`ErrorCode`](../enums/CdvPurchase.ErrorCode.md) |
-| `message` | `string` |
-
-#### Returns
-
-[`IError`](../interfaces/CdvPurchase.IError.md)
+The global store object.

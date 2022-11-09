@@ -4,9 +4,9 @@
 
 ## Table of contents
 
-### Constructors
+### Properties
 
-- [constructor](CdvPurchase.Logger.md#constructor)
+- [console](CdvPurchase.Logger.md#console)
 
 ### Methods
 
@@ -17,24 +17,39 @@
 - [logCallbackException](CdvPurchase.Logger.md#logcallbackexception)
 - [warn](CdvPurchase.Logger.md#warn)
 
-## Constructors
+## Properties
 
-### constructor
+### console
 
-• **new Logger**(`store`, `prefix?`)
+▪ `Static` **console**: [`Console`](../interfaces/CdvPurchase.Console.md) = `window.console`
 
-#### Parameters
+Console object used to display log lines.
 
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `store` | [`VerbosityProvider`](../interfaces/CdvPurchase.VerbosityProvider.md) | `undefined` |
-| `prefix` | `string` | `''` |
+It can be replaced by your implementation if you want to, for example, send logs to a remote server.
+
+**`Example`**
+
+```ts
+Logger.console = {
+  log: (message) => { remoteLog('LOG', message); }
+  warn: (message) => { remoteLog('WARN', message); }
+  error: (message) => { remoteLog('ERROR', message); }
+}
+```
 
 ## Methods
 
 ### child
 
 ▸ **child**(`prefix`): [`Logger`](CdvPurchase.Logger.md)
+
+Create a child logger, whose prefix will be this one's + the given string.
+
+**`Example`**
+
+```ts
+const log = store.log.child('AppStore')
+```
 
 #### Parameters
 
@@ -52,6 +67,8 @@ ___
 
 ▸ **debug**(`o`): `void`
 
+Logs a debug message, only if `store.verbosity` >= store.DEBUG
+
 #### Parameters
 
 | Name | Type |
@@ -68,6 +85,8 @@ ___
 
 ▸ **error**(`o`): `void`
 
+Logs an error message, only if `store.verbosity` >= store.ERROR
+
 #### Parameters
 
 | Name | Type |
@@ -83,6 +102,8 @@ ___
 ### info
 
 ▸ **info**(`o`): `void`
+
+Logs an info message, only if `store.verbosity` >= store.INFO
 
 #### Parameters
 
@@ -120,6 +141,8 @@ ___
 ### warn
 
 ▸ **warn**(`o`): `void`
+
+Logs a warning message, only if `store.verbosity` >= store.WARNING
 
 #### Parameters
 

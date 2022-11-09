@@ -10,10 +10,6 @@
 
 ## Table of contents
 
-### Constructors
-
-- [constructor](CdvPurchase.GooglePlay.Receipt.md#constructor)
-
 ### Properties
 
 - [orderId](CdvPurchase.GooglePlay.Receipt.md#orderid)
@@ -25,23 +21,8 @@
 
 - [hasTransaction](CdvPurchase.GooglePlay.Receipt.md#hastransaction)
 - [lastTransaction](CdvPurchase.GooglePlay.Receipt.md#lasttransaction)
-- [refresh](CdvPurchase.GooglePlay.Receipt.md#refresh)
-
-## Constructors
-
-### constructor
-
-• **new Receipt**(`purchase`)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `purchase` | [`Purchase`](../interfaces/CdvPurchase.GooglePlay.Bridge.Purchase.md) |
-
-#### Overrides
-
-[Receipt](CdvPurchase.Receipt.md).[constructor](CdvPurchase.Receipt.md#constructor)
+- [refreshPurchase](CdvPurchase.GooglePlay.Receipt.md#refreshpurchase)
+- [verify](CdvPurchase.GooglePlay.Receipt.md#verify)
 
 ## Properties
 
@@ -77,7 +58,7 @@ ___
 
 • **transactions**: [`Transaction`](CdvPurchase.Transaction.md)[]
 
-List of transactions contained in the receipt
+List of transactions contained in the receipt, ordered by date ascending.
 
 #### Inherited from
 
@@ -88,6 +69,8 @@ List of transactions contained in the receipt
 ### hasTransaction
 
 ▸ **hasTransaction**(`value`): `boolean`
+
+Return true if the receipt contains the given transaction
 
 #### Parameters
 
@@ -109,6 +92,8 @@ ___
 
 ▸ **lastTransaction**(): [`Transaction`](CdvPurchase.Transaction.md)
 
+Return the last transaction in this receipt
+
 #### Returns
 
 [`Transaction`](CdvPurchase.Transaction.md)
@@ -119,9 +104,9 @@ ___
 
 ___
 
-### refresh
+### refreshPurchase
 
-▸ **refresh**(`purchase`): `void`
+▸ **refreshPurchase**(`purchase`): `void`
 
 Refresh the content of the purchase based on the native BridgePurchase
 
@@ -134,3 +119,19 @@ Refresh the content of the purchase based on the native BridgePurchase
 #### Returns
 
 `void`
+
+___
+
+### verify
+
+▸ **verify**(): `Promise`<`void`\>
+
+Verify a receipt
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Inherited from
+
+[Receipt](CdvPurchase.Receipt.md).[verify](CdvPurchase.Receipt.md#verify)

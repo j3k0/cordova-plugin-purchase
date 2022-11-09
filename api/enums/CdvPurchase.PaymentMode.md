@@ -2,6 +2,8 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).PaymentMode
 
+Mode of payment
+
 ## Table of contents
 
 ### Enumeration Members
@@ -16,14 +18,20 @@
 
 • **FREE\_TRIAL** = ``"FreeTrial"``
 
+Nothing to be paid
+
 ___
 
 ### PAY\_AS\_YOU\_GO
 
 • **PAY\_AS\_YOU\_GO** = ``"PayAsYouGo"``
 
+Used for subscriptions, pay at the beginning of each billing period
+
 ___
 
 ### UP\_FRONT
 
 • **UP\_FRONT** = ``"UpFront"``
+
+Pay the whole amount up front

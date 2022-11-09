@@ -14,10 +14,6 @@
 
 ## Table of contents
 
-### Constructors
-
-- [constructor](CdvPurchase.Receipt.md#constructor)
-
 ### Properties
 
 - [platform](CdvPurchase.Receipt.md#platform)
@@ -27,20 +23,7 @@
 
 - [hasTransaction](CdvPurchase.Receipt.md#hastransaction)
 - [lastTransaction](CdvPurchase.Receipt.md#lasttransaction)
-
-## Constructors
-
-### constructor
-
-• **new Receipt**(`options`)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `options` | `Object` |
-| `options.platform` | [`Platform`](../enums/CdvPurchase.Platform.md) |
-| `options.transactions` | [`Transaction`](CdvPurchase.Transaction.md)[] |
+- [verify](CdvPurchase.Receipt.md#verify)
 
 ## Properties
 
@@ -56,13 +39,15 @@ ___
 
 • **transactions**: [`Transaction`](CdvPurchase.Transaction.md)[]
 
-List of transactions contained in the receipt
+List of transactions contained in the receipt, ordered by date ascending.
 
 ## Methods
 
 ### hasTransaction
 
 ▸ **hasTransaction**(`value`): `boolean`
+
+Return true if the receipt contains the given transaction
 
 #### Parameters
 
@@ -80,6 +65,20 @@ ___
 
 ▸ **lastTransaction**(): [`Transaction`](CdvPurchase.Transaction.md)
 
+Return the last transaction in this receipt
+
 #### Returns
 
 [`Transaction`](CdvPurchase.Transaction.md)
+
+___
+
+### verify
+
+▸ **verify**(): `Promise`<`void`\>
+
+Verify a receipt
+
+#### Returns
+
+`Promise`<`void`\>

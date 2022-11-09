@@ -10,10 +10,6 @@
 
 ## Table of contents
 
-### Constructors
-
-- [constructor](CdvPurchase.AppleAppStore.SKTransaction.md#constructor)
-
 ### Properties
 
 - [amountMicros](CdvPurchase.AppleAppStore.SKTransaction.md#amountmicros)
@@ -32,21 +28,10 @@
 - [state](CdvPurchase.AppleAppStore.SKTransaction.md#state)
 - [transactionId](CdvPurchase.AppleAppStore.SKTransaction.md#transactionid)
 
-## Constructors
+### Methods
 
-### constructor
-
-• **new SKTransaction**(`platform`)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `platform` | [`Platform`](../enums/CdvPurchase.Platform.md) |
-
-#### Inherited from
-
-[Transaction](CdvPurchase.Transaction.md).[constructor](CdvPurchase.Transaction.md#constructor)
+- [finish](CdvPurchase.AppleAppStore.SKTransaction.md#finish)
+- [verify](CdvPurchase.AppleAppStore.SKTransaction.md#verify)
 
 ## Properties
 
@@ -148,7 +133,7 @@ ___
 
 ### products
 
-• **products**: { `offerId?`: `string` ; `productId`: `string`  }[] = `[]`
+• **products**: { `id`: `string` ; `offerId?`: `string`  }[] = `[]`
 
 Purchased products
 
@@ -230,3 +215,35 @@ Transaction identifier.
 #### Inherited from
 
 [Transaction](CdvPurchase.Transaction.md).[transactionId](CdvPurchase.Transaction.md#transactionid)
+
+## Methods
+
+### finish
+
+▸ **finish**(): `Promise`<`void`\>
+
+Finish a transaction
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Inherited from
+
+[Transaction](CdvPurchase.Transaction.md).[finish](CdvPurchase.Transaction.md#finish)
+
+___
+
+### verify
+
+▸ **verify**(): `Promise`<`void`\>
+
+Verify a transaction
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Inherited from
+
+[Transaction](CdvPurchase.Transaction.md).[verify](CdvPurchase.Transaction.md#verify)
