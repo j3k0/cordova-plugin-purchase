@@ -149,7 +149,7 @@ namespace CdvPurchase {
             public dropInResult: DropIn.Result;
             public paymentRequest: PaymentRequest;
 
-            constructor(paymentRequest: PaymentRequest, dropInResult: DropIn.Result) {
+            constructor(paymentRequest: PaymentRequest, dropInResult: DropIn.Result, decorator: Internal.TransactionDecorator) {
 
                 // Now we have to send this to the server + the request
                 // result.paymentDescription; // "1111"
@@ -157,26 +157,26 @@ namespace CdvPurchase {
                 // result.deviceData; // undefined
                 // result.paymentMethodNonce; // {"isDefault":false,"nonce":"tokencc_bh_rdjmsc_76vjtq_9tzsv3_4467mg_tt4"}
 
-                const transaction = new Transaction(Platform.BRAINTREE);
-                transaction.products = paymentRequest.productIds.map(productId => ({ productId }));
+                const transaction = new Transaction(Platform.BRAINTREE, decorator);
+                transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
                 transaction.state = TransactionState.APPROVED;
                 transaction.transactionId = dropInResult.paymentMethodNonce?.nonce ?? `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
 
                 super({
                     platform: Platform.BRAINTREE,
                     transactions: [transaction],
-                });
+                }, decorator);
 
                 this.dropInResult = dropInResult;
                 this.paymentRequest = paymentRequest;
-                this.refresh(paymentRequest, dropInResult);
+                this.refresh(paymentRequest, dropInResult, decorator);
             }
 
-            refresh(paymentRequest: PaymentRequest, dropInResult: DropIn.Result) {
+            refresh(paymentRequest: PaymentRequest, dropInResult: DropIn.Result, decorator: Internal.TransactionDecorator) {
                 this.dropInResult = dropInResult;
                 this.paymentRequest = paymentRequest;
-                const transaction = new Transaction(Platform.BRAINTREE);
-                transaction.products = paymentRequest.productIds.map(productId => ({ productId }));
+                const transaction = new Transaction(Platform.BRAINTREE, decorator);
+                transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
                 transaction.state = TransactionState.APPROVED;
                 transaction.transactionId = dropInResult.paymentMethodNonce?.nonce ?? `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
                 transaction.amountMicros = paymentRequest.amountMicros;
@@ -356,10 +356,10 @@ namespace CdvPurchase {
 
                 let receipt = this._receipts.find(r => r.dropInResult.paymentMethodNonce?.nonce === dropInResult.paymentMethodNonce?.nonce);
                 if (receipt) {
-                    receipt.refresh(paymentRequest, dropInResult);
+                    receipt.refresh(paymentRequest, dropInResult, this.context.apiDecorators);
                 }
                 else {
-                    receipt = new BraintreeReceipt(paymentRequest, dropInResult);
+                    receipt = new BraintreeReceipt(paymentRequest, dropInResult, this.context.apiDecorators);
                     this.receipts.push(receipt);
                 }
                 this.context.listener.receiptsUpdated(Platform.BRAINTREE, [receipt]);

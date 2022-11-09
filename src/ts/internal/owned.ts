@@ -3,6 +3,7 @@ namespace CdvPurchase {
 
     /** Options for the {@link owned} function */
     export interface OwnedOptions {
+      product: { id: string; platform?: Platform };
       verifiedReceipts?: VerifiedReceipt[];
       localReceipts?: Receipt[];
     }
@@ -13,12 +14,12 @@ namespace CdvPurchase {
      * Will use the list of verified receipts if provided.
      * Will only use the list of local receipts if verifiedReceipt is undefined.
      */
-    export function owned(product: Product, options: OwnedOptions) {
+    export function owned(options: OwnedOptions) {
         if (options.verifiedReceipts !== undefined) {
-          return VerifiedReceipts.isOwned(options.verifiedReceipts, product);
+          return VerifiedReceipts.isOwned(options.verifiedReceipts, options.product);
         }
         else if (options.localReceipts !== undefined) {
-          return LocalReceipts.isOwned(options.localReceipts, product);
+          return LocalReceipts.isOwned(options.localReceipts, options.product);
         }
         else {
           return false;

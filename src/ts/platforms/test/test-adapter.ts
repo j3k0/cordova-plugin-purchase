@@ -10,9 +10,9 @@ namespace CdvPurchase {
 
         function updateVerifiedPurchases(tr: Transaction) {
             tr.products.forEach(p => {
-                const existing = verifiedPurchases.find(v => p.productId === v.id);
+                const existing = verifiedPurchases.find(v => p.id === v.id);
                 const attributes: VerifiedPurchase = {
-                    id: p.productId,
+                    id: p.id,
                     purchaseDate: tr.purchaseDate?.getTime(),
                     expiryDate: tr.expirationDate?.getTime(),
                     lastRenewalDate: tr.lastRenewalDate?.getTime(),
@@ -61,23 +61,26 @@ namespace CdvPurchase {
 
             async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
 
-                // let's test this active subscription
-                if (products.find(p => p.id === PAID_SUBSCRIPTION_ACTIVE.id)) {
-                    setTimeout(() => {
-                        this.reportActiveSubscription();
-                    }, 500); // it'll get reported in 500ms
-                }
+                return products.map(registerProduct => {
+                    if (!testProductsArray.find(p => p.id === registerProduct.id && p.type === registerProduct.type)) {
+                        return storeError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'This product is not available');
+                    }
+                    // Ensure it's not been loaded already.
+                    const existingProduct = this.products.find(p => p.id === registerProduct.id);
+                    if (existingProduct) return existingProduct;
 
-                return products.map(p => {
-                    const product = TEST_PRODUCTS.find(tp => tp.id === p.id && tp.type === p.type);
-                    if (product && this.products.indexOf(product) < 0) {
-                        this.products.push(product);
-                        this.context.listener.productsUpdated(Platform.TEST, [product]);
-                        return product;
+                    // Enable the active subscription if loaded by the user.
+                    if (registerProduct.id === testProducts.PAID_SUBSCRIPTION_ACTIVE.id) {
+                        setTimeout(() => {
+                            this.reportActiveSubscription();
+                        }, 500); // it'll get reported in 500ms
                     }
-                    else {
-                        return storeError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'This product is not available for purchase');
-                    }
+
+                    const product = initTestProduct(registerProduct.id, this.context.apiDecorators);
+                    if (!product) return storeError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'Could not load this product');
+                    this.products.push(product);
+                    this.context.listener.productsUpdated(Platform.TEST, [product]);
+                    return product;
                 });
             }
 
@@ -95,9 +98,9 @@ namespace CdvPurchase {
                 if (response?.toUpperCase() === 'E') return storeError(ErrorCode.PURCHASE, 'Purchase failed');
                 if (response?.toUpperCase() !== 'Y') return storeError(ErrorCode.PAYMENT_CANCELLED, 'Purchase flow has been cancelled by the user');
                 // purchase succeeded, let's generate a mock receipt.
-                const tr = new Transaction(platform);
+                const tr = new Transaction(platform, this.context.apiDecorators);
                 tr.products = [{
-                    productId: offer.productId,
+                    id: offer.productId,
                     offerId: offer.id,
                 }];
                 tr.state = TransactionState.APPROVED;
@@ -108,7 +111,7 @@ namespace CdvPurchase {
                 const receipt = new Receipt({
                     platform,
                     transactions: [tr]
-                });
+                }, this.context.apiDecorators);
                 this.receipts.push(receipt);
                 this.context.listener.receiptsUpdated(Platform.TEST, [receipt]);
             }
@@ -119,7 +122,7 @@ namespace CdvPurchase {
                         transaction.state = TransactionState.FINISHED;
                         transaction.isAcknowledged = true;
                         updateVerifiedPurchases(transaction);
-                        const product = this.products.find(p => transaction.products[0].productId === p.id);
+                        const product = this.products.find(p => transaction.products[0].id === p.id);
                         if (product?.type === ProductType.CONSUMABLE) transaction.isConsumed = true;
                         const receipts = this.receipts.filter(r => r.hasTransaction(transaction));
                         this.context.listener.receiptsUpdated(platform, receipts);
@@ -141,14 +144,14 @@ namespace CdvPurchase {
                 const response = prompt(`Mock payment of ${paymentRequest.amountMicros / 1000000} ${paymentRequest.currency}. Enter "Y" to confirm. Enter "E" to trigger an error.`);
                 if (response?.toUpperCase() === 'E') return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Payment not allowed');
                 if (response?.toUpperCase() !== 'Y') return;
-                const transaction = new Transaction(Platform.TEST);
+                const transaction = new Transaction(Platform.TEST, this.context.apiDecorators);
                 transaction.purchaseDate = new Date();
-                transaction.products = paymentRequest.productIds.map(productId => ({ productId }));
+                transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
                 transaction.state = TransactionState.APPROVED;
                 transaction.transactionId = 'payment-' + new Date().getTime();
                 transaction.amountMicros = paymentRequest.amountMicros;
                 transaction.currency = paymentRequest.currency;
-                const receipt = new Receipt({ platform, transactions: [transaction] });
+                const receipt = new Receipt({ platform, transactions: [transaction] }, this.context.apiDecorators);
                 this.receipts.push(receipt);
                 setTimeout(() => {
                     this.context.listener.receiptsUpdated(platform, [receipt]);
@@ -172,12 +175,12 @@ namespace CdvPurchase {
                 const receipt = new Receipt({
                     platform,
                     transactions: [],
-                });
-                function makeTransaction(n: number) {
-                    const tr = new Transaction(platform);
+                }, this.context.apiDecorators);
+                const makeTransaction = (n: number) => {
+                    const tr = new Transaction(platform, this.context.apiDecorators);
                     tr.products = [{
-                        productId: PAID_SUBSCRIPTION_ACTIVE.id,
-                        offerId: PAID_SUBSCRIPTION_ACTIVE.offers[0].id,
+                        id: testProducts.PAID_SUBSCRIPTION_ACTIVE.id,
+                        offerId: testProducts.PAID_SUBSCRIPTION_ACTIVE.extra.offerId,
                     }];
                     tr.state = TransactionState.APPROVED;
                     tr.transactionId = transactionId(n);
@@ -214,7 +217,7 @@ namespace CdvPurchase {
                         payload: {
                             ok: true,
                             data: {
-                                id: receipt.transactions[0]?.products[0]?.productId,
+                                id: receipt.transactions[0]?.products[0]?.id,
                                 latest_receipt: true,
                                 transaction: { type: 'test' },
                                 collection: verifiedPurchases,

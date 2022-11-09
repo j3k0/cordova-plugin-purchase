@@ -1,5 +1,16 @@
 namespace CdvPurchase
 {
+    /** @internal */
+    export namespace Internal {
+        /**
+         * Set of function used to provide a nicer API (or more backward compatible)
+         */
+        export interface TransactionDecorator {
+            finish(transaction: Transaction): Promise<void>;
+            verify(transaction: Transaction): Promise<void>;
+        }
+    }
+
     export class Transaction {
 
         private className: 'Transaction' = 'Transaction';
@@ -55,13 +66,24 @@ namespace CdvPurchase
         products: {
 
             /** Product identifier */
-            productId: string;
+            id: string;
 
             /** Offer identifier, if known */
             offerId?: string;
         }[] = [];
 
-        constructor(platform: Platform) { this.platform = platform; }
+        /** Finish a transaction */
+        async finish(): Promise<void> {}
+
+        /** Verify a transaction */
+        async verify(): Promise<void> {}
+
+        /** @internal */
+        constructor(platform: Platform, decorator: Internal.TransactionDecorator) {
+            this.platform = platform;
+            Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
+            Object.defineProperty(this, 'verify', { 'enumerable': false, get() { return () => decorator.verify(this); } });
+        }
     }
 
 }

@@ -1,34 +1,57 @@
 namespace CdvPurchase
 {
+    /**
+     * Desired logging level for the {@link Logger}
+     *
+     * @see {@link Store.verbosity}
+     */
     export enum LogLevel {
+        /** Disable all logging (default) */
         QUIET = 0,
+        /** Show only error messages */
         ERROR = 1,
+        /** Show warnings and errors */
         WARNING = 2,
+        /** Also show information messages */
         INFO = 3,
+        /** Enable internal debugging messages. */
         DEBUG = 4,
     };
 
+    /** @internal */
     export interface VerbosityProvider {
         verbosity: LogLevel | boolean;
     }
 
     export class Logger {
 
+        /** All log lines are prefixed with this string */
         private prefix: string = '';
 
+        /**
+         * Object that provides the desired level of verbosity
+         */
         private store: VerbosityProvider;
 
+        /** @internal */
         constructor(store: VerbosityProvider, prefix: string = '') {
             this.store = store;
             this.prefix = prefix || 'CordovaPurchase';
         }
 
+        /**
+         * Create a child logger, whose prefix will be this one's + the given string.
+         *
+         * @example
+         * const log = store.log.child('AppStore')
+         */
         child(prefix: string): Logger {
             return new Logger(this.store, this.prefix + '.' + prefix);
         }
 
-        /// ### `store.log.error(message)`
-        /// Logs an error message, only if `store.verbosity` >= store.ERROR
+        /**
+         * Logs an error message, only if `store.verbosity` >= store.ERROR
+         */
         error(o: any) {
             log(this.store.verbosity, LogLevel.ERROR, this.prefix, o);
             // show the stack trace
@@ -39,16 +62,19 @@ namespace CdvPurchase
             }
         }
 
-        /// ### `store.log.warn(message)`
-        /// Logs a warning message, only if `store.verbosity` >= store.WARNING
+        /**
+         * Logs a warning message, only if `store.verbosity` >= store.WARNING
+         */
         warn(o: any) { log(this.store.verbosity, LogLevel.WARNING, this.prefix, o); }
 
-        /// ### `store.log.info(message)`
-        /// Logs an info message, only if `store.verbosity` >= store.INFO
+        /**
+         * Logs an info message, only if `store.verbosity` >= store.INFO
+         */
         info(o: any) { log(this.store.verbosity, LogLevel.INFO, this.prefix, o); }
 
-        /// ### `store.log.debug(message)`
-        /// Logs a debug message, only if `store.verbosity` >= store.DEBUG
+        /**
+         * Logs a debug message, only if `store.verbosity` >= store.DEBUG
+         */
         debug(o: any) { log(this.store.verbosity, LogLevel.DEBUG, this.prefix, o); }
 
         /**
@@ -73,6 +99,29 @@ namespace CdvPurchase
                     this.warn("           " + err.stack);
             }
         }
+
+        /**
+         * Console object used to display log lines.
+         *
+         * It can be replaced by your implementation if you want to, for example, send logs to a remote server.
+         *
+         * @example
+         * Logger.console = {
+         *   log: (message) => { remoteLog('LOG', message); }
+         *   warn: (message) => { remoteLog('WARN', message); }
+         *   error: (message) => { remoteLog('ERROR', message); }
+         * }
+         */
+        static console: Console = window.console;
+    }
+
+    /**
+     * Interface to implement to provide custom logging facility.
+     */
+    export interface Console {
+        log(message: string): void;
+        warn(message: string): void;
+        error(message: string): void;
     }
 
     const LOG_LEVEL_STRING = ["QUIET", "ERROR", "WARNING", "INFO", "DEBUG"];
@@ -94,9 +143,9 @@ namespace CdvPurchase
         const fullPrefix = prefix ? `[${prefix}] ` : '';
 
         const logStr =
-            (level === LogLevel.ERROR) ? ((str: string) => console.error(str))
-                : (level === LogLevel.WARNING) ? ((str: string) => console.warn(str))
-                    : ((str: string) => console.log(str));
+            (level === LogLevel.ERROR) ? ((str: string) => Logger.console.error(str))
+                : (level === LogLevel.WARNING) ? ((str: string) => Logger.console.warn(str))
+                    : ((str: string) => Logger.console.log(str));
 
         if (LOG_LEVEL_STRING[level])
             logStr(`${fullPrefix}${LOG_LEVEL_STRING[level]}: ${o}`);

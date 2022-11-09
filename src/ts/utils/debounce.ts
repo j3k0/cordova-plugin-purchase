@@ -1,10 +1,12 @@
 namespace CdvPurchase {
     export namespace Utils {
 
+        /** @internal */
         export function delay(fn: () => void, wait: number) {
             return setTimeout(fn, wait);
         }
 
+        /** @internal */
         export function debounce(fn: () => void, wait: number): () => void {
             let timeout: any | null = null;
             const later = function (context: any, args: any) {

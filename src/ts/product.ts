@@ -1,5 +1,23 @@
 namespace CdvPurchase {
 
+    /** @internal */
+    export namespace Internal {
+        /**
+         * Set of function used to decorate Product objects with useful function.
+         */
+        export interface ProductDecorator {
+            /**
+             * Returns true if the product is owned.
+             */
+            owned(product: Product): boolean;
+
+            /**
+             * Returns true if the product can be purchased.
+             */
+            canPurchase(product: Product): boolean;
+        }
+    }
+
     /** Product definition from a store */
     export class Product {
 
@@ -30,12 +48,33 @@ namespace CdvPurchase {
          */
         get pricing(): PricingPhase | undefined { return this.offers[0]?.pricingPhases[0]; }
 
-        constructor(p: IRegisterProduct) {
+        /**
+         * Returns true if the product can be purchased.
+         */
+        get canPurchase(): boolean {
+            // Pseudo implementation to make typescript happy.
+            // see Object.defineProperty in the constructor for the actual implementation.
+            return false;
+        }
+
+        /**
+         * Returns true if the product is owned.
+         */
+        get owned(): boolean {
+            // Pseudo implementation to make typescript happy.
+            // see Object.defineProperty in the constructor for the actual implementation.
+            return false;
+        }
+
+        /** @internal */
+        constructor(p: IRegisterProduct, decorator: Internal.ProductDecorator) {
             this.platform = p.platform;
             this.type = p.type;
             this.id = p.id;
             this.offers = [];
             Object.defineProperty(this, 'pricing', { enumerable: false });
+            Object.defineProperty(this, 'canPurchase', { enumerable: false, get: () => decorator.canPurchase(this) });
+            Object.defineProperty(this, 'owned', { enumerable: false, get: () => decorator.owned(this) });
         }
 
         /**

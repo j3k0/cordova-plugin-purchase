@@ -9,8 +9,8 @@ namespace CdvPurchase {
 
             public nativePurchase: Bridge.Purchase;
 
-            constructor(purchase: Bridge.Purchase) {
-                super(Platform.GOOGLE_PLAY);
+            constructor(purchase: Bridge.Purchase, decorator: Internal.TransactionDecorator) {
+                super(Platform.GOOGLE_PLAY, decorator);
                 this.nativePurchase = purchase;
                 this.refresh(purchase);
             }
@@ -36,7 +36,7 @@ namespace CdvPurchase {
                 this.nativePurchase = purchase;
                 this.transactionId = `${purchase.orderId || purchase.purchaseToken}`;
                 this.purchaseId = `${purchase.purchaseToken}`;
-                this.products = purchase.productIds.map(productId => ({ productId }));
+                this.products = purchase.productIds.map(productId => ({ id: productId }));
                 if (purchase.purchaseTime) this.purchaseDate = new Date(purchase.purchaseTime);
                 this.isPending = (purchase.getPurchaseState === Bridge.PurchaseState.PENDING);
                 if (typeof purchase.acknowledged !== 'undefined') this.isAcknowledged = purchase.acknowledged;
@@ -53,17 +53,18 @@ namespace CdvPurchase {
             /** Unique order identifier for the transaction.  (like GPA.XXXX-XXXX-XXXX-XXXXX) */
             public orderId?: string;
 
-            constructor(purchase: Bridge.Purchase) {
+            /** @internal */
+            constructor(purchase: Bridge.Purchase, decorator: Internal.TransactionDecorator & Internal.ReceiptDecorator) {
                 super({
                     platform: Platform.GOOGLE_PLAY,
-                    transactions: [new Transaction(purchase)],
-                });
+                    transactions: [new Transaction(purchase, decorator)],
+                }, decorator);
                 this.purchaseToken = purchase.purchaseToken;
                 this.orderId = purchase.orderId;
             }
 
             /** Refresh the content of the purchase based on the native BridgePurchase */
-            refresh(purchase: Bridge.Purchase) {
+            refreshPurchase(purchase: Bridge.Purchase) {
                 (this.transactions[0] as Transaction)?.refresh(purchase);
                 this.orderId = purchase.orderId;
             }
@@ -82,7 +83,7 @@ namespace CdvPurchase {
 
             /** List of products managed by the GooglePlay adapter */
             get products(): GProduct[] { return this._products.products; }
-            private _products: Products = new Products();
+            private _products: Products;
 
             get receipts(): Receipt[] { return this._receipts; }
             private _receipts: Receipt[] = [];
@@ -104,6 +105,7 @@ namespace CdvPurchase {
             static _instance: Adapter;
             constructor(context: Internal.AdapterContext, autoRefreshIntervalMillis: number = 1000 * 3600 * 24) {
                 if (Adapter._instance) throw new Error('GooglePlay adapter already initialized');
+                this._products = new Products(context.apiDecorators);
                 this.autoRefreshIntervalMillis = autoRefreshIntervalMillis;
                 this.context = context;
                 this.log = context.log.child('GooglePlay');
@@ -221,9 +223,9 @@ namespace CdvPurchase {
                     if (!firstProduct)
                         return resolve(storeError(ErrorCode.FINISH, 'Cannot finish a transaction with no product'));
 
-                    const product = this._products.getProduct(firstProduct.productId);
+                    const product = this._products.getProduct(firstProduct.id);
                     if (!product)
-                        return resolve(storeError(ErrorCode.FINISH, 'Cannot finish transaction, unknown product ' + firstProduct.productId));
+                        return resolve(storeError(ErrorCode.FINISH, 'Cannot finish transaction, unknown product ' + firstProduct.id));
 
                     const receipt = this._receipts.find(r => r.hasTransaction(transaction));
                     if (!receipt)
@@ -256,11 +258,11 @@ namespace CdvPurchase {
                 purchases.forEach(purchase => {
                     const existingReceipt = this.receipts.find(r => r.purchaseToken === purchase.purchaseToken);
                     if (existingReceipt) {
-                        existingReceipt.refresh(purchase);
+                        existingReceipt.refreshPurchase(purchase);
                         this.context.listener.receiptsUpdated(Platform.GOOGLE_PLAY, [existingReceipt]);
                     }
                     else {
-                        const newReceipt = new Receipt(purchase);
+                        const newReceipt = new Receipt(purchase, this.context.apiDecorators);
                         this.receipts.push(newReceipt);
                         this.context.listener.receiptsUpdated(Platform.GOOGLE_PLAY, [newReceipt]);
                     }
@@ -317,7 +319,7 @@ namespace CdvPurchase {
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined {
                 const transaction = receipt.transactions[0] as GooglePlay.Transaction;
                 if (!transaction) return;
-                const productId = transaction.products[0]?.productId;
+                const productId = transaction.products[0]?.id;
                 if (!productId) return;
                 const product = this._products.getProduct(productId);
                 if (!product) return;

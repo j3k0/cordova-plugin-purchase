@@ -1,5 +1,11 @@
 namespace CdvPurchase
 {
+
+    /**
+     * Used to initialize a platform with some options
+     *
+     * @see {@link Store.initialize}
+     */
     export type PlatformWithOptions =
         | { platform: Platform.BRAINTREE; options: Braintree.AdapterOptions; }
         | { platform: Platform.GOOGLE_PLAY; }
@@ -8,7 +14,13 @@ namespace CdvPurchase
         | { platform: Platform.WINDOWS_STORE; }
         ;
 
+    /** @internal */
     export namespace Internal {
+
+        export interface AdapterListener {
+            productsUpdated(platform: Platform, products: Product[]): void;
+            receiptsUpdated(platform: Platform, receipts: Receipt[]): void;
+        }
 
         /** Adapter execution context */
         export interface AdapterContext {
@@ -29,6 +41,9 @@ namespace CdvPurchase
 
             /** Retrieves the application username */
             getApplicationUsername: () => string | undefined;
+
+            /** Functions used to decorate the API */
+            apiDecorators: ProductDecorator & TransactionDecorator & OfferDecorator & ReceiptDecorator;
         }
 
 

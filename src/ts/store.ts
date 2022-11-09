@@ -1,92 +1,157 @@
 /// <reference path="validator/validator.ts" />
-/// <reference path="internal/adapters.ts" />
 /// <reference path="log.ts" />
-/// <reference path="callbacks.ts" />
-/// <reference path="ready.ts" />
+/// <reference path="internal/adapters.ts" />
+/// <reference path="internal/callbacks.ts" />
+/// <reference path="internal/ready.ts" />
 
+/**
+ * Namespace for the cordova-plugin-purchase plugin.
+ *
+ * All classes, enumerations and variables defined by the plugin are in this namespace.
+ *
+ * Throughout the documentation, in order to keep examples readable, we omit the `CdvPurchase` prefix.
+ *
+ * When you see, for example `ProductType.PAID_SUBSCRIPTION`, it refers to `CdvPurchase.ProductType.PAID_SUBSCRIPTION`.
+ *
+ * In the files that interact with the plugin, I recommend creating those shortcuts (and more if needed):
+ *
+ * ```ts
+ * const {store, ProductType, Platform, LogLevel} = CdvPurchase;
+ * ```
+ */
 namespace CdvPurchase {
 
+    /**
+     * Current release number of the plugin.
+     */
     export const PLUGIN_VERSION = '13.0.0';
-
-    /** Singleton */
-    let globalStore: Store;
 
     /**
      * Entry class of the plugin.
      */
     export class Store {
 
-        /** The singleton store object */
-        static get instance(): Store {
-            if (globalStore) {
-                return globalStore;
-            }
-            else {
-                globalStore = new Store();
-                Object.assign(globalStore, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode); // for backward compatibility
-                return globalStore;
-            }
+        /**
+         * Payment platform adapters.
+         */
+        private adapters = new Internal.Adapters();
+
+        /**
+         * Retrieve a platform adapter.
+         *
+         * The platform adapter has to have been initialized before.
+         *
+         * @see {@link initialize}
+         */
+        getAdapter(platform: Platform) {
+            return this.adapters.find(platform);
         }
 
-        /** Payment platform adapters */
-        public adapters = new Internal.Adapters();
-
-        /** List of registered products */
+        /**
+         * List of registered products.
+         *
+         * Products are added to this list of products by {@link Store.register}, an internal job will defer loading to the platform adapters.
+         */
         private registeredProducts = new Internal.RegisteredProducts();
 
         /** Logger */
         public log = new Logger(this);
 
-        /** Verbosity level for log */
+        /**
+         * Verbosity level used by the plugin logger
+         *
+         * Set to:
+         *
+         *  - LogLevel.QUIET or 0 to disable all logging (default)
+         *  - LogLevel.ERROR or 1 to show only error messages
+         *  - LogLevel.WARNING or 2 to show warnings and errors
+         *  - LogLevel.INFO or 3 to also show information messages
+         *  - LogLevel.DEBUG or 4 to enable internal debugging messages.
+         *
+         * @see {@link LogLevel}
+         */
         public verbosity: LogLevel = LogLevel.ERROR;
 
         /** Return the identifier of the user for your application */
         public applicationUsername?: string | (() => string);
 
-        /** Get the application username as a string by either calling or returning Store.applicationUsername */
+        /**
+         * Get the application username as a string by either calling or returning {@link Store.applicationUsername}
+        */
         getApplicationUsername(): string | undefined {
             if (this.applicationUsername instanceof Function) return this.applicationUsername();
             return this.applicationUsername;
         }
 
-        /** URL or implementation of the receipt validation service */
+        /**
+         * URL or implementation of the receipt validation service
+         *
+         * @example
+         * Define the validator as a string
+         * ```ts
+         * CdvPurchase.store.validator = "https://validator.iaptic.com/v1/validate?appName=test"
+         * ```
+         *
+         * @example
+         * Define the validator as a function
+         * ```ts
+         * CdvPurchase.store.validator = (receipt, callback) => {
+         *   callback({
+         *     ok: true,
+         *     data: {
+         *       // see CdvPurchase.Validator.Response.Payload for details
+         *     }
+         *   })
+         * }
+         * ```
+         *
+         * @see {@link CdvPurchase.Validator.Response.Payload}
+         */
         public validator: string | Validator.Function | Validator.Target | undefined;
 
-        /** When adding information to receipt validation requests, those can serve different functions:
+        /**
+         * When adding information to receipt validation requests, those can serve different functions:
          *
          *  - handling support requests
          *  - fraud detection
          *  - analytics
          *  - tracking
+         *
+         * Make sure the value your select is in line with your application's privacy policy and your users' tracking preference.
+         *
+         * @example
+         * CdvPurchase.store.validator_privacy_policy = [
+         *   'fraud', 'support', 'analytics', 'tracking'
+         * ]
          */
         public validator_privacy_policy: PrivacyPolicyItem | PrivacyPolicyItem[] | undefined;
 
         /** List of callbacks for the "ready" events */
-        private _readyCallbacks = new ReadyCallbacks();
+        private _readyCallbacks = new Internal.ReadyCallbacks();
 
         /** Listens to adapters */
         private listener: Internal.StoreAdapterListener;
 
         /** Callbacks when a product definition was updated */
-        private updatedCallbacks = new Callbacks<Product>();
+        private updatedCallbacks = new Internal.Callbacks<Product>();
 
         /** Callback when a receipt was updated */
-        private updatedReceiptsCallbacks = new Callbacks<Receipt>();
+        private updatedReceiptsCallbacks = new Internal.Callbacks<Receipt>();
 
         /** Callbacks when a product is owned */
         // private ownedCallbacks = new Callbacks<Product>();
 
         /** Callbacks when a transaction has been approved */
-        private approvedCallbacks = new Callbacks<Transaction>();
+        private approvedCallbacks = new Internal.Callbacks<Transaction>();
 
         /** Callbacks when a transaction has been finished */
-        private finishedCallbacks = new Callbacks<Transaction>();
+        private finishedCallbacks = new Internal.Callbacks<Transaction>();
 
         /** Callbacks when a receipt has been validated */
-        private verifiedCallbacks = new Callbacks<VerifiedReceipt>();
+        private verifiedCallbacks = new Internal.Callbacks<VerifiedReceipt>();
 
         /** Callbacks for errors */
-        private errorCallbacks = new Callbacks<IError>;
+        private errorCallbacks = new Internal.Callbacks<IError>;
 
         /** Internal implementation of the receipt validation service integration */
         private _validator: Internal.Validator;
@@ -110,7 +175,24 @@ namespace CdvPurchase {
             }, this.log);
         }
 
-        /** Register a product */
+        /**
+         * Register a product.
+         *
+         * @example
+         * store.register([{
+         *       id: 'subscription1',
+         *       type: ProductType.PAID_SUBSCRIPTION,
+         *       platform: Platform.APPLE_APPSTORE,
+         *   }, {
+         *       id: 'subscription1',
+         *       type: ProductType.PAID_SUBSCRIPTION,
+         *       platform: Platform.GOOGLE_PLAY,
+         *   }, {
+         *       id: 'consumable1',
+         *       type: ProductType.CONSUMABLE,
+         *       platform: Platform.BRAINTREE,
+         *   }]);
+         */
         register(product: IRegisterProduct | IRegisterProduct[]) {
             this.registeredProducts.add(product);
         }
@@ -129,6 +211,13 @@ namespace CdvPurchase {
                 listener: this.listener,
                 log: this.log,
                 registeredProducts: this.registeredProducts,
+                apiDecorators: {
+                    canPurchase: this.canPurchase,
+                    owned: this.owned,
+                    finish: this.finish,
+                    order: this.order,
+                    verify: this.verify,
+                },
             });
             ret.then(() => this._readyCallbacks.trigger());
             return ret;
@@ -215,17 +304,7 @@ namespace CdvPurchase {
 
         /** List of all purchases from the verified receipts. */
         get verifiedPurchases(): VerifiedPurchase[] {
-            const indexed: { [key: string]: VerifiedPurchase } = {};
-            for (const receipt of this.verifiedReceipts) {
-                for (const purchase of receipt.collection) {
-                    const key = receipt.platform + ':' + purchase.id;
-                    const existing = indexed[key];
-                    if (!existing || (existing && (existing.lastRenewalDate ?? existing.purchaseDate ?? 0) < (purchase.lastRenewalDate ?? purchase.purchaseDate ?? 0))) {
-                        indexed[key] = { ...purchase, platform: receipt.platform };
-                    }
-                }
-            }
-            return Object.keys(indexed).map(key => indexed[key]);
+            return Internal.VerifiedReceipts.getVerifiedPurchases(this.verifiedReceipts);
         }
 
         /**
@@ -243,14 +322,19 @@ namespace CdvPurchase {
         }
 
         /** Return true if a product or offer can be purchased */
-        canPurchase(offer: Offer | Product) {
+        private canPurchase(offer: Offer | Product) {
             const product = (offer instanceof Offer) ? this.get(offer.productId, offer.platform) : offer;
             return Internal.LocalReceipts.canPurchase(this.localReceipts, product);
         }
 
-        /** Return true if a product is owned */
-        owned(product: Product) {
-            return Internal.owned(product, {
+        /**
+         * Return true if a product is owned
+         *
+         * @param product - The product object or identifier of the product.
+         */
+        owned(product: { id: string; platform?: Platform } | string) {
+            return Internal.owned({
+                product: typeof product === 'string' ? { id: product } : product,
                 verifiedReceipts: this.validator ? this.verifiedReceipts : undefined,
                 localReceipts: this.localReceipts,
             });
@@ -273,7 +357,7 @@ namespace CdvPurchase {
         }
 
         /** Verify a receipt or transacting with the receipt validation service. */
-        async verify(receiptOrTransaction: Transaction | Receipt) {
+        private async verify(receiptOrTransaction: Transaction | Receipt) {
             this._validator.add(receiptOrTransaction);
 
             // Run validation after 50ms, so if the same receipt is to be validated multiple times it will just create one call.
@@ -328,20 +412,30 @@ namespace CdvPurchase {
         public version = PLUGIN_VERSION;
     }
 
+    /**
+     * The global store object.
+     */
     export let store: Store;
+
+    //
+    // Documentation for sub-namespaces
+    //
 
     /**
      * @internal
      *
      * This namespace contains things never meant for being used directly by the user of the plugin.
      */
-    export namespace Internal {
-    }
+    export namespace Internal {}
 }
 
+// Create the CdvPurchase.store object at startup.
 setTimeout(() => {
     window.CdvPurchase = CdvPurchase;
-    window.CdvPurchase.store = CdvPurchase.Store.instance;
+    window.CdvPurchase.store = new CdvPurchase.Store();
+    // Let's maximize backward compatibility
+    Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode);
 }, 0);
 
+// Ensure utility are included when compiling typescript.
 /// <reference path="utils/format-billing-cycle.ts" />

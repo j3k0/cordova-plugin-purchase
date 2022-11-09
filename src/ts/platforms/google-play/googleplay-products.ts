@@ -14,8 +14,8 @@ namespace CdvPurchase {
             type = 'subs';
             tags: string[];
             token: string;
-            constructor(options: { id: string, product: GProduct, pricingPhases: PricingPhase[], tags: string[], token: string }) {
-                super(options);
+            constructor(options: { id: string, product: GProduct, pricingPhases: PricingPhase[], tags: string[], token: string }, decorator: Internal.OfferDecorator) {
+                super(options, decorator);
                 this.tags = options.tags;
                 this.token = options.token;
             }
@@ -24,6 +24,13 @@ namespace CdvPurchase {
         export type GOffer = InAppOffer | SubscriptionOffer;
 
         export class Products {
+
+            /** Decorate products API  */
+            private decorator: Internal.ProductDecorator & Internal.OfferDecorator;
+
+            constructor(decorator: Internal.ProductDecorator & Internal.OfferDecorator) {
+                this.decorator = decorator;
+            }
 
             /** List of products managed by the GooglePlay adapter */
             products: GProduct[] = [];
@@ -40,7 +47,7 @@ namespace CdvPurchase {
             /**  */
             addProduct(registeredProduct: IRegisterProduct, vp: Bridge.InAppProduct /* | SubscriptionV11 */ | Bridge.Subscription): GProduct {
                 const existingProduct = this.getProduct(registeredProduct.id);
-                const p = existingProduct ?? new GProduct(registeredProduct);
+                const p = existingProduct ?? new GProduct(registeredProduct, this.decorator);
                 p.title = vp.title || vp.name || p.title;
                 p.description = vp.description || p.description;
                 // Process the product depending on the format
@@ -98,7 +105,7 @@ namespace CdvPurchase {
                     return existingOffer;
                 }
                 else {
-                    const offer = new SubscriptionOffer({ id: offerId, product, pricingPhases, token: productOffer.token, tags: productOffer.tags });
+                    const offer = new SubscriptionOffer({ id: offerId, product, pricingPhases, token: productOffer.token, tags: productOffer.tags }, this.decorator);
                     this.offers.push(offer);
                     return offer;
                 }
@@ -259,7 +266,7 @@ namespace CdvPurchase {
                     p.offers = [existingOffer];
                 }
                 else {
-                    const newOffer = new InAppOffer({ id: vp.productId, product: p, pricingPhases });
+                    const newOffer = new InAppOffer({ id: vp.productId, product: p, pricingPhases }, this.decorator);
                     this.offers.push(newOffer);
                     p.offers = [newOffer];
                 }

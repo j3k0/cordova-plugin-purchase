@@ -18,9 +18,7 @@
             message: string;
         }
 
-        export type IErrorCallback = (err?: IError) => void;
-
-        /** Types of In-App-Products */
+        /** Types of In-App Products */
         export enum ProductType {
             /** Type: An consumable product, that can be purchased multiple time */
             CONSUMABLE = 'consumable',
@@ -36,7 +34,7 @@
             APPLICATION = 'application',
         }
 
-
+        /** Unit for measuring durations */
         export type IPeriodUnit = "Minute" | "Hour" | "Day" | "Week" | "Month" | "Year";
 
         /**
@@ -55,7 +53,7 @@
         /**
          * Description of a phase for the pricing of a purchase.
          *
-         * @see Product.pricingPhases
+         * @see {@link Offer.pricingPhases}
          */
         export interface PricingPhase {
             /** Price formatted for humans */
@@ -74,17 +72,21 @@
             paymentMode?: PaymentMode;
         }
 
+        /** Mode of payment */
         export enum PaymentMode {
+
+            /** Used for subscriptions, pay at the beginning of each billing period */
             PAY_AS_YOU_GO = "PayAsYouGo",
+
+            /** Pay the whole amount up front */
             UP_FRONT = "UpFront",
-            FREE_TRIAL = "FreeTrial"
+
+            /** Nothing to be paid */
+            FREE_TRIAL = "FreeTrial",
         }
 
-        export interface AdapterListener {
-            productsUpdated(platform: Platform, products: Product[]): void;
-            receiptsUpdated(platform: Platform, receipts: Receipt[]): void;
-        }
 
+        /** Adapter for a payment or in-app purchase platform */
         export interface Adapter {
 
             /**
@@ -170,6 +172,12 @@
         }
 
 
+        /**
+         * Data to attach to a transaction.
+         *
+         * @see {@link Offer.order}
+         * @see {@link Store.requestPayment}
+         */
         export interface AdditionalData {
 
             /** The application's user identifier, will be obfuscated with md5 to fill `accountId` if necessary */

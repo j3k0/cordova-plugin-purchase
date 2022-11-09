@@ -2,6 +2,9 @@ namespace CdvPurchase {
 
     const ERROR_CODES_BASE = 6777000;
 
+    /**
+     * Error codes
+     */
     export enum ErrorCode {
 
         /** Error: Failed to intialize the in-app purchase library */
@@ -68,6 +71,11 @@ namespace CdvPurchase {
         MISSING_OFFER_PARAMS = ERROR_CODES_BASE + 32,
     }
 
+    /**
+     * Create an {@link IError} instance
+     *
+     * @internal
+     */
     export function storeError(code: ErrorCode, message: string): IError {
         return { isError: true, code, message };
     }

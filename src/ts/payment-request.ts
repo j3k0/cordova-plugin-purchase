@@ -2,12 +2,28 @@ namespace CdvPurchase {
 
   /**
    * Request for payment.
+   *
+   * Use with {@link Store.requestPayment} to initiate a payment for a given amount.
+   *
+   * @example
+   *  const {store, Platform, ErrorCode} = CdvPurchase;
+   *  store.requestPayment({
+   *    platform: Platform.BRAINTREE,
+   *    productIds: ['my-product-1', 'my-product-2'],
+   *    amountMicros: 1990000,
+   *    currency: 'USD',
+   *    description: 'This this the description of the payment request',
+   *  }).then((result) => {
+   *    if (result && result.isError && result.code !== ErrorCode.PAYMENT_CANCELLED) {
+   *      alert(result.message);
+   *    }
+   *  });
    */
   export interface PaymentRequest {
 
     /**
      * Products being purchased.
-     * 
+     *
      * Used for your reference, does not have to be a product registered with the plugin.
      */
     productIds: string[];
@@ -18,12 +34,14 @@ namespace CdvPurchase {
     platform: Platform;
 
     /**
-     * Amount to pay.
+     * Amount to pay. Required.
      */
     amountMicros: number;
 
     /**
      * Currency.
+     *
+     * Some payment platforms only support one currency thus do not require this field.
      */
     currency?: string;
 
