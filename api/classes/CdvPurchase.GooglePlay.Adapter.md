@@ -33,6 +33,7 @@ Adapter for a payment or in-app purchase platform
 
 ### Methods
 
+- [checkSupport](CdvPurchase.GooglePlay.Adapter.md#checksupport)
 - [finish](CdvPurchase.GooglePlay.Adapter.md#finish)
 - [getPurchases](CdvPurchase.GooglePlay.Adapter.md#getpurchases)
 - [getSkusOf](CdvPurchase.GooglePlay.Adapter.md#getskusof)
@@ -182,6 +183,28 @@ List of purchase receipts.
 CdvPurchase.Adapter.receipts
 
 ## Methods
+
+### checkSupport
+
+▸ **checkSupport**(`functionality`): `boolean`
+
+Returns true if the platform supports the given functionality.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `functionality` | [`PlatformFunctionality`](../modules/CdvPurchase.md#platformfunctionality) |
+
+#### Returns
+
+`boolean`
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[checkSupport](../interfaces/CdvPurchase.Adapter.md#checksupport)
+
+___
 
 ### finish
 

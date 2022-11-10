@@ -28,6 +28,7 @@ Adapter for a payment or in-app purchase platform
 
 ### Methods
 
+- [checkSupport](CdvPurchase.AppleAppStore.Adapter.md#checksupport)
 - [finish](CdvPurchase.AppleAppStore.Adapter.md#finish)
 - [handleReceiptValidationResponse](CdvPurchase.AppleAppStore.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.AppleAppStore.Adapter.md#initialize)
@@ -124,6 +125,28 @@ Returns true is the adapter is supported on this device.
 CdvPurchase.Adapter.isSupported
 
 ## Methods
+
+### checkSupport
+
+▸ **checkSupport**(`functionality`): `boolean`
+
+Returns true if the platform supports the given functionality.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `functionality` | [`PlatformFunctionality`](../modules/CdvPurchase.md#platformfunctionality) |
+
+#### Returns
+
+`boolean`
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[checkSupport](../interfaces/CdvPurchase.Adapter.md#checksupport)
+
+___
 
 ### finish
 

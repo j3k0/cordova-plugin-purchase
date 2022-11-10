@@ -293,6 +293,7 @@ var CdvPurchase;
     class Product {
         /** @internal */
         constructor(p, decorator) {
+            /** @internal */
             this.className = 'Product';
             /** Product title from the store. */
             this.title = '';
@@ -607,10 +608,12 @@ var CdvPurchase;
 (function (CdvPurchase) {
     class Receipt {
         /** @internal */
-        constructor(options, decorator) {
+        constructor(platform, decorator) {
+            /** @internal */
             this.className = 'Receipt';
-            this.platform = options.platform;
-            this.transactions = options.transactions;
+            /** List of transactions contained in the receipt, ordered by date ascending. */
+            this.transactions = [];
+            this.platform = platform;
             Object.defineProperty(this, 'verify', { 'enumerable': false, get() { return () => decorator.verify(this); } });
             Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
         }
@@ -677,7 +680,7 @@ var CdvPurchase;
                         return vr;
                     }
                 }
-                this.log.debug("Register a new  verified receipt.");
+                this.log.debug("Register a new verified receipt.");
                 const newVR = new CdvPurchase.VerifiedReceipt(receipt, data, this.controller);
                 this.verifiedReceipts.push(newVR);
                 return newVR;
@@ -859,7 +862,7 @@ var CdvPurchase;
             /**
              * Initialize some platform adapters.
              */
-            async initialize(platforms = [CdvPurchase.Store.defaultPlatform()], context) {
+            async initialize(platforms, context) {
                 const newPlatforms = platforms.map(p => typeof p === 'string' ? { platform: p } : p).filter(p => !this.find(p.platform));
                 const log = context.log.child('Adapters');
                 log.info("Adding platforms: " + JSON.stringify(newPlatforms));
@@ -1039,6 +1042,9 @@ var CdvPurchase;
             this.verifiedCallbacks = new CdvPurchase.Internal.Callbacks();
             /** Callbacks for errors */
             this.errorCallbacks = new CdvPurchase.Internal.Callbacks;
+            /**
+             * Version of the plugin currently installed.
+             */
             this.version = CdvPurchase.PLUGIN_VERSION;
             this.listener = new CdvPurchase.Internal.StoreAdapterListener({
                 updatedCallbacks: this.updatedCallbacks,
@@ -1102,21 +1108,22 @@ var CdvPurchase;
          *
          * @param platforms - List of payment platforms to initialize, default to Store.defaultPlatform().
          */
-        async initialize(platforms = [Store.defaultPlatform()]) {
+        async initialize(platforms = [this.defaultPlatform()]) {
+            this.log.info('initialize()');
             const store = this;
             const ret = this.adapters.initialize(platforms, {
-                error: this.error.bind(this),
+                error: this.triggerError.bind(this),
                 get verbosity() { return store.verbosity; },
                 getApplicationUsername() { return store.getApplicationUsername(); },
-                listener: this.listener,
-                log: this.log,
-                registeredProducts: this.registeredProducts,
+                get listener() { return store.listener; },
+                get log() { return store.log; },
+                get registeredProducts() { return store.registeredProducts; },
                 apiDecorators: {
-                    canPurchase: this.canPurchase,
-                    owned: this.owned,
-                    finish: this.finish,
-                    order: this.order,
-                    verify: this.verify,
+                    canPurchase: this.canPurchase.bind(this),
+                    owned: this.owned.bind(this),
+                    finish: this.finish.bind(this),
+                    order: this.order.bind(this),
+                    verify: this.verify.bind(this),
                 },
             });
             ret.then(() => this._readyCallbacks.trigger());
@@ -1133,6 +1140,7 @@ var CdvPurchase;
          */
         async update() {
             var _a;
+            this.log.info('update()');
             // Load products metadata
             for (const registration of this.registeredProducts.byPlatform()) {
                 const products = await ((_a = this.adapters.findReady(registration.platform)) === null || _a === void 0 ? void 0 : _a.load(registration.products));
@@ -1165,24 +1173,44 @@ var CdvPurchase;
             };
             return ret;
         }
-        startMonitor(transaction, onChange) {
-            this.transactionStateMonitors.start(transaction, onChange);
+        /**
+         * Setup a function to be notified of changes to a transaction state.
+         *
+         * @param transaction The transaction to monitor.
+         * @param onChange Function to be called when the transaction status changes.
+         * @return A monitor which can be stopped with `monitor.stop()`
+         *
+         * @example
+         * const monitor = store.monitor(transaction, state => {
+         *   console.log('new state: ' + state);
+         *   if (state === TransactionState.FINISHED)
+         *     monitor.stop();
+         * });
+         */
+        monitor(transaction, onChange) {
+            return this.transactionStateMonitors.start(transaction, onChange);
         }
-        stopMonitor(transaction, onChange) {
-            this.transactionStateMonitors.stop(transaction, onChange);
-        }
-        /** List of all active products */
+        /**
+         * List of all active products.
+         *
+         * Products are active if their details have been successfully loaded from the store.
+         */
         get products() {
             // concatenate products all all active platforms
             return [].concat(...this.adapters.list.map(a => a.products));
         }
-        /** Find a product from its id and platform */
-        get(productId, platform = Store.defaultPlatform()) {
+        /**
+         * Find a product from its id and platform
+         *
+         * @param productId Product identifier on the platform.
+         * @param platform The product the product exists in. Can be omitted if you're only using a single payment platform.
+         */
+        get(productId, platform) {
             var _a;
-            return (_a = this.adapters.find(platform)) === null || _a === void 0 ? void 0 : _a.products.find(p => p.id === productId);
+            return (_a = this.adapters.findReady(platform)) === null || _a === void 0 ? void 0 : _a.products.find(p => p.id === productId);
         }
         /**
-         * List of all receipts as present on the device.
+         * List of all receipts present on the device.
          */
         get localReceipts() {
             // concatenate products all all active platforms
@@ -1196,13 +1224,17 @@ var CdvPurchase;
             }
             return ret;
         }
-        /** List of receipts verified with the receipt validation service.
+        /**
+         * List of receipts verified with the receipt validation service.
          *
-         * Those receipt contains more information and are generally more up-to-date than the local ones. */
+         * Those receipt contains more information and are generally more up-to-date than the local ones.
+         */
         get verifiedReceipts() {
             return this._validator.verifiedReceipts;
         }
-        /** List of all purchases from the verified receipts. */
+        /**
+         * List of all purchases from the verified receipts.
+         */
         get verifiedPurchases() {
             return CdvPurchase.Internal.VerifiedReceipts.getVerifiedPurchases(this.verifiedReceipts);
         }
@@ -1235,17 +1267,28 @@ var CdvPurchase;
                 localReceipts: this.localReceipts,
             });
         }
-        /** Place an order for a given offer */
+        /**
+         * Place an order for a given offer.
+         */
         async order(offer, additionalData) {
+            this.log.info(`order(${offer.productId})`);
             const adapter = this.adapters.findReady(offer.platform);
             if (!adapter)
                 return CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + offer.platform + ')');
             const ret = await adapter.order(offer, additionalData || {});
             if (ret && 'isError' in ret)
-                CdvPurchase.store.error(ret);
+                CdvPurchase.store.triggerError(ret);
             return ret;
         }
-        /** Request a payment */
+        /**
+         * Request a payment.
+         *
+         * A payment is a custom amount to charge the user. Make sure the selected payment platform
+         * supports Payment Requests.
+         *
+         * @param paymentRequest Parameters of the payment request
+         * @param additionalData Additional parameters
+         */
         requestPayment(paymentRequest, additionalData) {
             const adapter = this.adapters.findReady(paymentRequest.platform);
             if (!adapter)
@@ -1257,21 +1300,44 @@ var CdvPurchase;
                     const onStateChange = (state) => {
                         promise.trigger(result);
                         if (result.state === CdvPurchase.TransactionState.FINISHED)
-                            this.stopMonitor(result, onStateChange);
+                            monitor.stop();
                     };
-                    this.startMonitor(result, onStateChange);
+                    const monitor = this.monitor(result, onStateChange);
                 }
             });
             return promise;
         }
-        /** Verify a receipt or transacting with the receipt validation service. */
+        /**
+         * Returns true if a platform supports the requested functionality.
+         *
+         * @example
+         * store.checkSupport(Platform.APPLE_APPSTORE, 'requestPayment');
+         * // => false
+         */
+        checkSupport(platform, functionality) {
+            const adapter = this.adapters.find(platform);
+            if (!adapter)
+                return false; // the selected adapter hasn't been initialized
+            return adapter.checkSupport(functionality);
+        }
+        /**
+         * Verify a receipt or transacting with the receipt validation service.
+         *
+         * This will be called from the Receipt or Transaction objects using the API decorators.
+         */
         async verify(receiptOrTransaction) {
+            this.log.info(`verify(${receiptOrTransaction.className})`);
             this._validator.add(receiptOrTransaction);
             // Run validation after 50ms, so if the same receipt is to be validated multiple times it will just create one call.
             setTimeout(() => this._validator.run());
         }
-        /** Finalize a transaction */
+        /**
+         * Finalize a transaction.
+         *
+         * This will be called from the Receipt, Transaction or VerifiedReceipt objects using the API decorators.
+         */
         async finish(receipt) {
+            this.log.info(`finish(${receipt.className})`);
             const transactions = receipt instanceof CdvPurchase.VerifiedReceipt
                 ? receipt.sourceReceipt.transactions
                 : receipt instanceof CdvPurchase.Receipt
@@ -1279,13 +1345,24 @@ var CdvPurchase;
                     : [receipt];
             transactions.forEach(transaction => {
                 var _a;
-                const adapter = (_a = this.adapters.find(transaction.platform)) === null || _a === void 0 ? void 0 : _a.finish(transaction);
+                const adapter = (_a = this.adapters.findReady(transaction.platform)) === null || _a === void 0 ? void 0 : _a.finish(transaction);
             });
         }
+        /**
+         * Replay the users transactions.
+         *
+         * This method exists to cover an Apple AppStore requirement.
+         */
         async restorePurchases() {
-            // TODO
+            CdvPurchase.store.triggerError(CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'restorePurchases() is not implemented yet'));
         }
+        /**
+         * Open the subscription management interface for the selected platform.
+         *
+         * If platform is not specified,
+         */
         async manageSubscriptions(platform) {
+            this.log.info('manageSubscriptions()');
             const adapter = this.adapters.findReady(platform);
             if (!adapter)
                 return CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, "Found no adapter ready to handle 'manageSubscription'");
@@ -1297,18 +1374,33 @@ var CdvPurchase;
          * - on iOS: `APPLE_APPSTORE`
          * - on Android: `GOOGLE_PLAY`
          */
-        static defaultPlatform() {
+        defaultPlatform() {
             switch (window.cordova.platformId) {
                 case 'android': return CdvPurchase.Platform.GOOGLE_PLAY;
                 case 'ios': return CdvPurchase.Platform.APPLE_APPSTORE;
                 default: return CdvPurchase.Platform.TEST;
             }
         }
+        /**
+         * Register an error handler.
+         *
+         * @param error An error callback that takes the error as an argument
+         *
+         * @example
+         * store.error(function(error) {
+         *   console.error('CdvPurchase ERROR: ' + error.message);
+         * });
+         */
         error(error) {
-            if (error instanceof Function)
-                this.errorCallbacks.push(error);
-            else
-                this.errorCallbacks.trigger(error);
+            this.errorCallbacks.push(error);
+        }
+        /**
+         * Trigger an error event.
+         *
+         * @internal
+         */
+        triggerError(error) {
+            this.errorCallbacks.trigger(error);
         }
     }
     CdvPurchase.Store = Store;
@@ -1318,7 +1410,7 @@ setTimeout(() => {
     window.CdvPurchase = CdvPurchase;
     window.CdvPurchase.store = new CdvPurchase.Store();
     // Let's maximize backward compatibility
-    Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode);
+    Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode, CdvPurchase.Platform);
 }, 0);
 // Ensure utility are included when compiling typescript.
 /// <reference path="utils/format-billing-cycle.ts" />
@@ -1326,7 +1418,8 @@ var CdvPurchase;
 (function (CdvPurchase) {
     class Transaction {
         /** @internal */
-        constructor(platform, decorator) {
+        constructor(platform, parentReceipt, decorator) {
+            /** @internal */
             this.className = 'Transaction';
             /** Transaction identifier. */
             this.transactionId = '';
@@ -1337,6 +1430,7 @@ var CdvPurchase;
             this.platform = platform;
             Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
             Object.defineProperty(this, 'verify', { 'enumerable': false, get() { return () => decorator.verify(this); } });
+            Object.defineProperty(this, 'parentReceipt', { 'enumerable': false, get() { return parentReceipt; } });
         }
         /**
          * Finish a transaction.
@@ -1363,6 +1457,10 @@ var CdvPurchase;
          *   .verified(receipt => receipt.finish())
          */
         async verify() { } // actual implementation in the constructor
+        /**
+         * Return the receipt this transaction is part of.
+         */
+        get parentReceipt() { return {}; } // actual implementation in the constructor
     }
     CdvPurchase.Transaction = Transaction;
 })(CdvPurchase || (CdvPurchase = {}));
@@ -1370,6 +1468,11 @@ var CdvPurchase;
 (function (CdvPurchase) {
     let Internal;
     (function (Internal) {
+        /**
+         * Monitor the updates for products and receipt.
+         *
+         * Call the callbacks when appropriate.
+         */
         class StoreAdapterListener {
             constructor(delegate) {
                 this.lastTransactionState = {};
@@ -1388,7 +1491,8 @@ var CdvPurchase;
                         const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
                         const lastState = this.lastTransactionState[transactionToken];
                         if (transaction.state === CdvPurchase.TransactionState.APPROVED) {
-                            this.delegate.approvedCallbacks.trigger(transaction); // better retrigger (so validation is rerun on potential update)
+                            this.delegate.approvedCallbacks.trigger(transaction);
+                            // better retrigger (so validation is rerun on potential update)
                         }
                         else if (lastState !== transaction.state) {
                             if (transaction.state === CdvPurchase.TransactionState.FINISHED) {
@@ -1602,7 +1706,15 @@ var CdvPurchase;
     /** @internal */
     let Internal;
     (function (Internal) {
-        /** Helper class to monitor changes in transaction states */
+        /**
+         * Helper class to monitor changes in transaction states.
+         *
+         * @example
+         * const monitor = monitors.start(transaction, (state) => {
+         *   // ... transaction state has changed
+         * });
+         * monitor.stop();
+         */
         class TransactionStateMonitors {
             constructor(when) {
                 this.monitors = [];
@@ -1611,16 +1723,31 @@ var CdvPurchase;
                     .finished(transaction => this.callOnChange(transaction));
             }
             findMonitors(transaction) {
-                return this.monitors.filter(monitor => monitor.transaction === transaction);
+                return this.monitors.filter(monitor => monitor.transaction.platform === transaction.platform
+                    && monitor.transaction.transactionId === transaction.transactionId);
             }
             callOnChange(transaction) {
-                this.findMonitors(transaction).forEach(monitor => monitor.onChange(transaction.state));
+                this.findMonitors(transaction).forEach(monitor => {
+                    if (monitor.lastChange !== transaction.state) {
+                        monitor.lastChange = transaction.state;
+                        monitor.onChange(transaction.state);
+                    }
+                });
             }
+            /**
+             * Start monitoring the provided transaction for state changes.
+             */
             start(transaction, onChange) {
-                this.monitors.push({ transaction, onChange });
+                const monitorId = CdvPurchase.Utils.uuidv4();
+                this.monitors.push({ monitorId, transaction, onChange, lastChange: transaction.state });
+                setTimeout(onChange, 0, transaction.state);
+                return {
+                    transaction,
+                    stop: () => this.stop(monitorId),
+                };
             }
-            stop(transaction, onChange) {
-                this.monitors = this.monitors.filter(m => m.transaction !== transaction || m.onChange !== onChange);
+            stop(monitorId) {
+                this.monitors = this.monitors.filter(m => m.monitorId !== monitorId);
             }
         }
         Internal.TransactionStateMonitors = TransactionStateMonitors;
@@ -1740,6 +1867,9 @@ var CdvPurchase;
             async manageSubscriptions() {
                 return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'TODO: Not implemented');
             }
+            checkSupport(functionality) {
+                return false;
+            }
         }
         AppleAppStore.Adapter = Adapter;
     })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
@@ -1789,14 +1919,12 @@ var CdvPurchase;
                 // result.deviceData; // undefined
                 // result.paymentMethodNonce; // {"isDefault":false,"nonce":"tokencc_bh_rdjmsc_76vjtq_9tzsv3_4467mg_tt4"}
                 var _a, _b;
-                const transaction = new CdvPurchase.Transaction(CdvPurchase.Platform.BRAINTREE, decorator);
+                super(CdvPurchase.Platform.BRAINTREE, decorator);
+                const transaction = new CdvPurchase.Transaction(CdvPurchase.Platform.BRAINTREE, this, decorator);
                 transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
                 transaction.state = CdvPurchase.TransactionState.APPROVED;
                 transaction.transactionId = (_b = (_a = dropInResult.paymentMethodNonce) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
-                super({
-                    platform: CdvPurchase.Platform.BRAINTREE,
-                    transactions: [transaction],
-                }, decorator);
+                this.transactions = [transaction];
                 this.dropInResult = dropInResult;
                 this.paymentRequest = paymentRequest;
                 this.refresh(paymentRequest, dropInResult, decorator);
@@ -1805,12 +1933,13 @@ var CdvPurchase;
                 var _a, _b;
                 this.dropInResult = dropInResult;
                 this.paymentRequest = paymentRequest;
-                const transaction = new CdvPurchase.Transaction(CdvPurchase.Platform.BRAINTREE, decorator);
+                const transaction = new CdvPurchase.Transaction(CdvPurchase.Platform.BRAINTREE, this, decorator);
                 transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
                 transaction.state = CdvPurchase.TransactionState.APPROVED;
                 transaction.transactionId = (_b = (_a = dropInResult.paymentMethodNonce) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
                 transaction.amountMicros = paymentRequest.amountMicros;
                 transaction.currency = paymentRequest.currency;
+                this.transactions = [transaction];
             }
         }
         Braintree.BraintreeReceipt = BraintreeReceipt;
@@ -1871,10 +2000,9 @@ var CdvPurchase;
                 return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'N/A: Not implemented with Braintree');
             }
             async finish(transaction) {
-                return; /* {
-                    code: ErrorCode.UNKNOWN,
-                    message: 'N/A: Not implemented with Braintree'
-                } as IError; */
+                transaction.state = CdvPurchase.TransactionState.FINISHED;
+                this.context.listener.receiptsUpdated(CdvPurchase.Platform.TEST, [transaction.parentReceipt]);
+                return;
             }
             async manageSubscriptions() {
                 return CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, 'N/A: manageSubscriptions() is not available with Braintree');
@@ -2004,6 +2132,9 @@ var CdvPurchase;
                         }
                     }
                 }
+            }
+            checkSupport(functionality) {
+                return functionality === 'requestPayment';
             }
         }
         Braintree.Adapter = Adapter;
@@ -2382,8 +2513,8 @@ var CdvPurchase;
     let GooglePlay;
     (function (GooglePlay) {
         class Transaction extends CdvPurchase.Transaction {
-            constructor(purchase, decorator) {
-                super(CdvPurchase.Platform.GOOGLE_PLAY, decorator);
+            constructor(purchase, parentReceipt, decorator) {
+                super(CdvPurchase.Platform.GOOGLE_PLAY, parentReceipt, decorator);
                 this.nativePurchase = purchase;
                 this.refresh(purchase);
             }
@@ -2422,10 +2553,8 @@ var CdvPurchase;
         class Receipt extends CdvPurchase.Receipt {
             /** @internal */
             constructor(purchase, decorator) {
-                super({
-                    platform: CdvPurchase.Platform.GOOGLE_PLAY,
-                    transactions: [new Transaction(purchase, decorator)],
-                }, decorator);
+                super(CdvPurchase.Platform.GOOGLE_PLAY, decorator);
+                this.transactions = [new Transaction(purchase, this, decorator)];
                 this.purchaseToken = purchase.purchaseToken;
                 this.orderId = purchase.orderId;
             }
@@ -2684,6 +2813,9 @@ var CdvPurchase;
             async manageSubscriptions() {
                 this.bridge.manageSubscriptions();
                 return;
+            }
+            checkSupport(functionality) {
+                return functionality === 'order';
             }
         }
         GooglePlay.Adapter = Adapter;
@@ -3346,7 +3478,9 @@ var CdvPurchase;
                 if ((response === null || response === void 0 ? void 0 : response.toUpperCase()) !== 'Y')
                     return CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_CANCELLED, 'Purchase flow has been cancelled by the user');
                 // purchase succeeded, let's generate a mock receipt.
-                const tr = new CdvPurchase.Transaction(platform, this.context.apiDecorators);
+                const receipt = new CdvPurchase.Receipt(platform, this.context.apiDecorators);
+                const tr = new CdvPurchase.Transaction(platform, receipt, this.context.apiDecorators);
+                receipt.transactions = [tr];
                 tr.products = [{
                         id: offer.productId,
                         offerId: offer.id,
@@ -3356,10 +3490,6 @@ var CdvPurchase;
                 tr.transactionId = offer.productId + '-' + (new Date().getTime());
                 tr.isAcknowledged = false;
                 updateVerifiedPurchases(tr);
-                const receipt = new CdvPurchase.Receipt({
-                    platform,
-                    transactions: [tr]
-                }, this.context.apiDecorators);
                 this.receipts.push(receipt);
                 this.context.listener.receiptsUpdated(CdvPurchase.Platform.TEST, [receipt]);
             }
@@ -3385,19 +3515,21 @@ var CdvPurchase;
                 return;
             }
             async requestPayment(paymentRequest, additionalData) {
+                await CdvPurchase.Utils.asyncDelay(100); // maybe app has some UI to update... and "prompt" prevents that
                 const response = prompt(`Mock payment of ${paymentRequest.amountMicros / 1000000} ${paymentRequest.currency}. Enter "Y" to confirm. Enter "E" to trigger an error.`);
                 if ((response === null || response === void 0 ? void 0 : response.toUpperCase()) === 'E')
                     return CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED, 'Payment not allowed');
                 if ((response === null || response === void 0 ? void 0 : response.toUpperCase()) !== 'Y')
                     return;
-                const transaction = new CdvPurchase.Transaction(CdvPurchase.Platform.TEST, this.context.apiDecorators);
+                const receipt = new CdvPurchase.Receipt(platform, this.context.apiDecorators);
+                const transaction = new CdvPurchase.Transaction(CdvPurchase.Platform.TEST, receipt, this.context.apiDecorators);
                 transaction.purchaseDate = new Date();
                 transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
                 transaction.state = CdvPurchase.TransactionState.APPROVED;
                 transaction.transactionId = 'payment-' + new Date().getTime();
                 transaction.amountMicros = paymentRequest.amountMicros;
                 transaction.currency = paymentRequest.currency;
-                const receipt = new CdvPurchase.Receipt({ platform, transactions: [transaction] }, this.context.apiDecorators);
+                receipt.transactions = [transaction];
                 this.receipts.push(receipt);
                 setTimeout(() => {
                     this.context.listener.receiptsUpdated(platform, [receipt]);
@@ -3414,13 +3546,10 @@ var CdvPurchase;
                     return;
                 }
                 const RENEWS_EVERY_MS = 2 * 60000; // 2 minutes
-                const receipt = new CdvPurchase.Receipt({
-                    platform,
-                    transactions: [],
-                }, this.context.apiDecorators);
+                const receipt = new CdvPurchase.Receipt(platform, this.context.apiDecorators);
                 const makeTransaction = (n) => {
                     var _a, _b;
-                    const tr = new CdvPurchase.Transaction(platform, this.context.apiDecorators);
+                    const tr = new CdvPurchase.Transaction(platform, receipt, this.context.apiDecorators);
                     tr.products = [{
                             id: Test.testProducts.PAID_SUBSCRIPTION_ACTIVE.id,
                             offerId: Test.testProducts.PAID_SUBSCRIPTION_ACTIVE.extra.offerId,
@@ -3466,6 +3595,9 @@ var CdvPurchase;
                         }
                     });
                 }, 500);
+            }
+            checkSupport(functionality) {
+                return true;
             }
         }
         Test.Adapter = Adapter;
@@ -3691,6 +3823,9 @@ var CdvPurchase;
             async manageSubscriptions() {
                 return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'manageSubscriptions not supported');
             }
+            checkSupport(functionality) {
+                return false;
+            }
         }
         WindowsStore.Adapter = Adapter;
     })(WindowsStore = CdvPurchase.WindowsStore || (CdvPurchase.WindowsStore = {}));
@@ -3834,12 +3969,12 @@ var CdvPurchase;
     let Utils;
     (function (Utils) {
         /** @internal */
-        function delay(fn, wait) {
-            return setTimeout(fn, wait);
+        function delay(fn, milliseconds) {
+            return setTimeout(fn, milliseconds);
         }
         Utils.delay = delay;
         /** @internal */
-        function debounce(fn, wait) {
+        function debounce(fn, milliseconds) {
             let timeout = null;
             const later = function (context, args) {
                 timeout = null;
@@ -3848,11 +3983,15 @@ var CdvPurchase;
             const debounced = function () {
                 if (timeout)
                     window.clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
+                timeout = setTimeout(later, milliseconds);
             };
             return debounced;
         }
         Utils.debounce = debounce;
+        function asyncDelay(milliseconds) {
+            return new Promise(resolve => setTimeout(resolve, milliseconds));
+        }
+        Utils.asyncDelay = asyncDelay;
     })(Utils = CdvPurchase.Utils || (CdvPurchase.Utils = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -4237,6 +4376,8 @@ var CdvPurchase;
          */
         constructor(receipt, response, decorator) {
             var _a;
+            /** @internal */
+            this.className = 'VerifiedReceipt';
             this.id = response.id;
             this.sourceReceipt = receipt;
             this.collection = (_a = response.collection) !== null && _a !== void 0 ? _a : [];

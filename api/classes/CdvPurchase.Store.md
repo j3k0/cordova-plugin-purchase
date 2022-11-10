@@ -29,15 +29,17 @@ Entry class of the plugin.
 
 ### Methods
 
+- [checkSupport](CdvPurchase.Store.md#checksupport)
+- [defaultPlatform](CdvPurchase.Store.md#defaultplatform)
 - [error](CdvPurchase.Store.md#error)
 - [findInLocalReceipts](CdvPurchase.Store.md#findinlocalreceipts)
 - [findInVerifiedReceipts](CdvPurchase.Store.md#findinverifiedreceipts)
-- [finish](CdvPurchase.Store.md#finish)
 - [get](CdvPurchase.Store.md#get)
 - [getAdapter](CdvPurchase.Store.md#getadapter)
 - [getApplicationUsername](CdvPurchase.Store.md#getapplicationusername)
 - [initialize](CdvPurchase.Store.md#initialize)
 - [manageSubscriptions](CdvPurchase.Store.md#managesubscriptions)
+- [monitor](CdvPurchase.Store.md#monitor)
 - [order](CdvPurchase.Store.md#order)
 - [owned](CdvPurchase.Store.md#owned)
 - [ready](CdvPurchase.Store.md#ready)
@@ -45,11 +47,8 @@ Entry class of the plugin.
 - [register](CdvPurchase.Store.md#register)
 - [requestPayment](CdvPurchase.Store.md#requestpayment)
 - [restorePurchases](CdvPurchase.Store.md#restorepurchases)
-- [startMonitor](CdvPurchase.Store.md#startmonitor)
-- [stopMonitor](CdvPurchase.Store.md#stopmonitor)
 - [update](CdvPurchase.Store.md#update)
 - [when](CdvPurchase.Store.md#when)
-- [defaultPlatform](CdvPurchase.Store.md#defaultplatform)
 
 ## Constructors
 
@@ -155,13 +154,15 @@ ___
 
 • **version**: `string` = `PLUGIN_VERSION`
 
+Version of the plugin currently installed.
+
 ## Accessors
 
 ### localReceipts
 
 • `get` **localReceipts**(): [`Receipt`](CdvPurchase.Receipt.md)[]
 
-List of all receipts as present on the device.
+List of all receipts present on the device.
 
 #### Returns
 
@@ -185,7 +186,9 @@ ___
 
 • `get` **products**(): [`Product`](CdvPurchase.Product.md)[]
 
-List of all active products
+List of all active products.
+
+Products are active if their details have been successfully loaded from the store.
 
 #### Returns
 
@@ -219,15 +222,66 @@ Those receipt contains more information and are generally more up-to-date than t
 
 ## Methods
 
-### error
+### checkSupport
 
-▸ **error**(`error`): `void`
+▸ **checkSupport**(`platform`, `functionality`): `boolean`
+
+Returns true if a platform supports the requested functionality.
+
+**`Example`**
+
+```ts
+store.checkSupport(Platform.APPLE_APPSTORE, 'requestPayment');
+// => false
+```
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `error` | [`IError`](../interfaces/CdvPurchase.IError.md) \| [`Callback`](../modules/CdvPurchase.md#callback)<[`IError`](../interfaces/CdvPurchase.IError.md)\> |
+| `platform` | [`Platform`](../enums/CdvPurchase.Platform.md) |
+| `functionality` | [`PlatformFunctionality`](../modules/CdvPurchase.md#platformfunctionality) |
+
+#### Returns
+
+`boolean`
+
+___
+
+### defaultPlatform
+
+▸ **defaultPlatform**(): [`Platform`](../enums/CdvPurchase.Platform.md)
+
+The default payment platform to use depending on the OS.
+
+- on iOS: `APPLE_APPSTORE`
+- on Android: `GOOGLE_PLAY`
+
+#### Returns
+
+[`Platform`](../enums/CdvPurchase.Platform.md)
+
+___
+
+### error
+
+▸ **error**(`error`): `void`
+
+Register an error handler.
+
+**`Example`**
+
+```ts
+store.error(function(error) {
+  console.error('CdvPurchase ERROR: ' + error.message);
+});
+```
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `error` | [`Callback`](../modules/CdvPurchase.md#callback)<[`IError`](../interfaces/CdvPurchase.IError.md)\> | An error callback that takes the error as an argument |
 
 #### Returns
 
@@ -271,24 +325,6 @@ Find the last verified purchase for a given product, from those verified by the 
 
 ___
 
-### finish
-
-▸ **finish**(`receipt`): `Promise`<`void`\>
-
-Finalize a transaction
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `receipt` | [`Receipt`](CdvPurchase.Receipt.md) \| [`Transaction`](CdvPurchase.Transaction.md) \| [`VerifiedReceipt`](CdvPurchase.VerifiedReceipt.md) |
-
-#### Returns
-
-`Promise`<`void`\>
-
-___
-
 ### get
 
 ▸ **get**(`productId`, `platform?`): `undefined` \| [`Product`](CdvPurchase.Product.md)
@@ -297,10 +333,10 @@ Find a product from its id and platform
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `productId` | `string` |
-| `platform` | [`Platform`](../enums/CdvPurchase.Platform.md) |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `productId` | `string` | Product identifier on the platform. |
+| `platform?` | [`Platform`](../enums/CdvPurchase.Platform.md) | The product the product exists in. Can be omitted if you're only using a single payment platform. |
 
 #### Returns
 
@@ -366,6 +402,10 @@ ___
 
 ▸ **manageSubscriptions**(`platform?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
+Open the subscription management interface for the selected platform.
+
+If platform is not specified,
+
 #### Parameters
 
 | Name | Type |
@@ -378,11 +418,42 @@ ___
 
 ___
 
+### monitor
+
+▸ **monitor**(`transaction`, `onChange`): [`TransactionMonitor`](../interfaces/CdvPurchase.TransactionMonitor.md)
+
+Setup a function to be notified of changes to a transaction state.
+
+**`Example`**
+
+```ts
+const monitor = store.monitor(transaction, state => {
+  console.log('new state: ' + state);
+  if (state === TransactionState.FINISHED)
+    monitor.stop();
+});
+```
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `transaction` | [`Transaction`](CdvPurchase.Transaction.md) | The transaction to monitor. |
+| `onChange` | [`Callback`](../modules/CdvPurchase.md#callback)<[`TransactionState`](../enums/CdvPurchase.TransactionState.md)\> | Function to be called when the transaction status changes. |
+
+#### Returns
+
+[`TransactionMonitor`](../interfaces/CdvPurchase.TransactionMonitor.md)
+
+A monitor which can be stopped with `monitor.stop()`
+
+___
+
 ### order
 
 ▸ **order**(`offer`, `additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
-Place an order for a given offer
+Place an order for a given offer.
 
 #### Parameters
 
@@ -487,14 +558,17 @@ ___
 
 ▸ **requestPayment**(`paymentRequest`, `additionalData?`): [`PaymentRequestPromise`](CdvPurchase.PaymentRequestPromise.md)
 
-Request a payment
+Request a payment.
+
+A payment is a custom amount to charge the user. Make sure the selected payment platform
+supports Payment Requests.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `paymentRequest` | [`PaymentRequest`](../interfaces/CdvPurchase.PaymentRequest.md) |
-| `additionalData?` | [`AdditionalData`](../interfaces/CdvPurchase.AdditionalData.md) |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `paymentRequest` | [`PaymentRequest`](../interfaces/CdvPurchase.PaymentRequest.md) | Parameters of the payment request |
+| `additionalData?` | [`AdditionalData`](../interfaces/CdvPurchase.AdditionalData.md) | Additional parameters |
 
 #### Returns
 
@@ -506,43 +580,13 @@ ___
 
 ▸ **restorePurchases**(): `Promise`<`void`\>
 
+Replay the users transactions.
+
+This method exists to cover an Apple AppStore requirement.
+
 #### Returns
 
 `Promise`<`void`\>
-
-___
-
-### startMonitor
-
-▸ **startMonitor**(`transaction`, `onChange`): `void`
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `transaction` | [`Transaction`](CdvPurchase.Transaction.md) |
-| `onChange` | [`Callback`](../modules/CdvPurchase.md#callback)<[`TransactionState`](../enums/CdvPurchase.TransactionState.md)\> |
-
-#### Returns
-
-`void`
-
-___
-
-### stopMonitor
-
-▸ **stopMonitor**(`transaction`, `onChange`): `void`
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `transaction` | [`Transaction`](CdvPurchase.Transaction.md) |
-| `onChange` | [`Callback`](../modules/CdvPurchase.md#callback)<[`TransactionState`](../enums/CdvPurchase.TransactionState.md)\> |
-
-#### Returns
-
-`void`
 
 ___
 
@@ -576,18 +620,3 @@ store.when()
 #### Returns
 
 [`When`](../interfaces/CdvPurchase.When.md)
-
-___
-
-### defaultPlatform
-
-▸ `Static` **defaultPlatform**(): [`Platform`](../enums/CdvPurchase.Platform.md)
-
-The default payment platform to use depending on the OS.
-
-- on iOS: `APPLE_APPSTORE`
-- on Android: `GOOGLE_PLAY`
-
-#### Returns
-
-[`Platform`](../enums/CdvPurchase.Platform.md)

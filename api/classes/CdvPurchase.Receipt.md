@@ -38,7 +38,7 @@ ___
 
 ### transactions
 
-• **transactions**: [`Transaction`](CdvPurchase.Transaction.md)[]
+• **transactions**: [`Transaction`](CdvPurchase.Transaction.md)[] = `[]`
 
 List of transactions contained in the receipt, ordered by date ascending.
 

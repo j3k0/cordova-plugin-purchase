@@ -30,6 +30,10 @@
 - [state](CdvPurchase.Transaction.md#state)
 - [transactionId](CdvPurchase.Transaction.md#transactionid)
 
+### Accessors
+
+- [parentReceipt](CdvPurchase.Transaction.md#parentreceipt)
+
 ### Methods
 
 - [finish](CdvPurchase.Transaction.md#finish)
@@ -157,6 +161,18 @@ ___
 • **transactionId**: `string` = `''`
 
 Transaction identifier.
+
+## Accessors
+
+### parentReceipt
+
+• `get` **parentReceipt**(): [`Receipt`](CdvPurchase.Receipt.md)
+
+Return the receipt this transaction is part of.
+
+#### Returns
+
+[`Receipt`](CdvPurchase.Receipt.md)
 
 ## Methods
 

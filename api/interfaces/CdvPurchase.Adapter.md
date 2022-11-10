@@ -28,6 +28,7 @@ Adapter for a payment or in-app purchase platform
 
 ### Methods
 
+- [checkSupport](CdvPurchase.Adapter.md#checksupport)
 - [finish](CdvPurchase.Adapter.md#finish)
 - [handleReceiptValidationResponse](CdvPurchase.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.Adapter.md#initialize)
@@ -100,6 +101,24 @@ List of purchase receipts.
 [`Receipt`](../classes/CdvPurchase.Receipt.md)[]
 
 ## Methods
+
+### checkSupport
+
+▸ **checkSupport**(`functionality`): `boolean`
+
+Returns true if the platform supports the given functionality.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `functionality` | [`PlatformFunctionality`](../modules/CdvPurchase.md#platformfunctionality) |
+
+#### Returns
+
+`boolean`
+
+___
 
 ### finish
 

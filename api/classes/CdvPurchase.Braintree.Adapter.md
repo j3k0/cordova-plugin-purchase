@@ -33,6 +33,7 @@ Adapter for a payment or in-app purchase platform
 
 ### Methods
 
+- [checkSupport](CdvPurchase.Braintree.Adapter.md#checksupport)
 - [finish](CdvPurchase.Braintree.Adapter.md#finish)
 - [handleReceiptValidationResponse](CdvPurchase.Braintree.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.Braintree.Adapter.md#initialize)
@@ -166,6 +167,28 @@ List of purchase receipts.
 CdvPurchase.Adapter.receipts
 
 ## Methods
+
+### checkSupport
+
+▸ **checkSupport**(`functionality`): `boolean`
+
+Returns true if the platform supports the given functionality.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `functionality` | [`PlatformFunctionality`](../modules/CdvPurchase.md#platformfunctionality) |
+
+#### Returns
+
+`boolean`
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[checkSupport](../interfaces/CdvPurchase.Adapter.md#checksupport)
+
+___
 
 ### finish
 

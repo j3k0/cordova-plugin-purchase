@@ -62,6 +62,7 @@ const {store, ProductType, Platform, LogLevel} = CdvPurchase;
 - [PaymentRequest](../interfaces/CdvPurchase.PaymentRequest.md)
 - [PostalAddress](../interfaces/CdvPurchase.PostalAddress.md)
 - [PricingPhase](../interfaces/CdvPurchase.PricingPhase.md)
+- [TransactionMonitor](../interfaces/CdvPurchase.TransactionMonitor.md)
 - [VerifiedPurchase](../interfaces/CdvPurchase.VerifiedPurchase.md)
 - [When](../interfaces/CdvPurchase.When.md)
 
@@ -69,6 +70,7 @@ const {store, ProductType, Platform, LogLevel} = CdvPurchase;
 
 - [Callback](CdvPurchase.md#callback)
 - [IPeriodUnit](CdvPurchase.md#iperiodunit)
+- [PlatformFunctionality](CdvPurchase.md#platformfunctionality)
 - [PlatformWithOptions](CdvPurchase.md#platformwithoptions)
 - [PrivacyPolicyItem](CdvPurchase.md#privacypolicyitem)
 
@@ -112,6 +114,12 @@ ___
 Ƭ **IPeriodUnit**: ``"Minute"`` \| ``"Hour"`` \| ``"Day"`` \| ``"Week"`` \| ``"Month"`` \| ``"Year"``
 
 Unit for measuring durations
+
+___
+
+### PlatformFunctionality
+
+Ƭ **PlatformFunctionality**: ``"requestPayment"`` \| ``"order"``
 
 ___
 

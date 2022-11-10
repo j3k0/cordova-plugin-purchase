@@ -33,6 +33,10 @@
 - [state](CdvPurchase.GooglePlay.Transaction.md#state)
 - [transactionId](CdvPurchase.GooglePlay.Transaction.md#transactionid)
 
+### Accessors
+
+- [parentReceipt](CdvPurchase.GooglePlay.Transaction.md#parentreceipt)
+
 ### Methods
 
 - [finish](CdvPurchase.GooglePlay.Transaction.md#finish)
@@ -44,13 +48,14 @@
 
 ### constructor
 
-• **new Transaction**(`purchase`, `decorator`)
+• **new Transaction**(`purchase`, `parentReceipt`, `decorator`)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `purchase` | [`Purchase`](../interfaces/CdvPurchase.GooglePlay.Bridge.Purchase.md) |
+| `parentReceipt` | [`Receipt`](CdvPurchase.GooglePlay.Receipt.md) |
 | `decorator` | `TransactionDecorator` |
 
 #### Overrides
@@ -245,6 +250,22 @@ Transaction identifier.
 #### Inherited from
 
 [Transaction](CdvPurchase.Transaction.md).[transactionId](CdvPurchase.Transaction.md#transactionid)
+
+## Accessors
+
+### parentReceipt
+
+• `get` **parentReceipt**(): [`Receipt`](CdvPurchase.Receipt.md)
+
+Return the receipt this transaction is part of.
+
+#### Returns
+
+[`Receipt`](CdvPurchase.Receipt.md)
+
+#### Inherited from
+
+CdvPurchase.Transaction.parentReceipt
 
 ## Methods
 

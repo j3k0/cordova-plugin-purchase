@@ -231,7 +231,8 @@ declare namespace CdvPurchase {
     }
     /** Product definition from a store */
     class Product {
-        private className;
+        /** @internal */
+        className: 'Product';
         /** Platform this product is available from */
         platform: Platform;
         /** Type of product (subscription, consumable, etc.) */
@@ -419,6 +420,10 @@ declare namespace CdvPurchase {
          * Open the platforms' subscription management interface.
          */
         manageSubscriptions(): Promise<IError | undefined>;
+        /**
+         * Returns true if the platform supports the given functionality.
+         */
+        checkSupport(functionality: PlatformFunctionality): boolean;
     }
     /**
      * Data to attach to a transaction.
@@ -446,6 +451,7 @@ declare namespace CdvPurchase {
         /** Test platform */
         TEST = "test"
     }
+    type PlatformFunctionality = 'requestPayment' | 'order';
     /** Possible states of a product */
     enum TransactionState {
         INITIATED = "initiated",
@@ -703,7 +709,8 @@ declare namespace CdvPurchase {
         }
     }
     class Receipt {
-        private className;
+        /** @internal */
+        className: 'Receipt';
         /** Platform that generated the receipt */
         platform: Platform;
         /** List of transactions contained in the receipt, ordered by date ascending. */
@@ -713,10 +720,7 @@ declare namespace CdvPurchase {
         /** Finish all transactions in a receipt */
         finish(): Promise<void>;
         /** @internal */
-        constructor(options: {
-            platform: Platform;
-            transactions: Transaction[];
-        }, decorator: Internal.ReceiptDecorator);
+        constructor(platform: Platform, decorator: Internal.ReceiptDecorator);
         /** Return true if the receipt contains the given transaction */
         hasTransaction(value: Transaction): boolean;
         /** Return the last transaction in this receipt */
@@ -803,7 +807,7 @@ declare namespace CdvPurchase {
             log: Logger;
             /** Verbosity level */
             verbosity: LogLevel;
-            /** Error reporting */
+            /** Report an Error */
             error: (error: IError) => void;
             /** List of registered products */
             registeredProducts: Internal.RegisteredProducts;
@@ -828,7 +832,7 @@ declare namespace CdvPurchase {
             /**
              * Initialize some platform adapters.
              */
-            initialize(platforms: (Platform | PlatformWithOptions)[] | undefined, context: AdapterContext): Promise<IError[]>;
+            initialize(platforms: (Platform | PlatformWithOptions)[], context: AdapterContext): Promise<IError[]>;
             /**
              * Retrieve a platform adapter.
              */
@@ -1050,23 +1054,49 @@ declare namespace CdvPurchase {
          *      .verified(receipt => receipt.finish());
          */
         when(): When;
-        startMonitor(transaction: Transaction, onChange: Callback<TransactionState>): void;
-        stopMonitor(transaction: Transaction, onChange: Callback<TransactionState>): void;
-        /** List of all active products */
+        /**
+         * Setup a function to be notified of changes to a transaction state.
+         *
+         * @param transaction The transaction to monitor.
+         * @param onChange Function to be called when the transaction status changes.
+         * @return A monitor which can be stopped with `monitor.stop()`
+         *
+         * @example
+         * const monitor = store.monitor(transaction, state => {
+         *   console.log('new state: ' + state);
+         *   if (state === TransactionState.FINISHED)
+         *     monitor.stop();
+         * });
+         */
+        monitor(transaction: Transaction, onChange: Callback<TransactionState>): TransactionMonitor;
+        /**
+         * List of all active products.
+         *
+         * Products are active if their details have been successfully loaded from the store.
+         */
         get products(): Product[];
-        /** Find a product from its id and platform */
+        /**
+         * Find a product from its id and platform
+         *
+         * @param productId Product identifier on the platform.
+         * @param platform The product the product exists in. Can be omitted if you're only using a single payment platform.
+         */
         get(productId: string, platform?: Platform): Product | undefined;
         /**
-         * List of all receipts as present on the device.
+         * List of all receipts present on the device.
          */
         get localReceipts(): Receipt[];
         /** List of all transaction from the local receipts. */
         get localTransactions(): Transaction[];
-        /** List of receipts verified with the receipt validation service.
+        /**
+         * List of receipts verified with the receipt validation service.
          *
-         * Those receipt contains more information and are generally more up-to-date than the local ones. */
+         * Those receipt contains more information and are generally more up-to-date than the local ones.
+         */
         get verifiedReceipts(): VerifiedReceipt[];
-        /** List of all purchases from the verified receipts. */
+        /**
+         * List of all purchases from the verified receipts.
+         */
         get verifiedPurchases(): VerifiedPurchase[];
         /**
          * Find the last verified purchase for a given product, from those verified by the receipt validator.
@@ -1087,15 +1117,51 @@ declare namespace CdvPurchase {
             id: string;
             platform?: Platform;
         } | string): boolean;
-        /** Place an order for a given offer */
+        /**
+         * Place an order for a given offer.
+         */
         order(offer: Offer, additionalData?: AdditionalData): Promise<IError | undefined>;
-        /** Request a payment */
+        /**
+         * Request a payment.
+         *
+         * A payment is a custom amount to charge the user. Make sure the selected payment platform
+         * supports Payment Requests.
+         *
+         * @param paymentRequest Parameters of the payment request
+         * @param additionalData Additional parameters
+         */
         requestPayment(paymentRequest: PaymentRequest, additionalData?: AdditionalData): PaymentRequestPromise;
-        /** Verify a receipt or transacting with the receipt validation service. */
+        /**
+         * Returns true if a platform supports the requested functionality.
+         *
+         * @example
+         * store.checkSupport(Platform.APPLE_APPSTORE, 'requestPayment');
+         * // => false
+         */
+        checkSupport(platform: Platform, functionality: PlatformFunctionality): boolean;
+        /**
+         * Verify a receipt or transacting with the receipt validation service.
+         *
+         * This will be called from the Receipt or Transaction objects using the API decorators.
+         */
         private verify;
-        /** Finalize a transaction */
-        finish(receipt: Transaction | Receipt | VerifiedReceipt): Promise<void>;
+        /**
+         * Finalize a transaction.
+         *
+         * This will be called from the Receipt, Transaction or VerifiedReceipt objects using the API decorators.
+         */
+        private finish;
+        /**
+         * Replay the users transactions.
+         *
+         * This method exists to cover an Apple AppStore requirement.
+         */
         restorePurchases(): Promise<void>;
+        /**
+         * Open the subscription management interface for the selected platform.
+         *
+         * If platform is not specified,
+         */
         manageSubscriptions(platform?: Platform): Promise<IError | undefined>;
         /**
          * The default payment platform to use depending on the OS.
@@ -1103,8 +1169,27 @@ declare namespace CdvPurchase {
          * - on iOS: `APPLE_APPSTORE`
          * - on Android: `GOOGLE_PLAY`
          */
-        static defaultPlatform(): Platform;
-        error(error: IError | Callback<IError>): void;
+        defaultPlatform(): Platform;
+        /**
+         * Register an error handler.
+         *
+         * @param error An error callback that takes the error as an argument
+         *
+         * @example
+         * store.error(function(error) {
+         *   console.error('CdvPurchase ERROR: ' + error.message);
+         * });
+         */
+        error(error: Callback<IError>): void;
+        /**
+         * Trigger an error event.
+         *
+         * @internal
+         */
+        triggerError(error: IError): void;
+        /**
+         * Version of the plugin currently installed.
+         */
         version: string;
     }
     /**
@@ -1130,7 +1215,8 @@ declare namespace CdvPurchase {
         }
     }
     class Transaction {
-        private className;
+        /** @internal */
+        className: 'Transaction';
         /** Platform this transaction was created on */
         platform: Platform;
         /** Transaction identifier. */
@@ -1196,8 +1282,12 @@ declare namespace CdvPurchase {
          *   .verified(receipt => receipt.finish())
          */
         verify(): Promise<void>;
+        /**
+         * Return the receipt this transaction is part of.
+         */
+        get parentReceipt(): Receipt;
         /** @internal */
-        constructor(platform: Platform, decorator: Internal.TransactionDecorator);
+        constructor(platform: Platform, parentReceipt: Receipt, decorator: Internal.TransactionDecorator);
     }
 }
 declare namespace CdvPurchase {
@@ -1208,6 +1298,11 @@ declare namespace CdvPurchase {
             updatedCallbacks: Callbacks<Product>;
             updatedReceiptCallbacks: Callbacks<Receipt>;
         }
+        /**
+         * Monitor the updates for products and receipt.
+         *
+         * Call the callbacks when appropriate.
+         */
         class StoreAdapterListener implements AdapterListener {
             delegate: StoreAdapterDelegate;
             constructor(delegate: StoreAdapterDelegate);
@@ -1338,16 +1433,38 @@ declare namespace CdvPurchase {
     }
 }
 declare namespace CdvPurchase {
+    /**
+     * Instance of a function monitoring changes to a given transaction.
+     *
+     * Can be stopped with `monitor.stop()`.
+     */
+    interface TransactionMonitor {
+        /** Stop monitoring the transaction. */
+        stop(): void;
+        /** Transaction being monitored. */
+        transaction: Transaction;
+    }
     /** @internal */
     namespace Internal {
-        /** Helper class to monitor changes in transaction states */
+        /**
+         * Helper class to monitor changes in transaction states.
+         *
+         * @example
+         * const monitor = monitors.start(transaction, (state) => {
+         *   // ... transaction state has changed
+         * });
+         * monitor.stop();
+         */
         class TransactionStateMonitors {
             private monitors;
             private findMonitors;
             constructor(when: When);
             private callOnChange;
-            start(transaction: Transaction, onChange: Callback<TransactionState>): void;
-            stop(transaction: Transaction, onChange: Callback<TransactionState>): void;
+            /**
+             * Start monitoring the provided transaction for state changes.
+             */
+            start(transaction: Transaction, onChange: Callback<TransactionState>): TransactionMonitor;
+            stop(monitorId: string): void;
         }
     }
 }
@@ -1397,6 +1514,7 @@ declare namespace CdvPurchase {
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
+            checkSupport(functionality: PlatformFunctionality): boolean;
         }
     }
 }
@@ -1850,6 +1968,7 @@ declare namespace CdvPurchase {
             requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             receiptValidationBody(receipt: BraintreeReceipt): Validator.Request.Body | undefined;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
+            checkSupport(functionality: PlatformFunctionality): boolean;
         }
     }
 }
@@ -2417,7 +2536,7 @@ declare namespace CdvPurchase {
     namespace GooglePlay {
         class Transaction extends CdvPurchase.Transaction {
             nativePurchase: Bridge.Purchase;
-            constructor(purchase: Bridge.Purchase, decorator: Internal.TransactionDecorator);
+            constructor(purchase: Bridge.Purchase, parentReceipt: Receipt, decorator: Internal.TransactionDecorator);
             static toState(state: Bridge.PurchaseState, isAcknowledged: boolean): TransactionState;
             /**
              * Refresh the value in the transaction based on the native purchase update
@@ -2487,6 +2606,7 @@ declare namespace CdvPurchase {
             handleReceiptValidationResponse(receipt: CdvPurchase.Receipt, response: Validator.Response.Payload): Promise<void>;
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
+            checkSupport(functionality: PlatformFunctionality): boolean;
         }
     }
 }
@@ -3249,6 +3369,7 @@ declare namespace CdvPurchase {
             manageSubscriptions(): Promise<IError | undefined>;
             private reportActiveSubscription;
             static verify(receipt: Receipt, callback: Callback<Internal.ReceiptResponse>): void;
+            checkSupport(functionality: PlatformFunctionality): boolean;
         }
     }
 }
@@ -3352,6 +3473,7 @@ declare namespace CdvPurchase {
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
+            checkSupport(functionality: PlatformFunctionality): boolean;
         }
     }
 }
@@ -3501,9 +3623,10 @@ declare namespace CdvPurchase {
 declare namespace CdvPurchase {
     namespace Utils {
         /** @internal */
-        function delay(fn: () => void, wait: number): number;
+        function delay(fn: () => void, milliseconds: number): number;
         /** @internal */
-        function debounce(fn: () => void, wait: number): () => void;
+        function debounce(fn: () => void, milliseconds: number): () => void;
+        function asyncDelay(milliseconds: number): Promise<void>;
     }
 }
 declare namespace CdvPurchase {
@@ -3879,6 +4002,8 @@ declare namespace CdvPurchase {
     }
     /** Receipt data as validated by the receipt validation server */
     class VerifiedReceipt {
+        /** @internal */
+        className: 'VerifiedReceipt';
         /** Platform this receipt originated from */
         get platform(): Platform;
         /** Source local receipt used for this validation */

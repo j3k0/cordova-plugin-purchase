@@ -36,6 +36,7 @@ Test.TEST_PRODUCTS
 
 ### Methods
 
+- [checkSupport](CdvPurchase.Test.Adapter.md#checksupport)
 - [finish](CdvPurchase.Test.Adapter.md#finish)
 - [handleReceiptValidationResponse](CdvPurchase.Test.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.Test.Adapter.md#initialize)
@@ -133,6 +134,28 @@ Returns true is the adapter is supported on this device.
 CdvPurchase.Adapter.isSupported
 
 ## Methods
+
+### checkSupport
+
+▸ **checkSupport**(`functionality`): `boolean`
+
+Returns true if the platform supports the given functionality.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `functionality` | [`PlatformFunctionality`](../modules/CdvPurchase.md#platformfunctionality) |
+
+#### Returns
+
+`boolean`
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[checkSupport](../interfaces/CdvPurchase.Adapter.md#checksupport)
+
+___
 
 ### finish
 

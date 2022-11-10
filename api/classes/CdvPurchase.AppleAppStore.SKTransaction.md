@@ -28,6 +28,10 @@
 - [state](CdvPurchase.AppleAppStore.SKTransaction.md#state)
 - [transactionId](CdvPurchase.AppleAppStore.SKTransaction.md#transactionid)
 
+### Accessors
+
+- [parentReceipt](CdvPurchase.AppleAppStore.SKTransaction.md#parentreceipt)
+
 ### Methods
 
 - [finish](CdvPurchase.AppleAppStore.SKTransaction.md#finish)
@@ -215,6 +219,22 @@ Transaction identifier.
 #### Inherited from
 
 [Transaction](CdvPurchase.Transaction.md).[transactionId](CdvPurchase.Transaction.md#transactionid)
+
+## Accessors
+
+### parentReceipt
+
+• `get` **parentReceipt**(): [`Receipt`](CdvPurchase.Receipt.md)
+
+Return the receipt this transaction is part of.
+
+#### Returns
+
+[`Receipt`](CdvPurchase.Receipt.md)
+
+#### Inherited from
+
+Transaction.parentReceipt
 
 ## Methods
 
