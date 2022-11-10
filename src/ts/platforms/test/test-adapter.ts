@@ -98,7 +98,9 @@ namespace CdvPurchase {
                 if (response?.toUpperCase() === 'E') return storeError(ErrorCode.PURCHASE, 'Purchase failed');
                 if (response?.toUpperCase() !== 'Y') return storeError(ErrorCode.PAYMENT_CANCELLED, 'Purchase flow has been cancelled by the user');
                 // purchase succeeded, let's generate a mock receipt.
-                const tr = new Transaction(platform, this.context.apiDecorators);
+                const receipt = new Receipt(platform, this.context.apiDecorators);
+                const tr = new Transaction(platform, receipt, this.context.apiDecorators);
+                receipt.transactions = [tr];
                 tr.products = [{
                     id: offer.productId,
                     offerId: offer.id,
@@ -108,10 +110,6 @@ namespace CdvPurchase {
                 tr.transactionId = offer.productId + '-' + (new Date().getTime());
                 tr.isAcknowledged = false;
                 updateVerifiedPurchases(tr);
-                const receipt = new Receipt({
-                    platform,
-                    transactions: [tr]
-                }, this.context.apiDecorators);
                 this.receipts.push(receipt);
                 this.context.listener.receiptsUpdated(Platform.TEST, [receipt]);
             }
@@ -141,17 +139,19 @@ namespace CdvPurchase {
 
             async requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined> {
 
+                await Utils.asyncDelay(100); // maybe app has some UI to update... and "prompt" prevents that
                 const response = prompt(`Mock payment of ${paymentRequest.amountMicros / 1000000} ${paymentRequest.currency}. Enter "Y" to confirm. Enter "E" to trigger an error.`);
                 if (response?.toUpperCase() === 'E') return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Payment not allowed');
                 if (response?.toUpperCase() !== 'Y') return;
-                const transaction = new Transaction(Platform.TEST, this.context.apiDecorators);
+                const receipt = new Receipt(platform, this.context.apiDecorators);
+                const transaction = new Transaction(Platform.TEST, receipt, this.context.apiDecorators);
                 transaction.purchaseDate = new Date();
                 transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
                 transaction.state = TransactionState.APPROVED;
                 transaction.transactionId = 'payment-' + new Date().getTime();
                 transaction.amountMicros = paymentRequest.amountMicros;
                 transaction.currency = paymentRequest.currency;
-                const receipt = new Receipt({ platform, transactions: [transaction] }, this.context.apiDecorators);
+                receipt.transactions = [transaction];
                 this.receipts.push(receipt);
                 setTimeout(() => {
                     this.context.listener.receiptsUpdated(platform, [receipt]);
@@ -173,12 +173,9 @@ namespace CdvPurchase {
 
                 const RENEWS_EVERY_MS = 2 * 60000; // 2 minutes
 
-                const receipt = new Receipt({
-                    platform,
-                    transactions: [],
-                }, this.context.apiDecorators);
+                const receipt = new Receipt(platform, this.context.apiDecorators);
                 const makeTransaction = (n: number) => {
-                    const tr = new Transaction(platform, this.context.apiDecorators);
+                    const tr = new Transaction(platform, receipt, this.context.apiDecorators);
                     tr.products = [{
                         id: testProducts.PAID_SUBSCRIPTION_ACTIVE.id,
                         offerId: testProducts.PAID_SUBSCRIPTION_ACTIVE.extra.offerId,
@@ -226,6 +223,10 @@ namespace CdvPurchase {
                         }
                     });
                 }, 500);
+            }
+
+            checkSupport(functionality: PlatformFunctionality): boolean {
+                return true;
             }
         }
     }

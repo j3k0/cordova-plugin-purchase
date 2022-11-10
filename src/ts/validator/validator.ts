@@ -74,7 +74,7 @@ namespace CdvPurchase {
                         return vr;
                     }
                 }
-                this.log.debug("Register a new  verified receipt.")
+                this.log.debug("Register a new verified receipt.")
                 const newVR = new VerifiedReceipt(receipt, data, this.controller);
                 this.verifiedReceipts.push(newVR);
                 return newVR;

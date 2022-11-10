@@ -13,7 +13,8 @@ namespace CdvPurchase
 
     export class Transaction {
 
-        private className: 'Transaction' = 'Transaction';
+        /** @internal */
+        className: 'Transaction' = 'Transaction';
 
         /** Platform this transaction was created on */
         platform: Platform;
@@ -99,11 +100,17 @@ namespace CdvPurchase
          */
         async verify(): Promise<void> {} // actual implementation in the constructor
 
+        /**
+         * Return the receipt this transaction is part of.
+         */
+        get parentReceipt(): Receipt { return {} as Receipt; } // actual implementation in the constructor
+
         /** @internal */
-        constructor(platform: Platform, decorator: Internal.TransactionDecorator) {
+        constructor(platform: Platform, parentReceipt: Receipt, decorator: Internal.TransactionDecorator) {
             this.platform = platform;
             Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
             Object.defineProperty(this, 'verify', { 'enumerable': false, get() { return () => decorator.verify(this); } });
+            Object.defineProperty(this, 'parentReceipt', { 'enumerable': false, get() { return parentReceipt; } });
         }
     }
 

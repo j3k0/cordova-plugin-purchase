@@ -9,8 +9,8 @@ namespace CdvPurchase {
 
             public nativePurchase: Bridge.Purchase;
 
-            constructor(purchase: Bridge.Purchase, decorator: Internal.TransactionDecorator) {
-                super(Platform.GOOGLE_PLAY, decorator);
+            constructor(purchase: Bridge.Purchase, parentReceipt: Receipt, decorator: Internal.TransactionDecorator) {
+                super(Platform.GOOGLE_PLAY, parentReceipt, decorator);
                 this.nativePurchase = purchase;
                 this.refresh(purchase);
             }
@@ -55,10 +55,8 @@ namespace CdvPurchase {
 
             /** @internal */
             constructor(purchase: Bridge.Purchase, decorator: Internal.TransactionDecorator & Internal.ReceiptDecorator) {
-                super({
-                    platform: Platform.GOOGLE_PLAY,
-                    transactions: [new Transaction(purchase, decorator)],
-                }, decorator);
+                super(Platform.GOOGLE_PLAY, decorator);
+                this.transactions = [new Transaction(purchase, this, decorator)];
                 this.purchaseToken = purchase.purchaseToken;
                 this.orderId = purchase.orderId;
             }
@@ -367,6 +365,9 @@ namespace CdvPurchase {
                 return;
             }
 
+            checkSupport(functionality: PlatformFunctionality): boolean {
+                return functionality === 'order';
+            }
         }
 
     }

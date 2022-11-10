@@ -169,6 +169,11 @@
              * Open the platforms' subscription management interface.
              */
             manageSubscriptions(): Promise<IError | undefined>;
+
+            /**
+             * Returns true if the platform supports the given functionality.
+             */
+            checkSupport(functionality: PlatformFunctionality): boolean;
         }
 
 
@@ -210,6 +215,8 @@
             /** Test platform */
             TEST = 'test',
         }
+
+    export type PlatformFunctionality = 'requestPayment' | 'order';
 
     /** Possible states of a product */
     export enum TransactionState {

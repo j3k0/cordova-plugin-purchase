@@ -13,6 +13,9 @@ namespace CdvPurchase {
     /** Receipt data as validated by the receipt validation server */
     export class VerifiedReceipt {
 
+        /** @internal */
+        className: 'VerifiedReceipt' = 'VerifiedReceipt';
+
         /** Platform this receipt originated from */
         get platform(): Platform { return this.sourceReceipt.platform; }
 

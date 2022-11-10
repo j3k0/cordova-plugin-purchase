@@ -31,6 +31,9 @@ namespace CdvPurchase {
             async manageSubscriptions(): Promise<IError | undefined> {
                 return storeError(ErrorCode.UNKNOWN, 'manageSubscriptions not supported');
             }
+            checkSupport(functionality: PlatformFunctionality): boolean {
+                return false;
+            }
         }
     }
 }

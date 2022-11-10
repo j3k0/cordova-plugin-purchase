@@ -207,21 +207,22 @@ namespace CdvPurchase {
          *
          * @param platforms - List of payment platforms to initialize, default to Store.defaultPlatform().
          */
-        async initialize(platforms: (Platform | PlatformWithOptions)[] = [Store.defaultPlatform()]): Promise<IError[]> {
+        async initialize(platforms: (Platform | PlatformWithOptions)[] = [this.defaultPlatform()]): Promise<IError[]> {
+            this.log.info('initialize()');
             const store = this;
             const ret = this.adapters.initialize(platforms, {
-                error: this.error.bind(this),
+                error: this.triggerError.bind(this),
                 get verbosity() { return store.verbosity; },
                 getApplicationUsername() { return store.getApplicationUsername() },
-                listener: this.listener,
-                log: this.log,
-                registeredProducts: this.registeredProducts,
+                get listener() { return store.listener; },
+                get log() { return store.log; },
+                get registeredProducts() { return store.registeredProducts; },
                 apiDecorators: {
-                    canPurchase: this.canPurchase,
-                    owned: this.owned,
-                    finish: this.finish,
-                    order: this.order,
-                    verify: this.verify,
+                    canPurchase: this.canPurchase.bind(this),
+                    owned: this.owned.bind(this),
+                    finish: this.finish.bind(this),
+                    order: this.order.bind(this),
+                    verify: this.verify.bind(this),
                 },
             });
             ret.then(() => this._readyCallbacks.trigger());
@@ -239,6 +240,7 @@ namespace CdvPurchase {
          * Call to refresh the price of products and status of purchases.
          */
         async update() {
+            this.log.info('update()');
             // Load products metadata
             for (const registration of this.registeredProducts.byPlatform()) {
                 const products = await this.adapters.findReady(registration.platform)?.load(registration.products);
@@ -273,27 +275,46 @@ namespace CdvPurchase {
             return ret;
         }
 
-        startMonitor(transaction: Transaction, onChange: Callback<TransactionState>) {
-            this.transactionStateMonitors.start(transaction, onChange);
+        /**
+         * Setup a function to be notified of changes to a transaction state.
+         *
+         * @param transaction The transaction to monitor.
+         * @param onChange Function to be called when the transaction status changes.
+         * @return A monitor which can be stopped with `monitor.stop()`
+         *
+         * @example
+         * const monitor = store.monitor(transaction, state => {
+         *   console.log('new state: ' + state);
+         *   if (state === TransactionState.FINISHED)
+         *     monitor.stop();
+         * });
+         */
+        monitor(transaction: Transaction, onChange: Callback<TransactionState>): TransactionMonitor {
+            return this.transactionStateMonitors.start(transaction, onChange);
         }
 
-        stopMonitor(transaction: Transaction, onChange: Callback<TransactionState>) {
-            this.transactionStateMonitors.stop(transaction, onChange);
-        }
-
-        /** List of all active products */
+        /**
+         * List of all active products.
+         *
+         * Products are active if their details have been successfully loaded from the store.
+         */
         get products(): Product[] {
             // concatenate products all all active platforms
             return ([] as Product[]).concat(...this.adapters.list.map(a => a.products));
         }
 
-        /** Find a product from its id and platform */
-        get(productId: string, platform: Platform = Store.defaultPlatform()): Product | undefined {
-            return this.adapters.find(platform)?.products.find(p => p.id === productId);
+        /**
+         * Find a product from its id and platform
+         *
+         * @param productId Product identifier on the platform.
+         * @param platform The product the product exists in. Can be omitted if you're only using a single payment platform.
+         */
+        get(productId: string, platform?: Platform): Product | undefined {
+            return this.adapters.findReady(platform)?.products.find(p => p.id === productId);
         }
 
         /**
-         * List of all receipts as present on the device.
+         * List of all receipts present on the device.
          */
         get localReceipts(): Receipt[] {
             // concatenate products all all active platforms
@@ -309,14 +330,18 @@ namespace CdvPurchase {
             return ret;
         }
 
-        /** List of receipts verified with the receipt validation service.
+        /**
+         * List of receipts verified with the receipt validation service.
          *
-         * Those receipt contains more information and are generally more up-to-date than the local ones. */
+         * Those receipt contains more information and are generally more up-to-date than the local ones.
+         */
         get verifiedReceipts(): VerifiedReceipt[] {
             return this._validator.verifiedReceipts;
         }
 
-        /** List of all purchases from the verified receipts. */
+        /**
+         * List of all purchases from the verified receipts.
+         */
         get verifiedPurchases(): VerifiedPurchase[] {
             return Internal.VerifiedReceipts.getVerifiedPurchases(this.verifiedReceipts);
         }
@@ -354,16 +379,27 @@ namespace CdvPurchase {
             });
         }
 
-        /** Place an order for a given offer */
+        /**
+         * Place an order for a given offer.
+         */
         async order(offer: Offer, additionalData?: AdditionalData): Promise<IError | undefined> {
+            this.log.info(`order(${offer.productId})`);
             const adapter = this.adapters.findReady(offer.platform);
             if (!adapter) return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + offer.platform + ')');
             const ret = await adapter.order(offer, additionalData || {});
-            if (ret && 'isError' in ret) store.error(ret);
+            if (ret && 'isError' in ret) store.triggerError(ret);
             return ret;
         }
 
-        /** Request a payment */
+        /**
+         * Request a payment.
+         *
+         * A payment is a custom amount to charge the user. Make sure the selected payment platform
+         * supports Payment Requests.
+         *
+         * @param paymentRequest Parameters of the payment request
+         * @param additionalData Additional parameters
+         */
         requestPayment(paymentRequest: PaymentRequest, additionalData?: AdditionalData): PaymentRequestPromise {
             const adapter = this.adapters.findReady(paymentRequest.platform);
             if (!adapter)
@@ -374,16 +410,35 @@ namespace CdvPurchase {
                 if (result instanceof Transaction) {
                     const onStateChange = (state: TransactionState) => {
                         promise.trigger(result);
-                        if (result.state === TransactionState.FINISHED) this.stopMonitor(result, onStateChange);
+                        if (result.state === TransactionState.FINISHED)
+                            monitor.stop();
                     }
-                    this.startMonitor(result, onStateChange);
+                    const monitor = this.monitor(result, onStateChange);
                 }
             });
             return promise;
         }
 
-        /** Verify a receipt or transacting with the receipt validation service. */
+        /**
+         * Returns true if a platform supports the requested functionality.
+         *
+         * @example
+         * store.checkSupport(Platform.APPLE_APPSTORE, 'requestPayment');
+         * // => false
+         */
+        checkSupport(platform: Platform, functionality: PlatformFunctionality): boolean {
+            const adapter = this.adapters.find(platform);
+            if (!adapter) return false; // the selected adapter hasn't been initialized
+            return adapter.checkSupport(functionality);
+        }
+
+        /**
+         * Verify a receipt or transacting with the receipt validation service.
+         *
+         * This will be called from the Receipt or Transaction objects using the API decorators.
+         */
         private async verify(receiptOrTransaction: Receipt | Transaction) {
+            this.log.info(`verify(${receiptOrTransaction.className})`);
             this._validator.add(receiptOrTransaction);
 
             // Run validation after 50ms, so if the same receipt is to be validated multiple times it will just create one call.
@@ -391,8 +446,13 @@ namespace CdvPurchase {
 
         }
 
-        /** Finalize a transaction */
-        async finish(receipt: Transaction | Receipt | VerifiedReceipt) {
+        /**
+         * Finalize a transaction.
+         *
+         * This will be called from the Receipt, Transaction or VerifiedReceipt objects using the API decorators.
+         */
+        private async finish(receipt: Transaction | Receipt | VerifiedReceipt) {
+            this.log.info(`finish(${receipt.className})`);
             const transactions =
                 receipt instanceof VerifiedReceipt
                     ? receipt.sourceReceipt.transactions
@@ -400,15 +460,26 @@ namespace CdvPurchase {
                         ? receipt.transactions
                         : [receipt];
             transactions.forEach(transaction => {
-                const adapter = this.adapters.find(transaction.platform)?.finish(transaction);
+                const adapter = this.adapters.findReady(transaction.platform)?.finish(transaction);
             });
         }
 
+        /**
+         * Replay the users transactions.
+         *
+         * This method exists to cover an Apple AppStore requirement.
+         */
         async restorePurchases() {
-            // TODO
+            store.triggerError(storeError(ErrorCode.UNKNOWN, 'restorePurchases() is not implemented yet'));
         }
 
+        /**
+         * Open the subscription management interface for the selected platform.
+         *
+         * If platform is not specified,
+         */
         async manageSubscriptions(platform?: Platform): Promise<IError | undefined> {
+            this.log.info('manageSubscriptions()');
             const adapter = this.adapters.findReady(platform);
             if (!adapter) return storeError(ErrorCode.SETUP, "Found no adapter ready to handle 'manageSubscription'");
             return adapter.manageSubscriptions();
@@ -420,7 +491,7 @@ namespace CdvPurchase {
          * - on iOS: `APPLE_APPSTORE`
          * - on Android: `GOOGLE_PLAY`
          */
-        static defaultPlatform(): Platform {
+        defaultPlatform(): Platform {
             switch (window.cordova.platformId) {
                 case 'android': return Platform.GOOGLE_PLAY;
                 case 'ios': return Platform.APPLE_APPSTORE;
@@ -428,13 +499,32 @@ namespace CdvPurchase {
             }
         }
 
-        error(error: IError | Callback<IError>): void {
-            if (error instanceof Function)
-                this.errorCallbacks.push(error);
-            else
-                this.errorCallbacks.trigger(error);
+        /**
+         * Register an error handler.
+         *
+         * @param error An error callback that takes the error as an argument
+         *
+         * @example
+         * store.error(function(error) {
+         *   console.error('CdvPurchase ERROR: ' + error.message);
+         * });
+         */
+        error(error: Callback<IError>): void {
+            this.errorCallbacks.push(error);
         }
 
+        /**
+         * Trigger an error event.
+         *
+         * @internal
+         */
+        triggerError(error: IError) {
+            this.errorCallbacks.trigger(error);
+        }
+
+        /**
+         * Version of the plugin currently installed.
+         */
         public version = PLUGIN_VERSION;
     }
 
@@ -460,7 +550,7 @@ setTimeout(() => {
     window.CdvPurchase = CdvPurchase;
     window.CdvPurchase.store = new CdvPurchase.Store();
     // Let's maximize backward compatibility
-    Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode);
+    Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode, CdvPurchase.Platform);
 }, 0);
 
 // Ensure utility are included when compiling typescript.

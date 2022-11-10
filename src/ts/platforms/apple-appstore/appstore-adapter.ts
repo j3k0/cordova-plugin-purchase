@@ -65,6 +65,10 @@ namespace CdvPurchase {
             async manageSubscriptions(): Promise<IError | undefined> {
                 return storeError(ErrorCode.UNKNOWN, 'TODO: Not implemented');
             }
+
+            checkSupport(functionality: PlatformFunctionality): boolean {
+                return false;
+            }
         }
     }
 }

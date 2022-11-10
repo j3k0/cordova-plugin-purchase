@@ -11,13 +11,14 @@ namespace CdvPurchase
 
     export class Receipt {
 
-        private className: 'Receipt' = 'Receipt';
+        /** @internal */
+        className: 'Receipt' = 'Receipt';
 
         /** Platform that generated the receipt */
         platform: Platform;
 
         /** List of transactions contained in the receipt, ordered by date ascending. */
-        transactions: Transaction[];
+        transactions: Transaction[] = [];
 
         /** Verify a receipt */
         async verify(): Promise<void> {}
@@ -26,9 +27,8 @@ namespace CdvPurchase
         async finish(): Promise<void> {}
 
         /** @internal */
-        constructor(options: { platform: Platform, transactions: Transaction[] }, decorator: Internal.ReceiptDecorator) {
-            this.platform = options.platform;
-            this.transactions = options.transactions;
+        constructor(platform: Platform, decorator: Internal.ReceiptDecorator) {
+            this.platform = platform;
             Object.defineProperty(this, 'verify', { 'enumerable': false, get() { return () => decorator.verify(this); } });
             Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
         }

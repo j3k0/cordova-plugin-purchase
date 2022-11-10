@@ -30,8 +30,8 @@ namespace CdvPurchase
             }]);
 
             store.when()
-                .approved(transaction => store.verify(transaction))
-                .verified(receipt => store.finish(receipt))
+                .approved(transaction => transaction.verify())
+                .verified(receipt => receipt.finish())
                 .finished(transaction => console.log('Products owned: ' + transaction.products.map(p => p.id).join(',')))
                 .receiptUpdated(r => updatePurchases(r))
                 .productUpdated(p => updateUI(p));

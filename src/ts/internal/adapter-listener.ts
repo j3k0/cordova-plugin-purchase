@@ -9,6 +9,11 @@ namespace CdvPurchase
             updatedReceiptCallbacks: Callbacks<Receipt>;
         }
 
+        /**
+         * Monitor the updates for products and receipt.
+         *
+         * Call the callbacks when appropriate.
+         */
         export class StoreAdapterListener implements AdapterListener {
 
             delegate: StoreAdapterDelegate;
@@ -30,7 +35,8 @@ namespace CdvPurchase
                         const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
                         const lastState = this.lastTransactionState[transactionToken];
                         if (transaction.state === TransactionState.APPROVED) {
-                            this.delegate.approvedCallbacks.trigger(transaction); // better retrigger (so validation is rerun on potential update)
+                            this.delegate.approvedCallbacks.trigger(transaction);
+                            // better retrigger (so validation is rerun on potential update)
                         }
                         else if (lastState !== transaction.state) {
                             if (transaction.state === TransactionState.FINISHED) {

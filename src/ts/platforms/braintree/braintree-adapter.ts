@@ -157,15 +157,13 @@ namespace CdvPurchase {
                 // result.deviceData; // undefined
                 // result.paymentMethodNonce; // {"isDefault":false,"nonce":"tokencc_bh_rdjmsc_76vjtq_9tzsv3_4467mg_tt4"}
 
-                const transaction = new Transaction(Platform.BRAINTREE, decorator);
+                super(Platform.BRAINTREE, decorator);
+
+                const transaction = new Transaction(Platform.BRAINTREE, this, decorator);
                 transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
                 transaction.state = TransactionState.APPROVED;
                 transaction.transactionId = dropInResult.paymentMethodNonce?.nonce ?? `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
-
-                super({
-                    platform: Platform.BRAINTREE,
-                    transactions: [transaction],
-                }, decorator);
+                this.transactions = [transaction];
 
                 this.dropInResult = dropInResult;
                 this.paymentRequest = paymentRequest;
@@ -175,12 +173,13 @@ namespace CdvPurchase {
             refresh(paymentRequest: PaymentRequest, dropInResult: DropIn.Result, decorator: Internal.TransactionDecorator) {
                 this.dropInResult = dropInResult;
                 this.paymentRequest = paymentRequest;
-                const transaction = new Transaction(Platform.BRAINTREE, decorator);
+                const transaction = new Transaction(Platform.BRAINTREE, this, decorator);
                 transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
                 transaction.state = TransactionState.APPROVED;
                 transaction.transactionId = dropInResult.paymentMethodNonce?.nonce ?? `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
                 transaction.amountMicros = paymentRequest.amountMicros;
                 transaction.currency = paymentRequest.currency;
+                this.transactions = [transaction];
             }
         }
 
@@ -257,10 +256,9 @@ namespace CdvPurchase {
             }
 
             async finish(transaction: Transaction): Promise<undefined | IError> {
-                return; /* {
-                    code: ErrorCode.UNKNOWN,
-                    message: 'N/A: Not implemented with Braintree'
-                } as IError; */
+                transaction.state = TransactionState.FINISHED;
+                this.context.listener.receiptsUpdated(Platform.TEST, [transaction.parentReceipt]);
+                return;
             }
 
             async manageSubscriptions(): Promise<IError | undefined> {
@@ -392,6 +390,10 @@ namespace CdvPurchase {
                         }
                     }
                 }
+            }
+
+            checkSupport(functionality: PlatformFunctionality): boolean {
+                return functionality === 'requestPayment';
             }
         }
 
