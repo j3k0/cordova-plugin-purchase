@@ -160,6 +160,7 @@ namespace CdvPurchase {
                 super(Platform.BRAINTREE, decorator);
 
                 const transaction = new Transaction(Platform.BRAINTREE, this, decorator);
+                transaction.purchaseDate = new Date();
                 transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
                 transaction.state = TransactionState.APPROVED;
                 transaction.transactionId = dropInResult.paymentMethodNonce?.nonce ?? `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;

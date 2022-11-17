@@ -1921,6 +1921,7 @@ var CdvPurchase;
                 var _a, _b;
                 super(CdvPurchase.Platform.BRAINTREE, decorator);
                 const transaction = new CdvPurchase.Transaction(CdvPurchase.Platform.BRAINTREE, this, decorator);
+                transaction.purchaseDate = new Date();
                 transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
                 transaction.state = CdvPurchase.TransactionState.APPROVED;
                 transaction.transactionId = (_b = (_a = dropInResult.paymentMethodNonce) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
