@@ -83,13 +83,8 @@ namespace CdvPurchase {
             /** Add a receipt to the validation queue. It'll get validated after a few milliseconds. */
             add(receiptOrTransaction: Receipt | Transaction) {
                 this.log.debug("Schedule validation: " + JSON.stringify(receiptOrTransaction));
-                const receipt: Receipt | undefined =
-                    (receiptOrTransaction instanceof Transaction)
-                        ? this.controller.localReceipts.filter(r => r.hasTransaction(receiptOrTransaction)).slice(-1)[0]
-                        : receiptOrTransaction;
-                if (receipt) {
-                    this.receiptsToValidate.add(receipt);
-                }
+                const receipt: Receipt = (receiptOrTransaction instanceof Transaction) ? receiptOrTransaction.parentReceipt : receiptOrTransaction;
+                this.receiptsToValidate.add(receipt);
             }
 
             /** Run validation for all receipts in the queue */
@@ -181,7 +176,41 @@ namespace CdvPurchase {
                 return body;
             }
 
+            /**
+             * For each md5-hashed values of the validator request's ".transaction" field,
+             * store the response from the server.
+             *
+             * This way, if a subsequent request is necessary (without a couple of minutes)
+             * we just reuse the same data.
+             */
+            private cache: {
+                [bodyTransactionHash: string]: {
+                    payload: Validator.Response.Payload;
+                    expires: number;
+                }
+            } = {};
+
+            private removeExpiredCache() {
+                const now = +new Date();
+                const deleteList: string[] = [];
+                for (const hash in this.cache) {
+                    if (this.cache[hash].expires < now) {
+                        deleteList.push(hash);
+                    }
+                }
+                for (const hash of deleteList) {
+                    delete this.cache[hash];
+                }
+            }
+
             private runValidatorRequest(target: Validator.Target, receipt: Receipt, body: Validator.Request.Body, callback: Callback<ReceiptResponse>) {
+
+                this.removeExpiredCache();
+                const bodyTransactionHash = Utils.md5(JSON.stringify(body.transaction));
+                const cached = this.cache[bodyTransactionHash];
+                if (cached) {
+                    return callback({receipt, payload: cached.payload});
+                }
 
                 CdvPurchase.Utils.ajax<Validator.Response.Payload>(this.log.child("Ajax"), {
                     url: target.url,
@@ -200,6 +229,10 @@ namespace CdvPurchase {
                                     data: { latest_receipt: (response as any)?.data?.latest_receipt },
                                 } as Validator.Response.ErrorPayload
                             });
+                        this.cache[bodyTransactionHash] = {
+                            payload: response,
+                            expires: (+new Date()) + 120000, // expires in 2 minutes
+                        };
                         callback({ receipt, payload: response });
                     },
                     error: (status, message, data) => {
