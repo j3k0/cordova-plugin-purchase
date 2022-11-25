@@ -276,6 +276,19 @@ namespace CdvPurchase {
         }
 
         /**
+         * Remove a callback from any listener it might have been added to.
+         */
+        off<T>(callback: Callback<T>) {
+            this.updatedCallbacks.remove(callback as any);
+            this.updatedReceiptsCallbacks.remove(callback as any);
+            this.approvedCallbacks.remove(callback as any);
+            this.finishedCallbacks.remove(callback as any);
+            this.verifiedCallbacks.remove(callback as any);
+            this.errorCallbacks.remove(callback as any);
+            this._readyCallbacks.remove(callback as any);
+        }
+
+        /**
          * Setup a function to be notified of changes to a transaction state.
          *
          * @param transaction The transaction to monitor.
@@ -441,9 +454,8 @@ namespace CdvPurchase {
             this.log.info(`verify(${receiptOrTransaction.className})`);
             this._validator.add(receiptOrTransaction);
 
-            // Run validation after 50ms, so if the same receipt is to be validated multiple times it will just create one call.
-            setTimeout(() => this._validator.run());
-
+            // Run validation after 200ms, so if the same receipt is to be validated multiple times it will just create one call.
+            setTimeout(() => this._validator.run(), 200);
         }
 
         /**
@@ -470,7 +482,10 @@ namespace CdvPurchase {
          * This method exists to cover an Apple AppStore requirement.
          */
         async restorePurchases() {
-            store.triggerError(storeError(ErrorCode.UNKNOWN, 'restorePurchases() is not implemented yet'));
+            for (const adapter of this.adapters.list) {
+                if (adapter.ready) await adapter.restorePurchases();
+            }
+            // store.triggerError(storeError(ErrorCode.UNKNOWN, 'restorePurchases() is not implemented yet'));
         }
 
         /**

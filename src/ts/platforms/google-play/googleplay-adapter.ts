@@ -326,6 +326,7 @@ namespace CdvPurchase {
                     id: productId,
                     type: product.type,
                     offers: product.offers,
+                    products: this._products.products,
                     transaction: {
                         type: Platform.GOOGLE_PLAY,
                         id: receipt.transactions[0].transactionId,
@@ -367,6 +368,9 @@ namespace CdvPurchase {
 
             checkSupport(functionality: PlatformFunctionality): boolean {
                 return functionality === 'order';
+            }
+
+            async restorePurchases(): Promise<void> {
             }
         }
 

@@ -19,6 +19,12 @@ namespace CdvPurchase {
             trigger(value: T): void {
                 this.callbacks.forEach(cb => setTimeout(cb, 0, value));
             }
+
+            /** Remove a callback from the list */
+            remove(callback: Callback<T>): void {
+                this.callbacks = this.callbacks.filter(el => el !== callback);
+            }
         }
+
     }
 }

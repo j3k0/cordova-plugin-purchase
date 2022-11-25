@@ -52,6 +52,9 @@ namespace CdvPurchase {
          */
         id: string;
 
+        /** Get raw response data from the receipt validation request */
+        get raw(): Validator.Response.SuccessPayload['data'] { return {} as any; } // actual implementation as "defineProperty" in constructor.
+
         /**
          * @internal
          */
@@ -62,6 +65,7 @@ namespace CdvPurchase {
             this.latestReceipt = response.latest_receipt;
             this.nativeTransactions = [response.transaction];
             this.warning = response.warning;
+            Object.defineProperty(this, 'raw', { 'enumerable': false, get() { return response; } });
             Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
         }
 

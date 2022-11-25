@@ -25,6 +25,10 @@ namespace CdvPurchase {
                 this.readyCallbacks.forEach(cb => setTimeout(cb, 0));
                 this.readyCallbacks = [];
             }
+
+            remove(cb: Callback<void>): void {
+                this.readyCallbacks = this.readyCallbacks.filter(el => el !== cb);
+            }
         }
     }
 }

@@ -88,6 +88,21 @@ namespace CdvPurchase {
                 trialPeriodUnit?: SubscriptionPeriodUnit;
                 /** Metadata about the user's device */
                 device?: CdvPurchase.Validator.DeviceInfo;
+
+                /** List of products available in the store */
+                products: {
+                    /** Type of product (subscription, consumable, etc.) */
+                    type: ProductType;
+
+                    /** Product identifier on the store (unique per platform) */
+                    id: string;
+
+                    /** List of offers available for this product */
+                    offers: {
+                        id: string;
+                        pricingPhases: PricingPhase[];
+                    }[];
+                }[];
             }
 
             export type ApiValidatorBodyTransaction =

@@ -228,6 +228,9 @@ namespace CdvPurchase {
             checkSupport(functionality: PlatformFunctionality): boolean {
                 return true;
             }
+
+            async restorePurchases(): Promise<void> {
+            }
         }
     }
 }

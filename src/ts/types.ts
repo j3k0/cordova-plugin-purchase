@@ -174,6 +174,13 @@
              * Returns true if the platform supports the given functionality.
              */
             checkSupport(functionality: PlatformFunctionality): boolean;
+
+            /**
+             * Replay the queue of transactions.
+             *
+             * Might ask the user to login.
+             */
+            restorePurchases(): Promise<void>;
         }
 
 

@@ -9,7 +9,7 @@ namespace CdvPurchase
     export type PlatformWithOptions =
         | { platform: Platform.BRAINTREE; options: Braintree.AdapterOptions; }
         | { platform: Platform.GOOGLE_PLAY; }
-        | { platform: Platform.APPLE_APPSTORE; }
+        | { platform: Platform.APPLE_APPSTORE; options?: AppleAppStore.AdapterOptions; }
         | { platform: Platform.TEST; }
         | { platform: Platform.WINDOWS_STORE; }
         ;
@@ -65,7 +65,7 @@ namespace CdvPurchase
                     if (this.find(po.platform)) return;
                     switch (po.platform) {
                         case Platform.APPLE_APPSTORE:
-                            return this.list.push(new AppleAppStore.Adapter(context));
+                            return this.list.push(new AppleAppStore.Adapter(context, po.options || {}));
                         case Platform.GOOGLE_PLAY:
                             return this.list.push(new GooglePlay.Adapter(context));
                         case Platform.BRAINTREE:
@@ -94,7 +94,10 @@ namespace CdvPurchase
                     const adapter = this.find(platformToInit.platform);
                     if (!adapter) return;
                     log.info(`${adapter.name} initializing...`);
-                    if (!adapter.isSupported) return; // skip unsupported adapters
+                    if (!adapter.isSupported) {
+                        log.info(`${adapter.name} is not supported.`);
+                        return; // skip unsupported adapters
+                    }
                     const initResult = await adapter.initialize();
                     adapter.ready = true;
                     log.info(`${adapter.name} initialized. ${initResult ? JSON.stringify(initResult) : ''}`);

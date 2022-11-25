@@ -369,6 +369,7 @@ namespace CdvPurchase {
                     type: ProductType.CONSUMABLE,
                     priceMicros: receipt.paymentRequest.amountMicros,
                     currency: receipt.paymentRequest.currency,
+                    products: [],
                     transaction: {
                         type: Platform.BRAINTREE,
                         deviceData: receipt.dropInResult.deviceData,
@@ -395,6 +396,9 @@ namespace CdvPurchase {
 
             checkSupport(functionality: PlatformFunctionality): boolean {
                 return functionality === 'requestPayment';
+            }
+
+            async restorePurchases(): Promise<void> {
             }
         }
 
