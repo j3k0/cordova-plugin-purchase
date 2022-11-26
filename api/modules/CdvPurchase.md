@@ -125,7 +125,7 @@ ___
 
 ### PlatformWithOptions
 
-Ƭ **PlatformWithOptions**: { `options`: [`AdapterOptions`](../interfaces/CdvPurchase.Braintree.AdapterOptions.md) ; `platform`: [`BRAINTREE`](../enums/CdvPurchase.Platform.md#braintree)  } \| { `platform`: [`GOOGLE_PLAY`](../enums/CdvPurchase.Platform.md#google_play)  } \| { `platform`: [`APPLE_APPSTORE`](../enums/CdvPurchase.Platform.md#apple_appstore)  } \| { `platform`: [`TEST`](../enums/CdvPurchase.Platform.md#test)  } \| { `platform`: [`WINDOWS_STORE`](../enums/CdvPurchase.Platform.md#windows_store)  }
+Ƭ **PlatformWithOptions**: { `options`: [`AdapterOptions`](../interfaces/CdvPurchase.Braintree.AdapterOptions.md) ; `platform`: [`BRAINTREE`](../enums/CdvPurchase.Platform.md#braintree)  } \| { `platform`: [`GOOGLE_PLAY`](../enums/CdvPurchase.Platform.md#google_play)  } \| { `options?`: [`AdapterOptions`](../interfaces/CdvPurchase.AppleAppStore.AdapterOptions.md) ; `platform`: [`APPLE_APPSTORE`](../enums/CdvPurchase.Platform.md#apple_appstore)  } \| { `platform`: [`TEST`](../enums/CdvPurchase.Platform.md#test)  } \| { `platform`: [`WINDOWS_STORE`](../enums/CdvPurchase.Platform.md#windows_store)  }
 
 Used to initialize a platform with some options
 

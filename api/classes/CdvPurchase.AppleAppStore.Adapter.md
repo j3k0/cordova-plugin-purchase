@@ -2,7 +2,7 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[AppleAppStore](../modules/CdvPurchase.AppleAppStore.md).Adapter
 
-Adapter for a payment or in-app purchase platform
+Adapter for Apple AppStore using StoreKit version 1
 
 ## Implements
 
@@ -16,20 +16,28 @@ Adapter for a payment or in-app purchase platform
 
 ### Properties
 
+- [\_products](CdvPurchase.AppleAppStore.Adapter.md#_products)
+- [\_receipt](CdvPurchase.AppleAppStore.Adapter.md#_receipt)
+- [bridge](CdvPurchase.AppleAppStore.Adapter.md#bridge)
+- [context](CdvPurchase.AppleAppStore.Adapter.md#context)
+- [discountEligibilityDeterminer](CdvPurchase.AppleAppStore.Adapter.md#discounteligibilitydeterminer)
 - [id](CdvPurchase.AppleAppStore.Adapter.md#id)
+- [log](CdvPurchase.AppleAppStore.Adapter.md#log)
 - [name](CdvPurchase.AppleAppStore.Adapter.md#name)
-- [products](CdvPurchase.AppleAppStore.Adapter.md#products)
+- [needAppReceipt](CdvPurchase.AppleAppStore.Adapter.md#needappreceipt)
 - [ready](CdvPurchase.AppleAppStore.Adapter.md#ready)
-- [receipts](CdvPurchase.AppleAppStore.Adapter.md#receipts)
 
 ### Accessors
 
 - [isSupported](CdvPurchase.AppleAppStore.Adapter.md#issupported)
+- [products](CdvPurchase.AppleAppStore.Adapter.md#products)
+- [receipts](CdvPurchase.AppleAppStore.Adapter.md#receipts)
 
 ### Methods
 
 - [checkSupport](CdvPurchase.AppleAppStore.Adapter.md#checksupport)
 - [finish](CdvPurchase.AppleAppStore.Adapter.md#finish)
+- [getProduct](CdvPurchase.AppleAppStore.Adapter.md#getproduct)
 - [handleReceiptValidationResponse](CdvPurchase.AppleAppStore.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.AppleAppStore.Adapter.md#initialize)
 - [load](CdvPurchase.AppleAppStore.Adapter.md#load)
@@ -37,20 +45,58 @@ Adapter for a payment or in-app purchase platform
 - [order](CdvPurchase.AppleAppStore.Adapter.md#order)
 - [receiptValidationBody](CdvPurchase.AppleAppStore.Adapter.md#receiptvalidationbody)
 - [requestPayment](CdvPurchase.AppleAppStore.Adapter.md#requestpayment)
+- [restorePurchases](CdvPurchase.AppleAppStore.Adapter.md#restorepurchases)
 
 ## Constructors
 
 ### constructor
 
-• **new Adapter**(`context`)
+• **new Adapter**(`context`, `options`)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `context` | `AdapterContext` |
+| `options` | [`AdapterOptions`](../interfaces/CdvPurchase.AppleAppStore.AdapterOptions.md) |
 
 ## Properties
+
+### \_products
+
+• **\_products**: [`SKProduct`](CdvPurchase.AppleAppStore.SKProduct.md)[] = `[]`
+
+List of products loaded from AppStore
+
+___
+
+### \_receipt
+
+• `Optional` **\_receipt**: [`SKApplicationReceipt`](CdvPurchase.AppleAppStore.SKApplicationReceipt.md)
+
+The application receipt, contains all transactions
+
+___
+
+### bridge
+
+• **bridge**: [`Bridge`](CdvPurchase.AppleAppStore.Bridge.Bridge.md)
+
+___
+
+### context
+
+• **context**: `AdapterContext`
+
+___
+
+### discountEligibilityDeterminer
+
+• `Optional` **discountEligibilityDeterminer**: [`DiscountEligibilityDeterminer`](../modules/CdvPurchase.AppleAppStore.md#discounteligibilitydeterminer)
+
+Component that determine eligibility to a given discount offer
+
+___
 
 ### id
 
@@ -61,6 +107,12 @@ Platform identifier
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[id](../interfaces/CdvPurchase.Adapter.md#id)
+
+___
+
+### log
+
+• **log**: [`Logger`](CdvPurchase.Logger.md)
 
 ___
 
@@ -76,13 +128,11 @@ Nice name for the adapter
 
 ___
 
-### products
+### needAppReceipt
 
-• **products**: [`SKProduct`](CdvPurchase.AppleAppStore.SKProduct.md)[] = `[]`
+• **needAppReceipt**: `boolean`
 
-#### Implementation of
-
-[Adapter](../interfaces/CdvPurchase.Adapter.md).[products](../interfaces/CdvPurchase.Adapter.md#products)
+True when we need to validate the application receipt
 
 ___
 
@@ -98,23 +148,13 @@ The value is set by the "Adapters" class (which is responsible for initializing 
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[ready](../interfaces/CdvPurchase.Adapter.md#ready)
 
-___
-
-### receipts
-
-• **receipts**: [`SKReceipt`](CdvPurchase.AppleAppStore.SKReceipt.md)[] = `[]`
-
-#### Implementation of
-
-[Adapter](../interfaces/CdvPurchase.Adapter.md).[receipts](../interfaces/CdvPurchase.Adapter.md#receipts)
-
 ## Accessors
 
 ### isSupported
 
 • `get` **isSupported**(): `boolean`
 
-Returns true is the adapter is supported on this device.
+Returns true on Android, the only platform supported by this adapter
 
 #### Returns
 
@@ -123,6 +163,38 @@ Returns true is the adapter is supported on this device.
 #### Implementation of
 
 CdvPurchase.Adapter.isSupported
+
+___
+
+### products
+
+• `get` **products**(): [`Product`](CdvPurchase.Product.md)[]
+
+List of products managed by the adapter.
+
+#### Returns
+
+[`Product`](CdvPurchase.Product.md)[]
+
+#### Implementation of
+
+CdvPurchase.Adapter.products
+
+___
+
+### receipts
+
+• `get` **receipts**(): [`Receipt`](CdvPurchase.Receipt.md)[]
+
+List of purchase receipts.
+
+#### Returns
+
+[`Receipt`](CdvPurchase.Receipt.md)[]
+
+#### Implementation of
+
+CdvPurchase.Adapter.receipts
 
 ## Methods
 
@@ -173,9 +245,27 @@ For consumable, this will acknowledge and consume the purchase.
 
 ___
 
+### getProduct
+
+▸ **getProduct**(`id`): `undefined` \| [`SKProduct`](CdvPurchase.AppleAppStore.SKProduct.md)
+
+Find a given product from ID
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `id` | `string` |
+
+#### Returns
+
+`undefined` \| [`SKProduct`](CdvPurchase.AppleAppStore.SKProduct.md)
+
+___
+
 ### handleReceiptValidationResponse
 
-▸ **handleReceiptValidationResponse**(`receipt`, `response`): `Promise`<`void`\>
+▸ **handleReceiptValidationResponse**(`_receipt`, `response`): `Promise`<`void`\>
 
 Handle platform specific fields from receipt validation response.
 
@@ -183,7 +273,7 @@ Handle platform specific fields from receipt validation response.
 
 | Name | Type |
 | :------ | :------ |
-| `receipt` | [`Receipt`](CdvPurchase.Receipt.md) |
+| `_receipt` | [`Receipt`](CdvPurchase.Receipt.md) |
 | `response` | [`Payload`](../modules/CdvPurchase.Validator.Response.md#payload) |
 
 #### Returns
@@ -320,3 +410,21 @@ Request a payment from the user
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[requestPayment](../interfaces/CdvPurchase.Adapter.md#requestpayment)
+
+___
+
+### restorePurchases
+
+▸ **restorePurchases**(): `Promise`<`void`\>
+
+Replay the queue of transactions.
+
+Might ask the user to login.
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[restorePurchases](../interfaces/CdvPurchase.Adapter.md#restorepurchases)

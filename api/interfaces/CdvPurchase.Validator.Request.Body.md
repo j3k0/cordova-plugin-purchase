@@ -22,6 +22,7 @@ Body of a receipt validation request
 - [license](CdvPurchase.Validator.Request.Body.md#license)
 - [offers](CdvPurchase.Validator.Request.Body.md#offers)
 - [priceMicros](CdvPurchase.Validator.Request.Body.md#pricemicros)
+- [products](CdvPurchase.Validator.Request.Body.md#products)
 - [transaction](CdvPurchase.Validator.Request.Body.md#transaction)
 - [trialPeriod](CdvPurchase.Validator.Request.Body.md#trialperiod)
 - [trialPeriodUnit](CdvPurchase.Validator.Request.Body.md#trialperiodunit)
@@ -151,6 +152,14 @@ ___
 • `Optional` **priceMicros**: `number`
 
 Define the price of the product in micro units (i.e. `price / 1000000`) for the associated currency
+
+___
+
+### products
+
+• **products**: { `id`: `string` ; `offers`: { `id`: `string` ; `pricingPhases`: [`PricingPhase`](CdvPurchase.PricingPhase.md)[]  }[] ; `type`: [`ProductType`](../enums/CdvPurchase.ProductType.md)  }[]
+
+List of products available in the store
 
 ___
 

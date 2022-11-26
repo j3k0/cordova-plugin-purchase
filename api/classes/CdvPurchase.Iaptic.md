@@ -28,6 +28,7 @@ store.validator = iaptic.validator;
 
 ### Accessors
 
+- [appStoreDiscountEligibilityDeterminer](CdvPurchase.Iaptic.md#appstorediscounteligibilitydeterminer)
 - [braintreeClientTokenProvider](CdvPurchase.Iaptic.md#braintreeclienttokenprovider)
 - [validator](CdvPurchase.Iaptic.md#validator)
 
@@ -57,6 +58,24 @@ ___
 • **log**: [`Logger`](CdvPurchase.Logger.md)
 
 ## Accessors
+
+### appStoreDiscountEligibilityDeterminer
+
+• `get` **appStoreDiscountEligibilityDeterminer**(): [`DiscountEligibilityDeterminer`](../modules/CdvPurchase.AppleAppStore.md#discounteligibilitydeterminer)
+
+Determine the eligibility of discounts based on the content of the application receipt.
+
+The secret sauce used here is to wait for validation of the application receipt.
+The receipt validator will return the necessary data to determine eligibility.
+
+Receipt validation is expected to happen after loading product information, so the implementation here is to
+wait for a validation response.
+
+#### Returns
+
+[`DiscountEligibilityDeterminer`](../modules/CdvPurchase.AppleAppStore.md#discounteligibilitydeterminer)
+
+___
 
 ### braintreeClientTokenProvider
 

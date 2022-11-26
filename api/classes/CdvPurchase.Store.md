@@ -40,6 +40,7 @@ Entry class of the plugin.
 - [initialize](CdvPurchase.Store.md#initialize)
 - [manageSubscriptions](CdvPurchase.Store.md#managesubscriptions)
 - [monitor](CdvPurchase.Store.md#monitor)
+- [off](CdvPurchase.Store.md#off)
 - [order](CdvPurchase.Store.md#order)
 - [owned](CdvPurchase.Store.md#owned)
 - [ready](CdvPurchase.Store.md#ready)
@@ -446,6 +447,30 @@ const monitor = store.monitor(transaction, state => {
 [`TransactionMonitor`](../interfaces/CdvPurchase.TransactionMonitor.md)
 
 A monitor which can be stopped with `monitor.stop()`
+
+___
+
+### off
+
+▸ **off**<`T`\>(`callback`): `void`
+
+Remove a callback from any listener it might have been added to.
+
+#### Type parameters
+
+| Name |
+| :------ |
+| `T` |
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<`T`\> |
+
+#### Returns
+
+`void`
 
 ___
 

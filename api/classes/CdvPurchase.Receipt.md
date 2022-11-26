@@ -6,7 +6,7 @@
 
 - **`Receipt`**
 
-  ↳ [`SKReceipt`](CdvPurchase.AppleAppStore.SKReceipt.md)
+  ↳ [`SKApplicationReceipt`](CdvPurchase.AppleAppStore.SKApplicationReceipt.md)
 
   ↳ [`BraintreeReceipt`](CdvPurchase.Braintree.BraintreeReceipt.md)
 

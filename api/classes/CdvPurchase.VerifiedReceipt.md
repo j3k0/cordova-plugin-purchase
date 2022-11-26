@@ -18,6 +18,7 @@ Receipt data as validated by the receipt validation server
 ### Accessors
 
 - [platform](CdvPurchase.VerifiedReceipt.md#platform)
+- [raw](CdvPurchase.VerifiedReceipt.md#raw)
 
 ### Methods
 
@@ -87,6 +88,27 @@ Platform this receipt originated from
 #### Returns
 
 [`Platform`](../enums/CdvPurchase.Platform.md)
+
+___
+
+### raw
+
+• `get` **raw**(): `Object`
+
+Get raw response data from the receipt validation request
+
+#### Returns
+
+`Object`
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `collection?` | [`VerifiedPurchase`](../interfaces/CdvPurchase.VerifiedPurchase.md)[] | The collection of purchases in this receipt.  An array of ValidatorPurchase |
+| `id` | `string` | Id of the product that have been validated |
+| `ineligible_for_intro_price?` | `string`[] | List of product ids for which intro price isn't available anymore |
+| `latest_receipt` | `boolean` | Tell the plugin that we've used the latest receipt |
+| `transaction` | [`NativeTransaction`](../modules/CdvPurchase.Validator.Response.md#nativetransaction) | Native transaction detail |
+| `warning?` | `string` | A warning message about this validation.  It might be present when the server had to fallback to a backup validation solution. |
 
 ## Methods
 

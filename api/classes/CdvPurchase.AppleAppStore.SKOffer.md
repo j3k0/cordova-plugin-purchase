@@ -12,9 +12,14 @@ One of the available offers to purchase a given product
 
 ## Table of contents
 
+### Constructors
+
+- [constructor](CdvPurchase.AppleAppStore.SKOffer.md#constructor)
+
 ### Properties
 
 - [id](CdvPurchase.AppleAppStore.SKOffer.md#id)
+- [offerType](CdvPurchase.AppleAppStore.SKOffer.md#offertype)
 - [pricingPhases](CdvPurchase.AppleAppStore.SKOffer.md#pricingphases)
 
 ### Accessors
@@ -28,6 +33,27 @@ One of the available offers to purchase a given product
 
 - [order](CdvPurchase.AppleAppStore.SKOffer.md#order)
 
+## Constructors
+
+### constructor
+
+• **new SKOffer**(`options`, `decorator`)
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `options` | `Object` |
+| `options.id` | `string` |
+| `options.offerType` | [`SKOfferType`](../modules/CdvPurchase.AppleAppStore.md#skoffertype) |
+| `options.pricingPhases` | [`PricingPhase`](../interfaces/CdvPurchase.PricingPhase.md)[] |
+| `options.product` | [`Product`](CdvPurchase.Product.md) |
+| `decorator` | `OfferDecorator` |
+
+#### Overrides
+
+Offer.constructor
+
 ## Properties
 
 ### id
@@ -39,6 +65,12 @@ Offer identifier
 #### Inherited from
 
 [Offer](CdvPurchase.Offer.md).[id](CdvPurchase.Offer.md#id)
+
+___
+
+### offerType
+
+• **offerType**: [`SKOfferType`](../modules/CdvPurchase.AppleAppStore.md#skoffertype)
 
 ___
 

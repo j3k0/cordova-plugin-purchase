@@ -37,6 +37,7 @@ Adapter for a payment or in-app purchase platform
 - [order](CdvPurchase.Adapter.md#order)
 - [receiptValidationBody](CdvPurchase.Adapter.md#receiptvalidationbody)
 - [requestPayment](CdvPurchase.Adapter.md#requestpayment)
+- [restorePurchases](CdvPurchase.Adapter.md#restorepurchases)
 
 ## Properties
 
@@ -261,3 +262,17 @@ Request a payment from the user
 #### Returns
 
 `Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md) \| [`Transaction`](../classes/CdvPurchase.Transaction.md)\>
+
+___
+
+### restorePurchases
+
+▸ **restorePurchases**(): `Promise`<`void`\>
+
+Replay the queue of transactions.
+
+Might ask the user to login.
+
+#### Returns
+
+`Promise`<`void`\>

@@ -12,12 +12,19 @@ Product definition from a store
 
 ## Table of contents
 
+### Constructors
+
+- [constructor](CdvPurchase.AppleAppStore.SKProduct.md#constructor)
+
 ### Properties
 
+- [countryCode](CdvPurchase.AppleAppStore.SKProduct.md#countrycode)
 - [description](CdvPurchase.AppleAppStore.SKProduct.md#description)
+- [group](CdvPurchase.AppleAppStore.SKProduct.md#group)
 - [id](CdvPurchase.AppleAppStore.SKProduct.md#id)
 - [offers](CdvPurchase.AppleAppStore.SKProduct.md#offers)
 - [platform](CdvPurchase.AppleAppStore.SKProduct.md#platform)
+- [raw](CdvPurchase.AppleAppStore.SKProduct.md#raw)
 - [title](CdvPurchase.AppleAppStore.SKProduct.md#title)
 - [type](CdvPurchase.AppleAppStore.SKProduct.md#type)
 
@@ -30,8 +37,37 @@ Product definition from a store
 ### Methods
 
 - [getOffer](CdvPurchase.AppleAppStore.SKProduct.md#getoffer)
+- [refresh](CdvPurchase.AppleAppStore.SKProduct.md#refresh)
+- [removeIneligibleDiscounts](CdvPurchase.AppleAppStore.SKProduct.md#removeineligiblediscounts)
+
+## Constructors
+
+### constructor
+
+• **new SKProduct**(`validProduct`, `p`, `decorator`, `eligibilities`)
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `validProduct` | [`ValidProduct`](../interfaces/CdvPurchase.AppleAppStore.Bridge.ValidProduct.md) |
+| `p` | [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md) |
+| `decorator` | `ProductDecorator` & `OfferDecorator` |
+| `eligibilities` | `DiscountEligibilities` |
+
+#### Overrides
+
+Product.constructor
 
 ## Properties
+
+### countryCode
+
+• `Optional` **countryCode**: `string`
+
+AppStore country this product has been fetched for
+
+___
 
 ### description
 
@@ -42,6 +78,14 @@ Product full description from the store.
 #### Inherited from
 
 [Product](CdvPurchase.Product.md).[description](CdvPurchase.Product.md#description)
+
+___
+
+### group
+
+• `Optional` **group**: `string`
+
+Group this product is member of
 
 ___
 
@@ -78,6 +122,14 @@ Platform this product is available from
 #### Inherited from
 
 [Product](CdvPurchase.Product.md).[platform](CdvPurchase.Product.md#platform)
+
+___
+
+### raw
+
+• **raw**: [`ValidProduct`](../interfaces/CdvPurchase.AppleAppStore.Bridge.ValidProduct.md)
+
+Raw data returned by native side
 
 ___
 
@@ -178,3 +230,37 @@ An Offer or undefined if no match is found
 #### Inherited from
 
 [Product](CdvPurchase.Product.md).[getOffer](CdvPurchase.Product.md#getoffer)
+
+___
+
+### refresh
+
+▸ **refresh**(`valid`, `decorator`, `eligibilities`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `valid` | [`ValidProduct`](../interfaces/CdvPurchase.AppleAppStore.Bridge.ValidProduct.md) |
+| `decorator` | `ProductDecorator` & `OfferDecorator` |
+| `eligibilities` | `DiscountEligibilities` |
+
+#### Returns
+
+`void`
+
+___
+
+### removeIneligibleDiscounts
+
+▸ **removeIneligibleDiscounts**(`eligibilities`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `eligibilities` | `DiscountEligibilities` |
+
+#### Returns
+
+`void`

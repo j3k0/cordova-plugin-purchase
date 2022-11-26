@@ -138,6 +138,61 @@ var CdvPurchase;
                 });
             };
         }
+        /**
+         * Determine the eligibility of discounts based on the content of the application receipt.
+         *
+         * The secret sauce used here is to wait for validation of the application receipt.
+         * The receipt validator will return the necessary data to determine eligibility.
+         *
+         * Receipt validation is expected to happen after loading product information, so the implementation here is to
+         * wait for a validation response.
+         */
+        get appStoreDiscountEligibilityDeterminer() {
+            // the user needs the appStoreDiscountEligibilityDeterminer, let's start listening to receipt validation events.
+            let latestReceipt;
+            this.log.debug("AppStore eligibility determiner is listening...");
+            this.store.when().verified(receipt => {
+                if (receipt.platform === CdvPurchase.Platform.APPLE_APPSTORE) {
+                    this.log.debug("Got a verified AppStore receipt.");
+                    latestReceipt = receipt;
+                }
+            });
+            return (_appStoreReceipt, requests, callback) => {
+                this.log.debug("AppStore eligibility determiner");
+                if (latestReceipt) {
+                    this.log.debug("Using cached receipt");
+                    return callback(analyzeReceipt(latestReceipt, requests));
+                }
+                const onVerified = (receipt) => {
+                    if (receipt.platform === CdvPurchase.Platform.APPLE_APPSTORE) {
+                        this.log.debug("Receipt is verified, let's analyze the content and respond.");
+                        this.store.off(onVerified);
+                        callback(analyzeReceipt(receipt, requests));
+                    }
+                };
+                this.log.debug("Waiting for receipt");
+                this.store.when().verified(onVerified);
+            };
+            function analyzeReceipt(receipt, requests) {
+                const ineligibleIntro = receipt.raw.ineligible_for_intro_price;
+                return requests.map(request => {
+                    var _a;
+                    if (request.discountType === 'Introductory' && ineligibleIntro && ineligibleIntro.find(id => request.productId === id)) {
+                        // User is not eligible for this introductory offer
+                        return false;
+                    }
+                    else if (request.discountType === 'Subscription') {
+                        // Discount only available if user is or was a subscriber
+                        const matchingPurchase = (_a = receipt.raw.collection) === null || _a === void 0 ? void 0 : _a.find(purchase => purchase.id === request.productId);
+                        return matchingPurchase ? true : false;
+                    }
+                    else {
+                        // In other cases, assume the user is eligible
+                        return true;
+                    }
+                });
+            }
+        }
         /** Validator URL */
         get validator() {
             return `${this.config.url}/v1/validate?appName=${this.config.appName}&apiKey=${this.config.apiKey}`;
@@ -667,6 +722,14 @@ var CdvPurchase;
                 this.receiptsToValidate = new ReceiptsToValidate();
                 /** List of verified receipts */
                 this.verifiedReceipts = [];
+                /**
+                 * For each md5-hashed values of the validator request's ".transaction" field,
+                 * store the response from the server.
+                 *
+                 * This way, if a subsequent request is necessary (without a couple of minutes)
+                 * we just reuse the same data.
+                 */
+                this.cache = {};
                 this.controller = controller;
                 this.log = log.child('Validator');
             }
@@ -688,12 +751,8 @@ var CdvPurchase;
             /** Add a receipt to the validation queue. It'll get validated after a few milliseconds. */
             add(receiptOrTransaction) {
                 this.log.debug("Schedule validation: " + JSON.stringify(receiptOrTransaction));
-                const receipt = (receiptOrTransaction instanceof CdvPurchase.Transaction)
-                    ? this.controller.localReceipts.filter(r => r.hasTransaction(receiptOrTransaction)).slice(-1)[0]
-                    : receiptOrTransaction;
-                if (receipt) {
-                    this.receiptsToValidate.add(receipt);
-                }
+                const receipt = (receiptOrTransaction instanceof CdvPurchase.Transaction) ? receiptOrTransaction.parentReceipt : receiptOrTransaction;
+                this.receiptsToValidate.add(receipt);
             }
             /** Run validation for all receipts in the queue */
             run() {
@@ -771,7 +830,25 @@ var CdvPurchase;
                 }
                 return body;
             }
+            removeExpiredCache() {
+                const now = +new Date();
+                const deleteList = [];
+                for (const hash in this.cache) {
+                    if (this.cache[hash].expires < now) {
+                        deleteList.push(hash);
+                    }
+                }
+                for (const hash of deleteList) {
+                    delete this.cache[hash];
+                }
+            }
             runValidatorRequest(target, receipt, body, callback) {
+                this.removeExpiredCache();
+                const bodyTransactionHash = CdvPurchase.Utils.md5(JSON.stringify(body.transaction));
+                const cached = this.cache[bodyTransactionHash];
+                if (cached) {
+                    return callback({ receipt, payload: cached.payload });
+                }
                 CdvPurchase.Utils.ajax(this.log.child("Ajax"), {
                     url: target.url,
                     method: 'POST',
@@ -790,6 +867,10 @@ var CdvPurchase;
                                     data: { latest_receipt: (_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.latest_receipt },
                                 }
                             });
+                        this.cache[bodyTransactionHash] = {
+                            payload: response,
+                            expires: (+new Date()) + 120000, // expires in 2 minutes
+                        };
                         callback({ receipt, payload: response });
                     },
                     error: (status, message, data) => {
@@ -845,7 +926,7 @@ var CdvPurchase;
                         return;
                     switch (po.platform) {
                         case CdvPurchase.Platform.APPLE_APPSTORE:
-                            return this.list.push(new CdvPurchase.AppleAppStore.Adapter(context));
+                            return this.list.push(new CdvPurchase.AppleAppStore.Adapter(context, po.options || {}));
                         case CdvPurchase.Platform.GOOGLE_PLAY:
                             return this.list.push(new CdvPurchase.GooglePlay.Adapter(context));
                         case CdvPurchase.Platform.BRAINTREE:
@@ -875,8 +956,10 @@ var CdvPurchase;
                     if (!adapter)
                         return;
                     log.info(`${adapter.name} initializing...`);
-                    if (!adapter.isSupported)
+                    if (!adapter.isSupported) {
+                        log.info(`${adapter.name} is not supported.`);
                         return; // skip unsupported adapters
+                    }
                     const initResult = await adapter.initialize();
                     adapter.ready = true;
                     log.info(`${adapter.name} initialized. ${initResult ? JSON.stringify(initResult) : ''}`);
@@ -934,6 +1017,10 @@ var CdvPurchase;
             trigger(value) {
                 this.callbacks.forEach(cb => setTimeout(cb, 0, value));
             }
+            /** Remove a callback from the list */
+            remove(callback) {
+                this.callbacks = this.callbacks.filter(el => el !== callback);
+            }
         }
         Internal.Callbacks = Callbacks;
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
@@ -964,6 +1051,9 @@ var CdvPurchase;
                 this.isReady = true;
                 this.readyCallbacks.forEach(cb => setTimeout(cb, 0));
                 this.readyCallbacks = [];
+            }
+            remove(cb) {
+                this.readyCallbacks = this.readyCallbacks.filter(el => el !== cb);
             }
         }
         Internal.ReadyCallbacks = ReadyCallbacks;
@@ -1174,6 +1264,18 @@ var CdvPurchase;
             return ret;
         }
         /**
+         * Remove a callback from any listener it might have been added to.
+         */
+        off(callback) {
+            this.updatedCallbacks.remove(callback);
+            this.updatedReceiptsCallbacks.remove(callback);
+            this.approvedCallbacks.remove(callback);
+            this.finishedCallbacks.remove(callback);
+            this.verifiedCallbacks.remove(callback);
+            this.errorCallbacks.remove(callback);
+            this._readyCallbacks.remove(callback);
+        }
+        /**
          * Setup a function to be notified of changes to a transaction state.
          *
          * @param transaction The transaction to monitor.
@@ -1328,8 +1430,8 @@ var CdvPurchase;
         async verify(receiptOrTransaction) {
             this.log.info(`verify(${receiptOrTransaction.className})`);
             this._validator.add(receiptOrTransaction);
-            // Run validation after 50ms, so if the same receipt is to be validated multiple times it will just create one call.
-            setTimeout(() => this._validator.run());
+            // Run validation after 200ms, so if the same receipt is to be validated multiple times it will just create one call.
+            setTimeout(() => this._validator.run(), 200);
         }
         /**
          * Finalize a transaction.
@@ -1354,7 +1456,11 @@ var CdvPurchase;
          * This method exists to cover an Apple AppStore requirement.
          */
         async restorePurchases() {
-            CdvPurchase.store.triggerError(CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'restorePurchases() is not implemented yet'));
+            for (const adapter of this.adapters.list) {
+                if (adapter.ready)
+                    await adapter.restorePurchases();
+            }
+            // store.triggerError(storeError(ErrorCode.UNKNOWN, 'restorePurchases() is not implemented yet'));
         }
         /**
          * Open the subscription management interface for the selected platform.
@@ -1527,7 +1633,9 @@ var CdvPurchase;
                     for (const transaction of receipt.transactions) {
                         for (const trProducts of transaction.products) {
                             if (trProducts.id === product.id) {
-                                if (((_a = transaction.purchaseDate) !== null && _a !== void 0 ? _a : 0) < ((_b = found === null || found === void 0 ? void 0 : found.purchaseDate) !== null && _b !== void 0 ? _b : 1))
+                                // No matching transaction has been found or the tested one is newer than the already found one?
+                                // Then we chose the tested one.
+                                if (!found || ((_a = transaction.purchaseDate) !== null && _a !== void 0 ? _a : 0) < ((_b = found.purchaseDate) !== null && _b !== void 0 ? _b : 1))
                                     found = transaction;
                             }
                         }
@@ -1818,60 +1926,929 @@ var CdvPurchase;
 /// <reference path="../../transaction.ts" />
 var CdvPurchase;
 (function (CdvPurchase) {
-    // Apple
+    /**
+     * Apple AppStore adapter using StoreKit version 1
+     */
     let AppleAppStore;
     (function (AppleAppStore) {
-        class SKReceipt extends CdvPurchase.Receipt {
+        /**
+         * In the first stages of a purchase, the transaction doesn't have an identifier.
+         *
+         * In the meantime, we generate a virtual transaction identifier.
+         */
+        function virtualTransactionId(productId) {
+            return `virtual.${productId}`;
         }
-        AppleAppStore.SKReceipt = SKReceipt;
-        class SKProduct extends CdvPurchase.Product {
-        }
-        AppleAppStore.SKProduct = SKProduct;
-        class SKOffer extends CdvPurchase.Offer {
-        }
-        AppleAppStore.SKOffer = SKOffer;
-        class SKTransaction extends CdvPurchase.Transaction {
-        }
-        AppleAppStore.SKTransaction = SKTransaction;
+        /**
+         * Adapter for Apple AppStore using StoreKit version 1
+         */
         class Adapter {
-            constructor(context) {
+            constructor(context, options) {
+                var _a;
                 this.id = CdvPurchase.Platform.APPLE_APPSTORE;
                 this.name = 'AppStore';
                 this.ready = false;
-                this.products = [];
-                this.receipts = [];
+                /** List of products loaded from AppStore */
+                this._products = [];
+                this.context = context;
+                this.bridge = new AppleAppStore.Bridge.Bridge();
+                this.log = context.log.child('AppleAppStore');
+                this.discountEligibilityDeterminer = options.discountEligibilityDeterminer;
+                this.needAppReceipt = (_a = options.needAppReceipt) !== null && _a !== void 0 ? _a : true;
             }
+            get products() { return this._products; }
+            /** Find a given product from ID */
+            getProduct(id) { return this._products.find(p => p.id === id); }
+            get receipts() { return this._receipt ? [this._receipt] : []; }
+            /** Returns true on Android, the only platform supported by this adapter */
             get isSupported() {
-                return false;
+                return window.cordova.platformId === 'ios';
             }
-            async initialize() { return; }
-            async load(products) {
-                return products.map(p => CdvPurchase.storeError(CdvPurchase.ErrorCode.LOAD, 'Not implemented'));
+            upsertTransactionInProgress(productId, state) {
+                return this.upsertTransaction(productId, virtualTransactionId(productId), state);
+            }
+            removeTransactionInProgress(productId) {
+                this.removeTransaction(virtualTransactionId(productId));
+            }
+            async upsertTransaction(productId, transactionId, state) {
+                return new Promise(resolve => {
+                    this.initializeAppReceipt(() => {
+                        var _a;
+                        if (!this._receipt) {
+                            // this should not happen
+                            this.log.warn('Failed to load the application receipt, cannot proceed with handling the purchase');
+                            return;
+                        }
+                        const existing = (_a = this._receipt) === null || _a === void 0 ? void 0 : _a.transactions.find(t => t.transactionId === transactionId);
+                        if (existing) {
+                            existing.state = state;
+                            existing.refresh(productId);
+                            resolve(existing);
+                        }
+                        else {
+                            const tr = new AppleAppStore.SKTransaction(CdvPurchase.Platform.APPLE_APPSTORE, this._receipt, this.context.apiDecorators);
+                            tr.state = state;
+                            tr.transactionId = transactionId;
+                            tr.refresh(productId);
+                            this._receipt.transactions.push(tr);
+                            resolve(tr);
+                        }
+                    });
+                });
+            }
+            removeTransaction(transactionId) {
+                if (this._receipt) {
+                    this._receipt.transactions = this._receipt.transactions.filter(t => t.transactionId !== transactionId);
+                }
+            }
+            receiptUpdated() {
+                if (this._receipt) {
+                    this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [this._receipt]);
+                }
+            }
+            initialize() {
+                return new Promise(resolve => {
+                    this.log.info('bridge.init');
+                    const bridgeLogger = this.log.child('Bridge');
+                    this.bridge.init({
+                        autoFinish: false,
+                        debug: this.context.verbosity === CdvPurchase.LogLevel.DEBUG,
+                        log: msg => bridgeLogger.debug(msg),
+                        error: (code, message, options) => {
+                            this.log.error('ERROR: ' + code + ' - ' + message);
+                            if (code === CdvPurchase.ErrorCode.PAYMENT_CANCELLED) {
+                                return;
+                            }
+                        },
+                        ready: () => {
+                            this.log.info('ready');
+                        },
+                        purchased: async (transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId) => {
+                            this.log.info('purchase: id:' + transactionIdentifier + ' product:' + productId + ' originalTransaction:' + originalTransactionIdentifier + ' - date:' + transactionDate + ' - discount:' + discountId);
+                            // we can add the transaction to the receipt here
+                            const transaction = await this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.APPROVED);
+                            transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId);
+                            this.removeTransactionInProgress(productId);
+                            this.receiptUpdated();
+                        },
+                        purchaseEnqueued: async (productId, quantity) => {
+                            this.log.info('purchaseEnqueued: ' + productId + ' - ' + quantity);
+                            // let create a temporary transaction
+                            await this.upsertTransactionInProgress(productId, CdvPurchase.TransactionState.INITIATED);
+                            this.receiptUpdated();
+                        },
+                        purchaseFailed: (productId, code, message) => {
+                            this.log.info('purchaseFailed: ' + productId + ' - ' + code + ' - ' + message);
+                            this.removeTransactionInProgress(productId);
+                            this.receiptUpdated();
+                        },
+                        purchasing: async (productId) => {
+                            // purchase has been requested, but there's no transactionIdentifier yet.
+                            // we can create a dummy transaction
+                            this.log.info('purchasing: ' + productId);
+                            await this.upsertTransactionInProgress(productId, CdvPurchase.TransactionState.INITIATED);
+                            this.receiptUpdated();
+                        },
+                        deferred: async (productId) => {
+                            this.log.info('deferred: ' + productId);
+                            await this.upsertTransactionInProgress(productId, CdvPurchase.TransactionState.PENDING);
+                            this.receiptUpdated();
+                        },
+                        finished: async (transactionIdentifier, productId) => {
+                            this.log.info('finish: ' + transactionIdentifier + ' - ' + productId);
+                            this.removeTransactionInProgress(productId);
+                            await this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.FINISHED);
+                            this.receiptUpdated();
+                        },
+                        restored: async (transactionIdentifier, productId) => {
+                            this.log.info('restore: ' + transactionIdentifier + ' - ' + productId);
+                            await this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.APPROVED);
+                            this.receiptUpdated();
+                        },
+                        receiptsRefreshed: (receipt) => {
+                            this.log.info('receiptsRefreshed');
+                            if (this._receipt)
+                                this._receipt.refresh(receipt, this.needAppReceipt, this.context.apiDecorators);
+                        },
+                        restoreFailed: (errorCode) => {
+                            this.log.info('restoreFailed: ' + errorCode);
+                        },
+                        restoreCompleted: () => {
+                            this.log.info('restoreCompleted');
+                        },
+                    }, () => {
+                        this.log.info('bridge.init done');
+                        setTimeout(() => this.initializeAppReceipt(() => this.receiptUpdated()), 300);
+                        resolve(undefined);
+                    }, (code, message) => {
+                        this.log.info('bridge.init failed: ' + code + ' - ' + message);
+                        resolve(CdvPurchase.storeError(code, message));
+                    });
+                });
+            }
+            /**
+             * Create the application receipt
+             */
+            async initializeAppReceipt(callback) {
+                if (this._receipt)
+                    return callback(undefined); // already loaded
+                this.log.debug('emitAppReceipt()');
+                const nativeData = await this.loadAppStoreReceipt();
+                if (!(nativeData === null || nativeData === void 0 ? void 0 : nativeData.appStoreReceipt)) {
+                    this.log.warn('no appStoreReceipt');
+                }
+                this._receipt = new AppleAppStore.SKApplicationReceipt(nativeData, this.needAppReceipt, this.context.apiDecorators);
+                callback(undefined);
+            }
+            /** Promisified loading of the AppStore receipt */
+            async loadAppStoreReceipt() {
+                return new Promise(resolve => {
+                    this.log.debug('using cached appstore receipt');
+                    if (this.bridge.appStoreReceipt)
+                        return resolve(this.bridge.appStoreReceipt);
+                    this.log.debug('loading appstore receipt...');
+                    this.bridge.loadReceipts(receipt => {
+                        this.log.debug('appstore receipt loaded');
+                        resolve(receipt);
+                    }, (code, message) => {
+                        this.log.warn('Failed to load appStoreReceipt: ' + code + ' - ' + message);
+                        // this should not happen: native side never triggers an error
+                        // resolve(null);
+                    });
+                });
+            }
+            async loadEligibility(validProducts) {
+                if (!this.discountEligibilityDeterminer) {
+                    return new AppleAppStore.Internal.DiscountEligibilities([], []);
+                }
+                const eligibilityRequests = [];
+                validProducts.forEach(valid => {
+                    var _a;
+                    (_a = valid.discounts) === null || _a === void 0 ? void 0 : _a.forEach(discount => {
+                        eligibilityRequests.push({
+                            productId: valid.id,
+                            discountId: discount.id,
+                            discountType: discount.type,
+                        });
+                    });
+                });
+                if (eligibilityRequests.length > 0) {
+                    const applicationReceipt = await this.loadAppStoreReceipt();
+                    if (!applicationReceipt || !applicationReceipt.appStoreReceipt) {
+                        this.log.debug('no receipt, assuming introductory price are available.');
+                        return new AppleAppStore.Internal.DiscountEligibilities(eligibilityRequests, eligibilityRequests.map(r => r.discountType === "Introductory"));
+                    }
+                    else {
+                        this.log.debug('calling discount eligibility determiner.');
+                        const response = await this.callDiscountEligibilityDeterminer(applicationReceipt, eligibilityRequests);
+                        this.log.debug('response: ' + JSON.stringify(response));
+                        return new AppleAppStore.Internal.DiscountEligibilities(eligibilityRequests, response);
+                    }
+                }
+                else {
+                    return new AppleAppStore.Internal.DiscountEligibilities([], []);
+                }
+            }
+            callDiscountEligibilityDeterminer(applicationReceipt, eligibilityRequests) {
+                return new Promise(resolve => {
+                    if (!this.discountEligibilityDeterminer)
+                        return resolve([]);
+                    this.discountEligibilityDeterminer(applicationReceipt, eligibilityRequests, resolve);
+                });
+            }
+            load(products) {
+                return new Promise(resolve => {
+                    this.log.info('bridge.load');
+                    this.bridge.load(products.map(p => p.id), async (validProducts, invalidProducts) => {
+                        this.log.info('bridge.loaded: ' + JSON.stringify({ validProducts, invalidProducts }));
+                        const eligibilities = await this.loadEligibility(validProducts);
+                        this.log.info('eligibilities ready.');
+                        // for any valid product that includes a discount, check the eligibility.
+                        const ret = products.map(p => {
+                            if (invalidProducts.indexOf(p.id) >= 0) {
+                                this.log.debug(`${p.id} is invalid`);
+                                return CdvPurchase.storeError(CdvPurchase.ErrorCode.INVALID_PRODUCT_ID, 'Product not found in AppStore. #400');
+                            }
+                            else {
+                                const valid = validProducts.find(v => v.id === p.id);
+                                this.log.debug(`${p.id} is valid: ${JSON.stringify(valid)}`);
+                                if (!valid)
+                                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.INVALID_PRODUCT_ID, 'Product not found in AppStore. #404');
+                                let product = this.getProduct(p.id);
+                                if (product) {
+                                    this.log.debug('refreshing existing product');
+                                    product === null || product === void 0 ? void 0 : product.refresh(valid, this.context.apiDecorators, eligibilities);
+                                }
+                                else {
+                                    this.log.debug('registering existing product');
+                                    product = new AppleAppStore.SKProduct(valid, p, this.context.apiDecorators, eligibilities);
+                                    this._products.push(product);
+                                }
+                                return product;
+                            }
+                        });
+                        this.log.debug(`Products loaded: ${JSON.stringify(ret)}`);
+                        resolve(ret);
+                    }, (code, message) => {
+                        return products.map(p => CdvPurchase.storeError(code, message));
+                    });
+                });
             }
             async order(offer) {
-                return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'TODO: Not implemented');
+                return new Promise(resolve => {
+                    this.log.info('order');
+                    const discountId = offer.id !== AppleAppStore.DEFAULT_OFFER_ID ? offer.id : undefined;
+                    const success = () => {
+                        this.log.info('order.success');
+                        resolve(undefined);
+                    };
+                    const error = () => {
+                        this.log.info('order.error');
+                        resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Failed to place order'));
+                    };
+                    this.bridge.purchase(offer.productId, 1, this.context.getApplicationUsername(), discountId, success, error);
+                });
             }
-            async finish(transaction) {
-                return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'TODO: Not implemented');
+            finish(transaction) {
+                return new Promise(resolve => {
+                    this.log.info('finish(' + transaction.transactionId + ')');
+                    if (transaction.transactionId === AppleAppStore.APPLICATION_VIRTUAL_TRANSACTION_ID || transaction.transactionId === virtualTransactionId(transaction.products[0].id)) {
+                        // this is a virtual transaction, nothing to do.
+                        transaction.state = CdvPurchase.TransactionState.FINISHED;
+                        this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [transaction.parentReceipt]);
+                        return resolve(undefined);
+                    }
+                    const success = () => {
+                        transaction.state = CdvPurchase.TransactionState.FINISHED;
+                        this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [transaction.parentReceipt]);
+                        resolve(undefined);
+                    };
+                    const error = () => {
+                        resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.FINISH, 'Failed to finish transaction'));
+                    };
+                    this.bridge.finish(transaction.transactionId, success, error);
+                });
             }
             receiptValidationBody(receipt) {
-                // TODO
-                return;
+                if (receipt.platform !== CdvPurchase.Platform.APPLE_APPSTORE)
+                    return;
+                const skReceipt = receipt;
+                const transaction = skReceipt.transactions.slice(-1)[0];
+                return {
+                    id: skReceipt.nativeData.bundleIdentifier,
+                    type: CdvPurchase.ProductType.APPLICATION,
+                    products: this.products,
+                    transaction: {
+                        type: 'ios-appstore',
+                        id: transaction === null || transaction === void 0 ? void 0 : transaction.transactionId,
+                        appStoreReceipt: skReceipt.nativeData.appStoreReceipt,
+                    }
+                };
             }
-            async handleReceiptValidationResponse(receipt, response) {
-                return;
+            async handleReceiptValidationResponse(_receipt, response) {
+                var _a;
+                // we can add the purchaseDate to the application transaction
+                let localReceiptUpdated = false;
+                if (response.ok) {
+                    const vTransaction = response.data.transaction;
+                    if (vTransaction.type === 'ios-appstore' && 'original_application_version' in vTransaction) {
+                        (_a = this._receipt) === null || _a === void 0 ? void 0 : _a.transactions.forEach(t => {
+                            if (t.transactionId === AppleAppStore.APPLICATION_VIRTUAL_TRANSACTION_ID) {
+                                if (vTransaction.original_purchase_date_ms) {
+                                    t.purchaseDate = new Date(parseInt(vTransaction.original_purchase_date_ms));
+                                    localReceiptUpdated = true;
+                                }
+                            }
+                        });
+                    }
+                }
+                if (localReceiptUpdated)
+                    this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [_receipt]);
             }
             async requestPayment(payment, additionalData) {
                 return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'requestPayment not supported');
             }
             async manageSubscriptions() {
-                return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'TODO: Not implemented');
+                this.bridge.manageSubscriptions();
+                return;
             }
             checkSupport(functionality) {
-                return false;
+                return functionality === 'order';
+            }
+            restorePurchases() {
+                return new Promise(resolve => {
+                    this.bridge.restore();
+                    this.bridge.refreshReceipts(obj => {
+                        resolve();
+                    }, (code, message) => {
+                        resolve();
+                    });
+                });
             }
         }
         AppleAppStore.Adapter = Adapter;
+    })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let AppleAppStore;
+    (function (AppleAppStore) {
+        let Bridge;
+        (function (Bridge_1) {
+            /** No-operation function, used as a default for callbacks */
+            const noop = (args) => { };
+            /** Logger */
+            let log = noop;
+            /** Execute a native method */
+            function exec(methodName, options, success, error) {
+                window.cordova.exec(success, error, "InAppPurchase", methodName, options);
+            }
+            ;
+            /** Execute a javascript-side method in a try-catch block */
+            function protectCall(callback, context, ...args) {
+                if (!callback) {
+                    return;
+                }
+                try {
+                    // const args = Array.prototype.slice.call(arguments, 2);
+                    callback.apply(this, args);
+                }
+                catch (err) {
+                    log('exception in ' + context + ': "' + err + '"');
+                }
+            }
+            ;
+            class Bridge {
+                constructor() {
+                    /** Transactions for a given product */
+                    this.transactionsForProduct = {};
+                    /** True when the SDK has been initialized */
+                    this.initialized = false;
+                    /** List of registered product identifiers */
+                    this.registeredProducts = [];
+                    /** True if "restoreCompleted" or "restoreFailed" should be called when restore is done */
+                    this.needRestoreNotification = false;
+                    /*
+                    private eventQueue: {
+                        state: TransactionState;
+                        errorCode: ErrorCode | undefined;
+                        errorText: string | undefined;
+                        transactionIdentifier: string;
+                        productId: string;
+                        /** @deprecated *
+                        transactionReceipt: never;
+                        originalTransactionIdentifier: string | undefined;
+                        transactionDate: string;
+                        discountId: string;
+                    }[] = [];
+    
+                    private timer: number | null = null;
+                    */
+                    /** List of transaction updates to process */
+                    this.pendingUpdates = [];
+                    /** @deprecated */
+                    this.onPurchased = false;
+                    /** @deprecated */
+                    this.onFailed = false;
+                    /** @deprecated */
+                    this.onRestored = false;
+                    window.storekit = this; // used by native to communicate with this bridge
+                    this.options = {
+                        error: noop,
+                        ready: noop,
+                        purchased: noop,
+                        purchaseEnqueued: noop,
+                        purchasing: noop,
+                        purchaseFailed: noop,
+                        deferred: noop,
+                        finished: noop,
+                        restored: noop,
+                        receiptsRefreshed: noop,
+                        restoreFailed: noop,
+                        restoreCompleted: noop,
+                    };
+                    // if (window.localStorage && window.localStorage.sk_transactionForProduct)
+                    // this.transactionsForProduct = JSON.parse(window.localStorage.sk_transactionForProduct);
+                    // Remove support for receipt.forTransaction(...)
+                    // `appStoreReceipt` is now the only supported receipt format on iOS (drops support for iOS <= 6)
+                    // if (window.localStorage.sk_receiptForTransaction)
+                    // delete window.localStorage.sk_receiptForTransaction;
+                }
+                init(options, success, error) {
+                    this.options = {
+                        error: options.error || noop,
+                        ready: options.ready || noop,
+                        purchased: options.purchased || noop,
+                        purchaseEnqueued: options.purchaseEnqueued || noop,
+                        purchasing: options.purchasing || noop,
+                        purchaseFailed: options.purchaseFailed || noop,
+                        deferred: options.deferred || noop,
+                        finished: options.finished || noop,
+                        restored: options.restored || noop,
+                        receiptsRefreshed: options.receiptsRefreshed || noop,
+                        restoreFailed: options.restoreFailed || noop,
+                        restoreCompleted: options.restoreCompleted || noop,
+                    };
+                    if (options.debug) {
+                        exec('debug', [], noop, noop);
+                        log = options.log || function (msg) {
+                            console.log("[CordovaPurchase.AppAppStore.Bridge] " + msg);
+                        };
+                    }
+                    if (options.autoFinish) {
+                        exec('autoFinish', [], noop, noop);
+                    }
+                    const setupOk = () => {
+                        log('setup ok');
+                        protectCall(this.options.ready, 'options.ready');
+                        protectCall(success, 'init.success');
+                        this.initialized = true;
+                        setTimeout(() => this.processPendingTransactions(), 50);
+                    };
+                    const setupFailed = () => {
+                        log('setup failed');
+                        // protectCall(this.options.error, 'options.error', ErrorCode.SETUP, 'Setup failed');
+                        protectCall(error, 'init.error', CdvPurchase.ErrorCode.SETUP, 'Setup failed');
+                    };
+                    exec('setup', [], setupOk, setupFailed);
+                }
+                processPendingTransactions() {
+                    log('processing pending transactions');
+                    exec('processPendingTransactions', [], () => {
+                        this.finalizeTransactionUpdates();
+                    }, undefined);
+                }
+                /*
+                 * Makes an in-app purchase.
+                 *
+                 * @param {String} productId The product identifier. e.g. "com.example.MyApp.myproduct"
+                 * @param {int} quantity Quantity of product to purchase
+                 */
+                purchase(productId, quantity, applicationUsername, discount, success, error) {
+                    quantity = (quantity | 0) || 1;
+                    const options = this.options;
+                    // Many people forget to load information about their products from apple's servers before allowing
+                    // users to purchase them... leading them to spam us with useless issues and comments.
+                    // Let's chase them down!
+                    if (this.registeredProducts.indexOf(productId) < 0) {
+                        const msg = 'Purchasing ' + productId + ' failed.  Ensure the product was loaded first with Bridge.load(...)!';
+                        log(msg);
+                        if (typeof options.error === 'function') {
+                            protectCall(options.error, 'options.error', CdvPurchase.ErrorCode.PURCHASE, 'Trying to purchase a unknown product.', { productId, quantity });
+                        }
+                        return;
+                    }
+                    const purchaseOk = () => {
+                        log('Purchased ' + productId);
+                        if (typeof options.purchaseEnqueued === 'function') {
+                            protectCall(options.purchaseEnqueued, 'options.purchaseEnqueued', productId, quantity);
+                        }
+                        protectCall(success, 'purchase.success');
+                    };
+                    const purchaseFailed = () => {
+                        const errMsg = 'Purchasing ' + productId + ' failed';
+                        log(errMsg);
+                        if (typeof options.error === 'function') {
+                            protectCall(options.error, 'options.error', CdvPurchase.ErrorCode.PURCHASE, errMsg, { productId, quantity });
+                        }
+                        protectCall(error, 'purchase.error');
+                    };
+                    exec('purchase', [productId, quantity, applicationUsername, discount || {}], purchaseOk, purchaseFailed);
+                }
+                /*
+                 * Checks if device/user is allowed to make in-app purchases
+                 */
+                canMakePayments(success, error) {
+                    return exec("canMakePayments", [], success, error);
+                }
+                /*
+                 * Asks the payment queue to restore previously completed purchases.
+                 * The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
+                 *
+                 */
+                restore() {
+                    this.needRestoreNotification = true;
+                    exec('restoreCompletedTransactions', []);
+                }
+                manageSubscriptions() {
+                    exec('manageSubscriptions', []);
+                }
+                manageBilling() {
+                    exec('manageBilling', []);
+                }
+                presentCodeRedemptionSheet() {
+                    exec('presentCodeRedemptionSheet', []);
+                }
+                /**
+                 * Retrieves localized product data, including price (as localized
+                 * string), name, description of multiple products.
+                 *
+                 * @param {Array} productIds
+                 *   An array of product identifier strings.
+                 *
+                 * @param {Function} callback
+                 *   Called once with the result of the products request. Signature:
+                 *
+                 *     function(validProducts, invalidProductIds)
+                 *
+                 *   where validProducts receives an array of objects of the form:
+                 *
+                 *     {
+                 *       id: "<productId>",
+                 *       title: "<localised title>",
+                 *       description: "<localised escription>",
+                 *       price: "<localised price>"
+                 *     }
+                 *
+                 *  and invalidProductIds receives an array of product identifier
+                 *  strings which were rejected by the app store.
+                 */
+                load(productIds, success, error) {
+                    const options = this.options;
+                    if (typeof productIds === "string") {
+                        productIds = [productIds];
+                    }
+                    if (!productIds) {
+                        // Empty array, nothing to do.
+                        protectCall(success, 'load.success', [], []);
+                    }
+                    else if (!productIds.length) {
+                        // Empty array, nothing to do.
+                        protectCall(success, 'load.success', [], []);
+                    }
+                    else {
+                        if (typeof productIds[0] !== 'string') {
+                            const msg = 'invalid productIds given to store.load: ' + JSON.stringify(productIds);
+                            log(msg);
+                            protectCall(options.error, 'options.error', CdvPurchase.ErrorCode.LOAD, msg);
+                            protectCall(error, 'load.error', CdvPurchase.ErrorCode.LOAD, msg);
+                            return;
+                        }
+                        log('load ' + JSON.stringify(productIds));
+                        const loadOk = (array) => {
+                            const valid = array[0];
+                            const invalid = array[1];
+                            log('load ok: { valid:' + JSON.stringify(valid) + ' invalid:' + JSON.stringify(invalid) + ' }');
+                            protectCall(success, 'load.success', valid, invalid);
+                        };
+                        const loadFailed = (errMessage) => {
+                            log('load failed');
+                            log(errMessage);
+                            const message = 'Load failed: ' + errMessage;
+                            protectCall(options.error, 'options.error', CdvPurchase.ErrorCode.LOAD, message);
+                            protectCall(error, 'load.error', CdvPurchase.ErrorCode.LOAD, message);
+                        };
+                        this.registeredProducts = this.registeredProducts.concat(productIds);
+                        exec('load', [productIds], loadOk, loadFailed);
+                    }
+                }
+                /*
+                 * Finish an unfinished transaction.
+                 *
+                 * @param {String} transactionId
+                 *    Identifier of the transaction to finish.
+                 *
+                 * You have to call this method manually except when using the autoFinish option.
+                 */
+                finish(transactionId, success, error) {
+                    exec('finishTransaction', [transactionId], success, error);
+                }
+                finalizeTransactionUpdates() {
+                    for (let i = 0; i < this.pendingUpdates.length; ++i) {
+                        const args = this.pendingUpdates[i];
+                        this.transactionUpdated(args.state, args.errorCode, args.errorText, args.transactionIdentifier, args.productId, args.transactionReceipt, args.originalTransactionIdentifier, args.transactionDate, args.discountId);
+                    }
+                    this.pendingUpdates = [];
+                }
+                lastTransactionUpdated() {
+                    // no more pending transactions
+                }
+                // This is called from native.
+                //
+                // Note that it may eventually be called before initialization... unfortunately.
+                // In this case, we'll just keep pending updates in a list for later processing.
+                transactionUpdated(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId) {
+                    if (!this.initialized) {
+                        this.pendingUpdates.push({ state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId });
+                        return;
+                    }
+                    if (productId && transactionIdentifier) {
+                        log("product " + productId + " has a transaction in progress: " + transactionIdentifier);
+                        if (this.transactionsForProduct[productId]) {
+                            this.transactionsForProduct[productId].push(transactionIdentifier);
+                        }
+                        else {
+                            this.transactionsForProduct[productId] = [transactionIdentifier];
+                        }
+                    }
+                    switch (state) {
+                        case "PaymentTransactionStatePurchasing":
+                            protectCall(this.options.purchasing, 'options.purchasing', productId);
+                            return;
+                        case "PaymentTransactionStatePurchased":
+                            protectCall(this.options.purchased, 'options.purchase', transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId);
+                            return;
+                        case "PaymentTransactionStateDeferred":
+                            protectCall(this.options.deferred, 'options.deferred', productId);
+                            return;
+                        case "PaymentTransactionStateFailed":
+                            protectCall(this.options.purchaseFailed, 'options.purchaseFailed', productId, errorCode || CdvPurchase.ErrorCode.UNKNOWN, errorText || 'ERROR');
+                            protectCall(this.options.error, 'options.error', errorCode || CdvPurchase.ErrorCode.UNKNOWN, errorText || 'ERROR', { productId });
+                            return;
+                        case "PaymentTransactionStateRestored":
+                            protectCall(this.options.restored, 'options.restore', transactionIdentifier, productId);
+                            return;
+                        case "PaymentTransactionStateFinished":
+                            protectCall(this.options.finished, 'options.finish', transactionIdentifier, productId);
+                            return;
+                    }
+                }
+                restoreCompletedTransactionsFinished() {
+                    if (!this.needRestoreNotification)
+                        return;
+                    this.needRestoreNotification = false;
+                    protectCall(this.options.restoreCompleted, 'options.restoreCompleted');
+                }
+                restoreCompletedTransactionsFailed(errorCode) {
+                    if (!this.needRestoreNotification)
+                        return;
+                    this.needRestoreNotification = false;
+                    protectCall(this.options.restoreFailed, 'options.restoreFailed', errorCode);
+                }
+                parseReceiptArgs(args) {
+                    const base64 = args[0];
+                    const bundleIdentifier = args[1];
+                    const bundleShortVersion = args[2];
+                    const bundleNumericVersion = args[3];
+                    const bundleSignature = args[4];
+                    log('infoPlist: ' + bundleIdentifier + "," + bundleShortVersion + "," + bundleNumericVersion + "," + bundleSignature);
+                    return {
+                        appStoreReceipt: base64,
+                        bundleIdentifier: bundleIdentifier,
+                        bundleShortVersion: bundleShortVersion,
+                        bundleNumericVersion: bundleNumericVersion,
+                        bundleSignature: bundleSignature
+                    };
+                }
+                refreshReceipts(successCb, errorCb) {
+                    const loaded = (args) => {
+                        const data = this.parseReceiptArgs(args);
+                        this.appStoreReceipt = data;
+                        protectCall(this.options.receiptsRefreshed, 'options.receiptsRefreshed', data);
+                        protectCall(successCb, "refreshReceipts.success", data);
+                    };
+                    const error = (errMessage) => {
+                        log('refresh receipt failed: ' + errMessage);
+                        protectCall(this.options.error, 'options.error', CdvPurchase.ErrorCode.REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
+                        protectCall(errorCb, "refreshReceipts.error", CdvPurchase.ErrorCode.REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
+                    };
+                    this.appStoreReceipt = null;
+                    log('refreshing appStoreReceipt');
+                    exec('appStoreRefreshReceipt', [], loaded, error);
+                }
+                loadReceipts(callback, errorCb) {
+                    const loaded = (args) => {
+                        const data = this.parseReceiptArgs(args);
+                        this.appStoreReceipt = data;
+                        protectCall(callback, 'loadReceipts.callback', data);
+                    };
+                    const error = (errMessage) => {
+                        // should not happen (native side never triggers an error)
+                        // log('load failed: ' + errMessage);
+                        // protectCall(this.options.error, 'options.error', ErrorCode.LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
+                        // protectCall(errorCb, 'loadReceipts.error', ErrorCode.LOAD_RECEIPTS, 'Failed to load receipt: ' + errMessage);
+                    };
+                    log('loading appStoreReceipt');
+                    exec('appStoreReceipt', [], loaded, error);
+                }
+            }
+            Bridge_1.Bridge = Bridge;
+        })(Bridge = AppleAppStore.Bridge || (AppleAppStore.Bridge = {}));
+    })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    /**
+     * Apple AppStore adapter using StoreKit version 1
+     */
+    let AppleAppStore;
+    (function (AppleAppStore) {
+        /** @internal */
+        let Internal;
+        (function (Internal) {
+            class DiscountEligibilities {
+                constructor(request, response) {
+                    this.request = request;
+                    this.response = response;
+                }
+                isEligible(productId, discountType, discountId) {
+                    var _a;
+                    for (let i = 0; i < this.request.length; ++i) {
+                        const req = this.request[i];
+                        if (req.productId === productId && req.discountId === discountId && req.discountType === discountType) {
+                            return (_a = this.response[i]) !== null && _a !== void 0 ? _a : false;
+                        }
+                    }
+                    return false;
+                }
+            }
+            Internal.DiscountEligibilities = DiscountEligibilities;
+        })(Internal = AppleAppStore.Internal || (AppleAppStore.Internal = {}));
+    })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    /**
+     * Apple AppStore adapter using StoreKit version 1
+     */
+    let AppleAppStore;
+    (function (AppleAppStore) {
+        AppleAppStore.DEFAULT_OFFER_ID = '$';
+        class SKOffer extends CdvPurchase.Offer {
+            constructor(options, decorator) {
+                super(options, decorator);
+                this.offerType = options.offerType;
+            }
+        }
+        AppleAppStore.SKOffer = SKOffer;
+        class SKProduct extends CdvPurchase.Product {
+            constructor(validProduct, p, decorator, eligibilities) {
+                super(p, decorator);
+                this.raw = validProduct;
+                this.refresh(validProduct, decorator, eligibilities);
+            }
+            removeIneligibleDiscounts(eligibilities) {
+                this.offers = this.offers.filter(offer => {
+                    const skOffer = offer;
+                    if (skOffer.offerType === 'Default')
+                        return true;
+                    return eligibilities.isEligible(this.id, skOffer.offerType, offer.id);
+                });
+            }
+            refresh(valid, decorator, eligibilities) {
+                var _a;
+                this.raw = valid;
+                this.title = valid.title;
+                this.description = valid.description;
+                this.countryCode = valid.countryCode;
+                this.group = valid.group;
+                this.removeIneligibleDiscounts(eligibilities);
+                // default offer
+                const finalPhase = {
+                    price: valid.price,
+                    priceMicros: valid.priceMicros,
+                    currency: valid.currency,
+                    billingPeriod: formatBillingPeriod(valid.billingPeriod, valid.billingPeriodUnit),
+                    paymentMode: this.type === CdvPurchase.ProductType.PAID_SUBSCRIPTION ? CdvPurchase.PaymentMode.PAY_AS_YOU_GO : CdvPurchase.PaymentMode.UP_FRONT,
+                    recurrenceMode: this.type === CdvPurchase.ProductType.PAID_SUBSCRIPTION ? CdvPurchase.RecurrenceMode.INFINITE_RECURRING : CdvPurchase.RecurrenceMode.NON_RECURRING,
+                };
+                // intro price is now in the discounts array
+                // if (valid.introPrice && valid.introPriceMicros !== undefined) {
+                //     const introPrice: PricingPhase = {
+                //         price: valid.introPrice,
+                //         priceMicros: valid.introPriceMicros,
+                //         currency: valid.currency,
+                //         billingPeriod: formatBillingPeriod(valid.introPricePeriod, valid.introPricePeriodUnit),
+                //         paymentMode: valid.introPricePaymentMode,
+                //         recurrenceMode: RecurrenceMode.FINITE_RECURRING,
+                //         billingCycles: 1,
+                //     }
+                //     pricingPhases.push(introPrice);
+                // }
+                // discounts
+                (_a = valid.discounts) === null || _a === void 0 ? void 0 : _a.forEach(discount => {
+                    if (eligibilities.isEligible(valid.id, discount.type, discount.id)) {
+                        const pricingPhases = [];
+                        const numCycles = discount.paymentMode === CdvPurchase.PaymentMode.PAY_AS_YOU_GO ? discount.period : 1;
+                        const numPeriods = discount.paymentMode === CdvPurchase.PaymentMode.PAY_AS_YOU_GO ? 1 : discount.period;
+                        const discountPhase = {
+                            price: discount.price,
+                            priceMicros: discount.priceMicros,
+                            currency: valid.currency,
+                            billingPeriod: formatBillingPeriod(numPeriods, discount.periodUnit),
+                            billingCycles: numCycles,
+                            paymentMode: discount.paymentMode,
+                            recurrenceMode: CdvPurchase.RecurrenceMode.FINITE_RECURRING,
+                        };
+                        pricingPhases.push(discountPhase);
+                        pricingPhases.push(finalPhase);
+                        this.addOffer(new SKOffer({ id: discount.id, product: this, pricingPhases, offerType: discount.type }, decorator));
+                    }
+                });
+                if (!hasIntroductoryOffer(this)) {
+                    this.addOffer(new SKOffer({
+                        id: AppleAppStore.DEFAULT_OFFER_ID,
+                        product: this,
+                        pricingPhases: [finalPhase],
+                        offerType: 'Default',
+                    }, decorator));
+                }
+                function hasIntroductoryOffer(product) {
+                    return product.offers.filter(offer => {
+                        return offer.offerType === 'Introductory';
+                    }).length > 0;
+                }
+                /**
+                 * Return ISO form of an IPeriodUnit + number of periods
+                 */
+                function formatBillingPeriod(numPeriods, period) {
+                    if (numPeriods && period)
+                        return `P${numPeriods}${period[0]}`;
+                    else
+                        return undefined;
+                }
+            }
+        }
+        AppleAppStore.SKProduct = SKProduct;
+    })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let AppleAppStore;
+    (function (AppleAppStore) {
+        /**
+         * Transaction ID used for the application virtual transaction
+         */
+        AppleAppStore.APPLICATION_VIRTUAL_TRANSACTION_ID = 'appstore.application';
+        /**
+         * StoreKit 1 exposes a single receipt that contains all transactions.
+         */
+        class SKApplicationReceipt extends CdvPurchase.Receipt {
+            constructor(applicationReceipt, needApplicationReceipt, decorator) {
+                super(CdvPurchase.Platform.APPLE_APPSTORE, decorator);
+                this.nativeData = applicationReceipt;
+                this.refresh(this.nativeData, needApplicationReceipt, decorator);
+            }
+            refresh(nativeData, needApplicationReceipt, decorator) {
+                this.nativeData = nativeData;
+                if (needApplicationReceipt) {
+                    const existing = this.transactions.find(t => t.transactionId === AppleAppStore.APPLICATION_VIRTUAL_TRANSACTION_ID);
+                    if (existing) {
+                        return;
+                    }
+                    const t = new CdvPurchase.Transaction(CdvPurchase.Platform.APPLE_APPSTORE, this, decorator);
+                    t.transactionId = AppleAppStore.APPLICATION_VIRTUAL_TRANSACTION_ID;
+                    t.state = CdvPurchase.TransactionState.APPROVED;
+                    t.products.push({
+                        id: nativeData.bundleIdentifier,
+                    });
+                    this.transactions.push(t);
+                }
+            }
+        }
+        AppleAppStore.SKApplicationReceipt = SKApplicationReceipt;
+        /** StoreKit transaction */
+        class SKTransaction extends CdvPurchase.Transaction {
+            refresh(productId, originalTransactionIdentifier, transactionDate, discountId) {
+                if (productId)
+                    this.products = [{ id: productId, offerId: discountId }];
+                if (originalTransactionIdentifier)
+                    this.originalTransactionId = originalTransactionIdentifier;
+                if (transactionDate)
+                    this.purchaseDate = new Date(+transactionDate);
+            }
+        }
+        AppleAppStore.SKTransaction = SKTransaction;
     })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -2111,6 +3088,7 @@ var CdvPurchase;
                     type: CdvPurchase.ProductType.CONSUMABLE,
                     priceMicros: receipt.paymentRequest.amountMicros,
                     currency: receipt.paymentRequest.currency,
+                    products: [],
                     transaction: {
                         type: CdvPurchase.Platform.BRAINTREE,
                         deviceData: receipt.dropInResult.deviceData,
@@ -2136,6 +3114,8 @@ var CdvPurchase;
             }
             checkSupport(functionality) {
                 return functionality === 'requestPayment';
+            }
+            async restorePurchases() {
             }
         }
         Braintree.Adapter = Adapter;
@@ -2779,6 +3759,7 @@ var CdvPurchase;
                     id: productId,
                     type: product.type,
                     offers: product.offers,
+                    products: this._products.products,
                     transaction: {
                         type: CdvPurchase.Platform.GOOGLE_PLAY,
                         id: receipt.transactions[0].transactionId,
@@ -2817,6 +3798,8 @@ var CdvPurchase;
             }
             checkSupport(functionality) {
                 return functionality === 'order';
+            }
+            async restorePurchases() {
             }
         }
         GooglePlay.Adapter = Adapter;
@@ -2886,7 +3869,7 @@ var CdvPurchase;
             ProrationMode["IMMEDIATE_AND_CHARGE_FULL_PRICE"] = "IMMEDIATE_AND_CHARGE_FULL_PRICE";
         })(ProrationMode = GooglePlay.ProrationMode || (GooglePlay.ProrationMode = {}));
         let Bridge;
-        (function (Bridge_1) {
+        (function (Bridge_2) {
             let log = function log(msg) {
                 console.log("InAppBilling[js]: " + msg);
             };
@@ -2895,7 +3878,7 @@ var CdvPurchase;
                 PurchaseState[PurchaseState["UNSPECIFIED_STATE"] = 0] = "UNSPECIFIED_STATE";
                 PurchaseState[PurchaseState["PURCHASED"] = 1] = "PURCHASED";
                 PurchaseState[PurchaseState["PENDING"] = 2] = "PENDING";
-            })(PurchaseState = Bridge_1.PurchaseState || (Bridge_1.PurchaseState = {}));
+            })(PurchaseState = Bridge_2.PurchaseState || (Bridge_2.PurchaseState = {}));
             class Bridge {
                 constructor() {
                     this.options = {};
@@ -3025,7 +4008,7 @@ var CdvPurchase;
                     return window.cordova.exec(function () { }, function () { }, "InAppBillingPlugin", "launchPriceChangeConfirmationFlow", [productId]);
                 }
             }
-            Bridge_1.Bridge = Bridge;
+            Bridge_2.Bridge = Bridge;
             // Generates a `fail` function that accepts an optional error code
             // in the first part of the error string.
             //
@@ -3600,6 +4583,8 @@ var CdvPurchase;
             checkSupport(functionality) {
                 return true;
             }
+            async restorePurchases() {
+            }
         }
         Test.Adapter = Adapter;
     })(Test = CdvPurchase.Test || (CdvPurchase.Test = {}));
@@ -3826,6 +4811,8 @@ var CdvPurchase;
             }
             checkSupport(functionality) {
                 return false;
+            }
+            async restorePurchases() {
             }
         }
         WindowsStore.Adapter = Adapter;
@@ -4385,10 +5372,13 @@ var CdvPurchase;
             this.latestReceipt = response.latest_receipt;
             this.nativeTransactions = [response.transaction];
             this.warning = response.warning;
+            Object.defineProperty(this, 'raw', { 'enumerable': false, get() { return response; } });
             Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
         }
         /** Platform this receipt originated from */
         get platform() { return this.sourceReceipt.platform; }
+        /** Get raw response data from the receipt validation request */
+        get raw() { return {}; } // actual implementation as "defineProperty" in constructor.
         /**
          * Update the receipt content
          *

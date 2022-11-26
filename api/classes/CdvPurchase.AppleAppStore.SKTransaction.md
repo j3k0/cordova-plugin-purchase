@@ -2,6 +2,8 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[AppleAppStore](../modules/CdvPurchase.AppleAppStore.md).SKTransaction
 
+StoreKit transaction
+
 ## Hierarchy
 
 - [`Transaction`](CdvPurchase.Transaction.md)
@@ -19,6 +21,7 @@
 - [isConsumed](CdvPurchase.AppleAppStore.SKTransaction.md#isconsumed)
 - [isPending](CdvPurchase.AppleAppStore.SKTransaction.md#ispending)
 - [lastRenewalDate](CdvPurchase.AppleAppStore.SKTransaction.md#lastrenewaldate)
+- [originalTransactionId](CdvPurchase.AppleAppStore.SKTransaction.md#originaltransactionid)
 - [platform](CdvPurchase.AppleAppStore.SKTransaction.md#platform)
 - [products](CdvPurchase.AppleAppStore.SKTransaction.md#products)
 - [purchaseDate](CdvPurchase.AppleAppStore.SKTransaction.md#purchasedate)
@@ -35,6 +38,7 @@
 ### Methods
 
 - [finish](CdvPurchase.AppleAppStore.SKTransaction.md#finish)
+- [refresh](CdvPurchase.AppleAppStore.SKTransaction.md#refresh)
 - [verify](CdvPurchase.AppleAppStore.SKTransaction.md#verify)
 
 ## Properties
@@ -120,6 +124,12 @@ Time a subscription was last renewed
 #### Inherited from
 
 [Transaction](CdvPurchase.Transaction.md).[lastRenewalDate](CdvPurchase.Transaction.md#lastrenewaldate)
+
+___
+
+### originalTransactionId
+
+• `Optional` **originalTransactionId**: `string`
 
 ___
 
@@ -263,6 +273,25 @@ store.when()
 #### Inherited from
 
 [Transaction](CdvPurchase.Transaction.md).[finish](CdvPurchase.Transaction.md#finish)
+
+___
+
+### refresh
+
+▸ **refresh**(`productId?`, `originalTransactionIdentifier?`, `transactionDate?`, `discountId?`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `productId?` | `string` |
+| `originalTransactionIdentifier?` | `string` |
+| `transactionDate?` | `string` |
+| `discountId?` | `string` |
+
+#### Returns
+
+`void`
 
 ___
 

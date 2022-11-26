@@ -114,6 +114,16 @@ declare namespace CdvPurchase {
          * ]);
          */
         get braintreeClientTokenProvider(): Braintree.ClientTokenProvider;
+        /**
+         * Determine the eligibility of discounts based on the content of the application receipt.
+         *
+         * The secret sauce used here is to wait for validation of the application receipt.
+         * The receipt validator will return the necessary data to determine eligibility.
+         *
+         * Receipt validation is expected to happen after loading product information, so the implementation here is to
+         * wait for a validation response.
+         */
+        get appStoreDiscountEligibilityDeterminer(): AppleAppStore.DiscountEligibilityDeterminer;
         /** Validator URL */
         get validator(): string;
     }
@@ -424,6 +434,12 @@ declare namespace CdvPurchase {
          * Returns true if the platform supports the given functionality.
          */
         checkSupport(functionality: PlatformFunctionality): boolean;
+        /**
+         * Replay the queue of transactions.
+         *
+         * Might ask the user to login.
+         */
+        restorePurchases(): Promise<void>;
     }
     /**
      * Data to attach to a transaction.
@@ -773,6 +789,15 @@ declare namespace CdvPurchase {
             private runOnReceipt;
             private runValidatorFunction;
             private buildRequestBody;
+            /**
+             * For each md5-hashed values of the validator request's ".transaction" field,
+             * store the response from the server.
+             *
+             * This way, if a subsequent request is necessary (without a couple of minutes)
+             * we just reuse the same data.
+             */
+            private cache;
+            private removeExpiredCache;
             private runValidatorRequest;
         }
     }
@@ -790,6 +815,7 @@ declare namespace CdvPurchase {
         platform: Platform.GOOGLE_PLAY;
     } | {
         platform: Platform.APPLE_APPSTORE;
+        options?: AppleAppStore.AdapterOptions;
     } | {
         platform: Platform.TEST;
     } | {
@@ -861,6 +887,8 @@ declare namespace CdvPurchase {
             push(callback: Callback<T>): void;
             /** Call all registered callbacks with the given value */
             trigger(value: T): void;
+            /** Remove a callback from the list */
+            remove(callback: Callback<T>): void;
         }
     }
 }
@@ -879,6 +907,7 @@ declare namespace CdvPurchase {
             add(cb: Callback<void>): unknown;
             /** Calls the ready callbacks */
             trigger(): void;
+            remove(cb: Callback<void>): void;
         }
     }
 }
@@ -1054,6 +1083,10 @@ declare namespace CdvPurchase {
          *      .verified(receipt => receipt.finish());
          */
         when(): When;
+        /**
+         * Remove a callback from any listener it might have been added to.
+         */
+        off<T>(callback: Callback<T>): void;
         /**
          * Setup a function to be notified of changes to a transaction state.
          *
@@ -1489,32 +1522,363 @@ declare namespace CdvPurchase {
     }
 }
 declare namespace CdvPurchase {
+    /**
+     * Apple AppStore adapter using StoreKit version 1
+     */
     namespace AppleAppStore {
-        class SKReceipt extends Receipt {
+        /**
+         * Determine which discount the user is eligible to.
+         *
+         * @param applicationReceipt An apple appstore receipt
+         * @param requests List of discount offers to evaluate eligibility for
+         * @param callback Get the response, a boolean for each request (matched by index).
+         */
+        type DiscountEligibilityDeterminer = (applicationReceipt: ApplicationReceipt, requests: DiscountEligibilityRequest[], callback: (response: boolean[]) => void) => void;
+        /**
+         * Optional options for the AppleAppStore adapter
+         */
+        interface AdapterOptions {
+            /**
+             * Determine which discount the user is eligible to.
+             *
+             * @param applicationReceipt An apple appstore receipt
+             * @param requests List of discount offers to evaluate eligibility for
+             * @param callback Get the response, a boolean for each request (matched by index).
+             */
+            discountEligibilityDeterminer?: DiscountEligibilityDeterminer;
+            /**
+             * Set to false if you don't need to verify the application receipt
+             *
+             * Verifying the application receipt at startup is useful in different cases:
+             *
+             *  - Retrieve information about the user's first app download.
+             *  - Make it harder to side-load your application.
+             *  - Determine eligibility to introductory prices.
+             *
+             * The default is "true", use "false" is an optimization.
+             */
+            needAppReceipt?: boolean;
         }
-        class SKProduct extends Product {
-        }
-        class SKOffer extends Offer {
-        }
-        class SKTransaction extends Transaction {
-        }
+        /**
+         * Adapter for Apple AppStore using StoreKit version 1
+         */
         class Adapter implements CdvPurchase.Adapter {
             id: Platform;
             name: string;
             ready: boolean;
-            products: SKProduct[];
-            receipts: SKReceipt[];
-            constructor(context: Internal.AdapterContext);
+            /** List of products loaded from AppStore */
+            _products: SKProduct[];
+            get products(): Product[];
+            /** Find a given product from ID */
+            getProduct(id: string): SKProduct | undefined;
+            /** The application receipt, contains all transactions */
+            _receipt?: SKApplicationReceipt;
+            get receipts(): Receipt[];
+            bridge: Bridge.Bridge;
+            context: CdvPurchase.Internal.AdapterContext;
+            log: Logger;
+            /** Component that determine eligibility to a given discount offer */
+            discountEligibilityDeterminer?: DiscountEligibilityDeterminer;
+            /** True when we need to validate the application receipt */
+            needAppReceipt: boolean;
+            constructor(context: CdvPurchase.Internal.AdapterContext, options: AdapterOptions);
+            /** Returns true on Android, the only platform supported by this adapter */
             get isSupported(): boolean;
+            private upsertTransactionInProgress;
+            private removeTransactionInProgress;
+            private upsertTransaction;
+            private removeTransaction;
+            private receiptUpdated;
             initialize(): Promise<IError | undefined>;
+            /**
+             * Create the application receipt
+             */
+            private initializeAppReceipt;
+            /** Promisified loading of the AppStore receipt */
+            private loadAppStoreReceipt;
+            private loadEligibility;
+            private callDiscountEligibilityDeterminer;
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
             order(offer: Offer): Promise<undefined | IError>;
             finish(transaction: Transaction): Promise<undefined | IError>;
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
-            handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
+            handleReceiptValidationResponse(_receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
             checkSupport(functionality: PlatformFunctionality): boolean;
+            restorePurchases(): Promise<void>;
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace AppleAppStore {
+        /**
+         * Application receipt with information about the app bundle.
+         */
+        interface ApplicationReceipt {
+            /** Application receipt in base64 */
+            appStoreReceipt: string;
+            /** String containing the apps bundle identifier */
+            bundleIdentifier: string;
+            /** Application version in string format */
+            bundleShortVersion: string;
+            /** Application version in numeric format */
+            bundleNumericVersion: number;
+            /** Bundle signature */
+            bundleSignature: string;
+        }
+        namespace Bridge {
+            /**
+             * Product as loaded from AppStore
+             */
+            export interface ValidProduct {
+                /** product id */
+                id: string;
+                /** localized title */
+                title: string;
+                /** localized description */
+                description: string;
+                /** localized price */
+                price: string;
+                /** Price in micro units */
+                priceMicros: number;
+                /** Currency used by this product */
+                currency: string;
+                /** AppStore country this product has been fetched for */
+                countryCode: string;
+                /** Number of period units in each billing cycle */
+                billingPeriod?: number;
+                /** Unit for the billing cycle */
+                billingPeriodUnit?: IPeriodUnit;
+                /** Localized price for introductory period */
+                introPrice?: string;
+                /** Introductory price in micro units */
+                introPriceMicros?: number;
+                /** Number of introductory price periods */
+                introPricePeriod?: number;
+                /** Duration of an introductory price period */
+                introPricePeriodUnit?: IPeriodUnit;
+                /** Payment mode for introductory price */
+                introPricePaymentMode?: PaymentMode;
+                /** Available discount offers */
+                discounts?: Discount[];
+                /** Group this product is member of */
+                group?: string;
+            }
+            export type DiscountType = "Introductory" | "Subscription";
+            /** Subscription discount offer */
+            export interface Discount {
+                /** Discount identifier */
+                id: string;
+                /** Discount type */
+                type: DiscountType;
+                /** Localized price */
+                price: string;
+                /** Price in micro units */
+                priceMicros: number;
+                /** Number of periods */
+                period: number;
+                /** Subscription period unit */
+                periodUnit: IPeriodUnit;
+                /** Payment mode */
+                paymentMode: PaymentMode;
+            }
+            /**
+             * State of a transaction
+             */
+            export type TransactionState = "PaymentTransactionStatePurchasing" | "PaymentTransactionStatePurchased" | "PaymentTransactionStateDeferred" | "PaymentTransactionStateFailed" | "PaymentTransactionStateRestored" | "PaymentTransactionStateFinished";
+            /**
+             * A receipt returned by the native side.
+             */
+            type RawReceiptArgs = [
+                base64: string,
+                bundleIdentifier: string,
+                bundleShortVersion: string,
+                bundleNumericVersion: number,
+                bundleSignature: string
+            ];
+            export interface BridgeCallbacks {
+                error: (code: ErrorCode, message: String, options?: {
+                    productId: string;
+                    quantity?: number;
+                }) => void;
+                /** Called when the bridge is ready (after setup) */
+                ready: () => void;
+                /** Called when a transaction is in "Purchased" state */
+                purchased: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string) => void;
+                /** Called when a transaction has been enqueued */
+                purchaseEnqueued: (productId: string, quantity: number) => void;
+                /**
+                 * Called when a transaction failed.
+                 *
+                 * Watch out for ErrorCode.PAYMENT_CANCELLED (means user closed the dialog)
+                 */
+                purchaseFailed: (productId: string, code: ErrorCode, message: string) => void;
+                /**
+                 * Called when a transaction is in "purchasing" state
+                 */
+                purchasing: (productId: string) => void;
+                /** Called when a transaction is deferred (waiting for approval) */
+                deferred: (productId: string) => void;
+                /** Called when a transaction is in "finished" state */
+                finished: (transactionIdentifier: string, productId: string) => void;
+                /** Called when a transaction is in "restored" state */
+                restored: (transactionIdentifier: string, productId: string) => void;
+                /** Called when the application receipt is refreshed */
+                receiptsRefreshed: (receipt: ApplicationReceipt) => void;
+                /** Called when a call to "restore" failed */
+                restoreFailed: (errorCode: ErrorCode) => void;
+                /** Called when a call to "restore" is complete */
+                restoreCompleted: () => void;
+            }
+            export interface BridgeOptions extends BridgeCallbacks {
+                /** Custom logger for the bridge */
+                log: (message: string) => void;
+                /** True to enable lot of logs on the console */
+                debug: boolean;
+                /** Auto-finish transaction */
+                autoFinish: boolean;
+            }
+            export class Bridge {
+                /** Callbacks set by the adapter */
+                options: BridgeCallbacks;
+                /** Transactions for a given product */
+                transactionsForProduct: {
+                    [productId: string]: string[];
+                };
+                /** True when the SDK has been initialized */
+                private initialized;
+                /** The application receipt from AppStore, cached in javascript */
+                appStoreReceipt?: ApplicationReceipt | null;
+                /** List of registered product identifiers */
+                private registeredProducts;
+                /** True if "restoreCompleted" or "restoreFailed" should be called when restore is done */
+                private needRestoreNotification;
+                /** List of transaction updates to process */
+                private pendingUpdates;
+                constructor();
+                init(options: Partial<BridgeOptions>, success: () => void, error: (code: ErrorCode, message: string) => void): void;
+                processPendingTransactions(): void;
+                purchase(productId: string, quantity: number, applicationUsername: string | undefined, discount: string | undefined, success: () => void, error: () => void): void;
+                canMakePayments(success: () => void, error: (message: string) => void): void;
+                restore(): void;
+                manageSubscriptions(): void;
+                manageBilling(): void;
+                presentCodeRedemptionSheet(): void;
+                /**
+                 * Retrieves localized product data, including price (as localized
+                 * string), name, description of multiple products.
+                 *
+                 * @param {Array} productIds
+                 *   An array of product identifier strings.
+                 *
+                 * @param {Function} callback
+                 *   Called once with the result of the products request. Signature:
+                 *
+                 *     function(validProducts, invalidProductIds)
+                 *
+                 *   where validProducts receives an array of objects of the form:
+                 *
+                 *     {
+                 *       id: "<productId>",
+                 *       title: "<localised title>",
+                 *       description: "<localised escription>",
+                 *       price: "<localised price>"
+                 *     }
+                 *
+                 *  and invalidProductIds receives an array of product identifier
+                 *  strings which were rejected by the app store.
+                 */
+                load(productIds: string[], success: (validProducts: ValidProduct[], invalidProductIds: string[]) => void, error: (code: ErrorCode, message: string) => void): void;
+                finish(transactionId: string, success: () => void, error: () => void): void;
+                finalizeTransactionUpdates(): void;
+                lastTransactionUpdated(): void;
+                transactionUpdated(state: TransactionState, errorCode: ErrorCode | undefined, errorText: string | undefined, transactionIdentifier: string, productId: string, transactionReceipt: never, originalTransactionIdentifier: string | undefined, transactionDate: string | undefined, discountId: string | undefined): void;
+                restoreCompletedTransactionsFinished(): void;
+                restoreCompletedTransactionsFailed(errorCode: ErrorCode): void;
+                parseReceiptArgs(args: RawReceiptArgs): ApplicationReceipt;
+                refreshReceipts(successCb: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
+                loadReceipts(callback: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
+                /** @deprecated */
+                onPurchased: boolean;
+                /** @deprecated */
+                onFailed: boolean;
+                /** @deprecated */
+                onRestored: boolean;
+            }
+            export {};
+        }
+    }
+}
+declare namespace CdvPurchase {
+    /**
+     * Apple AppStore adapter using StoreKit version 1
+     */
+    namespace AppleAppStore {
+        type DiscountType = "Introductory" | "Subscription";
+        interface DiscountEligibilityRequest {
+            productId: string;
+            discountType: DiscountType;
+            discountId: string;
+        }
+        /** @internal */
+        namespace Internal {
+            class DiscountEligibilities {
+                request: DiscountEligibilityRequest[];
+                response: boolean[];
+                constructor(request: DiscountEligibilityRequest[], response: boolean[]);
+                isEligible(productId: string, discountType: DiscountType, discountId: string): boolean;
+            }
+        }
+    }
+}
+declare namespace CdvPurchase {
+    /**
+     * Apple AppStore adapter using StoreKit version 1
+     */
+    namespace AppleAppStore {
+        const DEFAULT_OFFER_ID = "$";
+        type SKOfferType = DiscountType | 'Default';
+        class SKOffer extends Offer {
+            offerType: SKOfferType;
+            constructor(options: {
+                id: string;
+                product: Product;
+                pricingPhases: PricingPhase[];
+                offerType: SKOfferType;
+            }, decorator: CdvPurchase.Internal.OfferDecorator);
+        }
+        class SKProduct extends Product {
+            /** Raw data returned by native side */
+            raw: Bridge.ValidProduct;
+            /** AppStore country this product has been fetched for */
+            countryCode?: string;
+            /** Group this product is member of */
+            group?: string;
+            constructor(validProduct: Bridge.ValidProduct, p: IRegisterProduct, decorator: CdvPurchase.Internal.ProductDecorator & CdvPurchase.Internal.OfferDecorator, eligibilities: Internal.DiscountEligibilities);
+            removeIneligibleDiscounts(eligibilities: Internal.DiscountEligibilities): void;
+            refresh(valid: Bridge.ValidProduct, decorator: CdvPurchase.Internal.ProductDecorator & CdvPurchase.Internal.OfferDecorator, eligibilities: Internal.DiscountEligibilities): void;
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace AppleAppStore {
+        /**
+         * Transaction ID used for the application virtual transaction
+         */
+        const APPLICATION_VIRTUAL_TRANSACTION_ID = "appstore.application";
+        /**
+         * StoreKit 1 exposes a single receipt that contains all transactions.
+         */
+        class SKApplicationReceipt extends Receipt {
+            nativeData: ApplicationReceipt;
+            constructor(applicationReceipt: ApplicationReceipt, needApplicationReceipt: boolean, decorator: CdvPurchase.Internal.ReceiptDecorator & CdvPurchase.Internal.TransactionDecorator);
+            refresh(nativeData: ApplicationReceipt, needApplicationReceipt: boolean, decorator: CdvPurchase.Internal.ReceiptDecorator & CdvPurchase.Internal.TransactionDecorator): void;
+        }
+        /** StoreKit transaction */
+        class SKTransaction extends Transaction {
+            originalTransactionId?: string;
+            refresh(productId?: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string): void;
         }
     }
 }
@@ -1969,6 +2333,7 @@ declare namespace CdvPurchase {
             receiptValidationBody(receipt: BraintreeReceipt): Validator.Request.Body | undefined;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
             checkSupport(functionality: PlatformFunctionality): boolean;
+            restorePurchases(): Promise<void>;
         }
     }
 }
@@ -2607,6 +2972,7 @@ declare namespace CdvPurchase {
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
             checkSupport(functionality: PlatformFunctionality): boolean;
+            restorePurchases(): Promise<void>;
         }
     }
 }
@@ -3370,6 +3736,7 @@ declare namespace CdvPurchase {
             private reportActiveSubscription;
             static verify(receipt: Receipt, callback: Callback<Internal.ReceiptResponse>): void;
             checkSupport(functionality: PlatformFunctionality): boolean;
+            restorePurchases(): Promise<void>;
         }
     }
 }
@@ -3474,6 +3841,7 @@ declare namespace CdvPurchase {
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
             checkSupport(functionality: PlatformFunctionality): boolean;
+            restorePurchases(): Promise<void>;
         }
     }
 }
@@ -3809,6 +4177,18 @@ declare namespace CdvPurchase {
                 trialPeriodUnit?: SubscriptionPeriodUnit;
                 /** Metadata about the user's device */
                 device?: CdvPurchase.Validator.DeviceInfo;
+                /** List of products available in the store */
+                products: {
+                    /** Type of product (subscription, consumable, etc.) */
+                    type: ProductType;
+                    /** Product identifier on the store (unique per platform) */
+                    id: string;
+                    /** List of offers available for this product */
+                    offers: {
+                        id: string;
+                        pricingPhases: PricingPhase[];
+                    }[];
+                }[];
             }
             type ApiValidatorBodyTransaction = ApiValidatorBodyTransactionApple | ApiValidatorBodyTransactionGoogle | ApiValidatorBodyTransactionWindows | ApiValidatorBodyTransactionBraintree;
             /** Transaction type from an Apple powered device  */
@@ -4033,6 +4413,8 @@ declare namespace CdvPurchase {
          * Id of the product that have been validated. Used internally.
          */
         id: string;
+        /** Get raw response data from the receipt validation request */
+        get raw(): Validator.Response.SuccessPayload['data'];
         /**
          * @internal
          */

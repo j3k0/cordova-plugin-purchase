@@ -42,6 +42,7 @@ Adapter for a payment or in-app purchase platform
 - [order](CdvPurchase.Braintree.Adapter.md#order)
 - [receiptValidationBody](CdvPurchase.Braintree.Adapter.md#receiptvalidationbody)
 - [requestPayment](CdvPurchase.Braintree.Adapter.md#requestpayment)
+- [restorePurchases](CdvPurchase.Braintree.Adapter.md#restorepurchases)
 
 ## Constructors
 
@@ -356,3 +357,21 @@ Request a payment from the user
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[requestPayment](../interfaces/CdvPurchase.Adapter.md#requestpayment)
+
+___
+
+### restorePurchases
+
+▸ **restorePurchases**(): `Promise`<`void`\>
+
+Replay the queue of transactions.
+
+Might ask the user to login.
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[restorePurchases](../interfaces/CdvPurchase.Adapter.md#restorepurchases)
