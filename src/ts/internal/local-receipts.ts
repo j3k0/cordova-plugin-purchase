@@ -15,7 +15,9 @@ namespace CdvPurchase {
           for (const transaction of receipt.transactions) {
             for (const trProducts of transaction.products) {
               if (trProducts.id === product.id) {
-                if ((transaction.purchaseDate ?? 0) < (found?.purchaseDate ?? 1))
+                // No matching transaction has been found or the tested one is newer than the already found one?
+                // Then we chose the tested one.
+                if (!found || (transaction.purchaseDate ?? 0) < (found.purchaseDate ?? 1))
                   found = transaction;
               }
             }
