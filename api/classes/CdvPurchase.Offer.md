@@ -25,6 +25,7 @@ One of the available offers to purchase a given product
 
 - [canPurchase](CdvPurchase.Offer.md#canpurchase)
 - [platform](CdvPurchase.Offer.md#platform)
+- [productGroup](CdvPurchase.Offer.md#productgroup)
 - [productId](CdvPurchase.Offer.md#productid)
 - [productType](CdvPurchase.Offer.md#producttype)
 
@@ -71,6 +72,18 @@ Platform this offer is available from
 #### Returns
 
 [`Platform`](../enums/CdvPurchase.Platform.md)
+
+___
+
+### productGroup
+
+• `get` **productGroup**(): `undefined` \| `string`
+
+Group the product related to this offer is member of
+
+#### Returns
+
+`undefined` \| `string`
 
 ___
 

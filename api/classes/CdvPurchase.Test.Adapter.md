@@ -41,6 +41,7 @@ Test.TEST_PRODUCTS
 - [handleReceiptValidationResponse](CdvPurchase.Test.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.Test.Adapter.md#initialize)
 - [load](CdvPurchase.Test.Adapter.md#load)
+- [manageBilling](CdvPurchase.Test.Adapter.md#managebilling)
 - [manageSubscriptions](CdvPurchase.Test.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.Test.Adapter.md#order)
 - [receiptValidationBody](CdvPurchase.Test.Adapter.md#receiptvalidationbody)
@@ -247,6 +248,22 @@ Load product definitions from the platform.
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[load](../interfaces/CdvPurchase.Adapter.md#load)
+
+___
+
+### manageBilling
+
+▸ **manageBilling**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Open the platforms' billing management interface.
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[manageBilling](../interfaces/CdvPurchase.Adapter.md#managebilling)
 
 ___
 

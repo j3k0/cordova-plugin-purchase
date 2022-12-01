@@ -16,6 +16,8 @@
 - [formatDurationEN](CdvPurchase.Utils.md#formatdurationen)
 - [md5](CdvPurchase.Utils.md#md5)
 - [nonEnumerable](CdvPurchase.Utils.md#nonenumerable)
+- [safeCall](CdvPurchase.Utils.md#safecall)
+- [safeCallback](CdvPurchase.Utils.md#safecallback)
 - [uuidv4](CdvPurchase.Utils.md#uuidv4)
 
 ## Functions
@@ -179,6 +181,59 @@ ___
 #### Returns
 
 `PropertyDescriptor`
+
+___
+
+### safeCall
+
+▸ **safeCall**<`T`\>(`logger`, `className`, `callback`, `value`): `void`
+
+Run a callback inside a try/catch block.
+
+#### Type parameters
+
+| Name |
+| :------ |
+| `T` |
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `logger` | [`Logger`](../classes/CdvPurchase.Logger.md) | Used to log errors. |
+| `className` | `string` | Type of callback, helps debugging when a function failed. |
+| `callback` | [`Callback`](CdvPurchase.md#callback)<`T`\> | The callback function is turn into a safer version. |
+| `value` | `T` | Value passed to the callback. |
+
+#### Returns
+
+`void`
+
+___
+
+### safeCallback
+
+▸ **safeCallback**<`T`\>(`logger`, `className`, `callback`): [`Callback`](CdvPurchase.md#callback)<`T`\>
+
+Return a safer version of a callback that runs inside a try/catch block.
+
+#### Type parameters
+
+| Name |
+| :------ |
+| `T` |
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `logger` | [`Logger`](../classes/CdvPurchase.Logger.md) | Used to log errors. |
+| `className` | `string` | Type of callback, helps debugging when a function failed. |
+| `callback` | [`Callback`](CdvPurchase.md#callback)<`T`\> | The callback function is turn into a safer version. |
+
+#### Returns
+
+[`Callback`](CdvPurchase.md#callback)<`T`\>
 
 ___
 

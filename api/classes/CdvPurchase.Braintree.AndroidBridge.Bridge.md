@@ -15,6 +15,7 @@ This tries to export pretty raw functions from the underlying native SDKs.
 ### Methods
 
 - [initialize](CdvPurchase.Braintree.AndroidBridge.Bridge.md#initialize)
+- [isApplePaySupported](CdvPurchase.Braintree.AndroidBridge.Bridge.md#isapplepaysupported)
 - [launchDropIn](CdvPurchase.Braintree.AndroidBridge.Bridge.md#launchdropin)
 - [isSupported](CdvPurchase.Braintree.AndroidBridge.Bridge.md#issupported)
 
@@ -46,6 +47,16 @@ This tries to export pretty raw functions from the underlying native SDKs.
 #### Returns
 
 `void`
+
+___
+
+### isApplePaySupported
+
+▸ **isApplePaySupported**(): `Promise`<`boolean`\>
+
+#### Returns
+
+`Promise`<`boolean`\>
 
 ___
 

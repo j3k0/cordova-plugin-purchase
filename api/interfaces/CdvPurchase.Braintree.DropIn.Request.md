@@ -9,11 +9,14 @@ A Braintree Drop-In Request
 ### Properties
 
 - [allowVaultCardOverride](CdvPurchase.Braintree.DropIn.Request.md#allowvaultcardoverride)
+- [applePayDisabled](CdvPurchase.Braintree.DropIn.Request.md#applepaydisabled)
+- [cardDisabled](CdvPurchase.Braintree.DropIn.Request.md#carddisabled)
 - [cardholderNameStatus](CdvPurchase.Braintree.DropIn.Request.md#cardholdernamestatus)
-- [disableCard](CdvPurchase.Braintree.DropIn.Request.md#disablecard)
 - [maskCardNumber](CdvPurchase.Braintree.DropIn.Request.md#maskcardnumber)
 - [maskSecurityCode](CdvPurchase.Braintree.DropIn.Request.md#masksecuritycode)
+- [paypalDisabled](CdvPurchase.Braintree.DropIn.Request.md#paypaldisabled)
 - [threeDSecureRequest](CdvPurchase.Braintree.DropIn.Request.md#threedsecurerequest)
+- [vaultCard](CdvPurchase.Braintree.DropIn.Request.md#vaultcard)
 - [vaultCardDefaultValue](CdvPurchase.Braintree.DropIn.Request.md#vaultcarddefaultvalue)
 - [vaultManager](CdvPurchase.Braintree.DropIn.Request.md#vaultmanager)
 
@@ -30,6 +33,25 @@ Default value is false.
 
 ___
 
+### applePayDisabled
+
+• `Optional` **applePayDisabled**: `boolean`
+
+Use this parameter to disable Apple Pay.
+
+Otherwise if Apple Pay is correctly configured, Apple Pay will appear
+as a selection in the Payment Method options.
+
+___
+
+### cardDisabled
+
+• `Optional` **cardDisabled**: `boolean`
+
+If set to true, disables Card in Drop-in. Default value is false.
+
+___
+
 ### cardholderNameStatus
 
 • `Optional` **cardholderNameStatus**: [`CardFormFieldStatus`](../enums/CdvPurchase.Braintree.DropIn.CardFormFieldStatus.md)
@@ -40,19 +62,15 @@ Default is DISABLED.
 
 ___
 
-### disableCard
-
-• `Optional` **disableCard**: `boolean`
-
-If set to true, disables Card in Drop-in. Default value is false.
-
-___
-
 ### maskCardNumber
 
 • `Optional` **maskCardNumber**: `boolean`
 
-true to mask the card number when the field is not focused. See com.braintreepayments.cardform.view.CardEditText for more details.
+True to mask the card number when the field is not focused.
+
+See com.braintreepayments.cardform.view.CardEditText for more details.
+
+Android only.
 
 ___
 
@@ -64,9 +82,34 @@ true to mask the security code during input. Defaults to false.
 
 ___
 
+### paypalDisabled
+
+• `Optional` **paypalDisabled**: `boolean`
+
+Set to true to hide the PayPal option even if enabled for your account.
+
+Defaults to false. Set to true to hide the PayPal option even if enabled for your account.
+
+___
+
 ### threeDSecureRequest
 
 • `Optional` **threeDSecureRequest**: [`Request`](CdvPurchase.Braintree.ThreeDSecure.Request.md)
+
+___
+
+### vaultCard
+
+• `Optional` **vaultCard**: `boolean`
+
+Whether or not to vault the card upon tokenization.
+
+Can only be applied when initializing the Braintree client with a client token
+that was generated with a customer ID.
+
+When set to `false` with `allowVaultCardOverride` set to `false`, then cards will not be vaulted.
+
+Defaults to true
 
 ___
 
@@ -91,4 +134,6 @@ ___
 
 • `Optional` **vaultManager**: `boolean`
 
-true to allow customers to manage their vaulted payment methods. Defaults to false.
+true to allow customers to manage their vaulted payment methods.
+
+Defaults to false.

@@ -22,6 +22,7 @@ One of the available offers to purchase a given product
 
 - [canPurchase](CdvPurchase.GooglePlay.InAppOffer.md#canpurchase)
 - [platform](CdvPurchase.GooglePlay.InAppOffer.md#platform)
+- [productGroup](CdvPurchase.GooglePlay.InAppOffer.md#productgroup)
 - [productId](CdvPurchase.GooglePlay.InAppOffer.md#productid)
 - [productType](CdvPurchase.GooglePlay.InAppOffer.md#producttype)
 
@@ -90,6 +91,22 @@ Platform this offer is available from
 #### Inherited from
 
 CdvPurchase.Offer.platform
+
+___
+
+### productGroup
+
+• `get` **productGroup**(): `undefined` \| `string`
+
+Group the product related to this offer is member of
+
+#### Returns
+
+`undefined` \| `string`
+
+#### Inherited from
+
+CdvPurchase.Offer.productGroup
 
 ___
 

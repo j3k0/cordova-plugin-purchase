@@ -256,6 +256,16 @@ declare namespace CdvPurchase {
         /** Product full description from the store. */
         description: string;
         /**
+         * Group the product is member of.
+         *
+         * Only 1 product of a given group can be owned. This is generally used
+         * to provide different levels for subscriptions, for example: silver
+         * and gold.
+         *
+         * Purchasing a different level will replace the previously owned one.
+         */
+        group?: string;
+        /**
          * Shortcut to offers[0].pricingPhases[0]
          *
          * Useful when you know products have a single offer and a single pricing phase.
@@ -286,461 +296,6 @@ declare namespace CdvPurchase {
          * @internal
          */
         addOffer(offer: Offer): this;
-    }
-}
-declare namespace CdvPurchase {
-    /** Callback */
-    type Callback<T> = (t: T) => void;
-    /** An error triggered by the In-App Purchase plugin */
-    interface IError {
-        /** Indicates that the returned object is an error */
-        isError: true;
-        /** See store.ERR_* for the available codes.
-         *
-         * https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#error-codes */
-        code: ErrorCode;
-        /** Human readable message, in plain english */
-        message: string;
-    }
-    /** Types of In-App Products */
-    enum ProductType {
-        /** Type: An consumable product, that can be purchased multiple time */
-        CONSUMABLE = "consumable",
-        /** Type: A non-consumable product, that can purchased only once and the user keeps forever */
-        NON_CONSUMABLE = "non consumable",
-        /** @deprecated use PAID_SUBSCRIPTION */
-        FREE_SUBSCRIPTION = "free subscription",
-        /** Type: An auto-renewable subscription */
-        PAID_SUBSCRIPTION = "paid subscription",
-        /** Type: An non-renewing subscription */
-        NON_RENEWING_SUBSCRIPTION = "non renewing subscription",
-        /** Type: The application bundle */
-        APPLICATION = "application"
-    }
-    /** Unit for measuring durations */
-    type IPeriodUnit = "Minute" | "Hour" | "Day" | "Week" | "Month" | "Year";
-    /**
-     * Type of recurring payment
-     *
-     * - FINITE_RECURRING: Payment recurs for a fixed number of billing period set in `paymentPhase.cycles`.
-     * - INFINITE_RECURRING: Payment recurs for infinite billing periods unless cancelled.
-     * - NON_RECURRING: A one time charge that does not repeat.
-     */
-    enum RecurrenceMode {
-        NON_RECURRING = "NON_RECURRING",
-        FINITE_RECURRING = "FINITE_RECURRING",
-        INFINITE_RECURRING = "INFINITE_RECURRING"
-    }
-    /**
-     * Description of a phase for the pricing of a purchase.
-     *
-     * @see {@link Offer.pricingPhases}
-     */
-    interface PricingPhase {
-        /** Price formatted for humans */
-        price: string;
-        /** Price in micro-units (divide by 1000000 to get numeric price) */
-        priceMicros: number;
-        /** Currency code */
-        currency?: string;
-        /** ISO 8601 duration of the period (https://en.wikipedia.org/wiki/ISO_8601#Durations) */
-        billingPeriod?: string;
-        /** Number of recurrence cycles (if recurrenceMode is FINITE_RECURRING) */
-        billingCycles?: number;
-        /** Type of recurring payment */
-        recurrenceMode?: RecurrenceMode;
-        /** Payment mode for the pricing phase ("PayAsYouGo", "UpFront", or "FreeTrial") */
-        paymentMode?: PaymentMode;
-    }
-    /** Mode of payment */
-    enum PaymentMode {
-        /** Used for subscriptions, pay at the beginning of each billing period */
-        PAY_AS_YOU_GO = "PayAsYouGo",
-        /** Pay the whole amount up front */
-        UP_FRONT = "UpFront",
-        /** Nothing to be paid */
-        FREE_TRIAL = "FreeTrial"
-    }
-    /** Adapter for a payment or in-app purchase platform */
-    interface Adapter {
-        /**
-         * Platform identifier
-         */
-        id: Platform;
-        /**
-         * Nice name for the adapter
-         */
-        name: string;
-        /**
-         * true after the platform has been successfully initialized.
-         *
-         * The value is set by the "Adapters" class (which is responsible for initializing adapters).
-         */
-        ready: boolean;
-        /**
-         * List of products managed by the adapter.
-         */
-        get products(): Product[];
-        /**
-         * List of purchase receipts.
-         */
-        get receipts(): Receipt[];
-        /**
-         * Returns true is the adapter is supported on this device.
-         */
-        get isSupported(): boolean;
-        /**
-         * Initializes a platform adapter.
-         *
-         * Will resolve when initialization is complete.
-         *
-         * Will fail with an `IError` in case of an unrecoverable error.
-         *
-         * In other case of a potentially recoverable error, the adapter will keep retrying to initialize forever.
-         */
-        initialize(): Promise<undefined | IError>;
-        /**
-         * Load product definitions from the platform.
-         */
-        load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
-        /**
-         * Initializes an order.
-         */
-        order(offer: Offer, additionalData: AdditionalData): Promise<undefined | IError>;
-        /**
-         * Finish a transaction.
-         *
-         * For non-consumables, this will acknowledge the purchase.
-         * For consumable, this will acknowledge and consume the purchase.
-         */
-        finish(transaction: Transaction): Promise<IError | undefined>;
-        /**
-         * Prepare for receipt validation
-         */
-        receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
-        /**
-         * Handle platform specific fields from receipt validation response.
-         */
-        handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
-        /**
-         * Request a payment from the user
-         */
-        requestPayment(payment: PaymentRequest, additionalData?: AdditionalData): Promise<IError | Transaction | undefined>;
-        /**
-         * Open the platforms' subscription management interface.
-         */
-        manageSubscriptions(): Promise<IError | undefined>;
-        /**
-         * Returns true if the platform supports the given functionality.
-         */
-        checkSupport(functionality: PlatformFunctionality): boolean;
-        /**
-         * Replay the queue of transactions.
-         *
-         * Might ask the user to login.
-         */
-        restorePurchases(): Promise<void>;
-    }
-    /**
-     * Data to attach to a transaction.
-     *
-     * @see {@link Offer.order}
-     * @see {@link Store.requestPayment}
-     */
-    interface AdditionalData {
-        /** The application's user identifier, will be obfuscated with md5 to fill `accountId` if necessary */
-        applicationUsername?: string;
-        /** GooglePlay specific additional data */
-        googlePlay?: GooglePlay.AdditionalData;
-        /** Braintree specific additional data */
-        braintree?: Braintree.AdditionalData;
-    }
-    enum Platform {
-        /** Apple AppStore */
-        APPLE_APPSTORE = "ios-appstore",
-        /** Google Play */
-        GOOGLE_PLAY = "android-playstore",
-        /** Windows Store */
-        WINDOWS_STORE = "windows-store-transaction",
-        /** Braintree */
-        BRAINTREE = "braintree",
-        /** Test platform */
-        TEST = "test"
-    }
-    type PlatformFunctionality = 'requestPayment' | 'order';
-    /** Possible states of a product */
-    enum TransactionState {
-        INITIATED = "initiated",
-        PENDING = "pending",
-        APPROVED = "approved",
-        CANCELLED = "cancelled",
-        FINISHED = "finished",
-        UNKNOWN_STATE = ""
-    }
-    type PrivacyPolicyItem = 'fraud' | 'support' | 'analytics' | 'tracking';
-    /** Store events listener */
-    interface When {
-        /**
-         * Register a function called when a product or receipt is updated.
-         *
-         * @deprecated - Use `productUpdated` or `receiptUpdated`.
-         */
-        updated(cb: Callback<Product | Receipt>): When;
-        /** Register a function called when a receipt is updated. */
-        receiptUpdated(cb: Callback<Receipt>): When;
-        /** Register a function called when a product is updated. */
-        productUpdated(cb: Callback<Product>): When;
-        /** Register a function called when transaction is approved. */
-        approved(cb: Callback<Transaction>): When;
-        /** Register a function called when a transaction is finished. */
-        finished(cb: Callback<Transaction>): When;
-        /** Register a function called when a receipt is verified. */
-        verified(cb: Callback<VerifiedReceipt>): When;
-    }
-    /** Whether or not the user intends to let the subscription auto-renew. */
-    enum RenewalIntent {
-        /** The user intends to let the subscription expire without renewing. */
-        LAPSE = "Lapse",
-        /** The user intends to renew the subscription. */
-        RENEW = "Renew"
-    }
-    /** Whether or not the user was notified or agreed to a price change */
-    enum PriceConsentStatus {
-        NOTIFIED = "Notified",
-        AGREED = "Agreed"
-    }
-    /** Reason why a subscription has been canceled */
-    enum CancelationReason {
-        /** Not canceled */
-        NOT_CANCELED = "",
-        /** Subscription canceled by the developer. */
-        DEVELOPER = "Developer",
-        /** Subscription canceled by the system for an unspecified reason. */
-        SYSTEM = "System",
-        /** Subscription upgraded or downgraded to a new subscription. */
-        SYSTEM_REPLACED = "System.Replaced",
-        /** Product not available for purchase at the time of renewal. */
-        SYSTEM_PRODUCT_UNAVAILABLE = "System.ProductUnavailable",
-        /** Billing error; for example customer’s payment information is no longer valid. */
-        SYSTEM_BILLING_ERROR = "System.BillingError",
-        /** Transaction is gone; It has been deleted. */
-        SYSTEM_DELETED = "System.Deleted",
-        /** Subscription canceled by the user for an unspecified reason. */
-        CUSTOMER = "Customer",
-        /** Customer canceled their transaction due to an actual or perceived issue within your app. */
-        CUSTOMER_TECHNICAL_ISSUES = "Customer.TechnicalIssues",
-        /** Customer did not agree to a recent price increase. See also priceConsentStatus. */
-        CUSTOMER_PRICE_INCREASE = "Customer.PriceIncrease",
-        /** Customer canceled for cost-related reasons. */
-        CUSTOMER_COST = "Customer.Cost",
-        /** Customer claimed to have found a better app. */
-        CUSTOMER_FOUND_BETTER_APP = "Customer.FoundBetterApp",
-        /** Customer did not feel he is using this service enough. */
-        CUSTOMER_NOT_USEFUL_ENOUGH = "Customer.NotUsefulEnough",
-        /** Subscription canceled for another reason; for example, if the customer made the purchase accidentally. */
-        CUSTOMER_OTHER_REASON = "Customer.OtherReason",
-        /** Subscription canceled for unknown reasons. */
-        UNKNOWN = "Unknown"
-    }
-}
-declare namespace CdvPurchase {
-    /** @internal */
-    namespace Internal {
-        interface OfferDecorator {
-            /**
-             * Initiate a purchase for the provided offer.
-             */
-            order(offer: Offer, additionalData?: AdditionalData): Promise<IError | undefined>;
-            /**
-             * Returns true if the offer can be purchased.
-             */
-            canPurchase(offer: Offer): boolean;
-        }
-    }
-    /**
-     * One of the available offers to purchase a given product
-     */
-    class Offer {
-        /** className, used to make sure we're passing an actual instance of the "Offer" class. */
-        private className;
-        /** Offer identifier */
-        id: string;
-        /** Identifier of the product related to this offer */
-        get productId(): string;
-        /** Type of the product related to this offer */
-        get productType(): ProductType;
-        /** Platform this offer is available from */
-        get platform(): Platform;
-        /** Pricing phases */
-        pricingPhases: PricingPhase[];
-        /**
-         * Initiate a purchase of this offer.
-         *
-         * @example
-         * store.get("my-product").getOffer().order();
-         */
-        order(additionalData?: AdditionalData): Promise<IError | undefined>;
-        /**
-         * true if the offer can be purchased.
-         */
-        get canPurchase(): boolean;
-        /** @internal */
-        constructor(options: {
-            id: string;
-            product: Product;
-            pricingPhases: PricingPhase[];
-        }, decorator: Internal.OfferDecorator);
-    }
-}
-declare namespace CdvPurchase {
-    class PaymentRequestPromise {
-        private failedCallbacks;
-        failed(callback: Callback<IError>): PaymentRequestPromise;
-        private initiatedCallbacks;
-        initiated(callback: Callback<Transaction>): PaymentRequestPromise;
-        private approvedCallbacks;
-        approved(callback: Callback<Transaction>): PaymentRequestPromise;
-        private finishedCallbacks;
-        finished(callback: Callback<Transaction>): PaymentRequestPromise;
-        private cancelledCallback;
-        cancelled(callback: Callback<void>): PaymentRequestPromise;
-        /** @internal */
-        trigger(argument?: IError | Transaction): PaymentRequestPromise;
-        /**
-         * Return a failed promise.
-         *
-         * @internal
-         */
-        static failed(code: ErrorCode, message: string): PaymentRequestPromise;
-        /**
-         * Return a failed promise.
-         *
-         * @internal
-         */
-        static cancelled(): PaymentRequestPromise;
-        /**
-         * Return an initiated transaction.
-         *
-         * @internal
-         */
-        static initiated(transaction: Transaction): PaymentRequestPromise;
-    }
-    /**
-     * Request for payment.
-     *
-     * Use with {@link Store.requestPayment} to initiate a payment for a given amount.
-     *
-     * @example
-     *  const {store, Platform, ErrorCode} = CdvPurchase;
-     *  store.requestPayment({
-     *    platform: Platform.BRAINTREE,
-     *    productIds: ['my-product-1', 'my-product-2'],
-     *    amountMicros: 1990000,
-     *    currency: 'USD',
-     *    description: 'This this the description of the payment request',
-     *  }).then((result) => {
-     *    if (result && result.isError && result.code !== ErrorCode.PAYMENT_CANCELLED) {
-     *      alert(result.message);
-     *    }
-     *  });
-     */
-    interface PaymentRequest {
-        /**
-         * Products being purchased.
-         *
-         * Used for your reference, does not have to be a product registered with the plugin.
-         */
-        productIds: string[];
-        /**
-         * Platform that will handle the payment request.
-         */
-        platform: Platform;
-        /**
-         * Amount to pay. Required.
-         */
-        amountMicros: number;
-        /**
-         * Currency.
-         *
-         * Some payment platforms only support one currency thus do not require this field.
-         */
-        currency?: string;
-        /**
-         * Description for the payment.
-         */
-        description?: string;
-        /** The email used for verification. Optional. */
-        email?: string;
-        /**
-         * The mobile phone number used for verification. Optional.
-         *
-         * Only numbers. Remove dashes, parentheses and other characters.
-         */
-        mobilePhoneNumber?: string;
-        /** The billing address used for verification. Optional. */
-        billingAddress?: PostalAddress;
-    }
-    /**
-     * Postal address for payment requests.
-     */
-    interface PostalAddress {
-        /** Given name associated with the address. */
-        givenName?: string;
-        /** Surname associated with the address. */
-        surname?: string;
-        /** Line 1 of the Address (eg. number, street, etc) */
-        streetAddress1?: string;
-        /** Line 2 of the Address (eg. suite, apt #, etc.) */
-        streetAddress2?: string;
-        /** Line 3 of the Address (eg. suite, apt #, etc.) */
-        streetAddress3?: string;
-        /** City name */
-        locality?: string;
-        /** Either a two-letter state code (for the US), or an ISO-3166-2 country subdivision code of up to three letters. */
-        region?: string;
-        /**
-         * Zip code or equivalent is usually required for countries that have them.
-         *
-         * For a list of countries that do not have postal codes please refer to http://en.wikipedia.org/wiki/Postal_code
-         */
-        postalCode?: string;
-        /**
-         * The phone number associated with the address
-         *
-         * Note: Only numbers. Remove dashes, parentheses and other characters
-         */
-        phoneNumber?: string;
-        /**
-         * 2 letter country code
-         */
-        countryCode?: string;
-    }
-}
-declare namespace CdvPurchase {
-    /** @internal */
-    namespace Internal {
-        interface ReceiptDecorator {
-            verify(receipt: Receipt): Promise<void>;
-            finish(receipt: Receipt): Promise<void>;
-        }
-    }
-    class Receipt {
-        /** @internal */
-        className: 'Receipt';
-        /** Platform that generated the receipt */
-        platform: Platform;
-        /** List of transactions contained in the receipt, ordered by date ascending. */
-        transactions: Transaction[];
-        /** Verify a receipt */
-        verify(): Promise<void>;
-        /** Finish all transactions in a receipt */
-        finish(): Promise<void>;
-        /** @internal */
-        constructor(platform: Platform, decorator: Internal.ReceiptDecorator);
-        /** Return true if the receipt contains the given transaction */
-        hasTransaction(value: Transaction): boolean;
-        /** Return the last transaction in this receipt */
-        lastTransaction(): Transaction;
     }
 }
 declare namespace CdvPurchase {
@@ -881,8 +436,16 @@ declare namespace CdvPurchase {
          * Manage a list of callbacks
          */
         class Callbacks<T> {
+            /** Type of callbacks */
+            className: string;
+            /** Log to the console */
+            logger: Logger;
             /** List of registered callbacks */
             callbacks: Callback<T>[];
+            /**
+             * @param className - Type of callbacks (used to help with debugging)
+             */
+            constructor(logger: Logger, className: string);
             /** Add a callback to the list */
             push(callback: Callback<T>): void;
             /** Call all registered callbacks with the given value */
@@ -903,6 +466,9 @@ declare namespace CdvPurchase {
             isReady: boolean;
             /** Callbacks when the store is ready */
             readyCallbacks: Callback<void>[];
+            /** Logger */
+            logger: Logger;
+            constructor(logger: Logger);
             /** Register a callback to be called when the plugin is ready. */
             add(cb: Callback<void>): unknown;
             /** Calls the ready callbacks */
@@ -1193,9 +759,25 @@ declare namespace CdvPurchase {
         /**
          * Open the subscription management interface for the selected platform.
          *
-         * If platform is not specified,
+         * If platform is not specified, the first available platform will be used.
+         *
+         * @example
+         * const activeSubscription: Purchase = // ...
+         * store.manageSubscriptions(activeSubscription.platform);
          */
         manageSubscriptions(platform?: Platform): Promise<IError | undefined>;
+        /**
+         * Opens the billing methods page on AppStore, Play, Microsoft, ...
+         *
+         * From this page, the user can update their payment methods.
+         *
+         * If platform is not specified, the first available platform will be used.
+         *
+         * @example
+         * if (purchase.isBillingRetryPeriod)
+         *     store.manageBilling(purchase.platform);
+         */
+        manageBilling(platform?: Platform): Promise<IError | undefined>;
         /**
          * The default payment platform to use depending on the OS.
          *
@@ -1237,6 +819,475 @@ declare namespace CdvPurchase {
     namespace Internal { }
 }
 declare namespace CdvPurchase {
+    /** Callback */
+    type Callback<T> = (t: T) => void;
+    /** An error triggered by the In-App Purchase plugin */
+    interface IError {
+        /** Indicates that the returned object is an error */
+        isError: true;
+        /** See store.ERR_* for the available codes.
+         *
+         * https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#error-codes */
+        code: ErrorCode;
+        /** Human readable message, in plain english */
+        message: string;
+    }
+    /** Types of In-App Products */
+    enum ProductType {
+        /** Type: An consumable product, that can be purchased multiple time */
+        CONSUMABLE = "consumable",
+        /** Type: A non-consumable product, that can purchased only once and the user keeps forever */
+        NON_CONSUMABLE = "non consumable",
+        /** @deprecated use PAID_SUBSCRIPTION */
+        FREE_SUBSCRIPTION = "free subscription",
+        /** Type: An auto-renewable subscription */
+        PAID_SUBSCRIPTION = "paid subscription",
+        /** Type: An non-renewing subscription */
+        NON_RENEWING_SUBSCRIPTION = "non renewing subscription",
+        /** Type: The application bundle */
+        APPLICATION = "application"
+    }
+    /** Unit for measuring durations */
+    type IPeriodUnit = "Minute" | "Hour" | "Day" | "Week" | "Month" | "Year";
+    /**
+     * Type of recurring payment
+     *
+     * - FINITE_RECURRING: Payment recurs for a fixed number of billing period set in `paymentPhase.cycles`.
+     * - INFINITE_RECURRING: Payment recurs for infinite billing periods unless cancelled.
+     * - NON_RECURRING: A one time charge that does not repeat.
+     */
+    enum RecurrenceMode {
+        NON_RECURRING = "NON_RECURRING",
+        FINITE_RECURRING = "FINITE_RECURRING",
+        INFINITE_RECURRING = "INFINITE_RECURRING"
+    }
+    /**
+     * Description of a phase for the pricing of a purchase.
+     *
+     * @see {@link Offer.pricingPhases}
+     */
+    interface PricingPhase {
+        /** Price formatted for humans */
+        price: string;
+        /** Price in micro-units (divide by 1000000 to get numeric price) */
+        priceMicros: number;
+        /** Currency code */
+        currency?: string;
+        /** ISO 8601 duration of the period (https://en.wikipedia.org/wiki/ISO_8601#Durations) */
+        billingPeriod?: string;
+        /** Number of recurrence cycles (if recurrenceMode is FINITE_RECURRING) */
+        billingCycles?: number;
+        /** Type of recurring payment */
+        recurrenceMode?: RecurrenceMode;
+        /** Payment mode for the pricing phase ("PayAsYouGo", "UpFront", or "FreeTrial") */
+        paymentMode?: PaymentMode;
+    }
+    /** Mode of payment */
+    enum PaymentMode {
+        /** Used for subscriptions, pay at the beginning of each billing period */
+        PAY_AS_YOU_GO = "PayAsYouGo",
+        /** Pay the whole amount up front */
+        UP_FRONT = "UpFront",
+        /** Nothing to be paid */
+        FREE_TRIAL = "FreeTrial"
+    }
+    /** Adapter for a payment or in-app purchase platform */
+    interface Adapter {
+        /**
+         * Platform identifier
+         */
+        id: Platform;
+        /**
+         * Nice name for the adapter
+         */
+        name: string;
+        /**
+         * true after the platform has been successfully initialized.
+         *
+         * The value is set by the "Adapters" class (which is responsible for initializing adapters).
+         */
+        ready: boolean;
+        /**
+         * List of products managed by the adapter.
+         */
+        get products(): Product[];
+        /**
+         * List of purchase receipts.
+         */
+        get receipts(): Receipt[];
+        /**
+         * Returns true is the adapter is supported on this device.
+         */
+        get isSupported(): boolean;
+        /**
+         * Initializes a platform adapter.
+         *
+         * Will resolve when initialization is complete.
+         *
+         * Will fail with an `IError` in case of an unrecoverable error.
+         *
+         * In other case of a potentially recoverable error, the adapter will keep retrying to initialize forever.
+         */
+        initialize(): Promise<undefined | IError>;
+        /**
+         * Load product definitions from the platform.
+         */
+        load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
+        /**
+         * Initializes an order.
+         */
+        order(offer: Offer, additionalData: AdditionalData): Promise<undefined | IError>;
+        /**
+         * Finish a transaction.
+         *
+         * For non-consumables, this will acknowledge the purchase.
+         * For consumable, this will acknowledge and consume the purchase.
+         */
+        finish(transaction: Transaction): Promise<IError | undefined>;
+        /**
+         * Prepare for receipt validation
+         */
+        receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
+        /**
+         * Handle platform specific fields from receipt validation response.
+         */
+        handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
+        /**
+         * Request a payment from the user
+         */
+        requestPayment(payment: PaymentRequest, additionalData?: AdditionalData): Promise<IError | Transaction | undefined>;
+        /**
+         * Open the platforms' subscription management interface.
+         */
+        manageSubscriptions(): Promise<IError | undefined>;
+        /**
+         * Open the platforms' billing management interface.
+         */
+        manageBilling(): Promise<IError | undefined>;
+        /**
+         * Returns true if the platform supports the given functionality.
+         */
+        checkSupport(functionality: PlatformFunctionality): boolean;
+        /**
+         * Replay the queue of transactions.
+         *
+         * Might ask the user to login.
+         */
+        restorePurchases(): Promise<void>;
+    }
+    /**
+     * Data to attach to a transaction.
+     *
+     * @see {@link Offer.order}
+     * @see {@link Store.requestPayment}
+     */
+    interface AdditionalData {
+        /** The application's user identifier, will be obfuscated with md5 to fill `accountId` if necessary */
+        applicationUsername?: string;
+        /** GooglePlay specific additional data */
+        googlePlay?: GooglePlay.AdditionalData;
+        /** Braintree specific additional data */
+        braintree?: Braintree.AdditionalData;
+    }
+    /**
+     * Purchase platforms supported by the plugin
+     */
+    enum Platform {
+        /** Apple AppStore */
+        APPLE_APPSTORE = "ios-appstore",
+        /** Google Play */
+        GOOGLE_PLAY = "android-playstore",
+        /** Windows Store */
+        WINDOWS_STORE = "windows-store-transaction",
+        /** Braintree */
+        BRAINTREE = "braintree",
+        /** Test platform */
+        TEST = "test"
+    }
+    /**
+     * Functionality optionality provided by a given platform.
+     *
+     * @see {@link Store.checkSupport}
+     */
+    type PlatformFunctionality = 'requestPayment' | 'order' | 'manageSubscriptions' | 'manageBilling';
+    /** Possible states of a product */
+    enum TransactionState {
+        INITIATED = "initiated",
+        PENDING = "pending",
+        APPROVED = "approved",
+        CANCELLED = "cancelled",
+        FINISHED = "finished",
+        UNKNOWN_STATE = ""
+    }
+    type PrivacyPolicyItem = 'fraud' | 'support' | 'analytics' | 'tracking';
+    /** Store events listener */
+    interface When {
+        /**
+         * Register a function called when a product or receipt is updated.
+         *
+         * @deprecated - Use `productUpdated` or `receiptUpdated`.
+         */
+        updated(cb: Callback<Product | Receipt>): When;
+        /** Register a function called when a receipt is updated. */
+        receiptUpdated(cb: Callback<Receipt>): When;
+        /** Register a function called when a product is updated. */
+        productUpdated(cb: Callback<Product>): When;
+        /** Register a function called when transaction is approved. */
+        approved(cb: Callback<Transaction>): When;
+        /** Register a function called when a transaction is finished. */
+        finished(cb: Callback<Transaction>): When;
+        /** Register a function called when a receipt is verified. */
+        verified(cb: Callback<VerifiedReceipt>): When;
+    }
+    /** Whether or not the user intends to let the subscription auto-renew. */
+    enum RenewalIntent {
+        /** The user intends to let the subscription expire without renewing. */
+        LAPSE = "Lapse",
+        /** The user intends to renew the subscription. */
+        RENEW = "Renew"
+    }
+    /** Whether or not the user was notified or agreed to a price change */
+    enum PriceConsentStatus {
+        NOTIFIED = "Notified",
+        AGREED = "Agreed"
+    }
+    /** Reason why a subscription has been canceled */
+    enum CancelationReason {
+        /** Not canceled */
+        NOT_CANCELED = "",
+        /** Subscription canceled by the developer. */
+        DEVELOPER = "Developer",
+        /** Subscription canceled by the system for an unspecified reason. */
+        SYSTEM = "System",
+        /** Subscription upgraded or downgraded to a new subscription. */
+        SYSTEM_REPLACED = "System.Replaced",
+        /** Product not available for purchase at the time of renewal. */
+        SYSTEM_PRODUCT_UNAVAILABLE = "System.ProductUnavailable",
+        /** Billing error; for example customer’s payment information is no longer valid. */
+        SYSTEM_BILLING_ERROR = "System.BillingError",
+        /** Transaction is gone; It has been deleted. */
+        SYSTEM_DELETED = "System.Deleted",
+        /** Subscription canceled by the user for an unspecified reason. */
+        CUSTOMER = "Customer",
+        /** Customer canceled their transaction due to an actual or perceived issue within your app. */
+        CUSTOMER_TECHNICAL_ISSUES = "Customer.TechnicalIssues",
+        /** Customer did not agree to a recent price increase. See also priceConsentStatus. */
+        CUSTOMER_PRICE_INCREASE = "Customer.PriceIncrease",
+        /** Customer canceled for cost-related reasons. */
+        CUSTOMER_COST = "Customer.Cost",
+        /** Customer claimed to have found a better app. */
+        CUSTOMER_FOUND_BETTER_APP = "Customer.FoundBetterApp",
+        /** Customer did not feel he is using this service enough. */
+        CUSTOMER_NOT_USEFUL_ENOUGH = "Customer.NotUsefulEnough",
+        /** Subscription canceled for another reason; for example, if the customer made the purchase accidentally. */
+        CUSTOMER_OTHER_REASON = "Customer.OtherReason",
+        /** Subscription canceled for unknown reasons. */
+        UNKNOWN = "Unknown"
+    }
+}
+declare namespace CdvPurchase {
+    /** @internal */
+    namespace Internal {
+        interface OfferDecorator {
+            /**
+             * Initiate a purchase for the provided offer.
+             */
+            order(offer: Offer, additionalData?: AdditionalData): Promise<IError | undefined>;
+            /**
+             * Returns true if the offer can be purchased.
+             */
+            canPurchase(offer: Offer): boolean;
+        }
+    }
+    /**
+     * One of the available offers to purchase a given product
+     */
+    class Offer {
+        /** className, used to make sure we're passing an actual instance of the "Offer" class. */
+        private className;
+        /** Offer identifier */
+        id: string;
+        /** Identifier of the product related to this offer */
+        get productId(): string;
+        /** Type of the product related to this offer */
+        get productType(): ProductType;
+        /** Group the product related to this offer is member of */
+        get productGroup(): string | undefined;
+        /** Platform this offer is available from */
+        get platform(): Platform;
+        /** Pricing phases */
+        pricingPhases: PricingPhase[];
+        /**
+         * Initiate a purchase of this offer.
+         *
+         * @example
+         * store.get("my-product").getOffer().order();
+         */
+        order(additionalData?: AdditionalData): Promise<IError | undefined>;
+        /**
+         * true if the offer can be purchased.
+         */
+        get canPurchase(): boolean;
+        /** @internal */
+        constructor(options: {
+            id: string;
+            product: Product;
+            pricingPhases: PricingPhase[];
+        }, decorator: Internal.OfferDecorator);
+    }
+}
+declare namespace CdvPurchase {
+    class PaymentRequestPromise {
+        private failedCallbacks;
+        failed(callback: Callback<IError>): PaymentRequestPromise;
+        private initiatedCallbacks;
+        initiated(callback: Callback<Transaction>): PaymentRequestPromise;
+        private approvedCallbacks;
+        approved(callback: Callback<Transaction>): PaymentRequestPromise;
+        private finishedCallbacks;
+        finished(callback: Callback<Transaction>): PaymentRequestPromise;
+        private cancelledCallback;
+        cancelled(callback: Callback<void>): PaymentRequestPromise;
+        /** @internal */
+        trigger(argument?: IError | Transaction): PaymentRequestPromise;
+        /**
+         * Return a failed promise.
+         *
+         * @internal
+         */
+        static failed(code: ErrorCode, message: string): PaymentRequestPromise;
+        /**
+         * Return a failed promise.
+         *
+         * @internal
+         */
+        static cancelled(): PaymentRequestPromise;
+        /**
+         * Return an initiated transaction.
+         *
+         * @internal
+         */
+        static initiated(transaction: Transaction): PaymentRequestPromise;
+    }
+    /**
+     * Request for payment.
+     *
+     * Use with {@link Store.requestPayment} to initiate a payment for a given amount.
+     *
+     * @example
+     *  const {store, Platform, ErrorCode} = CdvPurchase;
+     *  store.requestPayment({
+     *    platform: Platform.BRAINTREE,
+     *    productIds: ['my-product-1', 'my-product-2'],
+     *    amountMicros: 1990000,
+     *    currency: 'USD',
+     *    description: 'This this the description of the payment request',
+     *  }).then((result) => {
+     *    if (result && result.isError && result.code !== ErrorCode.PAYMENT_CANCELLED) {
+     *      alert(result.message);
+     *    }
+     *  });
+     */
+    interface PaymentRequest {
+        /**
+         * Products being purchased.
+         *
+         * Used for your reference, does not have to be a product registered with the plugin.
+         */
+        productIds: string[];
+        /**
+         * Platform that will handle the payment request.
+         */
+        platform: Platform;
+        /**
+         * Amount to pay. Required.
+         */
+        amountMicros: number;
+        /**
+         * Currency.
+         *
+         * Some payment platforms only support one currency thus do not require this field.
+         */
+        currency?: string;
+        /**
+         * Description for the payment.
+         */
+        description?: string;
+        /** The email used for verification. Optional. */
+        email?: string;
+        /**
+         * The mobile phone number used for verification. Optional.
+         *
+         * Only numbers. Remove dashes, parentheses and other characters.
+         */
+        mobilePhoneNumber?: string;
+        /** The billing address used for verification. Optional. */
+        billingAddress?: PostalAddress;
+    }
+    /**
+     * Postal address for payment requests.
+     */
+    interface PostalAddress {
+        /** Given name associated with the address. */
+        givenName?: string;
+        /** Surname associated with the address. */
+        surname?: string;
+        /** Line 1 of the Address (eg. number, street, etc) */
+        streetAddress1?: string;
+        /** Line 2 of the Address (eg. suite, apt #, etc.) */
+        streetAddress2?: string;
+        /** Line 3 of the Address (eg. suite, apt #, etc.) */
+        streetAddress3?: string;
+        /** City name */
+        locality?: string;
+        /** Either a two-letter state code (for the US), or an ISO-3166-2 country subdivision code of up to three letters. */
+        region?: string;
+        /**
+         * Zip code or equivalent is usually required for countries that have them.
+         *
+         * For a list of countries that do not have postal codes please refer to http://en.wikipedia.org/wiki/Postal_code
+         */
+        postalCode?: string;
+        /**
+         * The phone number associated with the address
+         *
+         * Note: Only numbers. Remove dashes, parentheses and other characters
+         */
+        phoneNumber?: string;
+        /**
+         * 2 letter country code
+         */
+        countryCode?: string;
+    }
+}
+declare namespace CdvPurchase {
+    /** @internal */
+    namespace Internal {
+        interface ReceiptDecorator {
+            verify(receipt: Receipt): Promise<void>;
+            finish(receipt: Receipt): Promise<void>;
+        }
+    }
+    class Receipt {
+        /** @internal */
+        className: 'Receipt';
+        /** Platform that generated the receipt */
+        platform: Platform;
+        /** List of transactions contained in the receipt, ordered by date ascending. */
+        transactions: Transaction[];
+        /** Verify a receipt */
+        verify(): Promise<void>;
+        /** Finish all transactions in a receipt */
+        finish(): Promise<void>;
+        /** @internal */
+        constructor(platform: Platform, decorator: Internal.ReceiptDecorator);
+        /** Return true if the receipt contains the given transaction */
+        hasTransaction(value: Transaction): boolean;
+        /** Return the last transaction in this receipt */
+        lastTransaction(): Transaction;
+    }
+}
+declare namespace CdvPurchase {
     /** @internal */
     namespace Internal {
         /**
@@ -1247,6 +1298,12 @@ declare namespace CdvPurchase {
             verify(transaction: Transaction): Promise<void>;
         }
     }
+    /**
+     * Transaction as reported by the device
+     *
+     * @see {@link Receipt}
+     * @see {@link store.localTransactions}
+     */
     class Transaction {
         /** @internal */
         className: 'Transaction';
@@ -1574,6 +1631,8 @@ declare namespace CdvPurchase {
             /** The application receipt, contains all transactions */
             _receipt?: SKApplicationReceipt;
             get receipts(): Receipt[];
+            private validProducts;
+            addValidProducts(registerProducts: IRegisterProduct[], validProducts: Bridge.ValidProduct[]): void;
             bridge: Bridge.Bridge;
             context: CdvPurchase.Internal.AdapterContext;
             log: Logger;
@@ -1605,6 +1664,7 @@ declare namespace CdvPurchase {
             handleReceiptValidationResponse(_receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
+            manageBilling(): Promise<IError | undefined>;
             checkSupport(functionality: PlatformFunctionality): boolean;
             restorePurchases(): Promise<void>;
         }
@@ -1823,7 +1883,10 @@ declare namespace CdvPurchase {
         }
         /** @internal */
         namespace Internal {
-            class DiscountEligibilities {
+            interface IDiscountEligibilities {
+                isEligible(productId: string, discountType: DiscountType, discountId: string): boolean;
+            }
+            class DiscountEligibilities implements IDiscountEligibilities {
                 request: DiscountEligibilityRequest[];
                 response: boolean[];
                 constructor(request: DiscountEligibilityRequest[], response: boolean[]);
@@ -1853,11 +1916,9 @@ declare namespace CdvPurchase {
             raw: Bridge.ValidProduct;
             /** AppStore country this product has been fetched for */
             countryCode?: string;
-            /** Group this product is member of */
-            group?: string;
-            constructor(validProduct: Bridge.ValidProduct, p: IRegisterProduct, decorator: CdvPurchase.Internal.ProductDecorator & CdvPurchase.Internal.OfferDecorator, eligibilities: Internal.DiscountEligibilities);
-            removeIneligibleDiscounts(eligibilities: Internal.DiscountEligibilities): void;
-            refresh(valid: Bridge.ValidProduct, decorator: CdvPurchase.Internal.ProductDecorator & CdvPurchase.Internal.OfferDecorator, eligibilities: Internal.DiscountEligibilities): void;
+            constructor(validProduct: Bridge.ValidProduct, p: IRegisterProduct, decorator: CdvPurchase.Internal.ProductDecorator & CdvPurchase.Internal.OfferDecorator, eligibilities: Internal.IDiscountEligibilities);
+            removeIneligibleDiscounts(eligibilities: Internal.IDiscountEligibilities): void;
+            refresh(valid: Bridge.ValidProduct, decorator: CdvPurchase.Internal.ProductDecorator & CdvPurchase.Internal.OfferDecorator, eligibilities: Internal.IDiscountEligibilities): void;
         }
     }
 }
@@ -2328,6 +2389,7 @@ declare namespace CdvPurchase {
             order(offer: Offer): Promise<undefined | IError>;
             finish(transaction: Transaction): Promise<undefined | IError>;
             manageSubscriptions(): Promise<IError | undefined>;
+            manageBilling(): Promise<IError | undefined>;
             private launchDropIn;
             requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             receiptValidationBody(receipt: BraintreeReceipt): Validator.Request.Body | undefined;
@@ -2385,6 +2447,7 @@ declare namespace CdvPurchase {
                 private getClientToken;
                 /** Returns true on Android, the only platform supported by this Braintree bridge */
                 static isSupported(): boolean;
+                isApplePaySupported(): Promise<boolean>;
                 launchDropIn(dropInRequest: DropIn.Request): Promise<DropIn.Result | IError>;
             }
         }
@@ -2399,6 +2462,7 @@ declare namespace CdvPurchase {
                 constructor(log: Logger, clientTokenProvider: ClientTokenProvider);
                 initialize(verbosity: VerbosityProvider, callback: Callback<IError | undefined>): void;
                 launchDropIn(dropInRequest: DropIn.Request): Promise<DropIn.Result | IError>;
+                isApplePaySupported(): Promise<boolean>;
                 static isSupported(): boolean;
             }
         }
@@ -2437,21 +2501,51 @@ declare namespace CdvPurchase {
                  */
                 cardholderNameStatus?: CardFormFieldStatus;
                 /**
-                 * true to allow customers to manage their vaulted payment methods. Defaults to false.
+                 * true to allow customers to manage their vaulted payment methods.
+                 *
+                 * Defaults to false.
                  */
                 vaultManager?: boolean;
                 /**
+                 * Whether or not to vault the card upon tokenization.
+                 *
+                 * Can only be applied when initializing the Braintree client with a client token
+                 * that was generated with a customer ID.
+                 *
+                 * When set to `false` with `allowVaultCardOverride` set to `false`, then cards will not be vaulted.
+                 *
+                 * Defaults to true
+                 */
+                vaultCard?: boolean;
+                /**
                  * If set to true, disables Card in Drop-in. Default value is false.
                  */
-                disableCard?: boolean;
+                cardDisabled?: boolean;
                 /**
-                 * true to mask the card number when the field is not focused. See com.braintreepayments.cardform.view.CardEditText for more details.
+                 * True to mask the card number when the field is not focused.
+                 *
+                 * See com.braintreepayments.cardform.view.CardEditText for more details.
+                 *
+                 * Android only.
                  */
                 maskCardNumber?: boolean;
                 /**
                  * true to mask the security code during input. Defaults to false.
                  */
                 maskSecurityCode?: boolean;
+                /**
+                 * Use this parameter to disable Apple Pay.
+                 *
+                 * Otherwise if Apple Pay is correctly configured, Apple Pay will appear
+                 * as a selection in the Payment Method options.
+                 */
+                applePayDisabled?: boolean;
+                /**
+                 * Set to true to hide the PayPal option even if enabled for your account.
+                 *
+                 * Defaults to false. Set to true to hide the PayPal option even if enabled for your account.
+                 */
+                paypalDisabled?: boolean;
             }
             /** How a field will behave in CardForm. */
             enum CardFormFieldStatus {
@@ -2568,7 +2662,7 @@ declare namespace CdvPurchase {
                 /**
                  * A nonce to be verified by ThreeDSecure.
                  */
-                nonce: string;
+                nonce?: string;
                 /** The email used for verification. Optional. */
                 email?: string;
                 /** The billing address used for verification. Optional. */
@@ -2737,8 +2831,8 @@ declare namespace CdvPurchase {
                  */
                 accountPwdChangeDate?: string;
                 /**
-                 *
                  * Optional. The 2-digit value indicating when the shipping address used for transaction was first used.
+                 *
                  * Possible values:
                  * 01 This transaction
                  * 02 Less than 30 days
@@ -2801,7 +2895,7 @@ declare namespace CdvPurchase {
                 /**
                  * Optional. Additional cardholder account information.
                  */
-                accountID: string;
+                accountID?: string;
                 /**
                  * Optional. The IP address of the consumer. IPv4 and IPv6 are supported.
                  */
@@ -2848,7 +2942,7 @@ declare namespace CdvPurchase {
                 /**
                  * Optional. The work phone number used for verification. Only numbers; remove dashes, parenthesis and other characters.
                  */
-                workPhoneNumber: string;
+                workPhoneNumber?: string;
             }
             enum Version {
                 /** 3DS 1.0 */
@@ -2965,12 +3059,22 @@ declare namespace CdvPurchase {
             /** @inheritDoc */
             order(offer: GOffer, additionalData: CdvPurchase.AdditionalData): Promise<IError | undefined>;
             /**
+             * Find a purchaseToken for an owned product in the same group as the requested one.
+             *
+             * @param productId - The product identifier to request matching purchaseToken for.
+             * @param productGroup - The group of the product to request matching purchaseToken for.
+             *
+             * @return A purchaseToken, undefined if none have been found.
+             */
+            findOldPurchaseToken(productId: string, productGroup?: string): string | undefined;
+            /**
              * Prepare for receipt validation
              */
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
             handleReceiptValidationResponse(receipt: CdvPurchase.Receipt, response: Validator.Response.Payload): Promise<void>;
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
+            manageBilling(): Promise<IError | undefined>;
             checkSupport(functionality: PlatformFunctionality): boolean;
             restorePurchases(): Promise<void>;
         }
@@ -3733,6 +3837,7 @@ declare namespace CdvPurchase {
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
             requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
+            manageBilling(): Promise<IError | undefined>;
             private reportActiveSubscription;
             static verify(receipt: Receipt, callback: Callback<Internal.ReceiptResponse>): void;
             checkSupport(functionality: PlatformFunctionality): boolean;
@@ -3840,6 +3945,7 @@ declare namespace CdvPurchase {
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
+            manageBilling(): Promise<IError | undefined>;
             checkSupport(functionality: PlatformFunctionality): boolean;
             restorePurchases(): Promise<void>;
         }
@@ -4045,6 +4151,27 @@ declare namespace CdvPurchase {
          * I cleaned up the all-including minified version of it.
          */
         function md5(str: string): string;
+    }
+}
+declare namespace CdvPurchase {
+    namespace Utils {
+        /**
+         * Return a safer version of a callback that runs inside a try/catch block.
+         *
+         * @param logger - Used to log errors.
+         * @param className - Type of callback, helps debugging when a function failed.
+         * @param callback - The callback function is turn into a safer version.
+         */
+        function safeCallback<T>(logger: Logger, className: string, callback: Callback<T>): Callback<T>;
+        /**
+         * Run a callback inside a try/catch block.
+         *
+         * @param logger - Used to log errors.
+         * @param className - Type of callback, helps debugging when a function failed.
+         * @param callback - The callback function is turn into a safer version.
+         * @param value - Value passed to the callback.
+         */
+        function safeCall<T>(logger: Logger, className: string, callback: Callback<T>, value: T): void;
     }
 }
 declare namespace CdvPurchase {

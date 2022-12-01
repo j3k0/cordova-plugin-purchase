@@ -2,6 +2,8 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).Platform
 
+Purchase platforms supported by the plugin
+
 ## Table of contents
 
 ### Enumeration Members

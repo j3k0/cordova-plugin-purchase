@@ -34,12 +34,14 @@ Adapter for a payment or in-app purchase platform
 ### Methods
 
 - [checkSupport](CdvPurchase.GooglePlay.Adapter.md#checksupport)
+- [findOldPurchaseToken](CdvPurchase.GooglePlay.Adapter.md#findoldpurchasetoken)
 - [finish](CdvPurchase.GooglePlay.Adapter.md#finish)
 - [getPurchases](CdvPurchase.GooglePlay.Adapter.md#getpurchases)
 - [getSkusOf](CdvPurchase.GooglePlay.Adapter.md#getskusof)
 - [handleReceiptValidationResponse](CdvPurchase.GooglePlay.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.GooglePlay.Adapter.md#initialize)
 - [load](CdvPurchase.GooglePlay.Adapter.md#load)
+- [manageBilling](CdvPurchase.GooglePlay.Adapter.md#managebilling)
 - [manageSubscriptions](CdvPurchase.GooglePlay.Adapter.md#managesubscriptions)
 - [onPriceChangeConfirmationResult](CdvPurchase.GooglePlay.Adapter.md#onpricechangeconfirmationresult)
 - [onPurchaseConsumed](CdvPurchase.GooglePlay.Adapter.md#onpurchaseconsumed)
@@ -207,6 +209,27 @@ Returns true if the platform supports the given functionality.
 
 ___
 
+### findOldPurchaseToken
+
+▸ **findOldPurchaseToken**(`productId`, `productGroup?`): `undefined` \| `string`
+
+Find a purchaseToken for an owned product in the same group as the requested one.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `productId` | `string` | The product identifier to request matching purchaseToken for. |
+| `productGroup?` | `string` | The group of the product to request matching purchaseToken for. |
+
+#### Returns
+
+`undefined` \| `string`
+
+A purchaseToken, undefined if none have been found.
+
+___
+
 ### finish
 
 ▸ **finish**(`transaction`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
@@ -331,6 +354,22 @@ Load product definitions from the platform.
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[load](../interfaces/CdvPurchase.Adapter.md#load)
+
+___
+
+### manageBilling
+
+▸ **manageBilling**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Open the platforms' billing management interface.
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[manageBilling](../interfaces/CdvPurchase.Adapter.md#managebilling)
 
 ___
 

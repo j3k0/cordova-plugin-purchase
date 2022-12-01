@@ -107,7 +107,7 @@ ___
 
 ### nonce
 
-• **nonce**: `string`
+• `Optional` **nonce**: `string`
 
 A nonce to be verified by ThreeDSecure.
 

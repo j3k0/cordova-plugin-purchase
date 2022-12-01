@@ -38,6 +38,7 @@ Entry class of the plugin.
 - [getAdapter](CdvPurchase.Store.md#getadapter)
 - [getApplicationUsername](CdvPurchase.Store.md#getapplicationusername)
 - [initialize](CdvPurchase.Store.md#initialize)
+- [manageBilling](CdvPurchase.Store.md#managebilling)
 - [manageSubscriptions](CdvPurchase.Store.md#managesubscriptions)
 - [monitor](CdvPurchase.Store.md#monitor)
 - [off](CdvPurchase.Store.md#off)
@@ -399,13 +400,49 @@ Call to initialize the in-app purchase plugin.
 
 ___
 
+### manageBilling
+
+▸ **manageBilling**(`platform?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Opens the billing methods page on AppStore, Play, Microsoft, ...
+
+From this page, the user can update their payment methods.
+
+If platform is not specified, the first available platform will be used.
+
+**`Example`**
+
+```ts
+if (purchase.isBillingRetryPeriod)
+    store.manageBilling(purchase.platform);
+```
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `platform?` | [`Platform`](../enums/CdvPurchase.Platform.md) |
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+___
+
 ### manageSubscriptions
 
 ▸ **manageSubscriptions**(`platform?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Open the subscription management interface for the selected platform.
 
-If platform is not specified,
+If platform is not specified, the first available platform will be used.
+
+**`Example`**
+
+```ts
+const activeSubscription: Purchase = // ...
+store.manageSubscriptions(activeSubscription.platform);
+```
 
 #### Parameters
 

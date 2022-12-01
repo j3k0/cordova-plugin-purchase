@@ -38,6 +38,7 @@ Adapter for a payment or in-app purchase platform
 - [handleReceiptValidationResponse](CdvPurchase.Braintree.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.Braintree.Adapter.md#initialize)
 - [load](CdvPurchase.Braintree.Adapter.md#load)
+- [manageBilling](CdvPurchase.Braintree.Adapter.md#managebilling)
 - [manageSubscriptions](CdvPurchase.Braintree.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.Braintree.Adapter.md#order)
 - [receiptValidationBody](CdvPurchase.Braintree.Adapter.md#receiptvalidationbody)
@@ -274,6 +275,22 @@ Load product definitions from the platform.
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[load](../interfaces/CdvPurchase.Adapter.md#load)
+
+___
+
+### manageBilling
+
+▸ **manageBilling**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Open the platforms' billing management interface.
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[manageBilling](../interfaces/CdvPurchase.Adapter.md#managebilling)
 
 ___
 

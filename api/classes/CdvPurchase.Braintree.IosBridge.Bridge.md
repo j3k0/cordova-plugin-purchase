@@ -16,6 +16,7 @@
 ### Methods
 
 - [initialize](CdvPurchase.Braintree.IosBridge.Bridge.md#initialize)
+- [isApplePaySupported](CdvPurchase.Braintree.IosBridge.Bridge.md#isapplepaysupported)
 - [launchDropIn](CdvPurchase.Braintree.IosBridge.Bridge.md#launchdropin)
 - [isSupported](CdvPurchase.Braintree.IosBridge.Bridge.md#issupported)
 
@@ -60,6 +61,16 @@ ___
 #### Returns
 
 `void`
+
+___
+
+### isApplePaySupported
+
+▸ **isApplePaySupported**(): `Promise`<`boolean`\>
+
+#### Returns
+
+`Promise`<`boolean`\>
 
 ___
 

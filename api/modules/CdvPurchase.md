@@ -119,7 +119,13 @@ ___
 
 ### PlatformFunctionality
 
-Ƭ **PlatformFunctionality**: ``"requestPayment"`` \| ``"order"``
+Ƭ **PlatformFunctionality**: ``"requestPayment"`` \| ``"order"`` \| ``"manageSubscriptions"`` \| ``"manageBilling"``
+
+Functionality optionality provided by a given platform.
+
+**`See`**
+
+[checkSupport](../classes/CdvPurchase.Store.md#checksupport)
 
 ___
 

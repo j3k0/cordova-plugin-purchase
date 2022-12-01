@@ -26,6 +26,7 @@ One of the available offers to purchase a given product
 
 - [canPurchase](CdvPurchase.AppleAppStore.SKOffer.md#canpurchase)
 - [platform](CdvPurchase.AppleAppStore.SKOffer.md#platform)
+- [productGroup](CdvPurchase.AppleAppStore.SKOffer.md#productgroup)
 - [productId](CdvPurchase.AppleAppStore.SKOffer.md#productid)
 - [productType](CdvPurchase.AppleAppStore.SKOffer.md#producttype)
 
@@ -115,6 +116,22 @@ Platform this offer is available from
 #### Inherited from
 
 Offer.platform
+
+___
+
+### productGroup
+
+• `get` **productGroup**(): `undefined` \| `string`
+
+Group the product related to this offer is member of
+
+#### Returns
+
+`undefined` \| `string`
+
+#### Inherited from
+
+Offer.productGroup
 
 ___
 

@@ -17,6 +17,7 @@ Product definition from a store
 ### Properties
 
 - [description](CdvPurchase.Product.md#description)
+- [group](CdvPurchase.Product.md#group)
 - [id](CdvPurchase.Product.md#id)
 - [offers](CdvPurchase.Product.md#offers)
 - [platform](CdvPurchase.Product.md#platform)
@@ -40,6 +41,20 @@ Product definition from a store
 • **description**: `string` = `''`
 
 Product full description from the store.
+
+___
+
+### group
+
+• `Optional` **group**: `string`
+
+Group the product is member of.
+
+Only 1 product of a given group can be owned. This is generally used
+to provide different levels for subscriptions, for example: silver
+and gold.
+
+Purchasing a different level will replace the previously owned one.
 
 ___
 

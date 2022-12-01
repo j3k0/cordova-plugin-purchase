@@ -35,12 +35,14 @@ Adapter for Apple AppStore using StoreKit version 1
 
 ### Methods
 
+- [addValidProducts](CdvPurchase.AppleAppStore.Adapter.md#addvalidproducts)
 - [checkSupport](CdvPurchase.AppleAppStore.Adapter.md#checksupport)
 - [finish](CdvPurchase.AppleAppStore.Adapter.md#finish)
 - [getProduct](CdvPurchase.AppleAppStore.Adapter.md#getproduct)
 - [handleReceiptValidationResponse](CdvPurchase.AppleAppStore.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.AppleAppStore.Adapter.md#initialize)
 - [load](CdvPurchase.AppleAppStore.Adapter.md#load)
+- [manageBilling](CdvPurchase.AppleAppStore.Adapter.md#managebilling)
 - [manageSubscriptions](CdvPurchase.AppleAppStore.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.AppleAppStore.Adapter.md#order)
 - [receiptValidationBody](CdvPurchase.AppleAppStore.Adapter.md#receiptvalidationbody)
@@ -198,6 +200,23 @@ CdvPurchase.Adapter.receipts
 
 ## Methods
 
+### addValidProducts
+
+▸ **addValidProducts**(`registerProducts`, `validProducts`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `registerProducts` | [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md)[] |
+| `validProducts` | [`ValidProduct`](../interfaces/CdvPurchase.AppleAppStore.Bridge.ValidProduct.md)[] |
+
+#### Returns
+
+`void`
+
+___
+
 ### checkSupport
 
 ▸ **checkSupport**(`functionality`): `boolean`
@@ -327,6 +346,22 @@ Load product definitions from the platform.
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[load](../interfaces/CdvPurchase.Adapter.md#load)
+
+___
+
+### manageBilling
+
+▸ **manageBilling**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Open the platforms' billing management interface.
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[manageBilling](../interfaces/CdvPurchase.Adapter.md#managebilling)
 
 ___
 

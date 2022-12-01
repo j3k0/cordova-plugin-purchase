@@ -98,7 +98,7 @@ ___
 
 ### accountID
 
-• **accountID**: `string`
+• `Optional` **accountID**: `string`
 
 Optional. Additional cardholder account information.
 
@@ -371,6 +371,7 @@ ___
 • `Optional` **shippingAddressUsageIndicator**: ``"01"`` \| ``"02"`` \| ``"03"`` \| ``"04"``
 
 Optional. The 2-digit value indicating when the shipping address used for transaction was first used.
+
 Possible values:
 01 This transaction
 02 Less than 30 days
@@ -441,6 +442,6 @@ ___
 
 ### workPhoneNumber
 
-• **workPhoneNumber**: `string`
+• `Optional` **workPhoneNumber**: `string`
 
 Optional. The work phone number used for verification. Only numbers; remove dashes, parenthesis and other characters.

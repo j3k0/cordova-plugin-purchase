@@ -357,6 +357,7 @@ var CdvPurchase;
             this.platform = p.platform;
             this.type = p.type;
             this.id = p.id;
+            this.group = p.group;
             this.offers = [];
             Object.defineProperty(this, 'pricing', { enumerable: false });
             Object.defineProperty(this, 'canPurchase', { enumerable: false, get: () => decorator.canPurchase(this) });
@@ -410,282 +411,6 @@ var CdvPurchase;
         }
     }
     CdvPurchase.Product = Product;
-})(CdvPurchase || (CdvPurchase = {}));
-var CdvPurchase;
-(function (CdvPurchase) {
-    /** Types of In-App Products */
-    let ProductType;
-    (function (ProductType) {
-        /** Type: An consumable product, that can be purchased multiple time */
-        ProductType["CONSUMABLE"] = "consumable";
-        /** Type: A non-consumable product, that can purchased only once and the user keeps forever */
-        ProductType["NON_CONSUMABLE"] = "non consumable";
-        /** @deprecated use PAID_SUBSCRIPTION */
-        ProductType["FREE_SUBSCRIPTION"] = "free subscription";
-        /** Type: An auto-renewable subscription */
-        ProductType["PAID_SUBSCRIPTION"] = "paid subscription";
-        /** Type: An non-renewing subscription */
-        ProductType["NON_RENEWING_SUBSCRIPTION"] = "non renewing subscription";
-        /** Type: The application bundle */
-        ProductType["APPLICATION"] = "application";
-    })(ProductType = CdvPurchase.ProductType || (CdvPurchase.ProductType = {}));
-    /**
-     * Type of recurring payment
-     *
-     * - FINITE_RECURRING: Payment recurs for a fixed number of billing period set in `paymentPhase.cycles`.
-     * - INFINITE_RECURRING: Payment recurs for infinite billing periods unless cancelled.
-     * - NON_RECURRING: A one time charge that does not repeat.
-     */
-    let RecurrenceMode;
-    (function (RecurrenceMode) {
-        RecurrenceMode["NON_RECURRING"] = "NON_RECURRING";
-        RecurrenceMode["FINITE_RECURRING"] = "FINITE_RECURRING";
-        RecurrenceMode["INFINITE_RECURRING"] = "INFINITE_RECURRING";
-    })(RecurrenceMode = CdvPurchase.RecurrenceMode || (CdvPurchase.RecurrenceMode = {}));
-    /** Mode of payment */
-    let PaymentMode;
-    (function (PaymentMode) {
-        /** Used for subscriptions, pay at the beginning of each billing period */
-        PaymentMode["PAY_AS_YOU_GO"] = "PayAsYouGo";
-        /** Pay the whole amount up front */
-        PaymentMode["UP_FRONT"] = "UpFront";
-        /** Nothing to be paid */
-        PaymentMode["FREE_TRIAL"] = "FreeTrial";
-    })(PaymentMode = CdvPurchase.PaymentMode || (CdvPurchase.PaymentMode = {}));
-    let Platform;
-    (function (Platform) {
-        /** Apple AppStore */
-        Platform["APPLE_APPSTORE"] = "ios-appstore";
-        /** Google Play */
-        Platform["GOOGLE_PLAY"] = "android-playstore";
-        /** Windows Store */
-        Platform["WINDOWS_STORE"] = "windows-store-transaction";
-        /** Braintree */
-        Platform["BRAINTREE"] = "braintree";
-        // /** Stripe */
-        // STRIPE = 'stripe',
-        /** Test platform */
-        Platform["TEST"] = "test";
-    })(Platform = CdvPurchase.Platform || (CdvPurchase.Platform = {}));
-    /** Possible states of a product */
-    let TransactionState;
-    (function (TransactionState) {
-        // REQUESTED = 'requested',
-        TransactionState["INITIATED"] = "initiated";
-        TransactionState["PENDING"] = "pending";
-        TransactionState["APPROVED"] = "approved";
-        TransactionState["CANCELLED"] = "cancelled";
-        TransactionState["FINISHED"] = "finished";
-        // OWNED = 'owned',
-        // EXPIRED = 'expired',
-        TransactionState["UNKNOWN_STATE"] = "";
-    })(TransactionState = CdvPurchase.TransactionState || (CdvPurchase.TransactionState = {}));
-    /** Whether or not the user intends to let the subscription auto-renew. */
-    let RenewalIntent;
-    (function (RenewalIntent) {
-        /** The user intends to let the subscription expire without renewing. */
-        RenewalIntent["LAPSE"] = "Lapse";
-        /** The user intends to renew the subscription. */
-        RenewalIntent["RENEW"] = "Renew";
-    })(RenewalIntent = CdvPurchase.RenewalIntent || (CdvPurchase.RenewalIntent = {}));
-    /** Whether or not the user was notified or agreed to a price change */
-    let PriceConsentStatus;
-    (function (PriceConsentStatus) {
-        PriceConsentStatus["NOTIFIED"] = "Notified";
-        PriceConsentStatus["AGREED"] = "Agreed";
-    })(PriceConsentStatus = CdvPurchase.PriceConsentStatus || (CdvPurchase.PriceConsentStatus = {}));
-    /** Reason why a subscription has been canceled */
-    let CancelationReason;
-    (function (CancelationReason) {
-        /** Not canceled */
-        CancelationReason["NOT_CANCELED"] = "";
-        /** Subscription canceled by the developer. */
-        CancelationReason["DEVELOPER"] = "Developer";
-        /** Subscription canceled by the system for an unspecified reason. */
-        CancelationReason["SYSTEM"] = "System";
-        /** Subscription upgraded or downgraded to a new subscription. */
-        CancelationReason["SYSTEM_REPLACED"] = "System.Replaced";
-        /** Product not available for purchase at the time of renewal. */
-        CancelationReason["SYSTEM_PRODUCT_UNAVAILABLE"] = "System.ProductUnavailable";
-        /** Billing error; for example customer’s payment information is no longer valid. */
-        CancelationReason["SYSTEM_BILLING_ERROR"] = "System.BillingError";
-        /** Transaction is gone; It has been deleted. */
-        CancelationReason["SYSTEM_DELETED"] = "System.Deleted";
-        /** Subscription canceled by the user for an unspecified reason. */
-        CancelationReason["CUSTOMER"] = "Customer";
-        /** Customer canceled their transaction due to an actual or perceived issue within your app. */
-        CancelationReason["CUSTOMER_TECHNICAL_ISSUES"] = "Customer.TechnicalIssues";
-        /** Customer did not agree to a recent price increase. See also priceConsentStatus. */
-        CancelationReason["CUSTOMER_PRICE_INCREASE"] = "Customer.PriceIncrease";
-        /** Customer canceled for cost-related reasons. */
-        CancelationReason["CUSTOMER_COST"] = "Customer.Cost";
-        /** Customer claimed to have found a better app. */
-        CancelationReason["CUSTOMER_FOUND_BETTER_APP"] = "Customer.FoundBetterApp";
-        /** Customer did not feel he is using this service enough. */
-        CancelationReason["CUSTOMER_NOT_USEFUL_ENOUGH"] = "Customer.NotUsefulEnough";
-        /** Subscription canceled for another reason; for example, if the customer made the purchase accidentally. */
-        CancelationReason["CUSTOMER_OTHER_REASON"] = "Customer.OtherReason";
-        /** Subscription canceled for unknown reasons. */
-        CancelationReason["UNKNOWN"] = "Unknown";
-    })(CancelationReason = CdvPurchase.CancelationReason || (CdvPurchase.CancelationReason = {}));
-})(CdvPurchase || (CdvPurchase = {}));
-/// <reference path="utils/non-enumerable.ts" />
-/// <reference path="product.ts" />
-/// <reference path="types.ts" />
-var CdvPurchase;
-(function (CdvPurchase) {
-    /**
-     * One of the available offers to purchase a given product
-     */
-    class Offer {
-        /** @internal */
-        constructor(options, decorator) {
-            /** className, used to make sure we're passing an actual instance of the "Offer" class. */
-            this.className = 'Offer';
-            this.id = options.id;
-            this.pricingPhases = options.pricingPhases;
-            // Object.defineProperty(this, 'product', { enumerable: false, get: () => options.product });
-            Object.defineProperty(this, 'productId', { enumerable: true, get: () => options.product.id });
-            Object.defineProperty(this, 'productType', { enumerable: true, get: () => options.product.type });
-            Object.defineProperty(this, 'platform', { enumerable: true, get: () => options.product.platform });
-            Object.defineProperty(this, 'order', { enumerable: false, get: () => (additionalData) => decorator.order(this, additionalData) });
-            Object.defineProperty(this, 'canPurchase', { enumerable: false, get: () => decorator.canPurchase(this) });
-        }
-        /** Identifier of the product related to this offer */
-        get productId() { return ''; }
-        /** Type of the product related to this offer */
-        get productType() { return CdvPurchase.ProductType.APPLICATION; }
-        /** Platform this offer is available from */
-        get platform() { return CdvPurchase.Platform.TEST; }
-        /**
-         * Initiate a purchase of this offer.
-         *
-         * @example
-         * store.get("my-product").getOffer().order();
-         */
-        async order(additionalData) {
-            // Pseudo implementation to make typescript happy.
-            // see Object.defineProperty in the constructor for the actual implementation.
-            return;
-        }
-        /**
-         * true if the offer can be purchased.
-         */
-        get canPurchase() {
-            // Pseudo implementation to make typescript happy.
-            // see Object.defineProperty in the constructor for the actual implementation.
-            return false;
-        }
-    }
-    CdvPurchase.Offer = Offer;
-})(CdvPurchase || (CdvPurchase = {}));
-var CdvPurchase;
-(function (CdvPurchase) {
-    class PaymentRequestPromise {
-        constructor() {
-            this.failedCallbacks = new CdvPurchase.Internal.PromiseLike();
-            this.initiatedCallbacks = new CdvPurchase.Internal.PromiseLike();
-            this.approvedCallbacks = new CdvPurchase.Internal.PromiseLike();
-            this.finishedCallbacks = new CdvPurchase.Internal.PromiseLike();
-            this.cancelledCallback = new CdvPurchase.Internal.PromiseLike();
-        }
-        failed(callback) {
-            this.failedCallbacks.push(callback);
-            return this;
-        }
-        initiated(callback) {
-            this.initiatedCallbacks.push(callback);
-            return this;
-        }
-        approved(callback) {
-            this.approvedCallbacks.push(callback);
-            return this;
-        }
-        finished(callback) {
-            this.finishedCallbacks.push(callback);
-            return this;
-        }
-        cancelled(callback) {
-            this.cancelledCallback.push(callback);
-            return this;
-        }
-        /** @internal */
-        trigger(argument) {
-            if (!argument) {
-                this.cancelledCallback.resolve();
-            }
-            else if ('isError' in argument) {
-                this.failedCallbacks.resolve(argument);
-            }
-            else {
-                switch (argument.state) {
-                    case CdvPurchase.TransactionState.INITIATED:
-                        this.initiatedCallbacks.resolve(argument);
-                        break;
-                    case CdvPurchase.TransactionState.APPROVED:
-                        this.approvedCallbacks.resolve(argument);
-                        break;
-                    case CdvPurchase.TransactionState.FINISHED:
-                        this.finishedCallbacks.resolve(argument);
-                        break;
-                }
-            }
-            return this;
-        }
-        /**
-         * Return a failed promise.
-         *
-         * @internal
-         */
-        static failed(code, message) {
-            return new PaymentRequestPromise().trigger(CdvPurchase.storeError(code, message));
-        }
-        /**
-         * Return a failed promise.
-         *
-         * @internal
-         */
-        static cancelled() {
-            return new PaymentRequestPromise().trigger();
-        }
-        /**
-         * Return an initiated transaction.
-         *
-         * @internal
-         */
-        static initiated(transaction) {
-            return new PaymentRequestPromise().trigger(transaction);
-        }
-    }
-    CdvPurchase.PaymentRequestPromise = PaymentRequestPromise;
-})(CdvPurchase || (CdvPurchase = {}));
-var CdvPurchase;
-(function (CdvPurchase) {
-    class Receipt {
-        /** @internal */
-        constructor(platform, decorator) {
-            /** @internal */
-            this.className = 'Receipt';
-            /** List of transactions contained in the receipt, ordered by date ascending. */
-            this.transactions = [];
-            this.platform = platform;
-            Object.defineProperty(this, 'verify', { 'enumerable': false, get() { return () => decorator.verify(this); } });
-            Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
-        }
-        /** Verify a receipt */
-        async verify() { }
-        /** Finish all transactions in a receipt */
-        async finish() { }
-        /** Return true if the receipt contains the given transaction */
-        hasTransaction(value) {
-            return !!this.transactions.find(t => t === value);
-        }
-        /** Return the last transaction in this receipt */
-        lastTransaction() {
-            return this.transactions[this.transactions.length - 1];
-        }
-    }
-    CdvPurchase.Receipt = Receipt;
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
 (function (CdvPurchase) {
@@ -1005,9 +730,14 @@ var CdvPurchase;
          * Manage a list of callbacks
          */
         class Callbacks {
-            constructor() {
+            /**
+             * @param className - Type of callbacks (used to help with debugging)
+             */
+            constructor(logger, className) {
                 /** List of registered callbacks */
                 this.callbacks = [];
+                this.logger = logger;
+                this.className = className;
             }
             /** Add a callback to the list */
             push(callback) {
@@ -1015,7 +745,9 @@ var CdvPurchase;
             }
             /** Call all registered callbacks with the given value */
             trigger(value) {
-                this.callbacks.forEach(cb => setTimeout(cb, 0, value));
+                this.callbacks.forEach(callback => {
+                    CdvPurchase.Utils.safeCall(this.logger, this.className, callback, value);
+                });
             }
             /** Remove a callback from the list */
             remove(callback) {
@@ -1034,11 +766,12 @@ var CdvPurchase;
          * Ready callbacks
          */
         class ReadyCallbacks {
-            constructor() {
+            constructor(logger) {
                 /** True when the plugin is ready */
                 this.isReady = false;
                 /** Callbacks when the store is ready */
                 this.readyCallbacks = [];
+                this.logger = logger;
             }
             /** Register a callback to be called when the plugin is ready. */
             add(cb) {
@@ -1049,7 +782,7 @@ var CdvPurchase;
             /** Calls the ready callbacks */
             trigger() {
                 this.isReady = true;
-                this.readyCallbacks.forEach(cb => setTimeout(cb, 0));
+                this.readyCallbacks.forEach(cb => CdvPurchase.Utils.safeCall(this.logger, 'ready()', cb, undefined));
                 this.readyCallbacks = [];
             }
             remove(cb) {
@@ -1117,21 +850,21 @@ var CdvPurchase;
              */
             this.verbosity = CdvPurchase.LogLevel.ERROR;
             /** List of callbacks for the "ready" events */
-            this._readyCallbacks = new CdvPurchase.Internal.ReadyCallbacks();
+            this._readyCallbacks = new CdvPurchase.Internal.ReadyCallbacks(this.log);
             /** Callbacks when a product definition was updated */
-            this.updatedCallbacks = new CdvPurchase.Internal.Callbacks();
+            this.updatedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'productUpdated()');
             /** Callback when a receipt was updated */
-            this.updatedReceiptsCallbacks = new CdvPurchase.Internal.Callbacks();
+            this.updatedReceiptsCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'receiptUpdated()');
             /** Callbacks when a product is owned */
             // private ownedCallbacks = new Callbacks<Product>();
             /** Callbacks when a transaction has been approved */
-            this.approvedCallbacks = new CdvPurchase.Internal.Callbacks();
+            this.approvedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'approved()');
             /** Callbacks when a transaction has been finished */
-            this.finishedCallbacks = new CdvPurchase.Internal.Callbacks();
+            this.finishedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'finished()');
             /** Callbacks when a receipt has been validated */
-            this.verifiedCallbacks = new CdvPurchase.Internal.Callbacks();
+            this.verifiedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'verified()');
             /** Callbacks for errors */
-            this.errorCallbacks = new CdvPurchase.Internal.Callbacks;
+            this.errorCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'error()');
             /**
              * Version of the plugin currently installed.
              */
@@ -1290,7 +1023,7 @@ var CdvPurchase;
          * });
          */
         monitor(transaction, onChange) {
-            return this.transactionStateMonitors.start(transaction, onChange);
+            return this.transactionStateMonitors.start(transaction, CdvPurchase.Utils.safeCallback(this.log, 'monitor()', onChange));
         }
         /**
          * List of all active products.
@@ -1465,7 +1198,11 @@ var CdvPurchase;
         /**
          * Open the subscription management interface for the selected platform.
          *
-         * If platform is not specified,
+         * If platform is not specified, the first available platform will be used.
+         *
+         * @example
+         * const activeSubscription: Purchase = // ...
+         * store.manageSubscriptions(activeSubscription.platform);
          */
         async manageSubscriptions(platform) {
             this.log.info('manageSubscriptions()');
@@ -1473,6 +1210,24 @@ var CdvPurchase;
             if (!adapter)
                 return CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, "Found no adapter ready to handle 'manageSubscription'");
             return adapter.manageSubscriptions();
+        }
+        /**
+         * Opens the billing methods page on AppStore, Play, Microsoft, ...
+         *
+         * From this page, the user can update their payment methods.
+         *
+         * If platform is not specified, the first available platform will be used.
+         *
+         * @example
+         * if (purchase.isBillingRetryPeriod)
+         *     store.manageBilling(purchase.platform);
+         */
+        async manageBilling(platform) {
+            this.log.info('manageBilling()');
+            const adapter = this.adapters.findReady(platform);
+            if (!adapter)
+                return CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, "Found no adapter ready to handle 'manageBilling'");
+            return adapter.manageBilling();
         }
         /**
          * The default payment platform to use depending on the OS.
@@ -1520,8 +1275,297 @@ setTimeout(() => {
 }, 0);
 // Ensure utility are included when compiling typescript.
 /// <reference path="utils/format-billing-cycle.ts" />
+/// <reference path="store.ts" />
 var CdvPurchase;
 (function (CdvPurchase) {
+    /** Types of In-App Products */
+    let ProductType;
+    (function (ProductType) {
+        /** Type: An consumable product, that can be purchased multiple time */
+        ProductType["CONSUMABLE"] = "consumable";
+        /** Type: A non-consumable product, that can purchased only once and the user keeps forever */
+        ProductType["NON_CONSUMABLE"] = "non consumable";
+        /** @deprecated use PAID_SUBSCRIPTION */
+        ProductType["FREE_SUBSCRIPTION"] = "free subscription";
+        /** Type: An auto-renewable subscription */
+        ProductType["PAID_SUBSCRIPTION"] = "paid subscription";
+        /** Type: An non-renewing subscription */
+        ProductType["NON_RENEWING_SUBSCRIPTION"] = "non renewing subscription";
+        /** Type: The application bundle */
+        ProductType["APPLICATION"] = "application";
+    })(ProductType = CdvPurchase.ProductType || (CdvPurchase.ProductType = {}));
+    /**
+     * Type of recurring payment
+     *
+     * - FINITE_RECURRING: Payment recurs for a fixed number of billing period set in `paymentPhase.cycles`.
+     * - INFINITE_RECURRING: Payment recurs for infinite billing periods unless cancelled.
+     * - NON_RECURRING: A one time charge that does not repeat.
+     */
+    let RecurrenceMode;
+    (function (RecurrenceMode) {
+        RecurrenceMode["NON_RECURRING"] = "NON_RECURRING";
+        RecurrenceMode["FINITE_RECURRING"] = "FINITE_RECURRING";
+        RecurrenceMode["INFINITE_RECURRING"] = "INFINITE_RECURRING";
+    })(RecurrenceMode = CdvPurchase.RecurrenceMode || (CdvPurchase.RecurrenceMode = {}));
+    /** Mode of payment */
+    let PaymentMode;
+    (function (PaymentMode) {
+        /** Used for subscriptions, pay at the beginning of each billing period */
+        PaymentMode["PAY_AS_YOU_GO"] = "PayAsYouGo";
+        /** Pay the whole amount up front */
+        PaymentMode["UP_FRONT"] = "UpFront";
+        /** Nothing to be paid */
+        PaymentMode["FREE_TRIAL"] = "FreeTrial";
+    })(PaymentMode = CdvPurchase.PaymentMode || (CdvPurchase.PaymentMode = {}));
+    /**
+     * Purchase platforms supported by the plugin
+     */
+    let Platform;
+    (function (Platform) {
+        /** Apple AppStore */
+        Platform["APPLE_APPSTORE"] = "ios-appstore";
+        /** Google Play */
+        Platform["GOOGLE_PLAY"] = "android-playstore";
+        /** Windows Store */
+        Platform["WINDOWS_STORE"] = "windows-store-transaction";
+        /** Braintree */
+        Platform["BRAINTREE"] = "braintree";
+        // /** Stripe */
+        // STRIPE = 'stripe',
+        /** Test platform */
+        Platform["TEST"] = "test";
+    })(Platform = CdvPurchase.Platform || (CdvPurchase.Platform = {}));
+    /** Possible states of a product */
+    let TransactionState;
+    (function (TransactionState) {
+        // REQUESTED = 'requested',
+        TransactionState["INITIATED"] = "initiated";
+        TransactionState["PENDING"] = "pending";
+        TransactionState["APPROVED"] = "approved";
+        TransactionState["CANCELLED"] = "cancelled";
+        TransactionState["FINISHED"] = "finished";
+        // OWNED = 'owned',
+        // EXPIRED = 'expired',
+        TransactionState["UNKNOWN_STATE"] = "";
+    })(TransactionState = CdvPurchase.TransactionState || (CdvPurchase.TransactionState = {}));
+    /** Whether or not the user intends to let the subscription auto-renew. */
+    let RenewalIntent;
+    (function (RenewalIntent) {
+        /** The user intends to let the subscription expire without renewing. */
+        RenewalIntent["LAPSE"] = "Lapse";
+        /** The user intends to renew the subscription. */
+        RenewalIntent["RENEW"] = "Renew";
+    })(RenewalIntent = CdvPurchase.RenewalIntent || (CdvPurchase.RenewalIntent = {}));
+    /** Whether or not the user was notified or agreed to a price change */
+    let PriceConsentStatus;
+    (function (PriceConsentStatus) {
+        PriceConsentStatus["NOTIFIED"] = "Notified";
+        PriceConsentStatus["AGREED"] = "Agreed";
+    })(PriceConsentStatus = CdvPurchase.PriceConsentStatus || (CdvPurchase.PriceConsentStatus = {}));
+    /** Reason why a subscription has been canceled */
+    let CancelationReason;
+    (function (CancelationReason) {
+        /** Not canceled */
+        CancelationReason["NOT_CANCELED"] = "";
+        /** Subscription canceled by the developer. */
+        CancelationReason["DEVELOPER"] = "Developer";
+        /** Subscription canceled by the system for an unspecified reason. */
+        CancelationReason["SYSTEM"] = "System";
+        /** Subscription upgraded or downgraded to a new subscription. */
+        CancelationReason["SYSTEM_REPLACED"] = "System.Replaced";
+        /** Product not available for purchase at the time of renewal. */
+        CancelationReason["SYSTEM_PRODUCT_UNAVAILABLE"] = "System.ProductUnavailable";
+        /** Billing error; for example customer’s payment information is no longer valid. */
+        CancelationReason["SYSTEM_BILLING_ERROR"] = "System.BillingError";
+        /** Transaction is gone; It has been deleted. */
+        CancelationReason["SYSTEM_DELETED"] = "System.Deleted";
+        /** Subscription canceled by the user for an unspecified reason. */
+        CancelationReason["CUSTOMER"] = "Customer";
+        /** Customer canceled their transaction due to an actual or perceived issue within your app. */
+        CancelationReason["CUSTOMER_TECHNICAL_ISSUES"] = "Customer.TechnicalIssues";
+        /** Customer did not agree to a recent price increase. See also priceConsentStatus. */
+        CancelationReason["CUSTOMER_PRICE_INCREASE"] = "Customer.PriceIncrease";
+        /** Customer canceled for cost-related reasons. */
+        CancelationReason["CUSTOMER_COST"] = "Customer.Cost";
+        /** Customer claimed to have found a better app. */
+        CancelationReason["CUSTOMER_FOUND_BETTER_APP"] = "Customer.FoundBetterApp";
+        /** Customer did not feel he is using this service enough. */
+        CancelationReason["CUSTOMER_NOT_USEFUL_ENOUGH"] = "Customer.NotUsefulEnough";
+        /** Subscription canceled for another reason; for example, if the customer made the purchase accidentally. */
+        CancelationReason["CUSTOMER_OTHER_REASON"] = "Customer.OtherReason";
+        /** Subscription canceled for unknown reasons. */
+        CancelationReason["UNKNOWN"] = "Unknown";
+    })(CancelationReason = CdvPurchase.CancelationReason || (CdvPurchase.CancelationReason = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+/// <reference path="utils/non-enumerable.ts" />
+/// <reference path="product.ts" />
+/// <reference path="types.ts" />
+var CdvPurchase;
+(function (CdvPurchase) {
+    /**
+     * One of the available offers to purchase a given product
+     */
+    class Offer {
+        /** @internal */
+        constructor(options, decorator) {
+            /** className, used to make sure we're passing an actual instance of the "Offer" class. */
+            this.className = 'Offer';
+            this.id = options.id;
+            this.pricingPhases = options.pricingPhases;
+            // Object.defineProperty(this, 'product', { enumerable: false, get: () => options.product });
+            Object.defineProperty(this, 'productId', { enumerable: true, get: () => options.product.id });
+            Object.defineProperty(this, 'productType', { enumerable: true, get: () => options.product.type });
+            Object.defineProperty(this, 'productGroup', { enumerable: true, get: () => options.product.group });
+            Object.defineProperty(this, 'platform', { enumerable: true, get: () => options.product.platform });
+            Object.defineProperty(this, 'order', { enumerable: false, get: () => (additionalData) => decorator.order(this, additionalData) });
+            Object.defineProperty(this, 'canPurchase', { enumerable: false, get: () => decorator.canPurchase(this) });
+        }
+        /** Identifier of the product related to this offer */
+        get productId() { return ''; }
+        /** Type of the product related to this offer */
+        get productType() { return CdvPurchase.ProductType.APPLICATION; }
+        /** Group the product related to this offer is member of */
+        get productGroup() { return undefined; }
+        /** Platform this offer is available from */
+        get platform() { return CdvPurchase.Platform.TEST; }
+        /**
+         * Initiate a purchase of this offer.
+         *
+         * @example
+         * store.get("my-product").getOffer().order();
+         */
+        async order(additionalData) {
+            // Pseudo implementation to make typescript happy.
+            // see Object.defineProperty in the constructor for the actual implementation.
+            return;
+        }
+        /**
+         * true if the offer can be purchased.
+         */
+        get canPurchase() {
+            // Pseudo implementation to make typescript happy.
+            // see Object.defineProperty in the constructor for the actual implementation.
+            return false;
+        }
+    }
+    CdvPurchase.Offer = Offer;
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    class PaymentRequestPromise {
+        constructor() {
+            this.failedCallbacks = new CdvPurchase.Internal.PromiseLike();
+            this.initiatedCallbacks = new CdvPurchase.Internal.PromiseLike();
+            this.approvedCallbacks = new CdvPurchase.Internal.PromiseLike();
+            this.finishedCallbacks = new CdvPurchase.Internal.PromiseLike();
+            this.cancelledCallback = new CdvPurchase.Internal.PromiseLike();
+        }
+        failed(callback) {
+            this.failedCallbacks.push(callback);
+            return this;
+        }
+        initiated(callback) {
+            this.initiatedCallbacks.push(callback);
+            return this;
+        }
+        approved(callback) {
+            this.approvedCallbacks.push(callback);
+            return this;
+        }
+        finished(callback) {
+            this.finishedCallbacks.push(callback);
+            return this;
+        }
+        cancelled(callback) {
+            this.cancelledCallback.push(callback);
+            return this;
+        }
+        /** @internal */
+        trigger(argument) {
+            if (!argument) {
+                this.cancelledCallback.resolve();
+            }
+            else if ('isError' in argument) {
+                this.failedCallbacks.resolve(argument);
+            }
+            else {
+                switch (argument.state) {
+                    case CdvPurchase.TransactionState.INITIATED:
+                        this.initiatedCallbacks.resolve(argument);
+                        break;
+                    case CdvPurchase.TransactionState.APPROVED:
+                        this.approvedCallbacks.resolve(argument);
+                        break;
+                    case CdvPurchase.TransactionState.FINISHED:
+                        this.finishedCallbacks.resolve(argument);
+                        break;
+                }
+            }
+            return this;
+        }
+        /**
+         * Return a failed promise.
+         *
+         * @internal
+         */
+        static failed(code, message) {
+            return new PaymentRequestPromise().trigger(CdvPurchase.storeError(code, message));
+        }
+        /**
+         * Return a failed promise.
+         *
+         * @internal
+         */
+        static cancelled() {
+            return new PaymentRequestPromise().trigger();
+        }
+        /**
+         * Return an initiated transaction.
+         *
+         * @internal
+         */
+        static initiated(transaction) {
+            return new PaymentRequestPromise().trigger(transaction);
+        }
+    }
+    CdvPurchase.PaymentRequestPromise = PaymentRequestPromise;
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    class Receipt {
+        /** @internal */
+        constructor(platform, decorator) {
+            /** @internal */
+            this.className = 'Receipt';
+            /** List of transactions contained in the receipt, ordered by date ascending. */
+            this.transactions = [];
+            this.platform = platform;
+            Object.defineProperty(this, 'verify', { 'enumerable': false, get() { return () => decorator.verify(this); } });
+            Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
+        }
+        /** Verify a receipt */
+        async verify() { }
+        /** Finish all transactions in a receipt */
+        async finish() { }
+        /** Return true if the receipt contains the given transaction */
+        hasTransaction(value) {
+            return !!this.transactions.find(t => t === value);
+        }
+        /** Return the last transaction in this receipt */
+        lastTransaction() {
+            return this.transactions[this.transactions.length - 1];
+        }
+    }
+    CdvPurchase.Receipt = Receipt;
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    /**
+     * Transaction as reported by the device
+     *
+     * @see {@link Receipt}
+     * @see {@link store.localTransactions}
+     */
     class Transaction {
         /** @internal */
         constructor(platform, parentReceipt, decorator) {
@@ -1950,6 +1994,7 @@ var CdvPurchase;
                 this.ready = false;
                 /** List of products loaded from AppStore */
                 this._products = [];
+                this.validProducts = {};
                 this.context = context;
                 this.bridge = new AppleAppStore.Bridge.Bridge();
                 this.log = context.log.child('AppleAppStore');
@@ -1960,6 +2005,14 @@ var CdvPurchase;
             /** Find a given product from ID */
             getProduct(id) { return this._products.find(p => p.id === id); }
             get receipts() { return this._receipt ? [this._receipt] : []; }
+            addValidProducts(registerProducts, validProducts) {
+                validProducts.forEach(vp => {
+                    const rp = registerProducts.find(p => p.id === vp.id);
+                    if (!rp)
+                        return;
+                    this.validProducts[vp.id] = Object.assign(Object.assign({}, vp), rp);
+                });
+            }
             /** Returns true on Android, the only platform supported by this adapter */
             get isSupported() {
                 return window.cordova.platformId === 'ios';
@@ -2161,6 +2214,7 @@ var CdvPurchase;
                     this.log.info('bridge.load');
                     this.bridge.load(products.map(p => p.id), async (validProducts, invalidProducts) => {
                         this.log.info('bridge.loaded: ' + JSON.stringify({ validProducts, invalidProducts }));
+                        this.addValidProducts(products, validProducts);
                         const eligibilities = await this.loadEligibility(validProducts);
                         this.log.info('eligibilities ready.');
                         // for any valid product that includes a discount, check the eligibility.
@@ -2237,7 +2291,8 @@ var CdvPurchase;
                 return {
                     id: skReceipt.nativeData.bundleIdentifier,
                     type: CdvPurchase.ProductType.APPLICATION,
-                    products: this.products,
+                    // send all products and offers so validator get pricing information
+                    products: Object.values(this.validProducts).map(vp => new AppleAppStore.SKProduct(vp, vp, this.context.apiDecorators, { isEligible: () => true })),
                     transaction: {
                         type: 'ios-appstore',
                         id: transaction === null || transaction === void 0 ? void 0 : transaction.transactionId,
@@ -2272,8 +2327,15 @@ var CdvPurchase;
                 this.bridge.manageSubscriptions();
                 return;
             }
+            async manageBilling() {
+                this.bridge.manageBilling();
+                return;
+            }
             checkSupport(functionality) {
-                return functionality === 'order';
+                const supported = [
+                    'order', 'manageBilling', 'manageSubscriptions'
+                ];
+                return supported.indexOf(functionality) >= 0;
             }
             restorePurchases() {
                 return new Promise(resolve => {
@@ -2731,7 +2793,8 @@ var CdvPurchase;
                 this.title = valid.title;
                 this.description = valid.description;
                 this.countryCode = valid.countryCode;
-                this.group = valid.group;
+                if (valid.group)
+                    this.group = valid.group;
                 this.removeIneligibleDiscounts(eligibilities);
                 // default offer
                 const finalPhase = {
@@ -2983,7 +3046,12 @@ var CdvPurchase;
                 return;
             }
             async manageSubscriptions() {
-                return CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, 'N/A: manageSubscriptions() is not available with Braintree');
+                this.log.info('N/A: manageSubscriptions() is not available with Braintree');
+                return;
+            }
+            async manageBilling() {
+                this.log.info('N/A: manageBilling() is not available with Braintree');
+                return;
             }
             // async getNonce(paymentMethod: PaymentMethod): Promise<Nonce | IError> {
             //     return new Promise(resolve => {
@@ -3232,6 +3300,9 @@ var CdvPurchase;
                 static isSupported() {
                     return window.cordova.platformId === 'android';
                 }
+                async isApplePaySupported() {
+                    return false;
+                }
                 launchDropIn(dropInRequest) {
                     return new Promise(resolve => {
                         window.cordova.exec((result) => {
@@ -3378,10 +3449,17 @@ var CdvPurchase;
                         };
                         this.clientTokenProvider((clientToken) => {
                             if (typeof clientToken === 'string')
-                                window.cordova.exec(onSuccess, onError, "BraintreePlugin", "launchDropInWithClientToken", [clientToken]);
+                                window.cordova.exec(onSuccess, onError, "BraintreePlugin", "launchDropIn", [clientToken, dropInRequest]);
                             else // failed to get token
                                 resolve(clientToken);
                         });
+                    });
+                }
+                isApplePaySupported() {
+                    return new Promise(resolve => {
+                        window.cordova.exec((result) => {
+                            resolve(result);
+                        }, null, "BraintreePlugin", "isApplePaySupported", []);
                     });
                 }
                 static isSupported() {
@@ -3733,12 +3811,46 @@ var CdvPurchase;
                     };
                     if (offer.productType === CdvPurchase.ProductType.PAID_SUBSCRIPTION) {
                         const idAndToken = offer.id; // offerId contains the productId and token (format productId@offerToken)
+                        // find if the user already owns a product in the same group
+                        const oldPurchaseToken = this.findOldPurchaseToken(offer.productId, offer.productGroup);
+                        if (oldPurchaseToken) {
+                            if (!additionalData.googlePlay)
+                                additionalData.googlePlay = { oldPurchaseToken };
+                            else if (!additionalData.googlePlay.oldPurchaseToken) {
+                                additionalData.googlePlay.oldPurchaseToken = oldPurchaseToken;
+                            }
+                        }
                         this.bridge.subscribe(buySuccess, buyFailed, idAndToken, additionalData);
                     }
                     else {
                         this.bridge.buy(buySuccess, buyFailed, offer.productId, additionalData);
                     }
                 });
+            }
+            /**
+             * Find a purchaseToken for an owned product in the same group as the requested one.
+             *
+             * @param productId - The product identifier to request matching purchaseToken for.
+             * @param productGroup - The group of the product to request matching purchaseToken for.
+             *
+             * @return A purchaseToken, undefined if none have been found.
+             */
+            findOldPurchaseToken(productId, productGroup) {
+                if (!productGroup)
+                    return undefined;
+                const oldReceipt = this._receipts.find(r => {
+                    return !!r.transactions.find(t => {
+                        return !!t.products.find(p => {
+                            const product = this._products.getProduct(p.id);
+                            if (!product)
+                                return false;
+                            if (!CdvPurchase.Internal.LocalReceipts.isOwned([r], product))
+                                return false;
+                            return (p.id === productId) || (productGroup && product.group === productGroup);
+                        });
+                    });
+                });
+                return oldReceipt === null || oldReceipt === void 0 ? void 0 : oldReceipt.purchaseToken;
             }
             /**
              * Prepare for receipt validation
@@ -3796,10 +3908,23 @@ var CdvPurchase;
                 this.bridge.manageSubscriptions();
                 return;
             }
-            checkSupport(functionality) {
-                return functionality === 'order';
+            async manageBilling() {
+                this.bridge.manageBilling();
+                return;
             }
-            async restorePurchases() {
+            checkSupport(functionality) {
+                const supported = [
+                    'order', 'manageBilling', 'manageSubscriptions'
+                ];
+                return supported.indexOf(functionality) >= 0;
+            }
+            restorePurchases() {
+                return new Promise(resolve => {
+                    this.bridge.getPurchases(resolve, (message, code) => {
+                        this.log.warn('getPurchases() failed: ' + (code !== null && code !== void 0 ? code : 'ERROR') + ': ' + message);
+                        resolve();
+                    });
+                });
             }
         }
         GooglePlay.Adapter = Adapter;
@@ -4524,6 +4649,10 @@ var CdvPurchase;
                 alert('Pseudo subscription management interface. Close it when you are done.');
                 return;
             }
+            async manageBilling() {
+                alert('Pseudo billing management interface. Close it when you are done.');
+                return;
+            }
             reportActiveSubscription() {
                 if (this.receipts.find(r => r.transactions[0].transactionId === transactionId(1))) {
                     // already reported
@@ -4808,6 +4937,9 @@ var CdvPurchase;
             }
             async manageSubscriptions() {
                 return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'manageSubscriptions not supported');
+            }
+            async manageBilling() {
+                return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'manageBilling not supported');
             }
             checkSupport(functionality) {
                 return false;
@@ -5225,6 +5357,51 @@ var CdvPurchase;
             return hexStringFromArray(computeMD5(str, shiftFunction));
         }
         Utils.md5 = md5;
+    })(Utils = CdvPurchase.Utils || (CdvPurchase.Utils = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Utils;
+    (function (Utils) {
+        /**
+         * Return a safer version of a callback that runs inside a try/catch block.
+         *
+         * @param logger - Used to log errors.
+         * @param className - Type of callback, helps debugging when a function failed.
+         * @param callback - The callback function is turn into a safer version.
+         */
+        function safeCallback(logger, className, callback) {
+            return function (value) {
+                safeCall(logger, className, callback, value);
+            };
+        }
+        Utils.safeCallback = safeCallback;
+        /**
+         * Run a callback inside a try/catch block.
+         *
+         * @param logger - Used to log errors.
+         * @param className - Type of callback, helps debugging when a function failed.
+         * @param callback - The callback function is turn into a safer version.
+         * @param value - Value passed to the callback.
+         */
+        function safeCall(logger, className, callback, value) {
+            setTimeout(() => {
+                try {
+                    callback(value);
+                }
+                catch (error) {
+                    logger.error(`Error in callback: type=${className} name=${callback.name}`);
+                    const errorAsError = error;
+                    if ('message' in errorAsError)
+                        logger.error(errorAsError.message);
+                    if ('fileName' in error)
+                        logger.error('in ' + error.fileName + ':' + error.lineNumber);
+                    if ('stack' in errorAsError)
+                        logger.error(errorAsError.stack);
+                }
+            }, 0);
+        }
+        Utils.safeCall = safeCall;
     })(Utils = CdvPurchase.Utils || (CdvPurchase.Utils = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;

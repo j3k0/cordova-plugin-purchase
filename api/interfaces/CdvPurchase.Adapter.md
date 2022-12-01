@@ -33,6 +33,7 @@ Adapter for a payment or in-app purchase platform
 - [handleReceiptValidationResponse](CdvPurchase.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.Adapter.md#initialize)
 - [load](CdvPurchase.Adapter.md#load)
+- [manageBilling](CdvPurchase.Adapter.md#managebilling)
 - [manageSubscriptions](CdvPurchase.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.Adapter.md#order)
 - [receiptValidationBody](CdvPurchase.Adapter.md#receiptvalidationbody)
@@ -194,6 +195,18 @@ Load product definitions from the platform.
 #### Returns
 
 `Promise`<([`IError`](CdvPurchase.IError.md) \| [`Product`](../classes/CdvPurchase.Product.md))[]\>
+
+___
+
+### manageBilling
+
+▸ **manageBilling**(): `Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+
+Open the platforms' billing management interface.
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 ___
 

@@ -15,6 +15,7 @@ Product definition from a store
 ### Properties
 
 - [description](CdvPurchase.GooglePlay.GProduct.md#description)
+- [group](CdvPurchase.GooglePlay.GProduct.md#group)
 - [id](CdvPurchase.GooglePlay.GProduct.md#id)
 - [offers](CdvPurchase.GooglePlay.GProduct.md#offers)
 - [platform](CdvPurchase.GooglePlay.GProduct.md#platform)
@@ -42,6 +43,24 @@ Product full description from the store.
 #### Inherited from
 
 [Product](CdvPurchase.Product.md).[description](CdvPurchase.Product.md#description)
+
+___
+
+### group
+
+• `Optional` **group**: `string`
+
+Group the product is member of.
+
+Only 1 product of a given group can be owned. This is generally used
+to provide different levels for subscriptions, for example: silver
+and gold.
+
+Purchasing a different level will replace the previously owned one.
+
+#### Inherited from
+
+[Product](CdvPurchase.Product.md).[group](CdvPurchase.Product.md#group)
 
 ___
 

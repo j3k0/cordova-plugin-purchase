@@ -2,6 +2,13 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).Transaction
 
+Transaction as reported by the device
+
+**`See`**
+
+ - [Receipt](CdvPurchase.Receipt.md)
+ - store.localTransactions
+
 ## Hierarchy
 
 - **`Transaction`**

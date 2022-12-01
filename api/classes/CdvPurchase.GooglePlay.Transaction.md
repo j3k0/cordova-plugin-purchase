@@ -2,6 +2,13 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).[GooglePlay](../modules/CdvPurchase.GooglePlay.md).Transaction
 
+Transaction as reported by the device
+
+**`See`**
+
+ - [Receipt](CdvPurchase.GooglePlay.Receipt.md)
+ - store.localTransactions
+
 ## Hierarchy
 
 - [`Transaction`](CdvPurchase.Transaction.md)
