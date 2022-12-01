@@ -50,6 +50,14 @@ namespace CdvPurchase {
             });
           }
 
+          isApplePaySupported(): Promise<boolean> {
+            return new Promise(resolve => {
+              window.cordova.exec((result: boolean) => {
+                resolve(result);
+              }, null, "BraintreePlugin", "isApplePaySupported", []);
+            });
+          }
+
           static isSupported() {
             return window.cordova.platformId === 'ios';
           }

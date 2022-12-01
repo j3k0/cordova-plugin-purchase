@@ -110,6 +110,10 @@ namespace CdvPurchase {
                     return window.cordova.platformId === 'android';
                 }
 
+                async isApplePaySupported(): Promise<boolean> {
+                    return false;
+                }
+
                 launchDropIn(dropInRequest: DropIn.Request): Promise<DropIn.Result | IError> {
                     return new Promise(resolve => {
                         window.cordova.exec(
