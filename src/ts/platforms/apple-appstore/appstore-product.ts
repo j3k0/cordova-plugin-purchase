@@ -26,16 +26,13 @@ namespace CdvPurchase {
       /** AppStore country this product has been fetched for */
       countryCode?: string;
 
-      /** Group this product is member of */
-      group?: string;
-
-      constructor(validProduct: Bridge.ValidProduct, p: IRegisterProduct, decorator: CdvPurchase.Internal.ProductDecorator & CdvPurchase.Internal.OfferDecorator, eligibilities: Internal.DiscountEligibilities) {
+      constructor(validProduct: Bridge.ValidProduct, p: IRegisterProduct, decorator: CdvPurchase.Internal.ProductDecorator & CdvPurchase.Internal.OfferDecorator, eligibilities: Internal.IDiscountEligibilities) {
         super(p, decorator);
         this.raw = validProduct;
         this.refresh(validProduct, decorator, eligibilities);
       }
 
-      removeIneligibleDiscounts(eligibilities: Internal.DiscountEligibilities) {
+      removeIneligibleDiscounts(eligibilities: Internal.IDiscountEligibilities) {
         this.offers = this.offers.filter(offer => {
           const skOffer = offer as SKOffer;
           if (skOffer.offerType === 'Default') return true;
@@ -43,7 +40,7 @@ namespace CdvPurchase {
         });
       }
 
-      refresh(valid: Bridge.ValidProduct, decorator: CdvPurchase.Internal.ProductDecorator & CdvPurchase.Internal.OfferDecorator, eligibilities: Internal.DiscountEligibilities) {
+      refresh(valid: Bridge.ValidProduct, decorator: CdvPurchase.Internal.ProductDecorator & CdvPurchase.Internal.OfferDecorator, eligibilities: Internal.IDiscountEligibilities) {
         this.raw = valid;
         this.title = valid.title;
         this.description = valid.description;

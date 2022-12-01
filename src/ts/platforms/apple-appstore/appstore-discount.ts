@@ -15,7 +15,12 @@ namespace CdvPurchase {
 
     /** @internal */
     export namespace Internal {
-      export class DiscountEligibilities {
+
+      export interface IDiscountEligibilities {
+        isEligible(productId: string, discountType: DiscountType, discountId: string): boolean;
+      }
+
+      export class DiscountEligibilities implements IDiscountEligibilities {
         request: DiscountEligibilityRequest[];
         response: boolean[];
         constructor(request: DiscountEligibilityRequest[], response: boolean[]) {
