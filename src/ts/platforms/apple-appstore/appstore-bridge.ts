@@ -249,6 +249,7 @@ namespace CdvPurchase {
                     errorText: string | undefined;
                     transactionIdentifier: string;
                     productId: string;
+                    /** @deprecated */
                     transactionReceipt: never;
                     originalTransactionIdentifier: string | undefined;
                     transactionDate: string | undefined;

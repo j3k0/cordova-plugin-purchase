@@ -130,7 +130,7 @@ namespace CdvPurchase {
                  *
                  * @deprecated Use `appStoreReceipt`
                  */
-                transactionReceipt?: string;
+                transactionReceipt?: never;
             }
 
             /** Transaction type from a google powered device  */

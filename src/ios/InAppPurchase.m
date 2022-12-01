@@ -467,9 +467,10 @@ static NSString *toTimestamp(NSDate *date) {
             case SKPaymentTransactionStatePurchased:
                 state = @"PaymentTransactionStatePurchased";
                 transactionIdentifier = transaction.transactionIdentifier;
-#if TARGET_OS_IPHONE
-                transactionReceipt = [[transaction transactionReceipt] base64EncodedStringWithOptions:0];
-#endif
+                // Transaction receipts are deprecated since iOS 7.0, time to remove it
+                // #if TARGET_OS_IPHONE
+                // transactionReceipt = [[transaction transactionReceipt] base64EncodedStringWithOptions:0];
+                // #endif
                 productId = transaction.payment.productIdentifier;
                 transactionDate = toTimestamp(transaction.transactionDate);
                 if (transaction.payment.paymentDiscount != nil) {
@@ -505,9 +506,11 @@ static NSString *toTimestamp(NSDate *date) {
                 transactionIdentifier = transaction.transactionIdentifier;
                 if (!transactionIdentifier)
                     transactionIdentifier = transaction.originalTransaction.transactionIdentifier;
-#if TARGET_OS_IPHONE
-                transactionReceipt = [[transaction transactionReceipt] base64EncodedStringWithOptions:0];
-#endif
+                // Transaction receipts are deprecated since iOS 7.0, time to remove it
+                // #if TARGET_OS_IPHONE
+                // transactionReceipt = [[transaction transactionReceipt] base64EncodedStringWithOptions:0];
+                // #endif
+
                 // TH 08/03/2016: default to transaction.payment.productIdentifier and use transaction.originalTransaction.payment.productIdentifier as a fallback.
                 // Previously only used transaction.originalTransaction.payment.productIdentifier.
                 // When restoring transactions when there are unfinished transactions, I encountered transactions for which originalTransaction is nil, leading to a nil productId.
