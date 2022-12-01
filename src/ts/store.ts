@@ -127,31 +127,31 @@ namespace CdvPurchase {
         public validator_privacy_policy: PrivacyPolicyItem | PrivacyPolicyItem[] | undefined;
 
         /** List of callbacks for the "ready" events */
-        private _readyCallbacks = new Internal.ReadyCallbacks();
+        private _readyCallbacks = new Internal.ReadyCallbacks(this.log);
 
         /** Listens to adapters */
         private listener: Internal.StoreAdapterListener;
 
         /** Callbacks when a product definition was updated */
-        private updatedCallbacks = new Internal.Callbacks<Product>();
+        private updatedCallbacks = new Internal.Callbacks<Product>(this.log, 'productUpdated()');
 
         /** Callback when a receipt was updated */
-        private updatedReceiptsCallbacks = new Internal.Callbacks<Receipt>();
+        private updatedReceiptsCallbacks = new Internal.Callbacks<Receipt>(this.log, 'receiptUpdated()');
 
         /** Callbacks when a product is owned */
         // private ownedCallbacks = new Callbacks<Product>();
 
         /** Callbacks when a transaction has been approved */
-        private approvedCallbacks = new Internal.Callbacks<Transaction>();
+        private approvedCallbacks = new Internal.Callbacks<Transaction>(this.log, 'approved()');
 
         /** Callbacks when a transaction has been finished */
-        private finishedCallbacks = new Internal.Callbacks<Transaction>();
+        private finishedCallbacks = new Internal.Callbacks<Transaction>(this.log, 'finished()');
 
         /** Callbacks when a receipt has been validated */
-        private verifiedCallbacks = new Internal.Callbacks<VerifiedReceipt>();
+        private verifiedCallbacks = new Internal.Callbacks<VerifiedReceipt>(this.log, 'verified()');
 
         /** Callbacks for errors */
-        private errorCallbacks = new Internal.Callbacks<IError>;
+        private errorCallbacks = new Internal.Callbacks<IError>(this.log, 'error()');
 
         /** Internal implementation of the receipt validation service integration */
         private _validator: Internal.Validator;
@@ -303,7 +303,9 @@ namespace CdvPurchase {
          * });
          */
         monitor(transaction: Transaction, onChange: Callback<TransactionState>): TransactionMonitor {
-            return this.transactionStateMonitors.start(transaction, onChange);
+            return this.transactionStateMonitors.start(
+                transaction,
+                Utils.safeCallback(this.log, 'monitor()', onChange));
         }
 
         /**
