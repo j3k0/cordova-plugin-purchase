@@ -77,6 +77,18 @@ namespace CdvPurchase {
             _receipt?: SKApplicationReceipt;
             get receipts(): Receipt[] { return this._receipt ? [this._receipt] : []; }
 
+            private validProducts: { [id: string]: Bridge.ValidProduct & IRegisterProduct; } = {};
+            addValidProducts(registerProducts: IRegisterProduct[], validProducts: Bridge.ValidProduct[]) {
+                validProducts.forEach(vp => {
+                    const rp = registerProducts.find(p => p.id === vp.id);
+                    if (!rp) return;
+                    this.validProducts[vp.id] = {
+                        ...vp,
+                        ...rp,
+                    }
+                });
+            }
+
             bridge: Bridge.Bridge;
             context: CdvPurchase.Internal.AdapterContext;
             log: Logger;
@@ -317,6 +329,7 @@ namespace CdvPurchase {
                         products.map(p => p.id),
                         async (validProducts, invalidProducts) => {
                             this.log.info('bridge.loaded: ' + JSON.stringify({ validProducts, invalidProducts }));
+                            this.addValidProducts(products, validProducts);
                             const eligibilities = await this.loadEligibility(validProducts);
                             this.log.info('eligibilities ready.');
                             // for any valid product that includes a discount, check the eligibility.
@@ -397,7 +410,8 @@ namespace CdvPurchase {
                 return {
                     id: skReceipt.nativeData.bundleIdentifier,
                     type: ProductType.APPLICATION,
-                    products: this.products, // send the product so validator can get price information
+                    // send all products and offers so validator get pricing information
+                    products: Object.values(this.validProducts).map(vp => new SKProduct(vp, vp, this.context.apiDecorators, { isEligible: () => true })),
                     transaction: {
                         type: 'ios-appstore',
                         id: transaction?.transactionId,

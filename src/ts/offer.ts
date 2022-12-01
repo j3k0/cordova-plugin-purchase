@@ -37,6 +37,9 @@ namespace CdvPurchase
         /** Type of the product related to this offer */
         get productType(): ProductType { return ProductType.APPLICATION; }
 
+        /** Group the product related to this offer is member of */
+        get productGroup(): string | undefined { return undefined; }
+
         /** Platform this offer is available from */
         get platform() { return Platform.TEST; }
 
@@ -73,6 +76,7 @@ namespace CdvPurchase
             // Object.defineProperty(this, 'product', { enumerable: false, get: () => options.product });
             Object.defineProperty(this, 'productId', { enumerable: true, get: () => options.product.id });
             Object.defineProperty(this, 'productType', { enumerable: true, get: () => options.product.type });
+            Object.defineProperty(this, 'productGroup', { enumerable: true, get: () => options.product.group });
             Object.defineProperty(this, 'platform', { enumerable: true, get: () => options.product.platform });
             Object.defineProperty(this, 'order', { enumerable: false, get: () => (additionalData?: AdditionalData) => decorator.order(this, additionalData) });
             Object.defineProperty(this, 'canPurchase', { enumerable: false, get: () => decorator.canPurchase(this) });

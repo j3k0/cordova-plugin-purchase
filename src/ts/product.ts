@@ -43,6 +43,17 @@ namespace CdvPurchase {
         description: string = '';
 
         /**
+         * Group the product is member of.
+         *
+         * Only 1 product of a given group can be owned. This is generally used
+         * to provide different levels for subscriptions, for example: silver
+         * and gold.
+         *
+         * Purchasing a different level will replace the previously owned one.
+         */
+        group?: string;
+
+        /**
          * Shortcut to offers[0].pricingPhases[0]
          *
          * Useful when you know products have a single offer and a single pricing phase.
@@ -72,6 +83,7 @@ namespace CdvPurchase {
             this.platform = p.platform;
             this.type = p.type;
             this.id = p.id;
+            this.group = p.group;
             this.offers = [];
             Object.defineProperty(this, 'pricing', { enumerable: false });
             Object.defineProperty(this, 'canPurchase', { enumerable: false, get: () => decorator.canPurchase(this) });

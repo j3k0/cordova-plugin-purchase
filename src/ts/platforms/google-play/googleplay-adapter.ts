@@ -303,12 +303,44 @@ namespace CdvPurchase {
                     };
                     if (offer.productType === ProductType.PAID_SUBSCRIPTION) {
                         const idAndToken = offer.id; // offerId contains the productId and token (format productId@offerToken)
+                        // find if the user already owns a product in the same group
+                        const oldPurchaseToken = this.findOldPurchaseToken(offer.productId, offer.productGroup);
+                        if (oldPurchaseToken) {
+                            if (!additionalData.googlePlay)
+                                additionalData.googlePlay = { oldPurchaseToken };
+                            else if (!additionalData.googlePlay.oldPurchaseToken) {
+                                additionalData.googlePlay.oldPurchaseToken = oldPurchaseToken;
+                            }
+                        }
                         this.bridge.subscribe(buySuccess, buyFailed, idAndToken, additionalData);
                     }
                     else {
                         this.bridge.buy(buySuccess, buyFailed, offer.productId, additionalData);
                     }
                 });
+            }
+
+            /**
+             * Find a purchaseToken for an owned product in the same group as the requested one.
+             *
+             * @param productId - The product identifier to request matching purchaseToken for.
+             * @param productGroup - The group of the product to request matching purchaseToken for.
+             *
+             * @return A purchaseToken, undefined if none have been found.
+             */
+            findOldPurchaseToken(productId: string, productGroup?: string): string | undefined {
+                if (!productGroup) return undefined;
+                const oldReceipt = this._receipts.find(r => {
+                    return !!r.transactions.find(t => {
+                        return !!t.products.find(p => {
+                            const product = this._products.getProduct(p.id);
+                            if (!product) return false;
+                            if (!Internal.LocalReceipts.isOwned([r], product)) return false;
+                            return (p.id === productId) || (productGroup && product.group === productGroup);
+                        });
+                    });
+                });
+                return oldReceipt?.purchaseToken;
             }
 
             /**

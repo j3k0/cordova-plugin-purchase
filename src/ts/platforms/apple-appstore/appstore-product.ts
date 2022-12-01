@@ -48,7 +48,7 @@ namespace CdvPurchase {
         this.title = valid.title;
         this.description = valid.description;
         this.countryCode = valid.countryCode;
-        this.group = valid.group;
+        if (valid.group) this.group = valid.group;
 
         this.removeIneligibleDiscounts(eligibilities);
 
