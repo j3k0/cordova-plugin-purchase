@@ -398,11 +398,25 @@ namespace CdvPurchase {
                 return;
             }
 
-            checkSupport(functionality: PlatformFunctionality): boolean {
-                return functionality === 'order';
+            async manageBilling(): Promise<IError | undefined> {
+                this.bridge.manageBilling();
+                return;
             }
 
-            async restorePurchases(): Promise<void> {
+            checkSupport(functionality: PlatformFunctionality): boolean {
+                const supported: PlatformFunctionality[] = [
+                    'order', 'manageBilling', 'manageSubscriptions'
+                ];
+                return supported.indexOf(functionality) >= 0;
+            }
+
+            restorePurchases(): Promise<void> {
+                return new Promise(resolve => {
+                    this.bridge.getPurchases(resolve, (message, code) => {
+                        this.log.warn('getPurchases() failed: ' + (code ?? 'ERROR') + ': ' + message);
+                        resolve();
+                    });
+                });
             }
         }
 

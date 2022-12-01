@@ -493,13 +493,35 @@ namespace CdvPurchase {
         /**
          * Open the subscription management interface for the selected platform.
          *
-         * If platform is not specified,
+         * If platform is not specified, the first available platform will be used.
+         *
+         * @example
+         * const activeSubscription: Purchase = // ...
+         * store.manageSubscriptions(activeSubscription.platform);
          */
         async manageSubscriptions(platform?: Platform): Promise<IError | undefined> {
             this.log.info('manageSubscriptions()');
             const adapter = this.adapters.findReady(platform);
             if (!adapter) return storeError(ErrorCode.SETUP, "Found no adapter ready to handle 'manageSubscription'");
             return adapter.manageSubscriptions();
+        }
+
+        /**
+         * Opens the billing methods page on AppStore, Play, Microsoft, ...
+         *
+         * From this page, the user can update their payment methods.
+         *
+         * If platform is not specified, the first available platform will be used.
+         *
+         * @example
+         * if (purchase.isBillingRetryPeriod)
+         *     store.manageBilling(purchase.platform);
+         */
+        async manageBilling(platform?: Platform): Promise<IError | undefined> {
+            this.log.info('manageBilling()');
+            const adapter = this.adapters.findReady(platform);
+            if (!adapter) return storeError(ErrorCode.SETUP, "Found no adapter ready to handle 'manageBilling'");
+            return adapter.manageBilling();
         }
 
         /**

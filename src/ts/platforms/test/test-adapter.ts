@@ -164,6 +164,11 @@ namespace CdvPurchase {
                 return;
             }
 
+            async manageBilling(): Promise<IError | undefined> {
+                alert('Pseudo billing management interface. Close it when you are done.')
+                return;
+            }
+
             private reportActiveSubscription() {
 
                 if (this.receipts.find(r => r.transactions[0].transactionId === transactionId(1))) {

@@ -263,7 +263,13 @@ namespace CdvPurchase {
             }
 
             async manageSubscriptions(): Promise<IError | undefined> {
-                return storeError(ErrorCode.SETUP, 'N/A: manageSubscriptions() is not available with Braintree');
+                this.log.info('N/A: manageSubscriptions() is not available with Braintree');
+                return;
+            }
+
+            async manageBilling(): Promise<IError | undefined> {
+                this.log.info('N/A: manageBilling() is not available with Braintree');
+                return;
             }
 
             // async getNonce(paymentMethod: PaymentMethod): Promise<Nonce | IError> {

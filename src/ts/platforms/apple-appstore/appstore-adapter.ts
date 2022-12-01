@@ -448,8 +448,16 @@ namespace CdvPurchase {
                 return;
             }
 
+            async manageBilling(): Promise<IError | undefined> {
+                this.bridge.manageBilling();
+                return;
+            }
+
             checkSupport(functionality: PlatformFunctionality): boolean {
-                return functionality === 'order';
+                const supported: PlatformFunctionality[] = [
+                    'order', 'manageBilling', 'manageSubscriptions'
+                ];
+                return supported.indexOf(functionality) >= 0;
             }
 
             restorePurchases(): Promise<void> {
