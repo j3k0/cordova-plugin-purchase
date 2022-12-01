@@ -12,14 +12,14 @@ namespace CdvPurchase {
 
         /**
          * the default value used to determine if Drop-in should vault the customer's card.
-         * 
+         *
          * This setting can be overwritten by the customer if the save card checkbox is visible using setAllowVaultCardOverride(boolean)
-         * 
+         *
          * If the save card CheckBox is shown, and default vault value is true: the save card CheckBox will appear pre-checked.
          * If the save card CheckBox is shown, and default vault value is false: the save card Checkbox will appear un-checked.
          * If the save card CheckBox is not shown, and default vault value is true: card always vaults.
          * If the save card CheckBox is not shown, and default vault value is false: card never vaults.
-         * 
+         *
          * This value is true by default.
          */
         vaultCardDefaultValue?: boolean;

@@ -220,8 +220,8 @@ namespace CdvPurchase {
         accountPwdChangeDate?: string;
 
         /**
-         *
          * Optional. The 2-digit value indicating when the shipping address used for transaction was first used.
+         *
          * Possible values:
          * 01 This transaction
          * 02 Less than 30 days

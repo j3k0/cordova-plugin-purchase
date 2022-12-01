@@ -150,6 +150,7 @@ namespace CdvPurchase {
             };
 
             export interface BridgeCallbacks {
+
                 error: (code: ErrorCode, message: String, options?: { productId: string, quantity?: number }) => void;
 
                 /** Called when the bridge is ready (after setup) */
