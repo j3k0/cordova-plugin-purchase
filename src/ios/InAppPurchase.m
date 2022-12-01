@@ -473,8 +473,11 @@ static NSString *toTimestamp(NSDate *date) {
                 // #endif
                 productId = transaction.payment.productIdentifier;
                 transactionDate = toTimestamp(transaction.transactionDate);
-                if (transaction.payment.paymentDiscount != nil) {
-                    discountId = transaction.payment.paymentDiscount.identifier;
+
+                if (@available(iOS 12.2, *)) {
+                    if (transaction.payment.paymentDiscount != nil) {
+                        discountId = transaction.payment.paymentDiscount.identifier;
+                    }
                 }
                 if(transaction.originalTransaction != nil){
                     originalTransactionIdentifier = transaction.originalTransaction.transactionIdentifier;
