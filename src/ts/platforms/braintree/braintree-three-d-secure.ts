@@ -16,7 +16,7 @@ namespace CdvPurchase {
         /**
          * A nonce to be verified by ThreeDSecure.
          */
-        nonce: string;
+        nonce?: string;
 
         /** The email used for verification. Optional. */
         email?: string;
@@ -295,7 +295,7 @@ namespace CdvPurchase {
         /**
          * Optional. Additional cardholder account information.
          */
-        accountID: string;
+        accountID?: string;
 
         /**
          * Optional. The IP address of the consumer. IPv4 and IPv6 are supported.
@@ -353,7 +353,7 @@ namespace CdvPurchase {
         /**
          * Optional. The work phone number used for verification. Only numbers; remove dashes, parenthesis and other characters.
          */
-        workPhoneNumber: string;
+        workPhoneNumber?: string;
       }
 
       export enum Version {

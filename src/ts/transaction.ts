@@ -11,6 +11,12 @@ namespace CdvPurchase
         }
     }
 
+    /**
+     * Transaction as reported by the device
+     *
+     * @see {@link Receipt}
+     * @see {@link store.localTransactions}
+     */
     export class Transaction {
 
         /** @internal */

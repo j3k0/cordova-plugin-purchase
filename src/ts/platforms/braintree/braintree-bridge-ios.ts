@@ -43,7 +43,7 @@ namespace CdvPurchase {
               }
               this.clientTokenProvider((clientToken) => {
                 if (typeof clientToken === 'string')
-                  window.cordova.exec(onSuccess, onError, "BraintreePlugin", "launchDropInWithClientToken", [clientToken]);
+                  window.cordova.exec(onSuccess, onError, "BraintreePlugin", "launchDropIn", [clientToken, dropInRequest]);
                 else // failed to get token
                   resolve(clientToken);
               });

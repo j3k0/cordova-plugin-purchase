@@ -27,30 +27,48 @@ namespace CdvPurchase {
         /**
          * - true shows save card CheckBox to allow user to choose whether or not to vault their card.
          * - false does not show Save Card CheckBox.
-         * 
+         *
          * Default value is false.
          */
         allowVaultCardOverride?: boolean;
 
         /**
          * Sets the Cardholder Name field status, which is how it will behave in CardForm.
-         * 
+         *
          * Default is DISABLED.
          */
         cardholderNameStatus?: CardFormFieldStatus;
 
         /**
-         * true to allow customers to manage their vaulted payment methods. Defaults to false.
+         * true to allow customers to manage their vaulted payment methods.
+         *
+         * Defaults to false.
          */
         vaultManager?: boolean;
 
         /**
-         * If set to true, disables Card in Drop-in. Default value is false.
+         * Whether or not to vault the card upon tokenization.
+         *
+         * Can only be applied when initializing the Braintree client with a client token
+         * that was generated with a customer ID.
+         *
+         * When set to `false` with `allowVaultCardOverride` set to `false`, then cards will not be vaulted.
+         *
+         * Defaults to true
          */
-        disableCard?: boolean;
+        vaultCard?: boolean;
 
         /**
-         * true to mask the card number when the field is not focused. See com.braintreepayments.cardform.view.CardEditText for more details.
+         * If set to true, disables Card in Drop-in. Default value is false.
+         */
+        cardDisabled?: boolean;
+
+        /**
+         * True to mask the card number when the field is not focused.
+         *
+         * See com.braintreepayments.cardform.view.CardEditText for more details.
+         *
+         * Android only.
          */
         maskCardNumber?: boolean;
 
@@ -58,6 +76,25 @@ namespace CdvPurchase {
          * true to mask the security code during input. Defaults to false.
          */
         maskSecurityCode?: boolean;
+
+        // cf BTDropInRequest.h
+        // payPalRequest: PayPalRequest;
+        // venmoRequest: VenmoRequest;
+
+        /**
+         * Use this parameter to disable Apple Pay.
+         *
+         * Otherwise if Apple Pay is correctly configured, Apple Pay will appear
+         * as a selection in the Payment Method options.
+         */
+        applePayDisabled?: boolean;
+
+        /**
+         * Set to true to hide the PayPal option even if enabled for your account.
+         *
+         * Defaults to false. Set to true to hide the PayPal option even if enabled for your account.
+         */
+        paypalDisabled?: boolean;
       }
 
       /** How a field will behave in CardForm. */
