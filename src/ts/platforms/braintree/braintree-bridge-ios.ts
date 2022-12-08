@@ -9,12 +9,65 @@ namespace CdvPurchase {
 
       export namespace IosBridge {
 
+        interface CdvPurchaseBraintreeApplePay {
+          installed?: boolean;
+        }
+
+        export interface BinData {
+          prepaid: string;
+          healthcare: string;
+          debit: string;
+          durbinRegulated: string;
+          commercial: string;
+          payroll: string;
+          issuingBank: string;
+          countryOfIssuance: string;
+          productID: string;
+        }
+
+        export interface ApplePayPaymentResult {
+          applePayCardNonce: {
+            nonce: string;
+            type: string;
+            binData?: BinData;
+          }
+          payment: ApplePay.Payment;
+        }
+
+        /**
+         * Options for enabling Apple Pay payments.
+         */
+        export interface ApplePayOptions {
+
+          /**
+           * Your company name, required to prepare the payment request.
+           *
+           * If you are setting `paymentSummaryItems` manually in `preparePaymentRequest`, this field will
+           * not be used.
+           */
+          companyName?: string;
+
+          /**
+           * When the user selects Apple Pay as a payment method, the plugin will initialize a payment request
+           * client side using the PassKit SDK.
+           *
+           * You can customize the ApplePay payment request by implementing the `preparePaymentRequest` function.
+           *
+           * This let's you prefill some information you have on database about the user, limit payment methods,
+           * enable coupon codes, etc.
+           *
+           * @see {@link https://developer.apple.com/documentation/passkit/pkpaymentrequest/}
+           */
+          preparePaymentRequest?: () => ApplePay.PaymentRequest;
+        }
+
         export class Bridge {
 
           log: Logger;
           clientTokenProvider: ClientTokenProvider;
+          applePayOptions?: ApplePayOptions;
 
-          constructor(log: Logger, clientTokenProvider: ClientTokenProvider) {
+          constructor(log: Logger, clientTokenProvider: ClientTokenProvider, applePayOptions?: ApplePayOptions) {
             this.log = log.child("IosBridge");
             this.clientTokenProvider = clientTokenProvider;
           }
@@ -25,11 +78,43 @@ namespace CdvPurchase {
             setTimeout(() => callback(undefined), 0);
           }
 
-          launchDropIn(dropInRequest: DropIn.Request): Promise<DropIn.Result | IError> {
+          async continueDropInForApplePay(paymentRequest: PaymentRequest, DropInRequest: DropIn.Request, dropInResult: DropIn.Result): Promise<DropIn.Result | IError> {
+            const request: ApplePay.PaymentRequest = this.applePayOptions?.preparePaymentRequest?.() || {
+              merchantCapabilities: [ApplePay.MerchantCapability.ThreeDS],
+            };
+            if (!request.paymentSummaryItems) {
+              request.paymentSummaryItems = [{
+                label: this.applePayOptions?.companyName ?? 'Total',
+                type: 'final',
+                amount: `${Math.round(paymentRequest.amountMicros / 10000) / 100}`,
+              }];
+            }
+            const result = await this.requestApplePayPayment(request);
+            this.log.info('Result from Apple Pay: ' + JSON.stringify(result));
+            if ('isError' in result) return result;
+            return {
+              paymentMethodNonce: {
+                isDefault: false,
+                nonce: result.applePayCardNonce.nonce,
+                type: result.applePayCardNonce.type,
+              },
+              paymentMethodType: dropInResult.paymentMethodType,
+              deviceData: dropInResult.deviceData,
+              paymentDescription: dropInResult.paymentDescription,
+            }
+          }
+
+          launchDropIn(paymentRequest: PaymentRequest, dropInRequest: DropIn.Request): Promise<DropIn.Result | IError> {
             return new Promise(resolve => {
               const onSuccess = (result: DropIn.Result) => {
                 this.log.info("dropInSuccess: " + JSON.stringify(result));
-                resolve(result);
+                if (result.paymentMethodType === DropIn.PaymentMethod.APPLE_PAY) {
+                  this.log.info("it's an ApplePay request, we have to process it.");
+                  this.continueDropInForApplePay(paymentRequest, dropInRequest, result).then(resolve);
+                }
+                else {
+                  resolve(result);
+                }
               }
               const onError = (errorString: string) => {
                 this.log.info("dropInFailure: " + errorString);
@@ -52,9 +137,37 @@ namespace CdvPurchase {
 
           isApplePaySupported(): Promise<boolean> {
             return new Promise(resolve => {
-              window.cordova.exec((result: boolean) => {
-                resolve(result);
-              }, null, "BraintreePlugin", "isApplePaySupported", []);
+              try {
+                window.cordova.exec((result: boolean) => {
+                  resolve(result);
+                }, () => {
+                  this.log.info('BraintreeApplePayPlugin is not available.');
+                  resolve(false);
+                }, "BraintreeApplePayPlugin", "isApplePaySupported", []);
+              }
+              catch (err) {
+                this.log.info('BraintreeApplePayPlugin is not installed.');
+                resolve(false);
+              }
+            });
+          }
+
+          requestApplePayPayment(request: ApplePay.PaymentRequest): Promise<ApplePayPaymentResult | IError> {
+            return new Promise(resolve => {
+              const braintreeApplePay = (window as any).CdvPurchaseBraintreeApplePay as (CdvPurchaseBraintreeApplePay | undefined);
+              if (!braintreeApplePay?.installed) {
+                return resolve(storeError(ErrorCode.SETUP, 'cordova-plugin-purchase-braintree-applepay does not appear to be installed.'));
+              }
+              else {
+                const success = (result: ApplePayPaymentResult) => {
+                  resolve(result);
+                };
+                const failure = (err?: string) => {
+                  const message = err ?? 'payment request failed';
+                  resolve(storeError(ErrorCode.PURCHASE, 'Braintree+ApplePay ERROR: ' + message));
+                };
+                window.cordova.exec(success, failure, 'CdvPurchaseBraintreeApplePay', 'presentDropInPaymentUI', [request]);
+              }
             });
           }
 

@@ -12,18 +12,9 @@ namespace CdvPurchase {
             /** Function used to retrieve a Client Token (used if no tokenizationKey are provided). */
             clientTokenProvider?: ClientTokenProvider;
 
-            // /** Provides a nonce for a payment request. */
-            // nonceProvider: NonceProvider;
-
-            /*
-             * Create a transaction server side.
-             *
-             * @see https://developer.paypal.com/braintree/docs/start/hello-server
-             *
-             * serverCheckout?: ServerCheckout;
-             */
+            /** Options for making Apple Pay payment requests */
+            applePay?: IosBridge.ApplePayOptions;
         }
-        // export type ServerCheckout = (dropInRequest: DropIn.Request, dropInResult: DropIn.Result, callback: Callback<TransactionResultObject>) => void;
 
         export type ClientTokenProvider = (callback: Callback<string | IError>) => void;
 
@@ -227,7 +218,7 @@ namespace CdvPurchase {
                                 this.options.clientTokenProvider(callback);
                             else
                                 callback(storeError(ErrorCode.CLIENT_INVALID, 'Braintree iOS Bridge requires a clientTokenProvider or tokenizationKey'));
-                        });
+                        }, this.options.applePay);
                         this.iosBridge.initialize(this.context, resolve);
                     }
                     else if (AndroidBridge.Bridge.isSupported() && !this.androidBridge) {
@@ -286,9 +277,9 @@ namespace CdvPurchase {
             //     });
             // }
 
-            private async launchDropIn(dropInRequest: DropIn.Request): Promise<DropIn.Result | IError> {
+            private async launchDropIn(paymentRequest: PaymentRequest, dropInRequest: DropIn.Request): Promise<DropIn.Result | IError> {
                 if (this.androidBridge) return this.androidBridge.launchDropIn(dropInRequest);
-                if (this.iosBridge) return this.iosBridge.launchDropIn(dropInRequest);
+                if (this.iosBridge) return this.iosBridge.launchDropIn(paymentRequest, dropInRequest);
                 return storeError(ErrorCode.PURCHASE, 'Braintree is not available');
             }
 
@@ -298,7 +289,7 @@ namespace CdvPurchase {
                 let dropInResult: DropIn.Result;
                 if (additionalData?.braintree?.dropInRequest) {
                     // User provided a full DropInRequest, just passing it through
-                    const response = await this.launchDropIn(additionalData.braintree.dropInRequest);
+                    const response = await this.launchDropIn(paymentRequest, additionalData.braintree.dropInRequest);
                     if (!dropInResponseIsOK(response)) return dropInResponseError(this.log, response);
                     dropInResult = response;
                 }
@@ -342,7 +333,7 @@ namespace CdvPurchase {
                 */
                 else {
                     // No other payment method as the moment...
-                    const response = await this.launchDropIn({});
+                    const response = await this.launchDropIn(paymentRequest, {});
                     if (!dropInResponseIsOK(response)) return dropInResponseError(this.log, response);
                     dropInResult = response;
                 }
