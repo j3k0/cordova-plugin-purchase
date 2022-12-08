@@ -1,5 +1,9 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.0.0
+
+- [Migration guide](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO:-Migrate-to-v13)
+
 ## 12.0.0
 
 ### Upgrade to Google Play Billing library v5.0

@@ -23,12 +23,10 @@
     NSMutableDictionary *products;
     NSMutableDictionary *retainer;
     NSMutableDictionary *unfinishedTransactions;
-    NSMutableDictionary *currentDownloads;
     NSMutableArray *pendingTransactionUpdates;
 }
 @property (nonatomic,retain) NSMutableDictionary *products;
 @property (nonatomic,retain) NSMutableDictionary *retainer;
-@property (nonatomic, retain) NSMutableDictionary *currentDownloads;
 @property (nonatomic, retain) NSMutableDictionary *unfinishedTransactions;
 @property (nonatomic, retain) NSMutableArray *pendingTransactionUpdates;
 
@@ -39,15 +37,11 @@
 - (void) purchase: (CDVInvokedUrlCommand*)command;
 - (void) appStoreReceipt: (CDVInvokedUrlCommand*)command;
 - (void) appStoreRefreshReceipt: (CDVInvokedUrlCommand*)command;
-
-- (void) pause: (CDVInvokedUrlCommand*)command;
-- (void) resume: (CDVInvokedUrlCommand*)command;
-- (void) cancel: (CDVInvokedUrlCommand*)command;
+- (void) processPendingTransactions: (CDVInvokedUrlCommand*)command;
 
 - (void) paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions;
 - (void) paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error;
 - (void) paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue;
-- (void) paymentQueue:(SKPaymentQueue *)queue updatedDownloads:(NSArray *)downloads;
 
 - (void) debug: (CDVInvokedUrlCommand*)command;
 - (void) autoFinish: (CDVInvokedUrlCommand*)command;

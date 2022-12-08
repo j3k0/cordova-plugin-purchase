@@ -11,3 +11,11 @@ npm-debug.log
 /.idea
 /demo
 /git_modules
+/src/tmpjs/
+/lib
+/old
+/.vscode/
+/api-dev/
+/src/ios/CDVPurchase.h
+/src/ios/CDVPurchase.m
+/src/ios/CDVPurchase.swift

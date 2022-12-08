@@ -26,7 +26,7 @@ SOFTWARE.
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     id="cordova-plugin-purchase"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    version="11.0.0">
+    version="13.0.0">
 
     <name>Purchase</name>
 	<description>Cordova Purchase plugin for iOS (AppStore), Android (PlayStore) and Windows</description>
@@ -42,7 +42,8 @@ SOFTWARE.
 
     <!-- ios -->
     <platform name="ios">
-        <js-module src="www/store-ios.js" name="InAppPurchase">
+        <js-module src="www/store.js" name="CdvPurchase">
+            <clobbers target="CdvPurchase" />
             <clobbers target="store" />
         </js-module>
 
@@ -71,7 +72,8 @@ SOFTWARE.
 
     <!-- osx -->
     <platform name="osx">
-        <js-module src="www/store-ios.js" name="InAppPurchase">
+        <js-module src="www/store.js" name="CdvPurchase">
+            <clobbers target="CdvPurchase" />
             <clobbers target="store" />
         </js-module>
         <js-module src="www/cordova-osx-polyfill.js" name="CordovaOSXPolyfill">
@@ -100,8 +102,9 @@ SOFTWARE.
 
     <!-- android -->
     <platform name="android">
-      <js-module src="www/store-android.js" name="InAppBillingPlugin">
+      <js-module src="www/store.js" name="CdvPurchase">
         <clobbers target="store" />
+        <clobbers target="CdvPurchase" />
       </js-module>
       <config-file target="AndroidManifest.xml" parent="/*">
         <uses-permission android:name="com.android.vending.BILLING" />
@@ -124,10 +127,17 @@ SOFTWARE.
       <source-file src="src/android/cc/fovea/Constants.java" target-dir="src/cc/fovea" />
     </platform>
 
+    <platform name="browser">
+      <js-module src="www/store.js" name="CdvPurchase">
+        <clobbers target="CdvPurchase" />
+      </js-module>
+    </platform>
+
     <!-- windows -->
 	<platform name="windows">
-		<js-module src="www/store-windows.js" name="InAppPurchase">
-			<clobbers target="store" />
+		<js-module src="www/store.js" name="CdvPurchase">
+            <clobbers target="CdvPurchase" />
+            <clobbers target="store" />
 		</js-module>
 		<js-module src="src/windows/InAppPurchaseProxy.js" name="InAppPurchaseProxy">
 			<merges target="" />

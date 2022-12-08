@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-purchase",
-  "version": "11.0.0",
+  "version": "13.0.0",
   "description": "Cordova Purchase plugin for iOS, Android, Windows (AppStore, Play, UWP)",
   "cordova": {
     "id": "cordova-plugin-purchase",
@@ -26,11 +26,13 @@
     "ios",
     "android",
     "play",
-    "appstore"
+    "appstore",
+    "iaptic",
+    "fovea"
   ],
   "scripts": {
-    "test": "make test-js",
-    "coverage": "make test-js-coverage"
+    "typedoc": "typedoc --hideGenerator --excludePrivate --excludeProtected --excludeInternal --disableSources --readme src/ts/README.md --hideBreadcrumbs true --hideInPageTOC false --out api --pretty --plugin typedoc-plugin-markdown --theme markdown --basePath src/ts src/ts/store.ts",
+    "typedoc-dev": "typedoc --hideGenerator --readme src/ts/README.md --out api-dev --pretty --plugin typedoc-plugin-markdown --theme markdown --basePath src/ts src/ts/store.ts"
   },
   "author": "Jean-Christophe Hoelt <hoelt@fovea.cc>",
   "license": "MIT",
@@ -41,7 +43,6 @@
   "devDependencies": {
     "acorn": "^6.3.0",
     "babel-eslint": "^10.0.3",
-    "coveralls": "^3.0.6",
     "eslint": "^5.16.0",
     "eslint-config-defaults": "^9.0.0",
     "eslint-plugin-import": "^2.18.2",
@@ -50,7 +51,12 @@
     "jshint": "^2.10.2",
     "mocha": "^6.2.0",
     "preprocessor": "^1.4.0",
+    "typedoc": "^0.23.15",
+    "typedoc-github-wiki-theme": "^1.0.1",
+    "typedoc-plugin-markdown": "^3.13.6",
+    "typescript": "^4.7.4",
     "uglify-js": "^3.6.0"
   },
-  "types": "./src/js/index.d.ts"
+  "main": "./www/store.js",
+  "types": "./www/store.d.ts"
 }
