@@ -3,13 +3,13 @@ set -e
 VP="$(cat package.json | grep '"version"' | head -1 | cut -d\" -f4)"
 VPL="$(cat package-lock.json | grep '"version"' | head -1 | cut -d\" -f4)"
 VPP="$(cat plugin.xml | grep -E '^[ ]+version="' | head -1 | cut -d \" -f2)"
-VJ="$(cat src/js/store.js | grep -E "^store.version = '" | head -1 | cut -d \' -f2)"
+VJ="$(cat src/ts/store.ts | grep -E "PLUGIN_VERSION = '" | head -1 | cut -d \' -f2)"
 
 echo
 echo "    package-lock.json: $VP"
 echo "    package.json:      $VPL"
 echo "    plugin.xml:        $VPP"
-echo "    src/js/store.js:   $VJ"
+echo "    src/ts/store.ts:   $VJ"
 echo
 
 if [ "x$VP" = "x$VPL" ] && [ "x$VP" = "x$VPP" ] && [ "x$VP" = "x$VJ" ]; then
