@@ -6,10 +6,19 @@
 
 ### Properties
 
+- [applePay](CdvPurchase.Braintree.AdapterOptions.md#applepay)
 - [clientTokenProvider](CdvPurchase.Braintree.AdapterOptions.md#clienttokenprovider)
 - [tokenizationKey](CdvPurchase.Braintree.AdapterOptions.md#tokenizationkey)
 
 ## Properties
+
+### applePay
+
+• `Optional` **applePay**: [`ApplePayOptions`](CdvPurchase.Braintree.IosBridge.ApplePayOptions.md)
+
+Options for making Apple Pay payment requests
+
+___
 
 ### clientTokenProvider
 

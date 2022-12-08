@@ -37,7 +37,7 @@ ___
 
 ### transactionReceipt
 
-• `Optional` **transactionReceipt**: `string`
+• `Optional` **transactionReceipt**: `undefined`
 
 Apple ios 6 transaction receipt.
 

@@ -1963,6 +1963,90 @@ var CdvPurchase;
         Internal.VerifiedReceipts = VerifiedReceipts;
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    /**
+     * Define types for ApplePay
+     *
+     * At the moment Apple Pay is only supported as an extension for Braintree.
+     */
+    let ApplePay;
+    (function (ApplePay) {
+        /** The fields that describe a contact. */
+        let ContactField;
+        (function (ContactField) {
+            ContactField["Name"] = "name";
+            ContactField["EmailAddress"] = "emailAddress";
+            ContactField["PhoneNumber"] = "phoneNumber";
+            ContactField["PostalAddress"] = "postalAddress";
+            ContactField["PhoneticName"] = "phoneticName";
+        })(ContactField = ApplePay.ContactField || (ApplePay.ContactField = {}));
+        /** A type that represents a payment method. */
+        let PaymentNetwork;
+        (function (PaymentNetwork) {
+            /** An American Express payment card. */
+            PaymentNetwork["Amex"] = "Amex";
+            /** A QR code used for payment. */
+            PaymentNetwork["Barcode"] = "Barcode";
+            /** A Cartes Bancaires payment card. */
+            PaymentNetwork["CartesBancaires"] = "CartesBancaires";
+            /** A China Union Pay payment card. */
+            PaymentNetwork["ChinaUnionPay"] = "ChinaUnionPay";
+            /** The Dankort payment card. */
+            PaymentNetwork["Dankort"] = "Dankort";
+            /** A Discover payment card. */
+            PaymentNetwork["Discover"] = "Discover";
+            /** The electronic funds transfer at point of sale (EFTPOS) payment method. */
+            PaymentNetwork["Eftpos"] = "Eftpos";
+            /** An Electron debit card. */
+            PaymentNetwork["Electron"] = "Electron";
+            /** The Elo payment card. */
+            PaymentNetwork["Elo"] = "Elo";
+            /** A Girocard payment method. */
+            PaymentNetwork["Girocard"] = "Girocard";
+            /** An iD payment card. */
+            PaymentNetwork["IDCredit"] = "IDCredit";
+            /** The Interac payment method. */
+            PaymentNetwork["Interac"] = "Interac";
+            /** A JCB payment card. */
+            PaymentNetwork["JCB"] = "JCB";
+            /** A mada payment card. */
+            PaymentNetwork["Mada"] = "Mada";
+            /** A Maestro payment card. */
+            PaymentNetwork["Maestro"] = "Maestro";
+            /** A MasterCard payment card. */
+            PaymentNetwork["MasterCard"] = "MasterCard";
+            /** A Mir payment card. */
+            PaymentNetwork["Mir"] = "Mir";
+            /** A Nanaco payment card. */
+            PaymentNetwork["Nanaco"] = "Nanaco";
+            /** Store credit and debit cards. */
+            PaymentNetwork["PrivateLabel"] = "PrivateLabel";
+            /** A QUICPay payment card. */
+            PaymentNetwork["QuicPay"] = "QuicPay";
+            /** A Suica payment card. */
+            PaymentNetwork["Suica"] = "Suica";
+            /** A Visa payment card. */
+            PaymentNetwork["Visa"] = "Visa";
+            /** A Visa V Pay payment card. */
+            PaymentNetwork["VPay"] = "VPay";
+            /** A WAON payment card. */
+            PaymentNetwork["Waon"] = "Waon";
+        })(PaymentNetwork = ApplePay.PaymentNetwork || (ApplePay.PaymentNetwork = {}));
+        /** Capabilities for processing payment. */
+        let MerchantCapability;
+        (function (MerchantCapability) {
+            /** Support for the 3-D Secure protocol. */
+            MerchantCapability["ThreeDS"] = "3DS";
+            /** Support for the EMV protocol. */
+            MerchantCapability["EMV"] = "EMV";
+            /** Support for credit cards. */
+            MerchantCapability["Credit"] = "Credit";
+            /** Support for debit cards. */
+            MerchantCapability["Debit"] = "Debit";
+        })(MerchantCapability = ApplePay.MerchantCapability || (ApplePay.MerchantCapability = {}));
+    })(ApplePay = CdvPurchase.ApplePay || (CdvPurchase.ApplePay = {}));
+})(CdvPurchase || (CdvPurchase = {}));
 /// <reference path="../../types.ts" />
 /// <reference path="../../product.ts" />
 /// <reference path="../../receipt.ts" />
@@ -3014,7 +3098,7 @@ var CdvPurchase;
                                 this.options.clientTokenProvider(callback);
                             else
                                 callback(CdvPurchase.storeError(CdvPurchase.ErrorCode.CLIENT_INVALID, 'Braintree iOS Bridge requires a clientTokenProvider or tokenizationKey'));
-                        });
+                        }, this.options.applePay);
                         this.iosBridge.initialize(this.context, resolve);
                     }
                     else if (Braintree.AndroidBridge.Bridge.isSupported() && !this.androidBridge) {
@@ -3066,11 +3150,11 @@ var CdvPurchase;
             //         }
             //     });
             // }
-            async launchDropIn(dropInRequest) {
+            async launchDropIn(paymentRequest, dropInRequest) {
                 if (this.androidBridge)
                     return this.androidBridge.launchDropIn(dropInRequest);
                 if (this.iosBridge)
-                    return this.iosBridge.launchDropIn(dropInRequest);
+                    return this.iosBridge.launchDropIn(paymentRequest, dropInRequest);
                 return CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Braintree is not available');
             }
             async requestPayment(paymentRequest, additionalData) {
@@ -3079,7 +3163,7 @@ var CdvPurchase;
                 let dropInResult;
                 if ((_a = additionalData === null || additionalData === void 0 ? void 0 : additionalData.braintree) === null || _a === void 0 ? void 0 : _a.dropInRequest) {
                     // User provided a full DropInRequest, just passing it through
-                    const response = await this.launchDropIn(additionalData.braintree.dropInRequest);
+                    const response = await this.launchDropIn(paymentRequest, additionalData.braintree.dropInRequest);
                     if (!dropInResponseIsOK(response))
                         return dropInResponseError(this.log, response);
                     dropInResult = response;
@@ -3124,7 +3208,7 @@ var CdvPurchase;
                 */
                 else {
                     // No other payment method as the moment...
-                    const response = await this.launchDropIn({});
+                    const response = await this.launchDropIn(paymentRequest, {});
                     if (!dropInResponseIsOK(response))
                         return dropInResponseError(this.log, response);
                     dropInResult = response;
@@ -3422,7 +3506,7 @@ var CdvPurchase;
         let IosBridge;
         (function (IosBridge) {
             class Bridge {
-                constructor(log, clientTokenProvider) {
+                constructor(log, clientTokenProvider, applePayOptions) {
                     this.log = log.child("IosBridge");
                     this.clientTokenProvider = clientTokenProvider;
                 }
@@ -3431,11 +3515,44 @@ var CdvPurchase;
                     window.cordova.exec(message => this.log.debug('(Native) ' + message), null, "BraintreePlugin", "setLogger", []);
                     setTimeout(() => callback(undefined), 0);
                 }
-                launchDropIn(dropInRequest) {
+                async continueDropInForApplePay(paymentRequest, DropInRequest, dropInResult) {
+                    var _a, _b, _c, _d;
+                    const request = ((_b = (_a = this.applePayOptions) === null || _a === void 0 ? void 0 : _a.preparePaymentRequest) === null || _b === void 0 ? void 0 : _b.call(_a)) || {
+                        merchantCapabilities: [CdvPurchase.ApplePay.MerchantCapability.ThreeDS],
+                    };
+                    if (!request.paymentSummaryItems) {
+                        request.paymentSummaryItems = [{
+                                label: (_d = (_c = this.applePayOptions) === null || _c === void 0 ? void 0 : _c.companyName) !== null && _d !== void 0 ? _d : 'Total',
+                                type: 'final',
+                                amount: `${Math.round(paymentRequest.amountMicros / 10000) / 100}`,
+                            }];
+                    }
+                    const result = await this.requestApplePayPayment(request);
+                    this.log.info('Result from Apple Pay: ' + JSON.stringify(result));
+                    if ('isError' in result)
+                        return result;
+                    return {
+                        paymentMethodNonce: {
+                            isDefault: false,
+                            nonce: result.applePayCardNonce.nonce,
+                            type: result.applePayCardNonce.type,
+                        },
+                        paymentMethodType: dropInResult.paymentMethodType,
+                        deviceData: dropInResult.deviceData,
+                        paymentDescription: dropInResult.paymentDescription,
+                    };
+                }
+                launchDropIn(paymentRequest, dropInRequest) {
                     return new Promise(resolve => {
                         const onSuccess = (result) => {
                             this.log.info("dropInSuccess: " + JSON.stringify(result));
-                            resolve(result);
+                            if (result.paymentMethodType === Braintree.DropIn.PaymentMethod.APPLE_PAY) {
+                                this.log.info("it's an ApplePay request, we have to process it.");
+                                this.continueDropInForApplePay(paymentRequest, dropInRequest, result).then(resolve);
+                            }
+                            else {
+                                resolve(result);
+                            }
                         };
                         const onError = (errorString) => {
                             this.log.info("dropInFailure: " + errorString);
@@ -3457,9 +3574,36 @@ var CdvPurchase;
                 }
                 isApplePaySupported() {
                     return new Promise(resolve => {
-                        window.cordova.exec((result) => {
-                            resolve(result);
-                        }, null, "BraintreePlugin", "isApplePaySupported", []);
+                        try {
+                            window.cordova.exec((result) => {
+                                resolve(result);
+                            }, () => {
+                                this.log.info('BraintreeApplePayPlugin is not available.');
+                                resolve(false);
+                            }, "BraintreeApplePayPlugin", "isApplePaySupported", []);
+                        }
+                        catch (err) {
+                            this.log.info('BraintreeApplePayPlugin is not installed.');
+                            resolve(false);
+                        }
+                    });
+                }
+                requestApplePayPayment(request) {
+                    return new Promise(resolve => {
+                        const braintreeApplePay = window.CdvPurchaseBraintreeApplePay;
+                        if (!(braintreeApplePay === null || braintreeApplePay === void 0 ? void 0 : braintreeApplePay.installed)) {
+                            return resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, 'cordova-plugin-purchase-braintree-applepay does not appear to be installed.'));
+                        }
+                        else {
+                            const success = (result) => {
+                                resolve(result);
+                            };
+                            const failure = (err) => {
+                                const message = err !== null && err !== void 0 ? err : 'payment request failed';
+                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Braintree+ApplePay ERROR: ' + message));
+                            };
+                            window.cordova.exec(success, failure, 'CdvPurchaseBraintreeApplePay', 'presentDropInPaymentUI', [request]);
+                        }
                     });
                 }
                 static isSupported() {

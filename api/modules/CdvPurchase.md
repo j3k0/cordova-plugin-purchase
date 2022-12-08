@@ -19,6 +19,7 @@ const {store, ProductType, Platform, LogLevel} = CdvPurchase;
 ### Namespaces
 
 - [AppleAppStore](CdvPurchase.AppleAppStore.md)
+- [ApplePay](CdvPurchase.ApplePay.md)
 - [Braintree](CdvPurchase.Braintree.md)
 - [GooglePlay](CdvPurchase.GooglePlay.md)
 - [Test](CdvPurchase.Test.md)
