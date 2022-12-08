@@ -35,28 +35,13 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 | [receipt validations](https://www.iaptic.com) | ✅ | ✅ | ✅ |
 | custom payments |   |   | ✅ |
 
-### Supported platforms
-
- - **iOS** version 6.0 or higher.
-   - with Braintree
- - **Android** version 2.2 (API level 8) or higher
-   - with Google Play client version 3.9.16 or higher
-   - with Braintree
-<!--
- - **Windows** Store/Phone 8.1 or higher
- - **Windows 10 Mobile**
- - **macOS** version 10
- - **Xbox One**
-   - (and any platform supporting Microsoft's UWP)
--->
-
 
 ## Installation
 
 ### Install the plugin (Cordova)
 
 ```sh
-cordova plugin add "https://github.com/j3k0/cordova-plugin-purchase.git#v13"
+cordova plugin add "cordova-plugin-purchase"
 ```
 
 
