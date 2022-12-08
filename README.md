@@ -27,7 +27,7 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 ### Features
 
 |  | AppStore (iOS / macOS) | Google Play | Braintree (iOS / Android) |
-|--|--|--|--|--|--|
+|--|--|--|--|
 | consumables | ✅ | ✅ | ✅ |
 | non consumables | ✅ | ✅ |  |
 | subscriptions | ✅ | ✅ |  |
