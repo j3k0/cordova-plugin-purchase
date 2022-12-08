@@ -26,14 +26,14 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 
 ### Features
 
-|  | AppStore (iOS / macOS) | Google Play | Windows 8 | Windows 10 / UWP | Braintree (iOS / Android) |
+|  | AppStore (iOS / macOS) | Google Play | Braintree (iOS / Android) |
 |--|--|--|--|--|--|
-| consumables |  | ✅ |  |  | ✅ |
-| non consumables |  | ✅ |  |  |  |
-| subscriptions |  | ✅ |  |  |  |
-| restore purchases |  | ✅ |  |  | ✅ |
-| [receipt validations](https://www.iaptic.com) |  | ✅ |  |  | ✅ |
-| custom payments |   |   |   |   | ✅ |
+| consumables | ✅ | ✅ | ✅ |
+| non consumables | ✅ | ✅ |  |
+| subscriptions | ✅ | ✅ |  |
+| restore purchases | ✅ | ✅ | ✅ |
+| [receipt validations](https://www.iaptic.com) | ✅ | ✅ | ✅ |
+| custom payments |   |   | ✅ |
 
 ### Supported platforms
 
