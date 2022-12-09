@@ -26,11 +26,11 @@ ___
 
 ### preparePaymentRequest
 
-• `Optional` **preparePaymentRequest**: () => [`PaymentRequest`](CdvPurchase.ApplePay.PaymentRequest.md)
+• `Optional` **preparePaymentRequest**: (`paymentRequest`: [`PaymentRequest`](CdvPurchase.PaymentRequest.md)) => [`PaymentRequest`](CdvPurchase.ApplePay.PaymentRequest.md)
 
 #### Type declaration
 
-▸ (): [`PaymentRequest`](CdvPurchase.ApplePay.PaymentRequest.md)
+▸ (`paymentRequest`): [`PaymentRequest`](CdvPurchase.ApplePay.PaymentRequest.md)
 
 When the user selects Apple Pay as a payment method, the plugin will initialize a payment request
 client side using the PassKit SDK.
@@ -43,6 +43,12 @@ enable coupon codes, etc.
 **`See`**
 
 [https://developer.apple.com/documentation/passkit/pkpaymentrequest/](https://developer.apple.com/documentation/passkit/pkpaymentrequest/)
+
+##### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `paymentRequest` | [`PaymentRequest`](CdvPurchase.PaymentRequest.md) |
 
 ##### Returns
 

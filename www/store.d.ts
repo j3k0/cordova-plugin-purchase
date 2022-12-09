@@ -3007,7 +3007,7 @@ declare namespace CdvPurchase {
                  *
                  * @see {@link https://developer.apple.com/documentation/passkit/pkpaymentrequest/}
                  */
-                preparePaymentRequest?: () => ApplePay.PaymentRequest;
+                preparePaymentRequest?: (paymentRequest: CdvPurchase.PaymentRequest) => ApplePay.PaymentRequest;
             }
             class Bridge {
                 log: Logger;

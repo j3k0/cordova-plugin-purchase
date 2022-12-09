@@ -58,7 +58,7 @@ namespace CdvPurchase {
            *
            * @see {@link https://developer.apple.com/documentation/passkit/pkpaymentrequest/}
            */
-          preparePaymentRequest?: () => ApplePay.PaymentRequest;
+          preparePaymentRequest?: (paymentRequest: CdvPurchase.PaymentRequest) => ApplePay.PaymentRequest;
         }
 
         export class Bridge {
@@ -79,7 +79,7 @@ namespace CdvPurchase {
           }
 
           async continueDropInForApplePay(paymentRequest: PaymentRequest, DropInRequest: DropIn.Request, dropInResult: DropIn.Result): Promise<DropIn.Result | IError> {
-            const request: ApplePay.PaymentRequest = this.applePayOptions?.preparePaymentRequest?.() || {
+            const request: ApplePay.PaymentRequest = this.applePayOptions?.preparePaymentRequest?.(paymentRequest) || {
               merchantCapabilities: [ApplePay.MerchantCapability.ThreeDS],
             };
             if (!request.paymentSummaryItems) {
