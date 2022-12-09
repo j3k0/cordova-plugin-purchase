@@ -3517,7 +3517,7 @@ var CdvPurchase;
                 }
                 async continueDropInForApplePay(paymentRequest, DropInRequest, dropInResult) {
                     var _a, _b, _c, _d;
-                    const request = ((_b = (_a = this.applePayOptions) === null || _a === void 0 ? void 0 : _a.preparePaymentRequest) === null || _b === void 0 ? void 0 : _b.call(_a)) || {
+                    const request = ((_b = (_a = this.applePayOptions) === null || _a === void 0 ? void 0 : _a.preparePaymentRequest) === null || _b === void 0 ? void 0 : _b.call(_a, paymentRequest)) || {
                         merchantCapabilities: [CdvPurchase.ApplePay.MerchantCapability.ThreeDS],
                     };
                     if (!request.paymentSummaryItems) {

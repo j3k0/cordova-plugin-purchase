@@ -122,17 +122,16 @@ A typical transaction includes separate summary items for the order total, shipp
 
 Apple Pay uses the last item in the paymentSummaryItems array as the grand total for the purchase shown in Listing 1. The PKPaymentAuthorizationViewController class displays this item differently than the rest of the summary items. As a result, there are additional requirements placed on both its amount and its label.
 
-    Set the grand total amount to the sum of all the other items in the array. This amount must be greater than or equal to zero.
-
-    Set the grand total label to the name of your company. This label represents the person or company receiving payment.
+- Set the grand total amount to the sum of all the other items in the array. This amount must be greater than or equal to zero.
+- Set the grand total label to the name of your company. This label represents the person or company receiving payment.
 
 Your payment processor might have additional requirements, such as a minimum or maximum payment amount.
 
 In iOS 15 and later you can create three different types of payment summary items:
 
-    Use a PaymentSummaryItem for an immediate payment.
-    Use a DeferredPaymentSummaryItem for a payment that occurs in the future, such as a pre-order.
-    Use a RecurringPaymentSummaryItem for a payment that occurs more than once, such as a subscription.
+- Use a PaymentSummaryItem for an immediate payment.
+- Use a DeferredPaymentSummaryItem for a payment that occurs in the future, such as a pre-order.
+- Use a RecurringPaymentSummaryItem for a payment that occurs more than once, such as a subscription.
 
 Note
 In versions of iOS prior to version 12.0 and watchOS prior to version 5.0, the amount of the grand total must be greater than zero.
