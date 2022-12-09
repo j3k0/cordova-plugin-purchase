@@ -386,21 +386,21 @@ namespace CdvPurchase {
                  * The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
                  *
                  */
-                restore() {
+                restore(callback?: Callback<any>) {
                     this.needRestoreNotification = true;
-                    exec('restoreCompletedTransactions', []);
+                    exec('restoreCompletedTransactions', [], callback, callback);
                 }
 
-                manageSubscriptions() {
-                    exec('manageSubscriptions', []);
+                manageSubscriptions(callback?: Callback<any>) {
+                    exec('manageSubscriptions', [], callback, callback);
                 }
 
-                manageBilling() {
-                    exec('manageBilling', []);
+                manageBilling(callback?: Callback<any>) {
+                    exec('manageBilling', [], callback, callback);
                 }
 
-                presentCodeRedemptionSheet() {
-                    exec('presentCodeRedemptionSheet', []);
+                presentCodeRedemptionSheet(callback?: Callback<any>) {
+                    exec('presentCodeRedemptionSheet', [], callback, callback);
                 }
 
                 /**

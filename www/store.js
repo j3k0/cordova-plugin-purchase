@@ -2431,6 +2431,11 @@ var CdvPurchase;
                     });
                 });
             }
+            presentCodeRedemptionSheet() {
+                return new Promise(resolve => {
+                    this.bridge.presentCodeRedemptionSheet(resolve);
+                });
+            }
         }
         AppleAppStore.Adapter = Adapter;
     })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
@@ -2612,18 +2617,18 @@ var CdvPurchase;
                  * The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
                  *
                  */
-                restore() {
+                restore(callback) {
                     this.needRestoreNotification = true;
-                    exec('restoreCompletedTransactions', []);
+                    exec('restoreCompletedTransactions', [], callback, callback);
                 }
-                manageSubscriptions() {
-                    exec('manageSubscriptions', []);
+                manageSubscriptions(callback) {
+                    exec('manageSubscriptions', [], callback, callback);
                 }
-                manageBilling() {
-                    exec('manageBilling', []);
+                manageBilling(callback) {
+                    exec('manageBilling', [], callback, callback);
                 }
-                presentCodeRedemptionSheet() {
-                    exec('presentCodeRedemptionSheet', []);
+                presentCodeRedemptionSheet(callback) {
+                    exec('presentCodeRedemptionSheet', [], callback, callback);
                 }
                 /**
                  * Retrieves localized product data, including price (as localized

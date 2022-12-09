@@ -2176,6 +2176,7 @@ declare namespace CdvPurchase {
             manageBilling(): Promise<IError | undefined>;
             checkSupport(functionality: PlatformFunctionality): boolean;
             restorePurchases(): Promise<void>;
+            presentCodeRedemptionSheet(): Promise<void>;
         }
     }
 }
@@ -2330,10 +2331,10 @@ declare namespace CdvPurchase {
                 processPendingTransactions(): void;
                 purchase(productId: string, quantity: number, applicationUsername: string | undefined, discount: string | undefined, success: () => void, error: () => void): void;
                 canMakePayments(success: () => void, error: (message: string) => void): void;
-                restore(): void;
-                manageSubscriptions(): void;
-                manageBilling(): void;
-                presentCodeRedemptionSheet(): void;
+                restore(callback?: Callback<any>): void;
+                manageSubscriptions(callback?: Callback<any>): void;
+                manageBilling(callback?: Callback<any>): void;
+                presentCodeRedemptionSheet(callback?: Callback<any>): void;
                 /**
                  * Retrieves localized product data, including price (as localized
                  * string), name, description of multiple products.

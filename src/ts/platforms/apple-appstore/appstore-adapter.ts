@@ -470,6 +470,12 @@ namespace CdvPurchase {
                     });
                 });
             }
+
+            presentCodeRedemptionSheet(): Promise<void> {
+                return new Promise(resolve => {
+                    this.bridge.presentCodeRedemptionSheet(resolve);
+                });
+            }
         }
     }
 }
