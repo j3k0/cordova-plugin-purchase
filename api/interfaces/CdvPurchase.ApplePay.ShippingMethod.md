@@ -67,7 +67,7 @@ ___
 
 ### type
 
-• **type**: [`SummaryItemType`](../modules/CdvPurchase.ApplePay.md#summaryitemtype)
+• `Optional` **type**: [`SummaryItemType`](../modules/CdvPurchase.ApplePay.md#summaryitemtype)
 
 Type that indicates whether the amount is final.
 

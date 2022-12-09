@@ -4,6 +4,10 @@
 
 Summary item in a payment request—for example, total, tax, discount, or grand total.
 
+**`See`**
+
+[https://developer.apple.com/documentation/passkit/pkpaymentrequest/1619231-paymentsummaryitems](https://developer.apple.com/documentation/passkit/pkpaymentrequest/1619231-paymentsummaryitems)
+
 ## Hierarchy
 
 - **`PaymentSummaryItem`**
@@ -45,6 +49,6 @@ ___
 
 ### type
 
-• **type**: [`SummaryItemType`](../modules/CdvPurchase.ApplePay.md#summaryitemtype)
+• `Optional` **type**: [`SummaryItemType`](../modules/CdvPurchase.ApplePay.md#summaryitemtype)
 
 Type that indicates whether the amount is final.

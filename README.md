@@ -24,6 +24,10 @@ This plugin allows **In-App Purchases** to be made from **Cordova, Ionic and Cap
 
 It lets you handle in-app purchases on many platforms with a single codebase.
 
+This is a plugin for the **Apache Cordova** framework that provides an easy and flexible way to integrate **in-app purchases** into Cordova-based mobile applications, including popular frameworks such as **Ionic and PhoneGap**.. With this plugin, you can easily add support for in-app purchases of digital content, such as subscriptions, consumables, and non-consumables, using the store-specific purchase APIs provided by the major mobile platforms. The plugin also supports requesting payments through popular payment providers such as **Braintree**, allowing you to easily accept payments from your users.
+
+The Cordova-Plugin-Purchase plugin is designed to be easy to use and integrate into your Cordova app, and it provides a consistent API across all supported platforms, so you can focus on building your app without worrying about platform-specific differences. Whether you are building a subscription-based app, a freemium app, or any other app that requires in-app purchases, the Cordova-Plugin-Purchase plugin can help you get started quickly and easily.
+
 ### Features
 
 |  | AppStore (iOS / macOS) | Google Play | Braintree (iOS / Android) |
@@ -32,8 +36,8 @@ It lets you handle in-app purchases on many platforms with a single codebase.
 | non consumables | ✅ | ✅ |  |
 | subscriptions | ✅ | ✅ |  |
 | restore purchases | ✅ | ✅ | ✅ |
-| [receipt validations](https://www.iaptic.com) | ✅ | ✅ | ✅ |
-| custom payments |   |   | ✅ |
+| payment requests |   |   | ✅ |
+| [receipt validation](https://www.iaptic.com) | ✅ | ✅ | ✅ |
 
 
 ## Installation
@@ -111,8 +115,6 @@ There's a specific page for the [version 13] release(./wiki/Version-13).
 
  - [Braintree SDK](https://github.com/j3k0/cordova-plugin-purchase-braintree)
    - Add the Braintree SDK to your application, enable Braintree on iOS and Android.
- - [Simple Non-Renewing Subscriptions](https://github.com/j3k0/cordova-non-renewing-subscription)
-   - The easiest way to integrate purchase into an app that only needs a non-renewing subscription.
 
 ### Subscriptions
 
