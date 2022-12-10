@@ -45,6 +45,7 @@ Adapter for Apple AppStore using StoreKit version 1
 - [manageBilling](CdvPurchase.AppleAppStore.Adapter.md#managebilling)
 - [manageSubscriptions](CdvPurchase.AppleAppStore.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.AppleAppStore.Adapter.md#order)
+- [presentCodeRedemptionSheet](CdvPurchase.AppleAppStore.Adapter.md#presentcoderedemptionsheet)
 - [receiptValidationBody](CdvPurchase.AppleAppStore.Adapter.md#receiptvalidationbody)
 - [requestPayment](CdvPurchase.AppleAppStore.Adapter.md#requestpayment)
 - [restorePurchases](CdvPurchase.AppleAppStore.Adapter.md#restorepurchases)
@@ -400,6 +401,16 @@ Initializes an order.
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[order](../interfaces/CdvPurchase.Adapter.md#order)
+
+___
+
+### presentCodeRedemptionSheet
+
+▸ **presentCodeRedemptionSheet**(): `Promise`<`void`\>
+
+#### Returns
+
+`Promise`<`void`\>
 
 ___
 

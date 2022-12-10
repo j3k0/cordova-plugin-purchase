@@ -3607,7 +3607,7 @@ var CdvPurchase;
                                 const message = err !== null && err !== void 0 ? err : 'payment request failed';
                                 resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Braintree+ApplePay ERROR: ' + message));
                             };
-                            window.cordova.exec(success, failure, 'CdvPurchaseBraintreeApplePay', 'presentDropInPaymentUI', [request]);
+                            window.cordova.exec(success, failure, 'BraintreeApplePayPlugin', 'presentDropInPaymentUI', [request]);
                         }
                     });
                 }

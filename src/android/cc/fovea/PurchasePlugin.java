@@ -1,5 +1,13 @@
 /**
- * Purchase Plugin.
+ * The Cordova Purchase Plugin for Google Play.
+ *
+ * The plugin has methods for:
+ *
+ * - initializing the Google Play BillingClient,
+ * - querying product details
+ * - making purchases
+ * - consuming purchases.
+ * - handling purchase updates and errors.
  *
  * @author Jean-Christophe Hoelt - Fovea.cc
  */

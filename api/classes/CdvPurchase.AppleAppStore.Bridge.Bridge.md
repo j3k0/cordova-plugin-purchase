@@ -211,7 +211,13 @@ ___
 
 ### manageBilling
 
-▸ **manageBilling**(): `void`
+▸ **manageBilling**(`callback?`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `callback?` | [`Callback`](../modules/CdvPurchase.md#callback)<`any`\> |
 
 #### Returns
 
@@ -221,7 +227,13 @@ ___
 
 ### manageSubscriptions
 
-▸ **manageSubscriptions**(): `void`
+▸ **manageSubscriptions**(`callback?`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `callback?` | [`Callback`](../modules/CdvPurchase.md#callback)<`any`\> |
 
 #### Returns
 
@@ -247,7 +259,13 @@ ___
 
 ### presentCodeRedemptionSheet
 
-▸ **presentCodeRedemptionSheet**(): `void`
+▸ **presentCodeRedemptionSheet**(`callback?`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `callback?` | [`Callback`](../modules/CdvPurchase.md#callback)<`any`\> |
 
 #### Returns
 
@@ -305,7 +323,13 @@ ___
 
 ### restore
 
-▸ **restore**(): `void`
+▸ **restore**(`callback?`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `callback?` | [`Callback`](../modules/CdvPurchase.md#callback)<`any`\> |
 
 #### Returns
 
