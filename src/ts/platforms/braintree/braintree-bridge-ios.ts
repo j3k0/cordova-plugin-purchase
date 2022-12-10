@@ -36,7 +36,7 @@ namespace CdvPurchase {
           }
 
           payment?: ApplePay.Payment;
-        };
+        }
 
         /**
          * Options for enabling Apple Pay payments.

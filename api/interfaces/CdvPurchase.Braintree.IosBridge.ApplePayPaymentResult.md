@@ -8,12 +8,13 @@
 
 - [applePayCardNonce](CdvPurchase.Braintree.IosBridge.ApplePayPaymentResult.md#applepaycardnonce)
 - [payment](CdvPurchase.Braintree.IosBridge.ApplePayPaymentResult.md#payment)
+- [userCancelled](CdvPurchase.Braintree.IosBridge.ApplePayPaymentResult.md#usercancelled)
 
 ## Properties
 
 ### applePayCardNonce
 
-• **applePayCardNonce**: `Object`
+• `Optional` **applePayCardNonce**: `Object`
 
 #### Type declaration
 
@@ -27,4 +28,12 @@ ___
 
 ### payment
 
-• **payment**: [`Payment`](CdvPurchase.ApplePay.Payment.md)
+• `Optional` **payment**: [`Payment`](CdvPurchase.ApplePay.Payment.md)
+
+___
+
+### userCancelled
+
+• `Optional` **userCancelled**: `boolean`
+
+True if user closed the window without paying.

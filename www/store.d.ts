@@ -2980,12 +2980,14 @@ declare namespace CdvPurchase {
                 productID: string;
             }
             interface ApplePayPaymentResult {
-                applePayCardNonce: {
+                /** True if user closed the window without paying. */
+                userCancelled?: boolean;
+                applePayCardNonce?: {
                     nonce: string;
                     type: string;
                     binData?: BinData;
                 };
-                payment: ApplePay.Payment;
+                payment?: ApplePay.Payment;
             }
             /**
              * Options for enabling Apple Pay payments.

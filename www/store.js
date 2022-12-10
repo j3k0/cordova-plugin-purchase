@@ -3521,7 +3521,7 @@ var CdvPurchase;
                     setTimeout(() => callback(undefined), 0);
                 }
                 async continueDropInForApplePay(paymentRequest, DropInRequest, dropInResult) {
-                    var _a, _b, _c, _d;
+                    var _a, _b, _c, _d, _e, _f, _g, _h;
                     const request = ((_b = (_a = this.applePayOptions) === null || _a === void 0 ? void 0 : _a.preparePaymentRequest) === null || _b === void 0 ? void 0 : _b.call(_a, paymentRequest)) || {
                         merchantCapabilities: [CdvPurchase.ApplePay.MerchantCapability.ThreeDS],
                     };
@@ -3536,11 +3536,14 @@ var CdvPurchase;
                     this.log.info('Result from Apple Pay: ' + JSON.stringify(result));
                     if ('isError' in result)
                         return result;
+                    if (result.userCancelled) {
+                        return CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_CANCELLED, 'User cancelled the payment request');
+                    }
                     return {
                         paymentMethodNonce: {
                             isDefault: false,
-                            nonce: result.applePayCardNonce.nonce,
-                            type: result.applePayCardNonce.type,
+                            nonce: (_f = (_e = result.applePayCardNonce) === null || _e === void 0 ? void 0 : _e.nonce) !== null && _f !== void 0 ? _f : '',
+                            type: (_h = (_g = result.applePayCardNonce) === null || _g === void 0 ? void 0 : _g.type) !== null && _h !== void 0 ? _h : '',
                         },
                         paymentMethodType: dropInResult.paymentMethodType,
                         deviceData: dropInResult.deviceData,
