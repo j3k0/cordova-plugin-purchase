@@ -166,7 +166,7 @@ namespace CdvPurchase {
                   const message = err ?? 'payment request failed';
                   resolve(storeError(ErrorCode.PURCHASE, 'Braintree+ApplePay ERROR: ' + message));
                 };
-                window.cordova.exec(success, failure, 'CdvPurchaseBraintreeApplePay', 'presentDropInPaymentUI', [request]);
+                window.cordova.exec(success, failure, 'BraintreeApplePayPlugin', 'presentDropInPaymentUI', [request]);
               }
             });
           }
