@@ -26,13 +26,17 @@ namespace CdvPurchase {
         }
 
         export interface ApplePayPaymentResult {
-          applePayCardNonce: {
+          /** True if user closed the window without paying. */
+          userCancelled?: boolean;
+
+          applePayCardNonce?: {
             nonce: string;
             type: string;
             binData?: BinData;
           }
-          payment: ApplePay.Payment;
-        }
+
+          payment?: ApplePay.Payment;
+        };
 
         /**
          * Options for enabling Apple Pay payments.
@@ -92,11 +96,14 @@ namespace CdvPurchase {
             const result = await this.requestApplePayPayment(request);
             this.log.info('Result from Apple Pay: ' + JSON.stringify(result));
             if ('isError' in result) return result;
+            if (result.userCancelled) {
+              return storeError(ErrorCode.PAYMENT_CANCELLED, 'User cancelled the payment request');
+            }
             return {
               paymentMethodNonce: {
                 isDefault: false,
-                nonce: result.applePayCardNonce.nonce,
-                type: result.applePayCardNonce.type,
+                nonce: result.applePayCardNonce?.nonce ?? '',
+                type: result.applePayCardNonce?.type ?? '',
               },
               paymentMethodType: dropInResult.paymentMethodType,
               deviceData: dropInResult.deviceData,
