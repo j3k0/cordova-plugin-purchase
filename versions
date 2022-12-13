@@ -5,9 +5,13 @@ VPL="$(cat package-lock.json | grep '"version"' | head -1 | cut -d\" -f4)"
 VPP="$(cat plugin.xml | grep -E '^[ ]+version="' | head -1 | cut -d \" -f2)"
 VJ="$(cat src/ts/store.ts | grep -E "PLUGIN_VERSION = '" | head -1 | cut -d \' -f2)"
 
+if [ "x$1" = "x--edit" ]; then
+  exec vim package.json package-lock.json plugin.xml src/ts/store.ts
+fi
+
 echo
-echo "    package-lock.json: $VP"
-echo "    package.json:      $VPL"
+echo "    package.json:      $VP"
+echo "    package-lock.json: $VPL"
 echo "    plugin.xml:        $VPP"
 echo "    src/ts/store.ts:   $VJ"
 echo
