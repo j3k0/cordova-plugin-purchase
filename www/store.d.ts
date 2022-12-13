@@ -2968,6 +2968,41 @@ declare namespace CdvPurchase {
 declare namespace CdvPurchase {
     namespace Braintree {
         namespace IosBridge {
+            /**
+             * Bridge to the cordova-plugin-purchase-braintree-applepay plugin
+             */
+            class ApplePayPlugin {
+                /**
+                 * Retrieve the plugin definition.
+                 *
+                 * Useful to check if it is installed.
+                 */
+                static get(): CdvPurchaseBraintreeApplePay | undefined;
+                /**
+                 * Initiate a payment with Apple Pay.
+                 */
+                static requestPayment(request: ApplePay.PaymentRequest): Promise<ApplePayPaymentResult | IError>;
+                /**
+                 * Returns true if the device supports Apple Pay.
+                 *
+                 * This does not necessarily mean the user has a card setup already.
+                 */
+                static isSupported(log: Logger): Promise<boolean>;
+            }
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace Braintree {
+        namespace IosBridge {
+            interface CdvPurchaseBraintreeApplePay {
+                installed?: boolean;
+                version?: string;
+            }
+            interface CdvPurchaseBraintree {
+                installed?: boolean;
+                version?: string;
+            }
             interface BinData {
                 prepaid: string;
                 healthcare: string;
@@ -3021,8 +3056,7 @@ declare namespace CdvPurchase {
                 initialize(verbosity: VerbosityProvider, callback: Callback<IError | undefined>): void;
                 continueDropInForApplePay(paymentRequest: PaymentRequest, DropInRequest: DropIn.Request, dropInResult: DropIn.Result): Promise<DropIn.Result | IError>;
                 launchDropIn(paymentRequest: PaymentRequest, dropInRequest: DropIn.Request): Promise<DropIn.Result | IError>;
-                isApplePaySupported(): Promise<boolean>;
-                requestApplePayPayment(request: ApplePay.PaymentRequest): Promise<ApplePayPaymentResult | IError>;
+                private braintreePlugin;
                 static isSupported(): boolean;
             }
         }

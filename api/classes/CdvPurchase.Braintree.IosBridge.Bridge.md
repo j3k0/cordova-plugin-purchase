@@ -18,9 +18,7 @@
 
 - [continueDropInForApplePay](CdvPurchase.Braintree.IosBridge.Bridge.md#continuedropinforapplepay)
 - [initialize](CdvPurchase.Braintree.IosBridge.Bridge.md#initialize)
-- [isApplePaySupported](CdvPurchase.Braintree.IosBridge.Bridge.md#isapplepaysupported)
 - [launchDropIn](CdvPurchase.Braintree.IosBridge.Bridge.md#launchdropin)
-- [requestApplePayPayment](CdvPurchase.Braintree.IosBridge.Bridge.md#requestapplepaypayment)
 - [isSupported](CdvPurchase.Braintree.IosBridge.Bridge.md#issupported)
 
 ## Constructors
@@ -92,16 +90,6 @@ ___
 
 ___
 
-### isApplePaySupported
-
-▸ **isApplePaySupported**(): `Promise`<`boolean`\>
-
-#### Returns
-
-`Promise`<`boolean`\>
-
-___
-
 ### launchDropIn
 
 ▸ **launchDropIn**(`paymentRequest`, `dropInRequest`): `Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
@@ -116,22 +104,6 @@ ___
 #### Returns
 
 `Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
-
-___
-
-### requestApplePayPayment
-
-▸ **requestApplePayPayment**(`request`): `Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`ApplePayPaymentResult`](../interfaces/CdvPurchase.Braintree.IosBridge.ApplePayPaymentResult.md)\>
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `request` | [`PaymentRequest`](../interfaces/CdvPurchase.ApplePay.PaymentRequest.md) |
-
-#### Returns
-
-`Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`ApplePayPaymentResult`](../interfaces/CdvPurchase.Braintree.IosBridge.ApplePayPaymentResult.md)\>
 
 ___
 

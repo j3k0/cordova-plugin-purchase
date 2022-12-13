@@ -3504,6 +3504,80 @@ var CdvPurchase;
 (function (CdvPurchase) {
     let Braintree;
     (function (Braintree) {
+        let IosBridge;
+        (function (IosBridge) {
+            /**
+             * Cordova plugin ID for the braintree-applepay plugin.
+             */
+            const PLUGIN_ID = 'BraintreeApplePayPlugin';
+            /**
+             * Bridge to the cordova-plugin-purchase-braintree-applepay plugin
+             */
+            class ApplePayPlugin {
+                /**
+                 * Retrieve the plugin definition.
+                 *
+                 * Useful to check if it is installed.
+                 */
+                static get() {
+                    return window.CdvPurchaseBraintreeApplePay;
+                }
+                /**
+                 * Initiate a payment with Apple Pay.
+                 */
+                static requestPayment(request) {
+                    return new Promise(resolve => {
+                        var _a;
+                        if (!((_a = ApplePayPlugin.get()) === null || _a === void 0 ? void 0 : _a.installed)) {
+                            return resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, 'cordova-plugin-purchase-braintree-applepay does not appear to be installed.'));
+                        }
+                        else {
+                            const success = (result) => {
+                                resolve(result);
+                            };
+                            const failure = (err) => {
+                                const message = err !== null && err !== void 0 ? err : 'payment request failed';
+                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Braintree+ApplePay ERROR: ' + message));
+                            };
+                            window.cordova.exec(success, failure, PLUGIN_ID, 'presentDropInPaymentUI', [request]);
+                        }
+                    });
+                }
+                /**
+                 * Returns true if the device supports Apple Pay.
+                 *
+                 * This does not necessarily mean the user has a card setup already.
+                 */
+                static isSupported(log) {
+                    return new Promise(resolve => {
+                        var _a;
+                        if (!((_a = ApplePayPlugin.get()) === null || _a === void 0 ? void 0 : _a.installed)) {
+                            log.info('BraintreeApplePayPlugin does not appear to be installed.');
+                            return resolve(false);
+                        }
+                        try {
+                            window.cordova.exec((result) => {
+                                resolve(result);
+                            }, () => {
+                                log.info('BraintreeApplePayPlugin is not available.');
+                                resolve(false);
+                            }, PLUGIN_ID, "isApplePaySupported", []);
+                        }
+                        catch (err) {
+                            log.info('BraintreeApplePayPlugin is not installed.');
+                            resolve(false);
+                        }
+                    });
+                }
+            }
+            IosBridge.ApplePayPlugin = ApplePayPlugin;
+        })(IosBridge = Braintree.IosBridge || (Braintree.IosBridge = {}));
+    })(Braintree = CdvPurchase.Braintree || (CdvPurchase.Braintree = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Braintree;
+    (function (Braintree) {
         /**
          * Cordova plugin ID for the braintree ios plugin.
          */
@@ -3532,7 +3606,7 @@ var CdvPurchase;
                                 amount: `${Math.round(paymentRequest.amountMicros / 10000) / 100}`,
                             }];
                     }
-                    const result = await this.requestApplePayPayment(request);
+                    const result = await IosBridge.ApplePayPlugin.requestPayment(request);
                     this.log.info('Result from Apple Pay: ' + JSON.stringify(result));
                     if ('isError' in result)
                         return result;
@@ -3551,7 +3625,7 @@ var CdvPurchase;
                     };
                 }
                 launchDropIn(paymentRequest, dropInRequest) {
-                    return new Promise(resolve => {
+                    return new Promise(async (resolve) => {
                         const onSuccess = (result) => {
                             this.log.info("dropInSuccess: " + JSON.stringify(result));
                             if (result.paymentMethodType === Braintree.DropIn.PaymentMethod.APPLE_PAY) {
@@ -3572,6 +3646,10 @@ var CdvPurchase;
                                 resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'ERROR ' + errCode + ': ' + errMessage));
                             }
                         };
+                        if (!await IosBridge.ApplePayPlugin.isSupported(this.log)) {
+                            this.log.info("Apple Pay is not supported.");
+                            dropInRequest.applePayDisabled = true;
+                        }
                         this.clientTokenProvider((clientToken) => {
                             if (typeof clientToken === 'string')
                                 window.cordova.exec(onSuccess, onError, "BraintreePlugin", "launchDropIn", [clientToken, dropInRequest]);
@@ -3580,39 +3658,8 @@ var CdvPurchase;
                         });
                     });
                 }
-                isApplePaySupported() {
-                    return new Promise(resolve => {
-                        try {
-                            window.cordova.exec((result) => {
-                                resolve(result);
-                            }, () => {
-                                this.log.info('BraintreeApplePayPlugin is not available.');
-                                resolve(false);
-                            }, "BraintreeApplePayPlugin", "isApplePaySupported", []);
-                        }
-                        catch (err) {
-                            this.log.info('BraintreeApplePayPlugin is not installed.');
-                            resolve(false);
-                        }
-                    });
-                }
-                requestApplePayPayment(request) {
-                    return new Promise(resolve => {
-                        const braintreeApplePay = window.CdvPurchaseBraintreeApplePay;
-                        if (!(braintreeApplePay === null || braintreeApplePay === void 0 ? void 0 : braintreeApplePay.installed)) {
-                            return resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, 'cordova-plugin-purchase-braintree-applepay does not appear to be installed.'));
-                        }
-                        else {
-                            const success = (result) => {
-                                resolve(result);
-                            };
-                            const failure = (err) => {
-                                const message = err !== null && err !== void 0 ? err : 'payment request failed';
-                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Braintree+ApplePay ERROR: ' + message));
-                            };
-                            window.cordova.exec(success, failure, 'BraintreeApplePayPlugin', 'presentDropInPaymentUI', [request]);
-                        }
-                    });
+                braintreePlugin() {
+                    return window.CdvPurchaseBraintree;
                 }
                 static isSupported() {
                     return window.cordova.platformId === 'ios';
