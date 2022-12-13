@@ -606,7 +606,7 @@ public final class PurchasePlugin
       final List<Purchase> purchases) {
     try {
       final int code = result.getResponseCode();
-      if (code == BillingResponseCode.OK && purchases != null && purchases.size() > 0)) {
+      if (code == BillingResponseCode.OK && purchases != null && purchases.size() > 0) {
         Log.d(mTag, "onPurchasesUpdated() -> Success");
         for (Purchase p : purchases) {
           mPurchases.add(0, p);
@@ -615,7 +615,7 @@ public final class PurchasePlugin
         sendToListener("purchasesUpdated", new JSONObject()
             .put("purchases", toJSON(purchases)));
       }
-      else if (code == BillingResponseCode.USER_CANCELED) {
+     if (code == BillingResponseCode.USER_CANCELED) {
         Log.w(mTag, "onPurchasesUpdated() -> "
             + "Cancelled: " + format(result));
         callError(Constants.ERR_CANCELLED, codeToString(code));
