@@ -146,7 +146,7 @@ namespace CdvPurchase {
                 const receipt = new Receipt(platform, this.context.apiDecorators);
                 const transaction = new Transaction(Platform.TEST, receipt, this.context.apiDecorators);
                 transaction.purchaseDate = new Date();
-                transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
+                transaction.products = paymentRequest.items.filter(p => p).map(product => ({ id: product?.id || '' })),
                 transaction.state = TransactionState.APPROVED;
                 transaction.transactionId = 'payment-' + new Date().getTime();
                 transaction.amountMicros = paymentRequest.amountMicros;

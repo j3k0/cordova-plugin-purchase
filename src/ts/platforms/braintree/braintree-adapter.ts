@@ -152,7 +152,7 @@ namespace CdvPurchase {
 
                 const transaction = new Transaction(Platform.BRAINTREE, this, decorator);
                 transaction.purchaseDate = new Date();
-                transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
+                transaction.products = paymentRequest.items?.filter(p => p).map(product => ({ id: product?.id || ''})) || [];
                 transaction.state = TransactionState.APPROVED;
                 transaction.transactionId = dropInResult.paymentMethodNonce?.nonce ?? `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
                 this.transactions = [transaction];
@@ -166,7 +166,7 @@ namespace CdvPurchase {
                 this.dropInResult = dropInResult;
                 this.paymentRequest = paymentRequest;
                 const transaction = new Transaction(Platform.BRAINTREE, this, decorator);
-                transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
+                transaction.products = paymentRequest.items.filter(p => p).map(product => ({ id: product?.id || ''}));
                 transaction.state = TransactionState.APPROVED;
                 transaction.transactionId = dropInResult.paymentMethodNonce?.nonce ?? `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
                 transaction.amountMicros = paymentRequest.amountMicros;
@@ -362,7 +362,7 @@ namespace CdvPurchase {
                 }
                 this.log.info("create receiptValidationBody for: " + JSON.stringify(receipt));
                 return {
-                    id: receipt.paymentRequest.productIds?.[0] ?? 'unknown',
+                    id: receipt.paymentRequest.items?.[0]?.id ?? 'unknown',
                     type: ProductType.CONSUMABLE,
                     priceMicros: receipt.paymentRequest.amountMicros,
                     currency: receipt.paymentRequest.currency,

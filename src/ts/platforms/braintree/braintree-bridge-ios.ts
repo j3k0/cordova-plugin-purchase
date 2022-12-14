@@ -93,11 +93,32 @@ namespace CdvPurchase {
               merchantCapabilities: [ApplePay.MerchantCapability.ThreeDS],
             };
             if (!request.paymentSummaryItems) {
-              request.paymentSummaryItems = [{
-                label: this.applePayOptions?.companyName ?? 'Total',
-                type: 'final',
-                amount: `${Math.round(paymentRequest.amountMicros / 10000) / 100}`,
-              }];
+              request.paymentSummaryItems =
+                paymentRequest.items.filter(p => p).map((product, index) => {
+
+                  // figure out amount and currency
+                  let amountMicros: number | undefined;
+                  if (typeof product?.pricing !== 'undefined') {
+                    if (!paymentRequest.currency) paymentRequest.currency = product.pricing.currency;
+                    if (product.pricing.currency && product.pricing.currency === paymentRequest.currency) {
+                      amountMicros = product.pricing?.priceMicros;
+                    }
+                  }
+                  if (amountMicros === undefined) {
+                    amountMicros = paymentRequest.amountMicros;
+                  }
+
+                  return {
+                    type: 'final',
+                    label: product?.title || product?.id || `Item #${index + 1}`,
+                    amount: `${Math.round(amountMicros / 10000) / 100}`,
+                  } as ApplePay.PaymentSummaryItem;
+                })
+                  .concat({
+                    type: 'final',
+                    label: this.applePayOptions?.companyName ?? 'Total',
+                    amount: `${Math.round(paymentRequest.amountMicros / 10000) / 100}`,
+                  });
             }
             const result = await ApplePayPlugin.requestPayment(request);
             this.log.info('Result from Apple Pay: ' + JSON.stringify(result));
