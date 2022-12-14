@@ -331,18 +331,39 @@ ___
 
 ▸ **requestPayment**(`paymentRequest`, `additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md) \| [`Transaction`](CdvPurchase.Transaction.md)\>
 
-Request a payment from the user
+This function simulates a payment process by prompting the user to confirm the payment.
+
+It creates a `Receipt` and `Transaction` object and returns the `Transaction` object if the user enters "Y" in the prompt.
+
+**`Example`**
+
+const paymentRequest = {
+  amountMicros: 1000000,
+  currency: "USD",
+  items: [{ id: "product-1" }, { id: "product-2" }]
+};
+const result = await requestPayment(paymentRequest);
+if (result?.isHttpError) {
+  console.error(`Error: ${result.message}`);
+} else if (result) {
+  console.log(`Transaction approved: ${result.transactionId}`);
+} else {
+  console.log("Payment cancelled by user");
+}
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `paymentRequest` | [`PaymentRequest`](../interfaces/CdvPurchase.PaymentRequest.md) |
-| `additionalData?` | [`AdditionalData`](../interfaces/CdvPurchase.AdditionalData.md) |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `paymentRequest` | [`PaymentRequest`](../interfaces/CdvPurchase.PaymentRequest.md) | An object containing information about the payment, such as the amount and currency. |
+| `additionalData?` | [`AdditionalData`](../interfaces/CdvPurchase.AdditionalData.md) | Additional data to be included in the receipt. |
 
 #### Returns
 
 `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md) \| [`Transaction`](CdvPurchase.Transaction.md)\>
+
+A promise that resolves to either an error object (if the user enters "E" in the prompt),
+a `Transaction` object (if the user confirms the payment), or `undefined` (if the user does not confirm the payment).
 
 #### Implementation of
 

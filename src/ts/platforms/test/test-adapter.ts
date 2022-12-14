@@ -137,6 +137,33 @@ namespace CdvPurchase {
                 return;
             }
 
+            /**
+             * This function simulates a payment process by prompting the user to confirm the payment.
+             *
+             * It creates a `Receipt` and `Transaction` object and returns the `Transaction` object if the user enters "Y" in the prompt.
+             *
+             * @param paymentRequest - An object containing information about the payment, such as the amount and currency.
+             * @param additionalData - Additional data to be included in the receipt.
+             *
+             * @returns A promise that resolves to either an error object (if the user enters "E" in the prompt),
+             * a `Transaction` object (if the user confirms the payment), or `undefined` (if the user does not confirm the payment).
+             *
+             * @example
+             *
+             * const paymentRequest = {
+             *   amountMicros: 1000000,
+             *   currency: "USD",
+             *   items: [{ id: "product-1" }, { id: "product-2" }]
+             * };
+             * const result = await requestPayment(paymentRequest);
+             * if (result?.isHttpError) {
+             *   console.error(`Error: ${result.message}`);
+             * } else if (result) {
+             *   console.log(`Transaction approved: ${result.transactionId}`);
+             * } else {
+             *   console.log("Payment cancelled by user");
+             * }
+             */
             async requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined> {
 
                 await Utils.asyncDelay(100); // maybe app has some UI to update... and "prompt" prevents that

@@ -1125,9 +1125,32 @@ var CdvPurchase;
          * @param additionalData Additional parameters
          */
         requestPayment(paymentRequest, additionalData) {
+            var _a, _b, _c, _d;
             const adapter = this.adapters.findReady(paymentRequest.platform);
             if (!adapter)
                 return CdvPurchase.PaymentRequestPromise.failed(CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + paymentRequest.platform + ')');
+            // fill-in missing total amount as the sum of all items.
+            if (typeof paymentRequest.amountMicros === 'undefined') {
+                paymentRequest.amountMicros = 0;
+                for (const item of paymentRequest.items) {
+                    paymentRequest.amountMicros += (_b = (_a = item === null || item === void 0 ? void 0 : item.pricing) === null || _a === void 0 ? void 0 : _a.priceMicros) !== null && _b !== void 0 ? _b : 0;
+                }
+            }
+            // fill-in the missing if set in the items.
+            if (typeof paymentRequest.currency === 'undefined') {
+                for (const item of paymentRequest.items) {
+                    if ((_c = item === null || item === void 0 ? void 0 : item.pricing) === null || _c === void 0 ? void 0 : _c.currency) {
+                        paymentRequest.currency = item.pricing.currency;
+                    }
+                }
+            }
+            // fill-in item amount when there's just 1 item.
+            if (paymentRequest.items.length === 1) {
+                const item = paymentRequest.items[0];
+                if (item && !item.pricing) {
+                    item.pricing = { priceMicros: (_d = paymentRequest.amountMicros) !== null && _d !== void 0 ? _d : 0 };
+                }
+            }
             const promise = new CdvPurchase.PaymentRequestPromise();
             adapter.requestPayment(paymentRequest, additionalData).then(result => {
                 promise.trigger(result);
@@ -3256,6 +3279,13 @@ var CdvPurchase;
                     }
                 };
             }
+            /**
+             * Handle a response from a receipt validation process.
+             *
+             * @param receipt The receipt being validated.
+             * @param response The response payload from the receipt validation process.
+             * @returns A promise that resolves when the response has been handled.
+             */
             async handleReceiptValidationResponse(receipt, response) {
                 var _a;
                 this.log.info("receipt validation response: " + JSON.stringify(response));
@@ -3595,25 +3625,23 @@ var CdvPurchase;
                     setTimeout(() => callback(undefined), 0);
                 }
                 async continueDropInForApplePay(paymentRequest, DropInRequest, dropInResult) {
-                    var _a, _b, _c, _d, _e, _f, _g, _h;
+                    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
                     const request = ((_b = (_a = this.applePayOptions) === null || _a === void 0 ? void 0 : _a.preparePaymentRequest) === null || _b === void 0 ? void 0 : _b.call(_a, paymentRequest)) || {
                         merchantCapabilities: [CdvPurchase.ApplePay.MerchantCapability.ThreeDS],
                     };
                     if (!request.paymentSummaryItems) {
                         request.paymentSummaryItems =
                             paymentRequest.items.filter(p => p).map((product, index) => {
-                                var _a;
-                                // figure out amount and currency
+                                var _a, _b;
+                                // figure out amount and currency for the item
                                 let amountMicros;
                                 if (typeof (product === null || product === void 0 ? void 0 : product.pricing) !== 'undefined') {
-                                    if (!paymentRequest.currency)
-                                        paymentRequest.currency = product.pricing.currency;
                                     if (product.pricing.currency && product.pricing.currency === paymentRequest.currency) {
                                         amountMicros = (_a = product.pricing) === null || _a === void 0 ? void 0 : _a.priceMicros;
                                     }
                                 }
                                 if (amountMicros === undefined) {
-                                    amountMicros = paymentRequest.amountMicros;
+                                    amountMicros = (_b = paymentRequest.amountMicros) !== null && _b !== void 0 ? _b : 0;
                                 }
                                 return {
                                     type: 'final',
@@ -3624,7 +3652,7 @@ var CdvPurchase;
                                 .concat({
                                 type: 'final',
                                 label: (_d = (_c = this.applePayOptions) === null || _c === void 0 ? void 0 : _c.companyName) !== null && _d !== void 0 ? _d : 'Total',
-                                amount: `${Math.round(paymentRequest.amountMicros / 10000) / 100}`,
+                                amount: `${Math.round(((_e = paymentRequest.amountMicros) !== null && _e !== void 0 ? _e : 0) / 10000) / 100}`,
                             });
                     }
                     const result = await IosBridge.ApplePayPlugin.requestPayment(request);
@@ -3637,8 +3665,8 @@ var CdvPurchase;
                     return {
                         paymentMethodNonce: {
                             isDefault: false,
-                            nonce: (_f = (_e = result.applePayCardNonce) === null || _e === void 0 ? void 0 : _e.nonce) !== null && _f !== void 0 ? _f : '',
-                            type: (_h = (_g = result.applePayCardNonce) === null || _g === void 0 ? void 0 : _g.type) !== null && _h !== void 0 ? _h : '',
+                            nonce: (_g = (_f = result.applePayCardNonce) === null || _f === void 0 ? void 0 : _f.nonce) !== null && _g !== void 0 ? _g : '',
+                            type: (_j = (_h = result.applePayCardNonce) === null || _h === void 0 ? void 0 : _h.type) !== null && _j !== void 0 ? _j : '',
                         },
                         paymentMethodType: dropInResult.paymentMethodType,
                         deviceData: dropInResult.deviceData,
@@ -4843,9 +4871,37 @@ var CdvPurchase;
             async handleReceiptValidationResponse(receipt, response) {
                 return;
             }
+            /**
+             * This function simulates a payment process by prompting the user to confirm the payment.
+             *
+             * It creates a `Receipt` and `Transaction` object and returns the `Transaction` object if the user enters "Y" in the prompt.
+             *
+             * @param paymentRequest - An object containing information about the payment, such as the amount and currency.
+             * @param additionalData - Additional data to be included in the receipt.
+             *
+             * @returns A promise that resolves to either an error object (if the user enters "E" in the prompt),
+             * a `Transaction` object (if the user confirms the payment), or `undefined` (if the user does not confirm the payment).
+             *
+             * @example
+             *
+             * const paymentRequest = {
+             *   amountMicros: 1000000,
+             *   currency: "USD",
+             *   items: [{ id: "product-1" }, { id: "product-2" }]
+             * };
+             * const result = await requestPayment(paymentRequest);
+             * if (result?.isHttpError) {
+             *   console.error(`Error: ${result.message}`);
+             * } else if (result) {
+             *   console.log(`Transaction approved: ${result.transactionId}`);
+             * } else {
+             *   console.log("Payment cancelled by user");
+             * }
+             */
             async requestPayment(paymentRequest, additionalData) {
+                var _a;
                 await CdvPurchase.Utils.asyncDelay(100); // maybe app has some UI to update... and "prompt" prevents that
-                const response = prompt(`Mock payment of ${paymentRequest.amountMicros / 1000000} ${paymentRequest.currency}. Enter "Y" to confirm. Enter "E" to trigger an error.`);
+                const response = prompt(`Mock payment of ${((_a = paymentRequest.amountMicros) !== null && _a !== void 0 ? _a : 0) / 1000000} ${paymentRequest.currency}. Enter "Y" to confirm. Enter "E" to trigger an error.`);
                 if ((response === null || response === void 0 ? void 0 : response.toUpperCase()) === 'E')
                     return CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED, 'Payment not allowed');
                 if ((response === null || response === void 0 ? void 0 : response.toUpperCase()) !== 'Y')

@@ -378,6 +378,13 @@ namespace CdvPurchase {
                 }
             }
 
+            /**
+             * Handle a response from a receipt validation process.
+             *
+             * @param receipt The receipt being validated.
+             * @param response The response payload from the receipt validation process.
+             * @returns A promise that resolves when the response has been handled.
+             */
             async handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void> {
                 this.log.info("receipt validation response: " + JSON.stringify(response));
                 if (response?.data && ('transaction' in response.data)) {

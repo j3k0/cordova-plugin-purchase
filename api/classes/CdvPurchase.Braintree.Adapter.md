@@ -221,18 +221,20 @@ ___
 
 ▸ **handleReceiptValidationResponse**(`receipt`, `response`): `Promise`<`void`\>
 
-Handle platform specific fields from receipt validation response.
+Handle a response from a receipt validation process.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `receipt` | [`Receipt`](CdvPurchase.Receipt.md) |
-| `response` | [`Payload`](../modules/CdvPurchase.Validator.Response.md#payload) |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `receipt` | [`Receipt`](CdvPurchase.Receipt.md) | The receipt being validated. |
+| `response` | [`Payload`](../modules/CdvPurchase.Validator.Response.md#payload) | The response payload from the receipt validation process. |
 
 #### Returns
 
 `Promise`<`void`\>
+
+A promise that resolves when the response has been handled.
 
 #### Implementation of
 

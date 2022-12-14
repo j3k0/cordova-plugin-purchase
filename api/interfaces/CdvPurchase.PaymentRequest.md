@@ -58,9 +58,11 @@ const {store, Platform, ErrorCode} = CdvPurchase;
 
 ### amountMicros
 
-• **amountMicros**: `number`
+• `Optional` **amountMicros**: `number`
 
-Amount to pay. Required.
+Amount to pay.
+
+Default to the sum of all items.
 
 ___
 
@@ -79,6 +81,8 @@ ___
 Currency.
 
 Some payment platforms only support one currency thus do not require this field.
+
+Default to the currency of the items.
 
 ___
 

@@ -1240,13 +1240,17 @@ declare namespace CdvPurchase {
          */
         platform: Platform;
         /**
-         * Amount to pay. Required.
+         * Amount to pay.
+         *
+         * Default to the sum of all items.
          */
-        amountMicros: number;
+        amountMicros?: number;
         /**
          * Currency.
          *
          * Some payment platforms only support one currency thus do not require this field.
+         *
+         * Default to the currency of the items.
          */
         currency?: string;
         /**
@@ -2945,6 +2949,13 @@ declare namespace CdvPurchase {
             private launchDropIn;
             requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             receiptValidationBody(receipt: BraintreeReceipt): Validator.Request.Body | undefined;
+            /**
+             * Handle a response from a receipt validation process.
+             *
+             * @param receipt The receipt being validated.
+             * @param response The response payload from the receipt validation process.
+             * @returns A promise that resolves when the response has been handled.
+             */
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
             checkSupport(functionality: PlatformFunctionality): boolean;
             restorePurchases(): Promise<void>;
@@ -4469,6 +4480,33 @@ declare namespace CdvPurchase {
             finish(transaction: Transaction): Promise<undefined | IError>;
             receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
+            /**
+             * This function simulates a payment process by prompting the user to confirm the payment.
+             *
+             * It creates a `Receipt` and `Transaction` object and returns the `Transaction` object if the user enters "Y" in the prompt.
+             *
+             * @param paymentRequest - An object containing information about the payment, such as the amount and currency.
+             * @param additionalData - Additional data to be included in the receipt.
+             *
+             * @returns A promise that resolves to either an error object (if the user enters "E" in the prompt),
+             * a `Transaction` object (if the user confirms the payment), or `undefined` (if the user does not confirm the payment).
+             *
+             * @example
+             *
+             * const paymentRequest = {
+             *   amountMicros: 1000000,
+             *   currency: "USD",
+             *   items: [{ id: "product-1" }, { id: "product-2" }]
+             * };
+             * const result = await requestPayment(paymentRequest);
+             * if (result?.isHttpError) {
+             *   console.error(`Error: ${result.message}`);
+             * } else if (result) {
+             *   console.log(`Transaction approved: ${result.transactionId}`);
+             * } else {
+             *   console.log("Payment cancelled by user");
+             * }
+             */
             requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
             manageBilling(): Promise<IError | undefined>;
