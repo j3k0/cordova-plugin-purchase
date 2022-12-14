@@ -140,7 +140,7 @@ namespace CdvPurchase {
             async requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined> {
 
                 await Utils.asyncDelay(100); // maybe app has some UI to update... and "prompt" prevents that
-                const response = prompt(`Mock payment of ${paymentRequest.amountMicros / 1000000} ${paymentRequest.currency}. Enter "Y" to confirm. Enter "E" to trigger an error.`);
+                const response = prompt(`Mock payment of ${(paymentRequest.amountMicros ?? 0) / 1000000} ${paymentRequest.currency}. Enter "Y" to confirm. Enter "E" to trigger an error.`);
                 if (response?.toUpperCase() === 'E') return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Payment not allowed');
                 if (response?.toUpperCase() !== 'Y') return;
                 const receipt = new Receipt(platform, this.context.apiDecorators);

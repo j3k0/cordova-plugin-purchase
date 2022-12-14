@@ -96,16 +96,15 @@ namespace CdvPurchase {
               request.paymentSummaryItems =
                 paymentRequest.items.filter(p => p).map((product, index) => {
 
-                  // figure out amount and currency
+                  // figure out amount and currency for the item
                   let amountMicros: number | undefined;
                   if (typeof product?.pricing !== 'undefined') {
-                    if (!paymentRequest.currency) paymentRequest.currency = product.pricing.currency;
                     if (product.pricing.currency && product.pricing.currency === paymentRequest.currency) {
                       amountMicros = product.pricing?.priceMicros;
                     }
                   }
                   if (amountMicros === undefined) {
-                    amountMicros = paymentRequest.amountMicros;
+                    amountMicros = paymentRequest.amountMicros ?? 0;
                   }
 
                   return {
@@ -117,7 +116,7 @@ namespace CdvPurchase {
                   .concat({
                     type: 'final',
                     label: this.applePayOptions?.companyName ?? 'Total',
-                    amount: `${Math.round(paymentRequest.amountMicros / 10000) / 100}`,
+                    amount: `${Math.round((paymentRequest.amountMicros ?? 0) / 10000) / 100}`,
                   });
             }
             const result = await ApplePayPlugin.requestPayment(request);

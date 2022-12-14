@@ -419,6 +419,32 @@ namespace CdvPurchase {
             const adapter = this.adapters.findReady(paymentRequest.platform);
             if (!adapter)
                 return PaymentRequestPromise.failed(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + paymentRequest.platform + ')');
+
+            // fill-in missing total amount as the sum of all items.
+            if (typeof paymentRequest.amountMicros === 'undefined') {
+                paymentRequest.amountMicros = 0;
+                for (const item of paymentRequest.items) {
+                    paymentRequest.amountMicros += item?.pricing?.priceMicros ?? 0;
+                }
+            }
+
+            // fill-in the missing if set in the items.
+            if (typeof paymentRequest.currency === 'undefined') {
+                for (const item of paymentRequest.items) {
+                    if (item?.pricing?.currency) {
+                        paymentRequest.currency = item.pricing.currency;
+                    }
+                }
+            }
+
+            // fill-in item amount when there's just 1 item.
+            if (paymentRequest.items.length === 1) {
+                const item = paymentRequest.items[0];
+                if (item && !item.pricing) {
+                    item.pricing = { priceMicros: paymentRequest.amountMicros ?? 0 }
+                }
+            }
+
             const promise = new PaymentRequestPromise();
             adapter.requestPayment(paymentRequest, additionalData).then(result => {
                 promise.trigger(result);

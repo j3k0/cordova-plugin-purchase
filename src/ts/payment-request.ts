@@ -156,14 +156,18 @@ namespace CdvPurchase {
     platform: Platform;
 
     /**
-     * Amount to pay. Required.
+     * Amount to pay.
+     *
+     * Default to the sum of all items.
      */
-    amountMicros: number;
+    amountMicros?: number;
 
     /**
      * Currency.
      *
      * Some payment platforms only support one currency thus do not require this field.
+     *
+     * Default to the currency of the items.
      */
     currency?: string;
 
