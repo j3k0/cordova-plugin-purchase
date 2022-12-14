@@ -81,6 +81,8 @@ See [Setup iOS Applications](https://github.com/j3k0/cordova-plugin-purchase/wik
 
 ## Getting Started
 
+### Learning about In-App Purchases
+
 If you wish to learn more about In-App Purchases (IAP), you'll find a good overview on the subject from the various platforms documentation:
 
 * Apple:
@@ -94,14 +96,19 @@ If you wish to learn more about In-App Purchases (IAP), you'll find a good overv
 
 All platforms share the same concepts, so they are a good reads in all cases.
 
-To ease the beginning of your journey into the intimidating world of In-App Purchase with Cordova, we wrote a guide which hopefully will help you get things done: [Guide: Cordova In-App Purchase Plugin - v13.0](https://purchase.cordova.fovea.cc/v/v13.0/)
+### Using the Plugin
 
-In short, you'll have two main tasks to accomplish:
+To ease the beginning of your journey into the intimidating world of In-App Purchase with Cordova, we wrote a guide which hopefully will help you get things done:
 
- 1. Setup your application and In-App Products on AppStore, Play or Azure platforms using their respective web interfaces.
+* [Guide: Cordova In-App Purchase Plugin - v13.0](https://purchase.cordova.fovea.cc/v/v13.0/)
+
+You'll have two main tasks to accomplish:
+
+ 1. Setup your application and In-App Products on AppStore, Play, Braintree or Azure platforms using their respective web interfaces.
  2. Add In-App Purchase code to your application.
 
 For platform setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/wiki/Home) is a good starting point.
+
 There's a specific page for the [version 13] release(./wiki/Version-13).
 
 ## Extra Resources

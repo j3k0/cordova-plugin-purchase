@@ -1,10 +1,97 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.1.0
+
+### Update to requestPayment()
+
+In the payment request, the `items` array now replace the `productIds` array. Use this array to define the list of items the user is paying for. For example:
+
+```ts
+CdvPurchase.store.requestPayment({
+  platform: CdvPurchase.Platform.BRAINTREE,
+  amountMicros: 11000000,
+  currency: 'USD',
+  items: [{
+    id: 'margherita_large',
+    title: 'Pizza Margherita Large',
+    pricing: {
+      priceMicros: 10000000,
+    }
+  }, {
+    id: 'delivery_standard',
+    title: 'Delivery',
+    pricing: {
+      priceMicros: 1000000,
+    }
+  }]
+});
+```
+
+The format for items makes them compatible with products loaded from the stores. You can then manage your inventory on Google Play but allow payment for those Google Play products using Braintree:
+
+```ts
+store.register([{
+  id: 'five_tokens',
+  type: ProductType.CONSUMABLE
+  platform: Platform.GOOGLE_PLAY,
+}]);
+
+// Later on...
+store.requestPayment({
+  platform: CdvPurchase.Platform.BRAINTREE,
+  amountMicros: 11000000,
+  currency: 'USD',
+  items: [store.get('five_tokens')],
+});
+```
+
+See [PaymentRequest](https://github.com/j3k0/cordova-plugin-purchase/blob/master/api/interfaces/CdvPurchase.PaymentRequest.md) and [PaymentRequestItem](https://github.com/j3k0/cordova-plugin-purchase/blob/master/api/interfaces/CdvPurchase.PaymentRequestItem.md) for details.
+
 ## 13.0.0
 
-- [Migration guide](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO:-Migrate-to-v13)
+This is a full rewrite of the API, updated to allow:
+
+ * using multiple payment processors in parallel
+ * exposing multiple offers for a single product and complex pricing
+ * exposing purchases from receipts (either local receipts or verified from a server)
+ * placing custom payment requests
+
+All JavaScript code has being rewritten in TypeScript, typings are now 100% complete and accurate.
+
+If you're upgrading from an earlier version, check the [migration guide](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO:-Migrate-to-v13).
+
+The native code is built using version 12 as starting point, so all features from version 12 are available as well.
+
+### Braintree
+
+This version introduces support for Braintree as a payment processor, it requires an additional plugin to add the libraries to your project: https://github.com/j3k0/cordova-plugin-purchase-braintree
+
+The Braintree integration supports payment with 3DSecure and Apple Pay.
+
+### Windows Store
+
+Support for payments on Windows Store has been dropped. It will be back in a later version.
+
+### Overview
+
+The new API separates the different concepts with their own first-level entities:
+
+- Products
+- Offers
+- Receipts
+- Transactions
+
+**Products / Offers** will contain the definition of what's available to the user to purchase.
+
+**Receipts / Transactions** will contain details about what the user has purchased.
+
+In the new API, it is possible to initiate transactions not necessarily linked with a product (using payment processors like Braintree).
+
+It defines a generic Adapter interface, implemented by the various payment platforms. The core of the plugin controls and monitors the different active adapters and expose the unified API. Previously, we basically had an iOS implementation of the unified API (using StoreKit), an android implementation, etc... Now, many adapters can coexist in peace.
 
 ## 12.0.0
+
+This was a first attempt to port the code to billing library v5. It's not recommended to use this version as, trying to keep the API backward compatible, made it messy and bug prone. Use version 13.
 
 ### Upgrade to Google Play Billing library v5.0
 

@@ -1200,14 +1200,32 @@ declare namespace CdvPurchase {
      *  const {store, Platform, ErrorCode} = CdvPurchase;
      *  store.requestPayment({
      *    platform: Platform.BRAINTREE,
-     *    productIds: ['my-product-1', 'my-product-2'],
-     *    amountMicros: 1990000,
+     *    items: [{
+     *      id: 'margherita_large',
+     *      title: 'Pizza Margherita Large',
+     *      pricing: {
+     *        priceMicros: 9990000,
+     *      }
+     *    }, {
+     *      id: 'delivery_standard',
+     *      title: 'Delivery',
+     *      pricing: {
+     *        priceMicros: 2000000,
+     *      }
+     *    }]
+     *    amountMicros: 11990000,
      *    currency: 'USD',
      *    description: 'This this the description of the payment request',
-     *  }).then((result) => {
-     *    if (result && result.isError && result.code !== ErrorCode.PAYMENT_CANCELLED) {
-     *      alert(result.message);
-     *    }
+     *  })
+     *  .cancelled(() => { // user cancelled by closing the window
+     *  })
+     *  .failed(error => { // payment request failed
+     *  })
+     *  .initiated(transaction => { // transaction initiated
+     *  })
+     *  .approved(transaction => { // transaction approved
+     *  })
+     *  .finished(transaction => { // transaction finished
      *  });
      */
     interface PaymentRequest {
