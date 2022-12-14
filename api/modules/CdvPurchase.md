@@ -61,6 +61,7 @@ const {store, ProductType, Platform, LogLevel} = CdvPurchase;
 - [IRegisterProduct](../interfaces/CdvPurchase.IRegisterProduct.md)
 - [IapticConfig](../interfaces/CdvPurchase.IapticConfig.md)
 - [PaymentRequest](../interfaces/CdvPurchase.PaymentRequest.md)
+- [PaymentRequestItem](../interfaces/CdvPurchase.PaymentRequestItem.md)
 - [PostalAddress](../interfaces/CdvPurchase.PostalAddress.md)
 - [PricingPhase](../interfaces/CdvPurchase.PricingPhase.md)
 - [TransactionMonitor](../interfaces/CdvPurchase.TransactionMonitor.md)

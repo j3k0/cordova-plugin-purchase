@@ -32,9 +32,9 @@ const {store, Platform, ErrorCode} = CdvPurchase;
 - [currency](CdvPurchase.PaymentRequest.md#currency)
 - [description](CdvPurchase.PaymentRequest.md#description)
 - [email](CdvPurchase.PaymentRequest.md#email)
+- [items](CdvPurchase.PaymentRequest.md#items)
 - [mobilePhoneNumber](CdvPurchase.PaymentRequest.md#mobilephonenumber)
 - [platform](CdvPurchase.PaymentRequest.md#platform)
-- [productIds](CdvPurchase.PaymentRequest.md#productids)
 
 ## Properties
 
@@ -80,6 +80,16 @@ The email used for verification. Optional.
 
 ___
 
+### items
+
+• **items**: (`undefined` \| [`PaymentRequestItem`](CdvPurchase.PaymentRequestItem.md))[]
+
+Products being purchased.
+
+They do not have to be products registered with the plugin, but they can be.
+
+___
+
 ### mobilePhoneNumber
 
 • `Optional` **mobilePhoneNumber**: `string`
@@ -95,13 +105,3 @@ ___
 • **platform**: [`Platform`](../enums/CdvPurchase.Platform.md)
 
 Platform that will handle the payment request.
-
-___
-
-### productIds
-
-• **productIds**: `string`[]
-
-Products being purchased.
-
-Used for your reference, does not have to be a product registered with the plugin.

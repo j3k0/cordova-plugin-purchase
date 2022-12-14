@@ -1170,6 +1170,28 @@ declare namespace CdvPurchase {
         static initiated(transaction: Transaction): PaymentRequestPromise;
     }
     /**
+     * Item being purchased with `requestPayment`
+     *
+     * The format is such as it's compatible with `Product`. This way, normal products can be added to
+     * the payment request.
+     */
+    interface PaymentRequestItem {
+        /** Identifier */
+        id: string;
+        /** Label for the item */
+        title: string;
+        /** Item pricing information.
+         *
+         * It can be undefined if a single product is purchased. If that case, it's assumed the price
+         * is equal to the total amount requested. */
+        pricing?: {
+            /** Price in micro units (i.e. price * 1,000,000) */
+            priceMicros: number;
+            /** Currency, for verification, if set it should be equal to the PaymentRequest currency */
+            currency?: string;
+        };
+    }
+    /**
      * Request for payment.
      *
      * Use with {@link Store.requestPayment} to initiate a payment for a given amount.
@@ -1192,9 +1214,9 @@ declare namespace CdvPurchase {
         /**
          * Products being purchased.
          *
-         * Used for your reference, does not have to be a product registered with the plugin.
+         * They do not have to be products registered with the plugin, but they can be.
          */
-        productIds: string[];
+        items: (PaymentRequestItem | undefined)[];
         /**
          * Platform that will handle the payment request.
          */

@@ -3047,13 +3047,13 @@ var CdvPurchase;
                 // result.paymentMethodType; // "VISA"
                 // result.deviceData; // undefined
                 // result.paymentMethodNonce; // {"isDefault":false,"nonce":"tokencc_bh_rdjmsc_76vjtq_9tzsv3_4467mg_tt4"}
-                var _a, _b;
+                var _a, _b, _c;
                 super(CdvPurchase.Platform.BRAINTREE, decorator);
                 const transaction = new CdvPurchase.Transaction(CdvPurchase.Platform.BRAINTREE, this, decorator);
                 transaction.purchaseDate = new Date();
-                transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
+                transaction.products = ((_a = paymentRequest.items) === null || _a === void 0 ? void 0 : _a.filter(p => p).map(product => ({ id: (product === null || product === void 0 ? void 0 : product.id) || '' }))) || [];
                 transaction.state = CdvPurchase.TransactionState.APPROVED;
-                transaction.transactionId = (_b = (_a = dropInResult.paymentMethodNonce) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
+                transaction.transactionId = (_c = (_b = dropInResult.paymentMethodNonce) === null || _b === void 0 ? void 0 : _b.nonce) !== null && _c !== void 0 ? _c : `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
                 this.transactions = [transaction];
                 this.dropInResult = dropInResult;
                 this.paymentRequest = paymentRequest;
@@ -3064,7 +3064,7 @@ var CdvPurchase;
                 this.dropInResult = dropInResult;
                 this.paymentRequest = paymentRequest;
                 const transaction = new CdvPurchase.Transaction(CdvPurchase.Platform.BRAINTREE, this, decorator);
-                transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
+                transaction.products = paymentRequest.items.filter(p => p).map(product => ({ id: (product === null || product === void 0 ? void 0 : product.id) || '' }));
                 transaction.state = CdvPurchase.TransactionState.APPROVED;
                 transaction.transactionId = (_b = (_a = dropInResult.paymentMethodNonce) === null || _a === void 0 ? void 0 : _a.nonce) !== null && _b !== void 0 ? _b : `UNKNOWN_${dropInResult.paymentMethodType}_${dropInResult.paymentDescription}`;
                 transaction.amountMicros = paymentRequest.amountMicros;
@@ -3234,14 +3234,14 @@ var CdvPurchase;
                 return receipt.transactions[0];
             }
             receiptValidationBody(receipt) {
-                var _a, _b, _c, _d;
+                var _a, _b, _c, _d, _e;
                 if (!isBraintreeReceipt(receipt)) {
                     this.log.error("Unexpected error, expecting a BraintreeReceipt: " + JSON.stringify(receipt));
                     return;
                 }
                 this.log.info("create receiptValidationBody for: " + JSON.stringify(receipt));
                 return {
-                    id: (_b = (_a = receipt.paymentRequest.productIds) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : 'unknown',
+                    id: (_c = (_b = (_a = receipt.paymentRequest.items) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.id) !== null && _c !== void 0 ? _c : 'unknown',
                     type: CdvPurchase.ProductType.CONSUMABLE,
                     priceMicros: receipt.paymentRequest.amountMicros,
                     currency: receipt.paymentRequest.currency,
@@ -3250,7 +3250,7 @@ var CdvPurchase;
                         type: CdvPurchase.Platform.BRAINTREE,
                         deviceData: receipt.dropInResult.deviceData,
                         id: 'nonce',
-                        paymentMethodNonce: (_d = (_c = receipt.dropInResult.paymentMethodNonce) === null || _c === void 0 ? void 0 : _c.nonce) !== null && _d !== void 0 ? _d : '',
+                        paymentMethodNonce: (_e = (_d = receipt.dropInResult.paymentMethodNonce) === null || _d === void 0 ? void 0 : _d.nonce) !== null && _e !== void 0 ? _e : '',
                         paymentDescription: receipt.dropInResult.paymentDescription,
                         paymentMethodType: receipt.dropInResult.paymentMethodType,
                     }
@@ -3600,11 +3600,32 @@ var CdvPurchase;
                         merchantCapabilities: [CdvPurchase.ApplePay.MerchantCapability.ThreeDS],
                     };
                     if (!request.paymentSummaryItems) {
-                        request.paymentSummaryItems = [{
-                                label: (_d = (_c = this.applePayOptions) === null || _c === void 0 ? void 0 : _c.companyName) !== null && _d !== void 0 ? _d : 'Total',
+                        request.paymentSummaryItems =
+                            paymentRequest.items.filter(p => p).map((product, index) => {
+                                var _a;
+                                // figure out amount and currency
+                                let amountMicros;
+                                if (typeof (product === null || product === void 0 ? void 0 : product.pricing) !== 'undefined') {
+                                    if (!paymentRequest.currency)
+                                        paymentRequest.currency = product.pricing.currency;
+                                    if (product.pricing.currency && product.pricing.currency === paymentRequest.currency) {
+                                        amountMicros = (_a = product.pricing) === null || _a === void 0 ? void 0 : _a.priceMicros;
+                                    }
+                                }
+                                if (amountMicros === undefined) {
+                                    amountMicros = paymentRequest.amountMicros;
+                                }
+                                return {
+                                    type: 'final',
+                                    label: (product === null || product === void 0 ? void 0 : product.title) || (product === null || product === void 0 ? void 0 : product.id) || `Item #${index + 1}`,
+                                    amount: `${Math.round(amountMicros / 10000) / 100}`,
+                                };
+                            })
+                                .concat({
                                 type: 'final',
+                                label: (_d = (_c = this.applePayOptions) === null || _c === void 0 ? void 0 : _c.companyName) !== null && _d !== void 0 ? _d : 'Total',
                                 amount: `${Math.round(paymentRequest.amountMicros / 10000) / 100}`,
-                            }];
+                            });
                     }
                     const result = await IosBridge.ApplePayPlugin.requestPayment(request);
                     this.log.info('Result from Apple Pay: ' + JSON.stringify(result));
@@ -4832,8 +4853,8 @@ var CdvPurchase;
                 const receipt = new CdvPurchase.Receipt(platform, this.context.apiDecorators);
                 const transaction = new CdvPurchase.Transaction(CdvPurchase.Platform.TEST, receipt, this.context.apiDecorators);
                 transaction.purchaseDate = new Date();
-                transaction.products = paymentRequest.productIds.map(productId => ({ id: productId }));
-                transaction.state = CdvPurchase.TransactionState.APPROVED;
+                transaction.products = paymentRequest.items.filter(p => p).map(product => ({ id: (product === null || product === void 0 ? void 0 : product.id) || '' })),
+                    transaction.state = CdvPurchase.TransactionState.APPROVED;
                 transaction.transactionId = 'payment-' + new Date().getTime();
                 transaction.amountMicros = paymentRequest.amountMicros;
                 transaction.currency = paymentRequest.currency;
