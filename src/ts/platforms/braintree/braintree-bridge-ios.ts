@@ -80,6 +80,7 @@ namespace CdvPurchase {
           constructor(log: Logger, clientTokenProvider: ClientTokenProvider, applePayOptions?: ApplePayOptions) {
             this.log = log.child("IosBridge");
             this.clientTokenProvider = clientTokenProvider;
+            this.applePayOptions = applePayOptions;
           }
 
           initialize(verbosity: VerbosityProvider, callback: Callback<IError | undefined>) {
