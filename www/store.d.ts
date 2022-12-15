@@ -496,7 +496,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.1.0";
+    const PLUGIN_VERSION = "13.1.1";
     /**
      * Entry class of the plugin.
      */
@@ -4499,7 +4499,7 @@ declare namespace CdvPurchase {
              *   items: [{ id: "product-1" }, { id: "product-2" }]
              * };
              * const result = await requestPayment(paymentRequest);
-             * if (result?.isHttpError) {
+             * if (result?.isError) {
              *   console.error(`Error: ${result.message}`);
              * } else if (result) {
              *   console.log(`Transaction approved: ${result.transactionId}`);

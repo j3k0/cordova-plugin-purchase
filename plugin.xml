@@ -26,7 +26,7 @@ SOFTWARE.
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     id="cordova-plugin-purchase"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    version="13.1.0">
+    version="13.1.1">
 
     <name>Purchase</name>
 	<description>Cordova Purchase plugin for iOS (AppStore), Android (PlayStore) and Windows</description>
@@ -42,6 +42,7 @@ SOFTWARE.
 
     <!-- ios -->
     <platform name="ios">
+        <!-- dependency id="cordova-plugin-add-swift-support" version="2.0.2" / -->
         <js-module src="www/store.js" name="CdvPurchase">
             <clobbers target="CdvPurchase" />
             <clobbers target="store" />

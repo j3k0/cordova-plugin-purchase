@@ -1,6 +1,6 @@
 # Release Notes - Cordova Plugin Purchase
 
-## 13.1.0
+## 13.1
 
 ### Update to requestPayment()
 
@@ -47,7 +47,7 @@ store.requestPayment({
 
 See [PaymentRequest](https://github.com/j3k0/cordova-plugin-purchase/blob/master/api/interfaces/CdvPurchase.PaymentRequest.md) and [PaymentRequestItem](https://github.com/j3k0/cordova-plugin-purchase/blob/master/api/interfaces/CdvPurchase.PaymentRequestItem.md) for details.
 
-## 13.0.0
+## 13.0
 
 This is a full rewrite of the API, updated to allow:
 

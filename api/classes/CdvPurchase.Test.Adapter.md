@@ -343,7 +343,7 @@ const paymentRequest = {
   items: [{ id: "product-1" }, { id: "product-2" }]
 };
 const result = await requestPayment(paymentRequest);
-if (result?.isHttpError) {
+if (result?.isError) {
   console.error(`Error: ${result.message}`);
 } else if (result) {
   console.log(`Transaction approved: ${result.transactionId}`);

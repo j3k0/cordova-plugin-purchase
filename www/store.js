@@ -817,7 +817,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.1.0';
+    CdvPurchase.PLUGIN_VERSION = '13.1.1';
     /**
      * Entry class of the plugin.
      */
@@ -3316,6 +3316,12 @@ var CdvPurchase;
         const dropInResponseIsOK = (response) => {
             return (!!response) && !('code' in response && 'message' in response);
         };
+        /**
+         * Returns the error response from Drop In
+         *
+         * If the "error" is that the user cancelled the payment, then returns undefined
+         * (as per the specification for requestPayment)
+         */
         const dropInResponseError = (log, response) => {
             if (!response) {
                 log.warn("launchDropIn failed: no response");
@@ -3323,6 +3329,10 @@ var CdvPurchase;
             }
             else {
                 // Failed
+                if (response.code === CdvPurchase.ErrorCode.PAYMENT_CANCELLED) {
+                    log.info("User cancelled the payment request");
+                    return undefined;
+                }
                 log.warn("launchDropIn failed: " + JSON.stringify(response));
                 return response;
             }
@@ -3618,6 +3628,7 @@ var CdvPurchase;
                 constructor(log, clientTokenProvider, applePayOptions) {
                     this.log = log.child("IosBridge");
                     this.clientTokenProvider = clientTokenProvider;
+                    this.applePayOptions = applePayOptions;
                 }
                 initialize(verbosity, callback) {
                     window.cordova.exec(null, null, "BraintreePlugin", "setVerbosity", [verbosity.verbosity]);
@@ -3630,30 +3641,20 @@ var CdvPurchase;
                         merchantCapabilities: [CdvPurchase.ApplePay.MerchantCapability.ThreeDS],
                     };
                     if (!request.paymentSummaryItems) {
-                        request.paymentSummaryItems =
-                            paymentRequest.items.filter(p => p).map((product, index) => {
-                                var _a, _b;
-                                // figure out amount and currency for the item
-                                let amountMicros;
-                                if (typeof (product === null || product === void 0 ? void 0 : product.pricing) !== 'undefined') {
-                                    if (product.pricing.currency && product.pricing.currency === paymentRequest.currency) {
-                                        amountMicros = (_a = product.pricing) === null || _a === void 0 ? void 0 : _a.priceMicros;
-                                    }
-                                }
-                                if (amountMicros === undefined) {
-                                    amountMicros = (_b = paymentRequest.amountMicros) !== null && _b !== void 0 ? _b : 0;
-                                }
-                                return {
-                                    type: 'final',
-                                    label: (product === null || product === void 0 ? void 0 : product.title) || (product === null || product === void 0 ? void 0 : product.id) || `Item #${index + 1}`,
-                                    amount: `${Math.round(amountMicros / 10000) / 100}`,
-                                };
-                            })
-                                .concat({
+                        const items = paymentRequest.items.filter(p => p).map((product, index) => {
+                            var _a, _b, _c;
+                            return ({
                                 type: 'final',
-                                label: (_d = (_c = this.applePayOptions) === null || _c === void 0 ? void 0 : _c.companyName) !== null && _d !== void 0 ? _d : 'Total',
-                                amount: `${Math.round(((_e = paymentRequest.amountMicros) !== null && _e !== void 0 ? _e : 0) / 10000) / 100}`,
+                                label: (product === null || product === void 0 ? void 0 : product.title) || (product === null || product === void 0 ? void 0 : product.id) || `Item #${index + 1}`,
+                                amount: `${Math.round(((_c = (_b = (_a = product === null || product === void 0 ? void 0 : product.pricing) === null || _a === void 0 ? void 0 : _a.priceMicros) !== null && _b !== void 0 ? _b : paymentRequest.amountMicros) !== null && _c !== void 0 ? _c : 0) / 10000) / 100}`,
                             });
+                        });
+                        const total = {
+                            type: 'final',
+                            label: (_d = (_c = this.applePayOptions) === null || _c === void 0 ? void 0 : _c.companyName) !== null && _d !== void 0 ? _d : 'Total',
+                            amount: `${Math.round(((_e = paymentRequest.amountMicros) !== null && _e !== void 0 ? _e : 0) / 10000) / 100}`,
+                        };
+                        request.paymentSummaryItems = [...items, total];
                     }
                     const result = await IosBridge.ApplePayPlugin.requestPayment(request);
                     this.log.info('Result from Apple Pay: ' + JSON.stringify(result));
@@ -4890,7 +4891,7 @@ var CdvPurchase;
              *   items: [{ id: "product-1" }, { id: "product-2" }]
              * };
              * const result = await requestPayment(paymentRequest);
-             * if (result?.isHttpError) {
+             * if (result?.isError) {
              *   console.error(`Error: ${result.message}`);
              * } else if (result) {
              *   console.log(`Transaction approved: ${result.transactionId}`);
