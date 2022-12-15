@@ -419,13 +419,23 @@ namespace CdvPurchase {
             return (!!response) && !('code' in response && 'message' in response);
         }
 
-        const dropInResponseError = (log: Logger, response?: IError): IError => {
+        /**
+         * Returns the error response from Drop In
+         *
+         * If the "error" is that the user cancelled the payment, then returns undefined
+         * (as per the specification for requestPayment)
+         */
+        const dropInResponseError = (log: Logger, response?: IError): (IError | undefined) => {
             if (!response) {
                 log.warn("launchDropIn failed: no response");
                 return storeError(ErrorCode.BAD_RESPONSE, 'Braintree failed to launch drop in');
             }
             else {
                 // Failed
+                if (response.code === ErrorCode.PAYMENT_CANCELLED) {
+                    log.info("User cancelled the payment request");
+                    return undefined;
+                }
                 log.warn("launchDropIn failed: " + JSON.stringify(response));
                 return response;
             }
