@@ -47,6 +47,19 @@ store.requestPayment({
 
 See [PaymentRequest](https://github.com/j3k0/cordova-plugin-purchase/blob/master/api/interfaces/CdvPurchase.PaymentRequest.md) and [PaymentRequestItem](https://github.com/j3k0/cordova-plugin-purchase/blob/master/api/interfaces/CdvPurchase.PaymentRequestItem.md) for details.
 
+### Fixes for Braintree.requestPayment()
+
+Bug fixes:
+
+* Properly using the provided `applePayOptions`
+* Detecting payment request cancellations by user
+
+### requestPayment() amount computed from items
+
+If the amount is not provided in a payment request, it will be computed as the sum of all items.
+
+Currency will also be retrieved from the items when missing.
+
 ## 13.0
 
 This is a full rewrite of the API, updated to allow:
