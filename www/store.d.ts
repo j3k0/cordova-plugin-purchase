@@ -503,7 +503,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.1.1";
+    const PLUGIN_VERSION = "13.1.2";
     /**
      * Entry class of the plugin.
      */

@@ -227,7 +227,7 @@ var CdvPurchase;
             /** All log lines are prefixed with this string */
             this.prefix = '';
             this.store = store;
-            this.prefix = prefix || 'CordovaPurchase';
+            this.prefix = prefix || 'CdvPurchase';
         }
         /**
          * Create a child logger, whose prefix will be this one's + the given string.
@@ -817,7 +817,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.1.1';
+    CdvPurchase.PLUGIN_VERSION = '13.1.2';
     /**
      * Entry class of the plugin.
      */
@@ -1125,22 +1125,34 @@ var CdvPurchase;
          * @param additionalData Additional parameters
          */
         requestPayment(paymentRequest, additionalData) {
-            var _a, _b, _c, _d;
+            var _a, _b, _c, _d, _e;
             const adapter = this.adapters.findReady(paymentRequest.platform);
             if (!adapter)
                 return CdvPurchase.PaymentRequestPromise.failed(CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + paymentRequest.platform + ')');
             // fill-in missing total amount as the sum of all items.
-            if (typeof paymentRequest.amountMicros === 'undefined') {
+            if (!paymentRequest.amountMicros) {
                 paymentRequest.amountMicros = 0;
                 for (const item of paymentRequest.items) {
                     paymentRequest.amountMicros += (_b = (_a = item === null || item === void 0 ? void 0 : item.pricing) === null || _a === void 0 ? void 0 : _a.priceMicros) !== null && _b !== void 0 ? _b : 0;
                 }
             }
             // fill-in the missing if set in the items.
-            if (typeof paymentRequest.currency === 'undefined') {
+            if (!paymentRequest.currency) {
                 for (const item of paymentRequest.items) {
                     if ((_c = item === null || item === void 0 ? void 0 : item.pricing) === null || _c === void 0 ? void 0 : _c.currency) {
                         paymentRequest.currency = item.pricing.currency;
+                    }
+                }
+            }
+            else {
+                for (const item of paymentRequest.items) {
+                    if ((_d = item === null || item === void 0 ? void 0 : item.pricing) === null || _d === void 0 ? void 0 : _d.currency) {
+                        if (paymentRequest.currency !== item.pricing.currency) {
+                            return CdvPurchase.PaymentRequestPromise.failed(CdvPurchase.ErrorCode.PAYMENT_INVALID, 'Currencies do not match');
+                        }
+                    }
+                    else if (item === null || item === void 0 ? void 0 : item.pricing) {
+                        item.pricing.currency = paymentRequest.currency;
                     }
                 }
             }
@@ -1148,7 +1160,10 @@ var CdvPurchase;
             if (paymentRequest.items.length === 1) {
                 const item = paymentRequest.items[0];
                 if (item && !item.pricing) {
-                    item.pricing = { priceMicros: (_d = paymentRequest.amountMicros) !== null && _d !== void 0 ? _d : 0 };
+                    item.pricing = {
+                        priceMicros: (_e = paymentRequest.amountMicros) !== null && _e !== void 0 ? _e : 0,
+                        currency: paymentRequest.currency,
+                    };
                 }
             }
             const promise = new CdvPurchase.PaymentRequestPromise();
@@ -2566,7 +2581,7 @@ var CdvPurchase;
                     if (options.debug) {
                         exec('debug', [], noop, noop);
                         log = options.log || function (msg) {
-                            console.log("[CordovaPurchase.AppAppStore.Bridge] " + msg);
+                            console.log("[CdvPurchase.AppAppStore.Bridge] " + msg);
                         };
                     }
                     if (options.autoFinish) {
