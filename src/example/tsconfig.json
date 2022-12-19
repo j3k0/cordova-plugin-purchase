@@ -1,0 +1,30 @@
+{
+  "include": [".", "../ts"],
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "ES2017",
+    "lib": ["ES2017", "DOM"],                            /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+
+    /* Modules */
+    "rootDir": "../",                                  /* Specify the root folder within your source files. */
+    "types": [],                         /* Specify type package names to be included without being referenced in a source file. */
+
+    /* JavaScript Support */
+    "allowJs": true,                                  /* Allow JavaScript files to be a part of your program. Use the 'checkJS' option to get errors from these files. */
+    "checkJs": true,                                  /* Enable error reporting in type-checked JavaScript files. */
+
+    "sourceMap": false,                                /* Create source map files for emitted JavaScript files. */
+    "outFile": "./example.js",                                  /* Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output. */
+    "importsNotUsedAsValues": "remove",               /* Specify emit/checking behavior for imports that are only used for types. */
+
+    /* Interop Constraints */
+    "esModuleInterop": false,                            /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
+    "forceConsistentCasingInFileNames": true,            /* Ensure that casing is correct in imports. */
+
+    /* Type Checking */
+    "strict": true,                                      /* Enable all strict type-checking options. */
+
+    /* Completeness */
+    "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+  }
+}
