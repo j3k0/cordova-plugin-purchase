@@ -421,7 +421,7 @@ namespace CdvPurchase {
                 return PaymentRequestPromise.failed(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + paymentRequest.platform + ')');
 
             // fill-in missing total amount as the sum of all items.
-            if (typeof paymentRequest.amountMicros === 'undefined') {
+            if (!paymentRequest.amountMicros) {
                 paymentRequest.amountMicros = 0;
                 for (const item of paymentRequest.items) {
                     paymentRequest.amountMicros += item?.pricing?.priceMicros ?? 0;
@@ -429,10 +429,22 @@ namespace CdvPurchase {
             }
 
             // fill-in the missing if set in the items.
-            if (typeof paymentRequest.currency === 'undefined') {
+            if (!paymentRequest.currency) {
                 for (const item of paymentRequest.items) {
                     if (item?.pricing?.currency) {
                         paymentRequest.currency = item.pricing.currency;
+                    }
+                }
+            }
+            else {
+                for (const item of paymentRequest.items) {
+                    if (item?.pricing?.currency) {
+                        if (paymentRequest.currency !== item.pricing.currency) {
+                            return PaymentRequestPromise.failed(ErrorCode.PAYMENT_INVALID, 'Currencies do not match');
+                        }
+                    }
+                    else if (item?.pricing) {
+                        item.pricing.currency = paymentRequest.currency;
                     }
                 }
             }
@@ -441,7 +453,10 @@ namespace CdvPurchase {
             if (paymentRequest.items.length === 1) {
                 const item = paymentRequest.items[0];
                 if (item && !item.pricing) {
-                    item.pricing = { priceMicros: paymentRequest.amountMicros ?? 0 }
+                    item.pricing = {
+                        priceMicros: paymentRequest.amountMicros ?? 0,
+                        currency: paymentRequest.currency,
+                    }
                 }
             }
 
