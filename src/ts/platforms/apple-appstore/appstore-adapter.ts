@@ -169,9 +169,7 @@ namespace CdvPurchase {
 
                         error: (code: ErrorCode, message: String, options?: { productId: string, quantity?: number }) => {
                             this.log.error('ERROR: ' + code + ' - ' + message);
-                            if (code === ErrorCode.PAYMENT_CANCELLED) {
-                                return;
-                            }
+                            CdvPurchase.store.triggerError(CdvPurchase.storeError(code, message));
                         },
 
                         ready: () => {
