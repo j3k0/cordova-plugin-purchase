@@ -8,6 +8,7 @@
 
 - [AndroidBridge](CdvPurchase.Braintree.AndroidBridge.md)
 - [DropIn](CdvPurchase.Braintree.DropIn.md)
+- [GooglePay](CdvPurchase.Braintree.GooglePay.md)
 - [IosBridge](CdvPurchase.Braintree.IosBridge.md)
 - [ThreeDSecure](CdvPurchase.Braintree.ThreeDSecure.md)
 

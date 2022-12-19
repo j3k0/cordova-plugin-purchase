@@ -3186,63 +3186,57 @@ var CdvPurchase;
                 return CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Braintree is not available');
             }
             async requestPayment(paymentRequest, additionalData) {
-                var _a, _b;
+                var _a, _b, _c, _d, _e, _f, _g, _h, _j;
                 this.log.info("requestPayment()" + JSON.stringify(paymentRequest));
-                let dropInResult;
-                if ((_a = additionalData === null || additionalData === void 0 ? void 0 : additionalData.braintree) === null || _a === void 0 ? void 0 : _a.dropInRequest) {
-                    // User provided a full DropInRequest, just passing it through
-                    const response = await this.launchDropIn(paymentRequest, additionalData.braintree.dropInRequest);
-                    if (!dropInResponseIsOK(response))
-                        return dropInResponseError(this.log, response);
-                    dropInResult = response;
+                const dropInRequest = ((_a = additionalData === null || additionalData === void 0 ? void 0 : additionalData.braintree) === null || _a === void 0 ? void 0 : _a.dropInRequest) || {};
+                // Apple Pay
+                if (!await Braintree.IosBridge.ApplePayPlugin.isSupported(this.log)) {
+                    this.log.info("Apple Pay is not supported.");
+                    dropInRequest.applePayDisabled = true;
                 }
-                /*
-                else if (!additionalData?.braintree?.method || additionalData.braintree.method === PaymentMethod.THREE_D_SECURE) {
-                    // User requested a 3D Secure payment
-                    const nonce = await this.getNonce(PaymentMethod.THREE_D_SECURE);
-                    if ('code' in nonce) {
-                        return nonce;
-                    }
-                    if (nonce.type !== PaymentMethod.THREE_D_SECURE) {
-                        return {
-                            code: ErrorCode.BAD_RESPONSE,
-                            message: 'The returned nonce should be of type THREE_D_SECURE',
+                // Google Pay
+                if (this.options.googlePay || dropInRequest.googlePayRequest) {
+                    const googlePay = Object.assign(Object.assign({}, ((_b = this.options.googlePay) !== null && _b !== void 0 ? _b : {})), ((_c = dropInRequest.googlePayRequest) !== null && _c !== void 0 ? _c : {}));
+                    if (!googlePay.transactionInfo) {
+                        googlePay.transactionInfo = {
+                            currencyCode: ((_d = paymentRequest.currency) !== null && _d !== void 0 ? _d : ''),
+                            totalPrice: ((_e = paymentRequest.amountMicros) !== null && _e !== void 0 ? _e : 0) / 1000000,
+                            totalPriceStatus: Braintree.GooglePay.TotalPriceStatus.FINAL,
                         };
                     }
-                    const threeDSecureRequest: CdvPurchase.Braintree.ThreeDSecure.Request = {
-                        amount: formatAmount(payment.amountMicros),
-                        nonce: nonce.value,
-                        email: payment.email,
-                        mobilePhoneNumber: payment.mobilePhoneNumber,
-                        billingAddress: {
-                            givenName: payment.billingAddress?.givenName,
-                            surname: payment.billingAddress?.surname,
-                            streetAddress: payment.billingAddress?.streetAddress1,
-                            extendedAddress: payment.billingAddress?.streetAddress2,
-                            line3: payment.billingAddress?.streetAddress3,
-                            locality: payment.billingAddress?.locality,
-                            phoneNumber: payment.billingAddress?.phoneNumber,
-                            postalCode: payment.billingAddress?.postalCode,
-                            region: payment.billingAddress?.region,
-                            countryCodeAlpha2: payment.billingAddress?.countryCode,
-                        },
-                    }
-                    const result = await this.androidBridge?.launchDropIn({ threeDSecureRequest });
-                    if (result?.code) {
-                        this.log.warn("launchDropIn failed: " + JSON.stringify(result));
-                        return result;
-                    }
+                    dropInRequest.googlePayRequest = googlePay;
                 }
-                */
-                else {
-                    // No other payment method as the moment...
-                    const response = await this.launchDropIn(paymentRequest, {});
-                    if (!dropInResponseIsOK(response))
-                        return dropInResponseError(this.log, response);
-                    dropInResult = response;
+                // 3DS
+                if (this.options.threeDSecure || dropInRequest.threeDSecureRequest) {
+                    const threeDS = Object.assign(Object.assign({}, ((_f = this.options.threeDSecure) !== null && _f !== void 0 ? _f : {})), ((_g = dropInRequest.threeDSecureRequest) !== null && _g !== void 0 ? _g : {}));
+                    if (!threeDS.amount) {
+                        threeDS.amount = asDecimalString((_h = paymentRequest.amountMicros) !== null && _h !== void 0 ? _h : 0);
+                    }
+                    if (!threeDS.billingAddress && paymentRequest.billingAddress) {
+                        threeDS.billingAddress = {
+                            givenName: paymentRequest.billingAddress.givenName,
+                            surname: paymentRequest.billingAddress.surname,
+                            countryCodeAlpha2: paymentRequest.billingAddress.countryCode,
+                            postalCode: paymentRequest.billingAddress.postalCode,
+                            locality: paymentRequest.billingAddress.locality,
+                            streetAddress: paymentRequest.billingAddress.streetAddress1,
+                            extendedAddress: paymentRequest.billingAddress.streetAddress2,
+                            line3: paymentRequest.billingAddress.streetAddress3,
+                            phoneNumber: paymentRequest.billingAddress.phoneNumber,
+                            region: paymentRequest.billingAddress.region,
+                        };
+                    }
+                    if (!threeDS.email) {
+                        threeDS.email = paymentRequest.email;
+                    }
+                    dropInRequest.threeDSecureRequest = threeDS;
                 }
+                const response = await this.launchDropIn(paymentRequest, dropInRequest);
+                if (!dropInResponseIsOK(response))
+                    return dropInResponseError(this.log, response);
+                const dropInResult = response;
                 this.log.info("launchDropIn success: " + JSON.stringify({ paymentRequest, dropInResult }));
-                if (!((_b = dropInResult.paymentMethodNonce) === null || _b === void 0 ? void 0 : _b.nonce)) {
+                if (!((_j = dropInResult.paymentMethodNonce) === null || _j === void 0 ? void 0 : _j.nonce)) {
                     return CdvPurchase.storeError(CdvPurchase.ErrorCode.BAD_RESPONSE, 'launchDropIn returned no paymentMethodNonce');
                 }
                 let receipt = this._receipts.find(r => { var _a, _b; return ((_a = r.dropInResult.paymentMethodNonce) === null || _a === void 0 ? void 0 : _a.nonce) === ((_b = dropInResult.paymentMethodNonce) === null || _b === void 0 ? void 0 : _b.nonce); });
@@ -3306,10 +3300,10 @@ var CdvPurchase;
             }
         }
         Braintree.Adapter = Adapter;
-        // function formatAmount(amountMicros: number): string {
-        //     const amountCents = '' + (amountMicros / 10000);
-        //     return (amountCents.slice(0, -2) || '0') + '.' + (amountCents.slice(-2, -1) || '0') + (amountCents.slice(-1) || '0');
-        // }
+        function asDecimalString(amountMicros) {
+            const amountCents = '' + (amountMicros / 10000);
+            return (amountCents.slice(0, -2) || '0') + '.' + (amountCents.slice(-2, -1) || '0') + (amountCents.slice(-1) || '0');
+        }
         function isBraintreeReceipt(receipt) {
             return receipt.platform === CdvPurchase.Platform.BRAINTREE;
         }
@@ -3591,6 +3585,10 @@ var CdvPurchase;
                 static isSupported(log) {
                     return new Promise(resolve => {
                         var _a;
+                        if (window.cordova.platformId !== 'ios') {
+                            log.info('BraintreeApplePayPlugin is only available for ios.');
+                            return resolve(false);
+                        }
                         if (!((_a = ApplePayPlugin.get()) === null || _a === void 0 ? void 0 : _a.installed)) {
                             log.info('BraintreeApplePayPlugin does not appear to be installed.');
                             return resolve(false);
@@ -3696,10 +3694,6 @@ var CdvPurchase;
                                 resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'ERROR ' + errCode + ': ' + errMessage));
                             }
                         };
-                        if (!await IosBridge.ApplePayPlugin.isSupported(this.log)) {
-                            this.log.info("Apple Pay is not supported.");
-                            dropInRequest.applePayDisabled = true;
-                        }
                         this.clientTokenProvider((clientToken) => {
                             if (typeof clientToken === 'string')
                                 window.cordova.exec(onSuccess, onError, "BraintreePlugin", "launchDropIn", [clientToken, dropInRequest]);
@@ -3771,6 +3765,50 @@ var CdvPurchase;
                 PaymentMethod["UNKNOWN"] = "UNKNOWN";
             })(PaymentMethod = DropIn.PaymentMethod || (DropIn.PaymentMethod = {}));
         })(DropIn = Braintree.DropIn || (Braintree.DropIn = {}));
+    })(Braintree = CdvPurchase.Braintree || (CdvPurchase.Braintree = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Braintree;
+    (function (Braintree) {
+        let GooglePay;
+        (function (GooglePay) {
+            /**
+             * The Google Pay API will collect the billing address for you if required
+             */
+            let BillingAddressFormat;
+            (function (BillingAddressFormat) {
+                /**
+                 * When this format is used, the billing address returned will only contain the minimal info, including name, country code, and postal code.
+                 *
+                 * Note that some countries do not use postal codes, so the postal code field will be empty in those countries.
+                 */
+                BillingAddressFormat[BillingAddressFormat["MIN"] = 0] = "MIN";
+                /**
+                 * When this format is used, the billing address returned will be the full address.
+                 *
+                 * Only select this format when it's required to process the order since it can increase friction during the checkout process and can lead to a lower conversion rate.
+                 */
+                BillingAddressFormat[BillingAddressFormat["FULL"] = 1] = "FULL";
+            })(BillingAddressFormat = GooglePay.BillingAddressFormat || (GooglePay.BillingAddressFormat = {}));
+            /**
+             * This enum represents the status of the total price of a transaction.
+             *
+             * It can take on one of the following values:
+             * - TotalPriceStatus.NOT_CURRENTLY_KNOWN: The total price is not currently known.
+             * - TotalPriceStatus.ESTIMATED: The total price is an estimate.
+             * - TotalPriceStatus.FINAL: The total price is final.
+             */
+            let TotalPriceStatus;
+            (function (TotalPriceStatus) {
+                /** The total price is not currently known. */
+                TotalPriceStatus[TotalPriceStatus["NOT_CURRENTLY_KNOWN"] = 1] = "NOT_CURRENTLY_KNOWN";
+                /** The total price is an estimate. */
+                TotalPriceStatus[TotalPriceStatus["ESTIMATED"] = 2] = "ESTIMATED";
+                /** The total price is final. */
+                TotalPriceStatus[TotalPriceStatus["FINAL"] = 3] = "FINAL";
+            })(TotalPriceStatus = GooglePay.TotalPriceStatus || (GooglePay.TotalPriceStatus = {}));
+        })(GooglePay = Braintree.GooglePay || (Braintree.GooglePay = {}));
     })(Braintree = CdvPurchase.Braintree || (CdvPurchase.Braintree = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;

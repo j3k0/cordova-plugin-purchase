@@ -22,6 +22,7 @@ const {store, ProductType, Platform, LogLevel} = CdvPurchase;
 - [ApplePay](CdvPurchase.ApplePay.md)
 - [Braintree](CdvPurchase.Braintree.md)
 - [GooglePlay](CdvPurchase.GooglePlay.md)
+- [PlatformOptions](CdvPurchase.PlatformOptions.md)
 - [Test](CdvPurchase.Test.md)
 - [Utils](CdvPurchase.Utils.md)
 - [Validator](CdvPurchase.Validator.md)
@@ -133,7 +134,7 @@ ___
 
 ### PlatformWithOptions
 
-Ƭ **PlatformWithOptions**: { `options`: [`AdapterOptions`](../interfaces/CdvPurchase.Braintree.AdapterOptions.md) ; `platform`: [`BRAINTREE`](../enums/CdvPurchase.Platform.md#braintree)  } \| { `platform`: [`GOOGLE_PLAY`](../enums/CdvPurchase.Platform.md#google_play)  } \| { `options?`: [`AdapterOptions`](../interfaces/CdvPurchase.AppleAppStore.AdapterOptions.md) ; `platform`: [`APPLE_APPSTORE`](../enums/CdvPurchase.Platform.md#apple_appstore)  } \| { `platform`: [`TEST`](../enums/CdvPurchase.Platform.md#test)  } \| { `platform`: [`WINDOWS_STORE`](../enums/CdvPurchase.Platform.md#windows_store)  }
+Ƭ **PlatformWithOptions**: [`Braintree`](../interfaces/CdvPurchase.PlatformOptions.Braintree.md) \| [`AppleAppStore`](../interfaces/CdvPurchase.PlatformOptions.AppleAppStore.md) \| [`GooglePlay`](../interfaces/CdvPurchase.PlatformOptions.GooglePlay.md) \| [`Test`](../interfaces/CdvPurchase.PlatformOptions.Test.md) \| [`WindowsStore`](../interfaces/CdvPurchase.PlatformOptions.WindowsStore.md)
 
 Used to initialize a platform with some options
 

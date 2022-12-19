@@ -16,6 +16,6 @@ Data for a Braintree payment request.
 
 • `Optional` **dropInRequest**: [`Request`](CdvPurchase.Braintree.DropIn.Request.md)
 
-Specify the full DropIn Request parameters.
+Specify the full DropIn Request parameters for full customization.
 
-When specified, all fields from PaymentRequest will be ignored.
+When set, this takes precedence over all other options.

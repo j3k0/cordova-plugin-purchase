@@ -43,11 +43,13 @@ ___
 
 ### amount
 
-• **amount**: `string`
+• `Optional` **amount**: `string`
 
-The amount for the transaction.
+Amount for the transaction.
 
 String representation of a decimal number.
+
+Automatically filled from the `PaymentRequest`.
 
 ___
 
@@ -56,6 +58,8 @@ ___
 • `Optional` **billingAddress**: [`PostalAddress`](CdvPurchase.Braintree.ThreeDSecure.PostalAddress.md)
 
 The billing address used for verification. Optional.
+
+Automatically filled from the `PaymentRequest`
 
 ___
 
@@ -84,6 +88,8 @@ ___
 • `Optional` **email**: `string`
 
 The email used for verification. Optional.
+
+Automatically filled from the `PaymentRequest`
 
 ___
 

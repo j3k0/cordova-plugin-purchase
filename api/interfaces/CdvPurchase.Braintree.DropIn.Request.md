@@ -12,6 +12,7 @@ A Braintree Drop-In Request
 - [applePayDisabled](CdvPurchase.Braintree.DropIn.Request.md#applepaydisabled)
 - [cardDisabled](CdvPurchase.Braintree.DropIn.Request.md#carddisabled)
 - [cardholderNameStatus](CdvPurchase.Braintree.DropIn.Request.md#cardholdernamestatus)
+- [googlePayRequest](CdvPurchase.Braintree.DropIn.Request.md#googlepayrequest)
 - [maskCardNumber](CdvPurchase.Braintree.DropIn.Request.md#maskcardnumber)
 - [maskSecurityCode](CdvPurchase.Braintree.DropIn.Request.md#masksecuritycode)
 - [paypalDisabled](CdvPurchase.Braintree.DropIn.Request.md#paypaldisabled)
@@ -62,6 +63,14 @@ Default is DISABLED.
 
 ___
 
+### googlePayRequest
+
+• `Optional` **googlePayRequest**: [`Request`](CdvPurchase.Braintree.GooglePay.Request.md)
+
+Provide the Google Pay request if you need Google Pay support
+
+___
+
 ### maskCardNumber
 
 • `Optional` **maskCardNumber**: `boolean`
@@ -95,6 +104,8 @@ ___
 ### threeDSecureRequest
 
 • `Optional` **threeDSecureRequest**: [`Request`](CdvPurchase.Braintree.ThreeDSecure.Request.md)
+
+Provide the ThreeDSecure request if you need 3DS support
 
 ___
 
