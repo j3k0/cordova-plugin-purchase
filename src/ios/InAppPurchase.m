@@ -25,9 +25,9 @@ static BOOL g_autoFinishEnabled = NO;
 // Log messages to NSLog if g_debugEnabled is set
 #define DLog(fmt, ...) { \
     if (g_debugEnabled) \
-        NSLog((@"[CordovaPurchase.AppleAppStore.objc] " fmt), ##__VA_ARGS__); \
+        NSLog((@"[CdvPurchase.AppleAppStore.objc] " fmt), ##__VA_ARGS__); \
     else if (!g_initialized) \
-        NSLog((@"[CordovaPurhcase.AppleAppStore.objc] (before init): " fmt), ##__VA_ARGS__); \
+        NSLog((@"[CdvPurchase.AppleAppStore.objc] (before init): " fmt), ##__VA_ARGS__); \
 }
 
 #define ERROR_CODES_BASE 6777000
@@ -254,10 +254,10 @@ static NSString *toTimestamp(NSDate *date) {
     self.unfinishedTransactions = [[NSMutableDictionary alloc] init];
     if ([SKPaymentQueue canMakePayments]) {
         [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
-        NSLog(@"[CordovaPurchase.AppleAppStore.objc] Initialized.");
+        NSLog(@"[CdvPurchase.AppleAppStore.objc] Initialized.");
     }
     else {
-        NSLog(@"[CordovaPurchase.AppleAppStore.objc] Initialization failed: payments are disabled.");
+        NSLog(@"[CdvPurchase.AppleAppStore.objc] Initialization failed: payments are disabled.");
     }
 }
 

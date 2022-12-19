@@ -36,7 +36,7 @@ namespace CdvPurchase
         /** @internal */
         constructor(store: VerbosityProvider, prefix: string = '') {
             this.store = store;
-            this.prefix = prefix || 'CordovaPurchase';
+            this.prefix = prefix || 'CdvPurchase';
         }
 
         /**

@@ -302,7 +302,7 @@ namespace CdvPurchase {
                     if (options.debug) {
                         exec('debug', [], noop, noop);
                         log = options.log || function (msg) {
-                            console.log("[CordovaPurchase.AppAppStore.Bridge] " + msg);
+                            console.log("[CdvPurchase.AppAppStore.Bridge] " + msg);
                         };
                     }
 

@@ -70,7 +70,7 @@ public final class PurchasePlugin
         AcknowledgePurchaseResponseListener {
 
   /** Tag used for log messages. */
-  private final String mTag = "CordovaPurchase";
+  private final String mTag = "CdvPurchase";
 
   /**
    * Context for the last plugin call.
