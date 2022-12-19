@@ -8,17 +8,11 @@ namespace CdvPurchase {
     export interface AdditionalData {
 
       /**
-       * Specify the full DropIn Request parameters.
-       * 
-       * When specified, all fields from PaymentRequest will be ignored.
-       */
-      dropInRequest?: DropIn.Request,
-
-      /*
-       * Payment method (default to THREE_D_SECURE)
+       * Specify the full DropIn Request parameters for full customization.
        *
-       * method?: PaymentMethod;
+       * When set, this takes precedence over all other options.
        */
+      dropInRequest?: DropIn.Request;
     }
   }
 }

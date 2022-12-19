@@ -7,24 +7,32 @@ namespace CdvPurchase {
       export interface Request {
 
         /**
-         * The amount for the transaction.
+         * Amount for the transaction.
          *
          * String representation of a decimal number.
+         *
+         * Automatically filled from the `PaymentRequest`.
          */
-        amount: string;
+        amount?: string;
 
         /**
          * A nonce to be verified by ThreeDSecure.
          */
         nonce?: string;
 
-        /** The email used for verification. Optional. */
+        /**
+         *  The email used for verification. Optional.
+         *
+         * Automatically filled from the `PaymentRequest`
+         */
         email?: string;
 
-        /** The billing address used for verification. Optional. */
+        /**
+         * The billing address used for verification. Optional.
+         *
+         * Automatically filled from the `PaymentRequest`
+         */
         billingAddress?: PostalAddress;
-
-        // THE BELOW IS NOT IMPLEMENTED TODO!!!
 
         /**
          * The mobile phone number used for verification.
@@ -45,7 +53,6 @@ namespace CdvPurchase {
 
         /** The additional information used for verification. */
         additionalInformation?: AdditionalInformation;
-
 
         /** Set to V2 if ThreeDSecure V2 flows are desired, when possible. Defaults to V2 */
         versionRequested?: Version;

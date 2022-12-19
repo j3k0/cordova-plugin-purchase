@@ -1,5 +1,23 @@
 namespace CdvPurchase
 {
+    export namespace PlatformOptions {
+        export interface Braintree {
+            platform: Platform.BRAINTREE;
+            options: Braintree.AdapterOptions;
+        }
+
+        export interface GooglePlay {
+            platform: Platform.GOOGLE_PLAY;
+        }
+
+        export interface AppleAppStore {
+            platform: Platform.APPLE_APPSTORE;
+            options?: AppleAppStore.AdapterOptions;
+        }
+
+        export interface Test { platform: Platform.TEST; }
+        export interface WindowsStore { platform: Platform.WINDOWS_STORE; }
+    }
 
     /**
      * Used to initialize a platform with some options
@@ -7,11 +25,11 @@ namespace CdvPurchase
      * @see {@link Store.initialize}
      */
     export type PlatformWithOptions =
-        | { platform: Platform.BRAINTREE; options: Braintree.AdapterOptions; }
-        | { platform: Platform.GOOGLE_PLAY; }
-        | { platform: Platform.APPLE_APPSTORE; options?: AppleAppStore.AdapterOptions; }
-        | { platform: Platform.TEST; }
-        | { platform: Platform.WINDOWS_STORE; }
+        | PlatformOptions.Braintree
+        | PlatformOptions.AppleAppStore
+        | PlatformOptions.GooglePlay
+        | PlatformOptions.Test
+        | PlatformOptions.WindowsStore
         ;
 
     /** @internal */

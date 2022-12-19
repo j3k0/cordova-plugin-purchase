@@ -5,7 +5,11 @@ namespace CdvPurchase {
       /** A Braintree Drop-In Request */
       export interface Request {
 
+        /** Provide the ThreeDSecure request if you need 3DS support */
         threeDSecureRequest?: ThreeDSecure.Request;
+
+        /** Provide the Google Pay request if you need Google Pay support */
+        googlePayRequest?: GooglePay.Request;
 
         // requestThreeDSecureVerification?: boolean;
         // collectDeviceData?: boolean;

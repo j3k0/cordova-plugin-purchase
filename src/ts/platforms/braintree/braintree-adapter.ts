@@ -14,6 +14,16 @@ namespace CdvPurchase {
 
             /** Options for making Apple Pay payment requests */
             applePay?: IosBridge.ApplePayOptions;
+
+            /**
+             * Google Pay request parameters applied to all Braintree DropIn requests
+             */
+            googlePay?: GooglePay.Request;
+
+            /**
+             * 3DS request parameters applied to all Braintree DropIn requests
+             */
+            threeDSecure?: ThreeDSecure.Request;
         }
 
         export type ClientTokenProvider = (callback: Callback<string | IError>) => void;
@@ -286,57 +296,62 @@ namespace CdvPurchase {
             async requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined> {
 
                 this.log.info("requestPayment()" + JSON.stringify(paymentRequest));
-                let dropInResult: DropIn.Result;
-                if (additionalData?.braintree?.dropInRequest) {
-                    // User provided a full DropInRequest, just passing it through
-                    const response = await this.launchDropIn(paymentRequest, additionalData.braintree.dropInRequest);
-                    if (!dropInResponseIsOK(response)) return dropInResponseError(this.log, response);
-                    dropInResult = response;
+                const dropInRequest: DropIn.Request = additionalData?.braintree?.dropInRequest || {};
+
+                // Apple Pay
+                if (!await IosBridge.ApplePayPlugin.isSupported(this.log)) {
+                    this.log.info("Apple Pay is not supported.");
+                    dropInRequest.applePayDisabled = true;
                 }
-                /*
-                else if (!additionalData?.braintree?.method || additionalData.braintree.method === PaymentMethod.THREE_D_SECURE) {
-                    // User requested a 3D Secure payment
-                    const nonce = await this.getNonce(PaymentMethod.THREE_D_SECURE);
-                    if ('code' in nonce) {
-                        return nonce;
+
+                // Google Pay
+                if (this.options.googlePay || dropInRequest.googlePayRequest) {
+                    const googlePay: GooglePay.Request = {
+                        ...(this.options.googlePay ?? {}),
+                        ...(dropInRequest.googlePayRequest ?? {}),
                     }
-                    if (nonce.type !== PaymentMethod.THREE_D_SECURE) {
-                        return {
-                            code: ErrorCode.BAD_RESPONSE,
-                            message: 'The returned nonce should be of type THREE_D_SECURE',
-                        };
+                    if (!googlePay.transactionInfo) {
+                        googlePay.transactionInfo = {
+                            currencyCode: (paymentRequest.currency ?? ''),
+                            totalPrice: (paymentRequest.amountMicros ?? 0) / 1000000,
+                            totalPriceStatus: GooglePay.TotalPriceStatus.FINAL,
+                        }
                     }
-                    const threeDSecureRequest: CdvPurchase.Braintree.ThreeDSecure.Request = {
-                        amount: formatAmount(payment.amountMicros),
-                        nonce: nonce.value,
-                        email: payment.email,
-                        mobilePhoneNumber: payment.mobilePhoneNumber,
-                        billingAddress: {
-                            givenName: payment.billingAddress?.givenName,
-                            surname: payment.billingAddress?.surname,
-                            streetAddress: payment.billingAddress?.streetAddress1,
-                            extendedAddress: payment.billingAddress?.streetAddress2,
-                            line3: payment.billingAddress?.streetAddress3,
-                            locality: payment.billingAddress?.locality,
-                            phoneNumber: payment.billingAddress?.phoneNumber,
-                            postalCode: payment.billingAddress?.postalCode,
-                            region: payment.billingAddress?.region,
-                            countryCodeAlpha2: payment.billingAddress?.countryCode,
-                        },
-                    }
-                    const result = await this.androidBridge?.launchDropIn({ threeDSecureRequest });
-                    if (result?.code) {
-                        this.log.warn("launchDropIn failed: " + JSON.stringify(result));
-                        return result;
-                    }
+                    dropInRequest.googlePayRequest = googlePay;
                 }
-                */
-                else {
-                    // No other payment method as the moment...
-                    const response = await this.launchDropIn(paymentRequest, {});
-                    if (!dropInResponseIsOK(response)) return dropInResponseError(this.log, response);
-                    dropInResult = response;
+
+                // 3DS
+                if (this.options.threeDSecure || dropInRequest.threeDSecureRequest) {
+                    const threeDS: ThreeDSecure.Request = {
+                        ...(this.options.threeDSecure ?? {}),
+                        ...(dropInRequest.threeDSecureRequest ?? {}),
+                    }
+                    if (!threeDS.amount) {
+                        threeDS.amount = asDecimalString(paymentRequest.amountMicros ?? 0);
+                    }
+                    if (!threeDS.billingAddress && paymentRequest.billingAddress) {
+                        threeDS.billingAddress = {
+                            givenName: paymentRequest.billingAddress.givenName,
+                            surname: paymentRequest.billingAddress.surname,
+                            countryCodeAlpha2: paymentRequest.billingAddress.countryCode,
+                            postalCode: paymentRequest.billingAddress.postalCode,
+                            locality: paymentRequest.billingAddress.locality,
+                            streetAddress: paymentRequest.billingAddress.streetAddress1,
+                            extendedAddress: paymentRequest.billingAddress.streetAddress2,
+                            line3: paymentRequest.billingAddress.streetAddress3,
+                            phoneNumber: paymentRequest.billingAddress.phoneNumber,
+                            region: paymentRequest.billingAddress.region,
+                        }
+                    }
+                    if (!threeDS.email) {
+                        threeDS.email = paymentRequest.email;
+                    }
+                    dropInRequest.threeDSecureRequest = threeDS;
                 }
+
+                const response = await this.launchDropIn(paymentRequest, dropInRequest);
+                if (!dropInResponseIsOK(response)) return dropInResponseError(this.log, response);
+                const dropInResult: DropIn.Result = response;
 
                 this.log.info("launchDropIn success: " + JSON.stringify({ paymentRequest, dropInResult }));
                 if (!dropInResult.paymentMethodNonce?.nonce) {
@@ -406,10 +421,10 @@ namespace CdvPurchase {
             }
         }
 
-        // function formatAmount(amountMicros: number): string {
-        //     const amountCents = '' + (amountMicros / 10000);
-        //     return (amountCents.slice(0, -2) || '0') + '.' + (amountCents.slice(-2, -1) || '0') + (amountCents.slice(-1) || '0');
-        // }
+        function asDecimalString(amountMicros: number): string {
+            const amountCents = '' + (amountMicros / 10000);
+            return (amountCents.slice(0, -2) || '0') + '.' + (amountCents.slice(-2, -1) || '0') + (amountCents.slice(-1) || '0');
+        }
 
         function isBraintreeReceipt(receipt: Receipt): receipt is BraintreeReceipt {
             return receipt.platform === Platform.BRAINTREE;
