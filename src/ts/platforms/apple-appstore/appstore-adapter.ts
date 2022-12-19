@@ -403,19 +403,42 @@ namespace CdvPurchase {
                 });
             }
 
-            receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined {
+            refreshReceipt(): Promise<undefined | IError | ApplicationReceipt> {
+                return new Promise(resolve => {
+                    const success = (receipt: ApplicationReceipt): void => {
+                        // at that point, the receipt should have been refreshed.
+                        resolve(receipt);
+                    }
+                    const error = (code: ErrorCode, message: string): void => {
+                        resolve(storeError(code, message));
+                    }
+                    this.bridge.refreshReceipts(success, error);
+                });
+            }
+
+            async receiptValidationBody(receipt: Receipt): Promise<Validator.Request.Body | undefined> {
                 if (receipt.platform !== Platform.APPLE_APPSTORE) return;
                 const skReceipt = receipt as SKApplicationReceipt;
+                let applicationReceipt = skReceipt.nativeData;
+                if (!skReceipt.nativeData.appStoreReceipt) {
+                    const result = await this.refreshReceipt();
+                    if (!result || 'isError' in result) {
+                        this.log.warn('Failed to refresh receipt, cannot run receipt validation.');
+                        if (result) this.log.error(result);
+                        return;
+                    }
+                    applicationReceipt = result;
+                }
                 const transaction = skReceipt.transactions.slice(-1)[0] as (SKTransaction | undefined);
                 return {
-                    id: skReceipt.nativeData.bundleIdentifier,
+                    id: applicationReceipt.bundleIdentifier,
                     type: ProductType.APPLICATION,
                     // send all products and offers so validator get pricing information
                     products: Object.values(this.validProducts).map(vp => new SKProduct(vp, vp, this.context.apiDecorators, { isEligible: () => true })),
                     transaction: {
                         type: 'ios-appstore',
                         id: transaction?.transactionId,
-                        appStoreReceipt: skReceipt.nativeData.appStoreReceipt,
+                        appStoreReceipt: applicationReceipt.appStoreReceipt,
                     }
                 }
             }

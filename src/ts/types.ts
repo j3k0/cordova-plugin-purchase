@@ -155,7 +155,7 @@ namespace CdvPurchase {
         /**
          * Prepare for receipt validation
          */
-        receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
+        receiptValidationBody(receipt: Receipt): Promise<Validator.Request.Body | undefined>;
 
         /**
          * Handle platform specific fields from receipt validation response.

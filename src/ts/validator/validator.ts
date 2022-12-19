@@ -109,21 +109,23 @@ namespace CdvPurchase {
                 receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));
             }
 
-            private runOnReceipt(receipt: Receipt, callback: Callback<ReceiptResponse>) {
+            private async runOnReceipt(receipt: Receipt, callback: Callback<ReceiptResponse>) {
 
                 if (receipt.platform === Platform.TEST) {
                     this.log.debug('Using Test Adapter mock verify function.');
                     return Test.Adapter.verify(receipt, callback);
                 }
                 if (!this.controller.validator) return;
+                const body = await this.buildRequestBody(receipt);
+                if (!body) return;
+
                 if (typeof this.controller.validator === 'function')
                     return this.runValidatorFunction(this.controller.validator, receipt, callback);
 
                 const target: Validator.Target = typeof this.controller.validator === 'string'
                     ? { url: this.controller.validator }
                     : this.controller.validator;
-                const body = this.buildRequestBody(receipt);
-                if (!body) return;
+
                 return this.runValidatorRequest(target, receipt, body, callback);
             }
 
@@ -136,11 +138,11 @@ namespace CdvPurchase {
                 }
             }
 
-            private buildRequestBody(receipt: Receipt): Validator.Request.Body | undefined {
+            private async buildRequestBody(receipt: Receipt): Promise<Validator.Request.Body | undefined> {
 
                 // Let the adapter generate the initial content
                 const adapter = this.controller.adapters.find(receipt.platform);
-                const body = adapter?.receiptValidationBody(receipt);
+                const body = await adapter?.receiptValidationBody(receipt);
                 if (!body) return;
 
                 // Add the applicationUsername

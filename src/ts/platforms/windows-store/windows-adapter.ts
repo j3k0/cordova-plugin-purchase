@@ -22,7 +22,7 @@ namespace CdvPurchase {
             async handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void> {
                 return;
             }
-            receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined {
+            async receiptValidationBody(receipt: Receipt): Promise<Validator.Request.Body | undefined> {
                 return;
             }
             async requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined> {

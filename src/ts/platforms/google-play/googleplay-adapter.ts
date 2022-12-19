@@ -346,7 +346,7 @@ namespace CdvPurchase {
             /**
              * Prepare for receipt validation
              */
-            receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined {
+            async receiptValidationBody(receipt: Receipt): Promise<Validator.Request.Body | undefined> {
                 const transaction = receipt.transactions[0] as GooglePlay.Transaction;
                 if (!transaction) return;
                 const productId = transaction.products[0]?.id;

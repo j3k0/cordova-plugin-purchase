@@ -370,7 +370,7 @@ namespace CdvPurchase {
                 return receipt.transactions[0];
             }
 
-            receiptValidationBody(receipt: BraintreeReceipt): Validator.Request.Body | undefined {
+            async receiptValidationBody(receipt: BraintreeReceipt): Promise<Validator.Request.Body | undefined> {
                 if (!isBraintreeReceipt(receipt)) {
                     this.log.error("Unexpected error, expecting a BraintreeReceipt: " + JSON.stringify(receipt));
                     return;
