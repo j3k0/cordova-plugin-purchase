@@ -399,7 +399,7 @@ static NSString *toTimestamp(NSDate *date) {
     if ([quantity respondsToSelector:@selector(integerValue)]) {
         payment.quantity = [quantity integerValue];
     }
-    if (applicationUsername != nil && applicationUsername.length > 0) {
+    if (applicationUsername != nil && applicationUsername != NSNull.null && applicationUsername.length > 0) {
         DLog(@"purchase applicationUsername (%@).", applicationUsername);
         payment.applicationUsername = applicationUsername;
     }
