@@ -148,11 +148,6 @@ namespace CdvPurchase {
                 }
               }
 
-              if (!await ApplePayPlugin.isSupported(this.log)) {
-                this.log.info("Apple Pay is not supported.");
-                dropInRequest.applePayDisabled = true;
-              }
-
               this.clientTokenProvider((clientToken) => {
                 if (typeof clientToken === 'string')
                   window.cordova.exec(onSuccess, onError, "BraintreePlugin", "launchDropIn", [clientToken, dropInRequest]);

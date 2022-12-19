@@ -49,6 +49,10 @@ namespace CdvPurchase {
          */
         static isSupported(log: Logger): Promise<boolean> {
           return new Promise(resolve => {
+            if (window.cordova.platformId !== 'ios') {
+              log.info('BraintreeApplePayPlugin is only available for ios.');
+              return resolve(false);
+            }
             if (!ApplePayPlugin.get()?.installed) {
               log.info('BraintreeApplePayPlugin does not appear to be installed.');
               return resolve(false);
