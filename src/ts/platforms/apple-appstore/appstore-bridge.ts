@@ -578,6 +578,9 @@ namespace CdvPurchase {
 
                     const error = (errMessage: string) => {
                         log('refresh receipt failed: ' + errMessage);
+                        if (errMessage.includes("(@AMSErrorDomain:100)")) {
+                            log('authentication failed, indicated by the string "(@AMSErrorDomain:100)"');
+                        }
                         protectCall(this.options.error, 'options.error', ErrorCode.REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
                         protectCall(errorCb, "refreshReceipts.error", ErrorCode.REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
                     };

@@ -421,12 +421,14 @@ namespace CdvPurchase {
                 const skReceipt = receipt as SKApplicationReceipt;
                 let applicationReceipt = skReceipt.nativeData;
                 if (!skReceipt.nativeData.appStoreReceipt) {
+                    this.log.info('Cannot prepare the receipt validation body, because appStoreReceipt is missing. Refreshing...');
                     const result = await this.refreshReceipt();
                     if (!result || 'isError' in result) {
                         this.log.warn('Failed to refresh receipt, cannot run receipt validation.');
                         if (result) this.log.error(result);
                         return;
                     }
+                    this.log.info('Receipt refreshed.');
                     applicationReceipt = result;
                 }
                 const transaction = skReceipt.transactions.slice(-1)[0] as (SKTransaction | undefined);

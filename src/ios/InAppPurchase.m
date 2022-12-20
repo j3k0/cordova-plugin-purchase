@@ -810,12 +810,30 @@ static NSString *toTimestamp(NSDate *date) {
 #endif
 }
 
-- (void):(SKRequest *)request didFailWithError:(NSError*) error {
+- (NSString *)errorCodeStack:(NSError *)error {
+    NSString *message = [NSString stringWithFormat:@"%@ [#%@:%ld]", [error localizedDescription], error.domain, (long)error.code];
+    if (@available(iOS 14.5, *)) {
+        for (NSError *underlyingError in error.underlyingErrors) {
+            message = [NSString stringWithFormat:@"%@, (%@)", message, [self errorCodeStack:underlyingError]];
+        }
+    }
+    return message;
+}
+
+- (void)request:(SKRequest *)request didFailWithError:(NSError *)error {
     DLog(@"RefreshReceiptDelegate.request didFailWithError: In-App Store unavailable (ERROR %li)", (unsigned long)error.code);
-    DLog(@"RefreshReceiptDelegate.request didFailWithError: %@", [error localizedDescription]);
+    NSString *message = [self errorCodeStack:error];
+    DLog(@"RefreshReceiptDelegate.request didFailWithError: %@", message);
     CDVPluginResult* pluginResult =
-    [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+    [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:message];
     [self.plugin.commandDelegate sendPluginResult:pluginResult callbackId:self.command.callbackId];
+#if ARC_ENABLED
+    [self.plugin.retainer removeObjectForKey:@"receiptRefreshRequest"];
+    [self.plugin.retainer removeObjectForKey:@"receiptRefreshRequestDelegate"];
+#else
+    [request release];
+    [self    release];
+#endif
 }
 
 #if ARC_DISABLED
