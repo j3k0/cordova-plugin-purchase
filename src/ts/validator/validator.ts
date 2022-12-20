@@ -120,7 +120,7 @@ namespace CdvPurchase {
                 if (!body) return;
 
                 if (typeof this.controller.validator === 'function')
-                    return this.runValidatorFunction(this.controller.validator, receipt, callback);
+                    return this.runValidatorFunction(this.controller.validator, receipt, body, callback);
 
                 const target: Validator.Target = typeof this.controller.validator === 'string'
                     ? { url: this.controller.validator }
@@ -129,9 +129,9 @@ namespace CdvPurchase {
                 return this.runValidatorRequest(target, receipt, body, callback);
             }
 
-            private runValidatorFunction(validator: Validator.Function, receipt: Receipt, callback: Callback<ReceiptResponse>) {
+            private runValidatorFunction(validator: Validator.Function, receipt: Receipt, body: Validator.Request.Body, callback: Callback<ReceiptResponse>) {
                 try {
-                    validator(receipt, (payload: Validator.Response.Payload) => callback({ receipt, payload }));
+                    validator(body, (payload: Validator.Response.Payload) => callback({ receipt, payload }));
                 }
                 catch (error) {
                     this.log.warn("user provided validator function failed with error: " + (error as Error)?.stack);

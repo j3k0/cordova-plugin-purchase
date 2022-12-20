@@ -7,10 +7,8 @@ namespace CdvPurchase {
          */
         export type ISODate = string;
 
-        export type Callback = (payload: Validator.Response.Payload) => void;
-
         export interface Function {
-            (receipt: Receipt, callback: Callback): void;
+            (receipt: Validator.Request.Body, callback: Callback<Validator.Response.Payload>): void;
         }
 
         export interface Target {
