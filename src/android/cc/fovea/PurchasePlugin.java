@@ -606,7 +606,7 @@ public final class PurchasePlugin
       final List<Purchase> purchases) {
     try {
       final int code = result.getResponseCode();
-      if (code == BillingResponseCode.OK && purchases != null && purchases.size() > 0)) {
+      if (code == BillingResponseCode.OK && purchases != null && purchases.size() > 0) {
         Log.d(mTag, "onPurchasesUpdated() -> Success");
         for (Purchase p : purchases) {
           mPurchases.add(0, p);
