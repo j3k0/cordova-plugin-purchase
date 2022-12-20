@@ -307,7 +307,7 @@ ___
 
 ### receiptValidationBody
 
-▸ **receiptValidationBody**(`receipt`): `undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)
+▸ **receiptValidationBody**(`receipt`): `Promise`<`undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)\>
 
 Prepare for receipt validation
 
@@ -319,7 +319,7 @@ Prepare for receipt validation
 
 #### Returns
 
-`undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)
+`Promise`<`undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)\>
 
 #### Implementation of
 

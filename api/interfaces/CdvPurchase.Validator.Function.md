@@ -12,8 +12,8 @@
 
 | Name | Type |
 | :------ | :------ |
-| `receipt` | [`Receipt`](../classes/CdvPurchase.Receipt.md) |
-| `callback` | [`Callback`](../modules/CdvPurchase.Validator.md#callback) |
+| `receipt` | [`Body`](CdvPurchase.Validator.Request.Body.md) |
+| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<[`Payload`](../modules/CdvPurchase.Validator.Response.md#payload)\> |
 
 #### Returns
 

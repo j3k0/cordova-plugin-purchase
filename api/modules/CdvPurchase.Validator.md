@@ -17,30 +17,9 @@
 
 ### Type Aliases
 
-- [Callback](CdvPurchase.Validator.md#callback)
 - [ISODate](CdvPurchase.Validator.md#isodate)
 
 ## Type Aliases
-
-### Callback
-
-Ƭ **Callback**: (`payload`: [`Payload`](CdvPurchase.Validator.Response.md#payload)) => `void`
-
-#### Type declaration
-
-▸ (`payload`): `void`
-
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `payload` | [`Payload`](CdvPurchase.Validator.Response.md#payload) |
-
-##### Returns
-
-`void`
-
-___
 
 ### ISODate
 

@@ -954,7 +954,7 @@ declare namespace CdvPurchase {
         /**
          * Prepare for receipt validation
          */
-        receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
+        receiptValidationBody(receipt: Receipt): Promise<Validator.Request.Body | undefined>;
         /**
          * Handle platform specific fields from receipt validation response.
          */
@@ -2220,7 +2220,8 @@ declare namespace CdvPurchase {
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
             order(offer: Offer): Promise<undefined | IError>;
             finish(transaction: Transaction): Promise<undefined | IError>;
-            receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
+            refreshReceipt(): Promise<undefined | IError | ApplicationReceipt>;
+            receiptValidationBody(receipt: Receipt): Promise<Validator.Request.Body | undefined>;
             handleReceiptValidationResponse(_receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
@@ -2963,7 +2964,7 @@ declare namespace CdvPurchase {
             manageBilling(): Promise<IError | undefined>;
             private launchDropIn;
             requestPayment(paymentRequest: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
-            receiptValidationBody(receipt: BraintreeReceipt): Validator.Request.Body | undefined;
+            receiptValidationBody(receipt: BraintreeReceipt): Promise<Validator.Request.Body | undefined>;
             /**
              * Handle a response from a receipt validation process.
              *
@@ -3919,7 +3920,7 @@ declare namespace CdvPurchase {
             /**
              * Prepare for receipt validation
              */
-            receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
+            receiptValidationBody(receipt: Receipt): Promise<Validator.Request.Body | undefined>;
             handleReceiptValidationResponse(receipt: CdvPurchase.Receipt, response: Validator.Response.Payload): Promise<void>;
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
@@ -4682,7 +4683,7 @@ declare namespace CdvPurchase {
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
             order(offer: Offer): Promise<undefined | IError>;
             finish(transaction: Transaction): Promise<undefined | IError>;
-            receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
+            receiptValidationBody(receipt: Receipt): Promise<Validator.Request.Body | undefined>;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
             /**
              * This function simulates a payment process by prompting the user to confirm the payment.
@@ -4818,7 +4819,7 @@ declare namespace CdvPurchase {
             order(offer: Offer): Promise<undefined | IError>;
             finish(transaction: Transaction): Promise<undefined | IError>;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
-            receiptValidationBody(receipt: Receipt): Validator.Request.Body | undefined;
+            receiptValidationBody(receipt: Receipt): Promise<Validator.Request.Body | undefined>;
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
             manageBilling(): Promise<IError | undefined>;
@@ -5361,9 +5362,8 @@ declare namespace CdvPurchase {
          * Dates stored as a ISO formatted string
          */
         type ISODate = string;
-        type Callback = (payload: Validator.Response.Payload) => void;
         interface Function {
-            (receipt: Receipt, callback: Callback): void;
+            (receipt: Validator.Request.Body, callback: Callback<Validator.Response.Payload>): void;
         }
         interface Target {
             url: string;

@@ -499,36 +499,36 @@ var CdvPurchase;
                 };
                 receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));
             }
-            runOnReceipt(receipt, callback) {
+            async runOnReceipt(receipt, callback) {
                 if (receipt.platform === CdvPurchase.Platform.TEST) {
                     this.log.debug('Using Test Adapter mock verify function.');
                     return CdvPurchase.Test.Adapter.verify(receipt, callback);
                 }
                 if (!this.controller.validator)
                     return;
+                const body = await this.buildRequestBody(receipt);
+                if (!body)
+                    return;
                 if (typeof this.controller.validator === 'function')
-                    return this.runValidatorFunction(this.controller.validator, receipt, callback);
+                    return this.runValidatorFunction(this.controller.validator, receipt, body, callback);
                 const target = typeof this.controller.validator === 'string'
                     ? { url: this.controller.validator }
                     : this.controller.validator;
-                const body = this.buildRequestBody(receipt);
-                if (!body)
-                    return;
                 return this.runValidatorRequest(target, receipt, body, callback);
             }
-            runValidatorFunction(validator, receipt, callback) {
+            runValidatorFunction(validator, receipt, body, callback) {
                 try {
-                    validator(receipt, (payload) => callback({ receipt, payload }));
+                    validator(body, (payload) => callback({ receipt, payload }));
                 }
                 catch (error) {
                     this.log.warn("user provided validator function failed with error: " + (error === null || error === void 0 ? void 0 : error.stack));
                 }
             }
-            buildRequestBody(receipt) {
+            async buildRequestBody(receipt) {
                 var _a, _b, _c;
                 // Let the adapter generate the initial content
                 const adapter = this.controller.adapters.find(receipt.platform);
-                const body = adapter === null || adapter === void 0 ? void 0 : adapter.receiptValidationBody(receipt);
+                const body = await (adapter === null || adapter === void 0 ? void 0 : adapter.receiptValidationBody(receipt));
                 if (!body)
                     return;
                 // Add the applicationUsername
@@ -2405,20 +2405,45 @@ var CdvPurchase;
                     this.bridge.finish(transaction.transactionId, success, error);
                 });
             }
-            receiptValidationBody(receipt) {
+            refreshReceipt() {
+                return new Promise(resolve => {
+                    const success = (receipt) => {
+                        // at that point, the receipt should have been refreshed.
+                        resolve(receipt);
+                    };
+                    const error = (code, message) => {
+                        resolve(CdvPurchase.storeError(code, message));
+                    };
+                    this.bridge.refreshReceipts(success, error);
+                });
+            }
+            async receiptValidationBody(receipt) {
                 if (receipt.platform !== CdvPurchase.Platform.APPLE_APPSTORE)
                     return;
                 const skReceipt = receipt;
+                let applicationReceipt = skReceipt.nativeData;
+                if (!skReceipt.nativeData.appStoreReceipt) {
+                    this.log.info('Cannot prepare the receipt validation body, because appStoreReceipt is missing. Refreshing...');
+                    const result = await this.refreshReceipt();
+                    if (!result || 'isError' in result) {
+                        this.log.warn('Failed to refresh receipt, cannot run receipt validation.');
+                        if (result)
+                            this.log.error(result);
+                        return;
+                    }
+                    this.log.info('Receipt refreshed.');
+                    applicationReceipt = result;
+                }
                 const transaction = skReceipt.transactions.slice(-1)[0];
                 return {
-                    id: skReceipt.nativeData.bundleIdentifier,
+                    id: applicationReceipt.bundleIdentifier,
                     type: CdvPurchase.ProductType.APPLICATION,
                     // send all products and offers so validator get pricing information
                     products: Object.values(this.validProducts).map(vp => new AppleAppStore.SKProduct(vp, vp, this.context.apiDecorators, { isEligible: () => true })),
                     transaction: {
                         type: 'ios-appstore',
                         id: transaction === null || transaction === void 0 ? void 0 : transaction.transactionId,
-                        appStoreReceipt: skReceipt.nativeData.appStoreReceipt,
+                        appStoreReceipt: applicationReceipt.appStoreReceipt,
                     }
                 };
             }
@@ -2828,6 +2853,9 @@ var CdvPurchase;
                     };
                     const error = (errMessage) => {
                         log('refresh receipt failed: ' + errMessage);
+                        if (errMessage.includes("(@AMSErrorDomain:100)")) {
+                            log('authentication failed, indicated by the string "(@AMSErrorDomain:100)"');
+                        }
                         protectCall(this.options.error, 'options.error', CdvPurchase.ErrorCode.REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
                         protectCall(errorCb, "refreshReceipts.error", CdvPurchase.ErrorCode.REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
                     };
@@ -3265,7 +3293,7 @@ var CdvPurchase;
                 this.context.listener.receiptsUpdated(CdvPurchase.Platform.BRAINTREE, [receipt]);
                 return receipt.transactions[0];
             }
-            receiptValidationBody(receipt) {
+            async receiptValidationBody(receipt) {
                 var _a, _b, _c, _d, _e;
                 if (!isBraintreeReceipt(receipt)) {
                     this.log.error("Unexpected error, expecting a BraintreeReceipt: " + JSON.stringify(receipt));
@@ -4157,7 +4185,7 @@ var CdvPurchase;
             /**
              * Prepare for receipt validation
              */
-            receiptValidationBody(receipt) {
+            async receiptValidationBody(receipt) {
                 var _a;
                 const transaction = receipt.transactions[0];
                 if (!transaction)
@@ -4919,7 +4947,7 @@ var CdvPurchase;
                     }, 500);
                 });
             }
-            receiptValidationBody(receipt) {
+            async receiptValidationBody(receipt) {
                 return;
             }
             async handleReceiptValidationResponse(receipt, response) {
@@ -5259,7 +5287,7 @@ var CdvPurchase;
             async handleReceiptValidationResponse(receipt, response) {
                 return;
             }
-            receiptValidationBody(receipt) {
+            async receiptValidationBody(receipt) {
                 return;
             }
             async requestPayment(payment, additionalData) {

@@ -47,6 +47,7 @@ Adapter for Apple AppStore using StoreKit version 1
 - [order](CdvPurchase.AppleAppStore.Adapter.md#order)
 - [presentCodeRedemptionSheet](CdvPurchase.AppleAppStore.Adapter.md#presentcoderedemptionsheet)
 - [receiptValidationBody](CdvPurchase.AppleAppStore.Adapter.md#receiptvalidationbody)
+- [refreshReceipt](CdvPurchase.AppleAppStore.Adapter.md#refreshreceipt)
 - [requestPayment](CdvPurchase.AppleAppStore.Adapter.md#requestpayment)
 - [restorePurchases](CdvPurchase.AppleAppStore.Adapter.md#restorepurchases)
 
@@ -416,7 +417,7 @@ ___
 
 ### receiptValidationBody
 
-▸ **receiptValidationBody**(`receipt`): `undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)
+▸ **receiptValidationBody**(`receipt`): `Promise`<`undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)\>
 
 Prepare for receipt validation
 
@@ -428,11 +429,21 @@ Prepare for receipt validation
 
 #### Returns
 
-`undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)
+`Promise`<`undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)\>
 
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[receiptValidationBody](../interfaces/CdvPurchase.Adapter.md#receiptvalidationbody)
+
+___
+
+### refreshReceipt
+
+▸ **refreshReceipt**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md) \| [`ApplicationReceipt`](../interfaces/CdvPurchase.AppleAppStore.ApplicationReceipt.md)\>
+
+#### Returns
+
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md) \| [`ApplicationReceipt`](../interfaces/CdvPurchase.AppleAppStore.ApplicationReceipt.md)\>
 
 ___
 
