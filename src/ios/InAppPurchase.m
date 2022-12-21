@@ -513,7 +513,7 @@ static NSString *toTimestamp(NSDate *date) {
                 // Finish failed transactions, when autoFinish is off
                 if (!g_autoFinishEnabled) {
                     [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
-                    [self transactionFinished:transaction];
+                    // [self transactionFinished:transaction];
                 }
                 break;
 
