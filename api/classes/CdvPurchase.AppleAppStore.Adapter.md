@@ -21,6 +21,7 @@ Adapter for Apple AppStore using StoreKit version 1
 - [bridge](CdvPurchase.AppleAppStore.Adapter.md#bridge)
 - [context](CdvPurchase.AppleAppStore.Adapter.md#context)
 - [discountEligibilityDeterminer](CdvPurchase.AppleAppStore.Adapter.md#discounteligibilitydeterminer)
+- [forceReceiptRefresh](CdvPurchase.AppleAppStore.Adapter.md#forcereceiptrefresh)
 - [id](CdvPurchase.AppleAppStore.Adapter.md#id)
 - [log](CdvPurchase.AppleAppStore.Adapter.md#log)
 - [name](CdvPurchase.AppleAppStore.Adapter.md#name)
@@ -99,6 +100,16 @@ ___
 • `Optional` **discountEligibilityDeterminer**: [`DiscountEligibilityDeterminer`](../modules/CdvPurchase.AppleAppStore.md#discounteligibilitydeterminer)
 
 Component that determine eligibility to a given discount offer
+
+___
+
+### forceReceiptRefresh
+
+• **forceReceiptRefresh**: `boolean` = `false`
+
+Set to true to force a full refresh of the receipt when preparing a receipt validation call.
+
+This is typically done when placing an order and restoring purchases.
 
 ___
 

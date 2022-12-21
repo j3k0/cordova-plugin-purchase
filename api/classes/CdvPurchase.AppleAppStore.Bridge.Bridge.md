@@ -135,7 +135,7 @@ ___
 | :------ | :------ |
 | `transactionId` | `string` |
 | `success` | () => `void` |
-| `error` | () => `void` |
+| `error` | (`msg`: `string`) => `void` |
 
 #### Returns
 

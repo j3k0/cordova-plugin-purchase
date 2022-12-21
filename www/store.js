@@ -2114,6 +2114,12 @@ var CdvPurchase;
                 this.id = CdvPurchase.Platform.APPLE_APPSTORE;
                 this.name = 'AppStore';
                 this.ready = false;
+                /**
+                 * Set to true to force a full refresh of the receipt when preparing a receipt validation call.
+                 *
+                 * This is typically done when placing an order and restoring purchases.
+                 */
+                this.forceReceiptRefresh = false;
                 /** List of products loaded from AppStore */
                 this._products = [];
                 this.validProducts = {};
@@ -2382,6 +2388,9 @@ var CdvPurchase;
                         this.log.info('order.error');
                         resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Failed to place order'));
                     };
+                    // When we switch AppStore user, the cached receipt isn't from the new user.
+                    // so after a purchase, we want to make sure we're using the receipt from the logged in user.
+                    this.forceReceiptRefresh = true;
                     this.bridge.purchase(offer.productId, 1, this.context.getApplicationUsername(), discountId, success, error);
                 });
             }
@@ -2399,8 +2408,14 @@ var CdvPurchase;
                         this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [transaction.parentReceipt]);
                         resolve(undefined);
                     };
-                    const error = () => {
-                        resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.FINISH, 'Failed to finish transaction'));
+                    const error = (msg) => {
+                        if (msg === null || msg === void 0 ? void 0 : msg.includes('[#CdvPurchase:100]')) {
+                            // already finished
+                            success();
+                        }
+                        else {
+                            resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.FINISH, 'Failed to finish transaction'));
+                        }
                     };
                     this.bridge.finish(transaction.transactionId, success, error);
                 });
@@ -2422,7 +2437,8 @@ var CdvPurchase;
                     return;
                 const skReceipt = receipt;
                 let applicationReceipt = skReceipt.nativeData;
-                if (!skReceipt.nativeData.appStoreReceipt) {
+                if (this.forceReceiptRefresh || !skReceipt.nativeData.appStoreReceipt) {
+                    this.forceReceiptRefresh = false;
                     this.log.info('Cannot prepare the receipt validation body, because appStoreReceipt is missing. Refreshing...');
                     const result = await this.refreshReceipt();
                     if (!result || 'isError' in result) {
@@ -2486,6 +2502,7 @@ var CdvPurchase;
             }
             restorePurchases() {
                 return new Promise(resolve => {
+                    this.forceReceiptRefresh = true;
                     this.bridge.restore();
                     this.bridge.refreshReceipts(obj => {
                         resolve();

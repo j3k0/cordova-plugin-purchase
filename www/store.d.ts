@@ -2183,6 +2183,12 @@ declare namespace CdvPurchase {
             id: Platform;
             name: string;
             ready: boolean;
+            /**
+             * Set to true to force a full refresh of the receipt when preparing a receipt validation call.
+             *
+             * This is typically done when placing an order and restoring purchases.
+             */
+            forceReceiptRefresh: boolean;
             /** List of products loaded from AppStore */
             _products: SKProduct[];
             get products(): Product[];
@@ -2412,7 +2418,7 @@ declare namespace CdvPurchase {
                  *  strings which were rejected by the app store.
                  */
                 load(productIds: string[], success: (validProducts: ValidProduct[], invalidProductIds: string[]) => void, error: (code: ErrorCode, message: string) => void): void;
-                finish(transactionId: string, success: () => void, error: () => void): void;
+                finish(transactionId: string, success: () => void, error: (msg: string) => void): void;
                 finalizeTransactionUpdates(): void;
                 lastTransactionUpdated(): void;
                 transactionUpdated(state: TransactionState, errorCode: ErrorCode | undefined, errorText: string | undefined, transactionIdentifier: string, productId: string, transactionReceipt: never, originalTransactionIdentifier: string | undefined, transactionDate: string | undefined, discountId: string | undefined): void;
