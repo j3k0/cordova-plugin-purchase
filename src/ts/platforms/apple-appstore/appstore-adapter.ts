@@ -112,6 +112,9 @@ namespace CdvPurchase {
                 this.log = context.log.child('AppleAppStore');
                 this.discountEligibilityDeterminer = options.discountEligibilityDeterminer;
                 this.needAppReceipt = options.needAppReceipt ?? true;
+                this.receiptUpdated = Utils.debounce(() => {
+                    this._receiptUpdated();
+                }, 300);
             }
 
             /** Returns true on Android, the only platform supported by this adapter */
@@ -159,7 +162,11 @@ namespace CdvPurchase {
                 }
             }
 
-            private receiptUpdated() {
+            /** Debounced version of _receiptUpdated */
+            private receiptUpdated: () => void;
+
+            /** Notify the store that the receipt has been updated */
+            private _receiptUpdated() {
                 if (this._receipt) {
                     this.context.listener.receiptsUpdated(Platform.APPLE_APPSTORE, [this._receipt]);
                 }
@@ -174,10 +181,16 @@ namespace CdvPurchase {
                         debug: this.context.verbosity === LogLevel.DEBUG,
                         log: msg => bridgeLogger.debug(msg),
 
-                        error: (code: ErrorCode, message: String, options?: { productId: string, quantity?: number }) => {
+                        error: (code: ErrorCode, message: string, options?: { productId: string, quantity?: number }) => {
                             this.log.error('ERROR: ' + code + ' - ' + message);
                             if (code === ErrorCode.PAYMENT_CANCELLED) {
+                                // When the user closes the payment sheet, this generates a
+                                // PAYMENT_CANCELLED error that isn't an error anymore since version 13
+                                // of the plugin.
                                 return;
+                            }
+                            else {
+                                this.context.error(storeError(code, message));
                             }
                         },
 

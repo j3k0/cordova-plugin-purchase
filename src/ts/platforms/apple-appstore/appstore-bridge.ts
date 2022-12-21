@@ -151,7 +151,7 @@ namespace CdvPurchase {
 
             export interface BridgeCallbacks {
 
-                error: (code: ErrorCode, message: String, options?: { productId: string, quantity?: number }) => void;
+                error: (code: ErrorCode, message: string, options?: { productId: string, quantity?: number }) => void;
 
                 /** Called when the bridge is ready (after setup) */
                 ready: () => void;
@@ -357,14 +357,14 @@ namespace CdvPurchase {
                     }
 
                     const purchaseOk = () => {
-                        log('Purchased ' + productId);
+                        log('Purchase enqueued ' + productId);
                         if (typeof options.purchaseEnqueued === 'function') {
                             protectCall(options.purchaseEnqueued, 'options.purchaseEnqueued', productId, quantity);
                         }
                         protectCall(success, 'purchase.success');
                     };
                     const purchaseFailed = () => {
-                        const errMsg = 'Purchasing ' + productId + ' failed';
+                        const errMsg = 'Purchase failed: ' + productId;
                         log(errMsg);
                         if (typeof options.error === 'function') {
                             protectCall(options.error, 'options.error', ErrorCode.PURCHASE, errMsg, {productId, quantity});
@@ -503,9 +503,9 @@ namespace CdvPurchase {
                         this.pendingUpdates.push({ state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId });
                         return;
                     }
+                    log("transaction updated:" + transactionIdentifier + " state:" + state + " product:" + productId);
 
                     if (productId && transactionIdentifier) {
-                        log("product " + productId + " has a transaction in progress: " + transactionIdentifier);
                         if (this.transactionsForProduct[productId]) {
                             this.transactionsForProduct[productId].push(transactionIdentifier);
                         }
