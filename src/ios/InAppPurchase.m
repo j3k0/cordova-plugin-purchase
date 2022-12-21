@@ -382,12 +382,21 @@ static NSString *toTimestamp(NSDate *date) {
     DLog(@"load: Product request started");
 }
 
+- (NSString *) stringArgument: (id)value {
+    if (value != nil && value != NSNull.null && [value isMemberOfClass:[NSString class]]) {
+        return value;
+    }
+    else {
+        return nil;
+    }
+}
+
 - (void) purchase: (CDVInvokedUrlCommand*)command {
 
     DLog(@"purchase: About to do IAP");
     id identifier = [command.arguments objectAtIndex:0];
     id quantity =   [command.arguments objectAtIndex:1];
-    NSString *applicationUsername = (NSString*)[command.arguments objectAtIndex:2];
+    NSString *applicationUsername = [self stringArgument: [command.arguments objectAtIndex:2]];
     id discountArg = [command.arguments objectAtIndex:3];
 
     SKProduct *product = [self.products objectForKey:identifier];
