@@ -74,7 +74,7 @@ ___
 
 ### error
 
-• **error**: (`code`: [`ErrorCode`](../enums/CdvPurchase.ErrorCode.md), `message`: `String`, `options?`: { `productId`: `string` ; `quantity?`: `number`  }) => `void`
+• **error**: (`code`: [`ErrorCode`](../enums/CdvPurchase.ErrorCode.md), `message`: `string`, `options?`: { `productId`: `string` ; `quantity?`: `number`  }) => `void`
 
 #### Type declaration
 
@@ -85,7 +85,7 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `code` | [`ErrorCode`](../enums/CdvPurchase.ErrorCode.md) |
-| `message` | `String` |
+| `message` | `string` |
 | `options?` | `Object` |
 | `options.productId` | `string` |
 | `options.quantity?` | `number` |

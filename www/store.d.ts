@@ -2213,7 +2213,10 @@ declare namespace CdvPurchase {
             private removeTransactionInProgress;
             private upsertTransaction;
             private removeTransaction;
+            /** Debounced version of _receiptUpdated */
             private receiptUpdated;
+            /** Notify the store that the receipt has been updated */
+            private _receiptUpdated;
             initialize(): Promise<IError | undefined>;
             /**
              * Create the application receipt
@@ -2326,7 +2329,7 @@ declare namespace CdvPurchase {
                 bundleSignature: string
             ];
             export interface BridgeCallbacks {
-                error: (code: ErrorCode, message: String, options?: {
+                error: (code: ErrorCode, message: string, options?: {
                     productId: string;
                     quantity?: number;
                 }) => void;

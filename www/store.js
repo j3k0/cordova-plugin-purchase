@@ -2128,6 +2128,9 @@ var CdvPurchase;
                 this.log = context.log.child('AppleAppStore');
                 this.discountEligibilityDeterminer = options.discountEligibilityDeterminer;
                 this.needAppReceipt = (_a = options.needAppReceipt) !== null && _a !== void 0 ? _a : true;
+                this.receiptUpdated = CdvPurchase.Utils.debounce(() => {
+                    this._receiptUpdated();
+                }, 300);
             }
             get products() { return this._products; }
             /** Find a given product from ID */
@@ -2182,7 +2185,8 @@ var CdvPurchase;
                     this._receipt.transactions = this._receipt.transactions.filter(t => t.transactionId !== transactionId);
                 }
             }
-            receiptUpdated() {
+            /** Notify the store that the receipt has been updated */
+            _receiptUpdated() {
                 if (this._receipt) {
                     this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [this._receipt]);
                 }
@@ -2198,7 +2202,13 @@ var CdvPurchase;
                         error: (code, message, options) => {
                             this.log.error('ERROR: ' + code + ' - ' + message);
                             if (code === CdvPurchase.ErrorCode.PAYMENT_CANCELLED) {
+                                // When the user closes the payment sheet, this generates a
+                                // PAYMENT_CANCELLED error that isn't an error anymore since version 13
+                                // of the plugin.
                                 return;
+                            }
+                            else {
+                                this.context.error(CdvPurchase.storeError(code, message));
                             }
                         },
                         ready: () => {
@@ -2670,14 +2680,14 @@ var CdvPurchase;
                         return;
                     }
                     const purchaseOk = () => {
-                        log('Purchased ' + productId);
+                        log('Purchase enqueued ' + productId);
                         if (typeof options.purchaseEnqueued === 'function') {
                             protectCall(options.purchaseEnqueued, 'options.purchaseEnqueued', productId, quantity);
                         }
                         protectCall(success, 'purchase.success');
                     };
                     const purchaseFailed = () => {
-                        const errMsg = 'Purchasing ' + productId + ' failed';
+                        const errMsg = 'Purchase failed: ' + productId;
                         log(errMsg);
                         if (typeof options.error === 'function') {
                             protectCall(options.error, 'options.error', CdvPurchase.ErrorCode.PURCHASE, errMsg, { productId, quantity });
@@ -2803,8 +2813,8 @@ var CdvPurchase;
                         this.pendingUpdates.push({ state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId });
                         return;
                     }
+                    log("transaction updated:" + transactionIdentifier + " state:" + state + " product:" + productId);
                     if (productId && transactionIdentifier) {
-                        log("product " + productId + " has a transaction in progress: " + transactionIdentifier);
                         if (this.transactionsForProduct[productId]) {
                             this.transactionsForProduct[productId].push(transactionIdentifier);
                         }
