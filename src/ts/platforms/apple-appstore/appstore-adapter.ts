@@ -406,8 +406,14 @@ namespace CdvPurchase {
                         this.context.listener.receiptsUpdated(Platform.APPLE_APPSTORE, [transaction.parentReceipt]);
                         resolve(undefined);
                     }
-                    const error = () => {
-                        resolve(storeError(ErrorCode.FINISH, 'Failed to finish transaction'));
+                    const error = (msg: string) => {
+                        if (msg?.includes('[#CdvPurchase:100]')) {
+                            // already finished
+                            success();
+                        }
+                        else {
+                            resolve(storeError(ErrorCode.FINISH, 'Failed to finish transaction'));
+                        }
                     }
                     this.bridge.finish(transaction.transactionId, success, error);
                 });

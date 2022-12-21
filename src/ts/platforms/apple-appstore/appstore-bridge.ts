@@ -477,7 +477,7 @@ namespace CdvPurchase {
                  *
                  * You have to call this method manually except when using the autoFinish option.
                  */
-                finish(transactionId: string, success: () => void, error: () => void) {
+                finish(transactionId: string, success: () => void, error: (msg: string) => void) {
                     exec('finishTransaction', [transactionId], success, error);
                 }
 

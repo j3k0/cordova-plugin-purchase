@@ -611,7 +611,7 @@ static NSString *toTimestamp(NSDate *date) {
 - (void) finishTransaction: (CDVInvokedUrlCommand*)command {
 
     NSString *identifier = (NSString*)[command.arguments objectAtIndex:0];
-    DLog(@"finishTransaction: %@", identifier);
+    // DLog(@"finishTransaction: %@", identifier);
     SKPaymentTransaction *transaction = nil;
 
     if (identifier) {
@@ -627,8 +627,8 @@ static NSString *toTimestamp(NSDate *date) {
         [self transactionFinished:transaction];
     }
     else {
-        DLog(@"finishTransaction: Cannot finish transaction %@.", identifier);
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Cannot finish transaction"];
+        // DLog(@"finishTransaction: Cannot finish transaction %@.", identifier);
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Cannot finish transaction [#CdvPurchase:100]"];
     }
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
