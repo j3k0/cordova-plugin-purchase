@@ -66,6 +66,13 @@ namespace CdvPurchase {
             name = 'AppStore';
             ready = false;
 
+            /**
+             * Set to true to force a full refresh of the receipt when preparing a receipt validation call.
+             *
+             * This is typically done when placing an order and restoring purchases.
+             */
+            forceReceiptRefresh = false;
+
             /** List of products loaded from AppStore */
             _products: SKProduct[] = [];
             get products(): Product[] { return this._products; }
@@ -377,6 +384,9 @@ namespace CdvPurchase {
                         this.log.info('order.error');
                         resolve(storeError(ErrorCode.PURCHASE, 'Failed to place order'));
                     }
+                    // When we switch AppStore user, the cached receipt isn't from the new user.
+                    // so after a purchase, we want to make sure we're using the receipt from the logged in user.
+                    this.forceReceiptRefresh = true;
                     this.bridge.purchase(offer.productId, 1, this.context.getApplicationUsername(), discountId, success, error);
                 });
             }
@@ -420,7 +430,8 @@ namespace CdvPurchase {
                 if (receipt.platform !== Platform.APPLE_APPSTORE) return;
                 const skReceipt = receipt as SKApplicationReceipt;
                 let applicationReceipt = skReceipt.nativeData;
-                if (!skReceipt.nativeData.appStoreReceipt) {
+                if (this.forceReceiptRefresh || !skReceipt.nativeData.appStoreReceipt) {
+                    this.forceReceiptRefresh = false;
                     this.log.info('Cannot prepare the receipt validation body, because appStoreReceipt is missing. Refreshing...');
                     const result = await this.refreshReceipt();
                     if (!result || 'isError' in result) {
@@ -487,6 +498,7 @@ namespace CdvPurchase {
 
             restorePurchases(): Promise<void> {
                 return new Promise(resolve => {
+                    this.forceReceiptRefresh = true;
                     this.bridge.restore();
                     this.bridge.refreshReceipts(obj => {
                         resolve();
