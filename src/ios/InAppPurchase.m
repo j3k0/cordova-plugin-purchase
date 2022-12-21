@@ -402,6 +402,8 @@ static NSString *toTimestamp(NSDate *date) {
     SKProduct *product = [self.products objectForKey:identifier];
     if (product == nil) {
         DLog(@"Product (%@) does not exist or is not sucessfully initialized.", identifier);
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Product does not exist."];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         return;
     }
     SKMutablePayment *payment = [SKMutablePayment paymentWithProduct:product];
@@ -428,6 +430,8 @@ static NSString *toTimestamp(NSDate *date) {
         }
     }
     [[SKPaymentQueue defaultQueue] addPayment:payment];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"Payment added to queue"];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 //Check if user/device is allowed to make in-app purchases
