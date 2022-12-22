@@ -503,7 +503,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.1.4";
+    const PLUGIN_VERSION = "13.1.5";
     /**
      * Entry class of the plugin.
      */
@@ -2188,7 +2188,7 @@ declare namespace CdvPurchase {
              *
              * This is typically done when placing an order and restoring purchases.
              */
-            forceReceiptRefresh: boolean;
+            forceReceiptReload: boolean;
             /** List of products loaded from AppStore */
             _products: SKProduct[];
             get products(): Product[];
@@ -2196,6 +2196,8 @@ declare namespace CdvPurchase {
             getProduct(id: string): SKProduct | undefined;
             /** The application receipt, contains all transactions */
             _receipt?: SKApplicationReceipt;
+            /** The pseudo receipt stores purchases in progress */
+            pseudoReceipt: Receipt;
             get receipts(): Receipt[];
             private validProducts;
             addValidProducts(registerProducts: IRegisterProduct[], validProducts: Bridge.ValidProduct[]): void;
@@ -2214,14 +2216,15 @@ declare namespace CdvPurchase {
             private upsertTransaction;
             private removeTransaction;
             /** Debounced version of _receiptUpdated */
-            private receiptUpdated;
-            /** Notify the store that the receipt has been updated */
-            private _receiptUpdated;
+            private receiptsUpdated;
+            /** Notify the store that the receipts have been updated */
+            private _receiptsUpdated;
             initialize(): Promise<IError | undefined>;
             /**
              * Create the application receipt
              */
             private initializeAppReceipt;
+            private prepareReceipt;
             /** Promisified loading of the AppStore receipt */
             private loadAppStoreReceipt;
             private loadEligibility;

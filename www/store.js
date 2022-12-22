@@ -817,7 +817,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.1.4';
+    CdvPurchase.PLUGIN_VERSION = '13.1.5';
     /**
      * Entry class of the plugin.
      */
@@ -2119,7 +2119,7 @@ var CdvPurchase;
                  *
                  * This is typically done when placing an order and restoring purchases.
                  */
-                this.forceReceiptRefresh = false;
+                this.forceReceiptReload = false;
                 /** List of products loaded from AppStore */
                 this._products = [];
                 this.validProducts = {};
@@ -2128,14 +2128,18 @@ var CdvPurchase;
                 this.log = context.log.child('AppleAppStore');
                 this.discountEligibilityDeterminer = options.discountEligibilityDeterminer;
                 this.needAppReceipt = (_a = options.needAppReceipt) !== null && _a !== void 0 ? _a : true;
-                this.receiptUpdated = CdvPurchase.Utils.debounce(() => {
-                    this._receiptUpdated();
+                this.pseudoReceipt = new CdvPurchase.Receipt(CdvPurchase.Platform.APPLE_APPSTORE, this.context.apiDecorators);
+                this.receiptsUpdated = CdvPurchase.Utils.debounce(() => {
+                    this._receiptsUpdated();
                 }, 300);
             }
             get products() { return this._products; }
             /** Find a given product from ID */
             getProduct(id) { return this._products.find(p => p.id === id); }
-            get receipts() { return this._receipt ? [this._receipt] : []; }
+            get receipts() {
+                return (this._receipt ? [this._receipt] : [])
+                    .concat(this.pseudoReceipt ? this.pseudoReceipt : []);
+            }
             addValidProducts(registerProducts, validProducts) {
                 validProducts.forEach(vp => {
                     const rp = registerProducts.find(p => p.id === vp.id);
@@ -2149,10 +2153,27 @@ var CdvPurchase;
                 return window.cordova.platformId === 'ios';
             }
             upsertTransactionInProgress(productId, state) {
-                return this.upsertTransaction(productId, virtualTransactionId(productId), state);
+                const transactionId = virtualTransactionId(productId);
+                return new Promise(resolve => {
+                    const existing = this.pseudoReceipt.transactions.find(t => t.transactionId === transactionId);
+                    if (existing) {
+                        existing.state = state;
+                        existing.refresh(productId);
+                        resolve(existing);
+                    }
+                    else {
+                        const tr = new AppleAppStore.SKTransaction(CdvPurchase.Platform.APPLE_APPSTORE, this.pseudoReceipt, this.context.apiDecorators);
+                        tr.state = state;
+                        tr.transactionId = transactionId;
+                        tr.refresh(productId);
+                        this.pseudoReceipt.transactions.push(tr);
+                        resolve(tr);
+                    }
+                });
             }
             removeTransactionInProgress(productId) {
-                this.removeTransaction(virtualTransactionId(productId));
+                const transactionId = virtualTransactionId(productId);
+                this.pseudoReceipt.transactions = this.pseudoReceipt.transactions.filter(t => t.transactionId !== transactionId);
             }
             async upsertTransaction(productId, transactionId, state) {
                 return new Promise(resolve => {
@@ -2185,10 +2206,13 @@ var CdvPurchase;
                     this._receipt.transactions = this._receipt.transactions.filter(t => t.transactionId !== transactionId);
                 }
             }
-            /** Notify the store that the receipt has been updated */
-            _receiptUpdated() {
+            /** Notify the store that the receipts have been updated */
+            _receiptsUpdated() {
                 if (this._receipt) {
-                    this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [this._receipt]);
+                    this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [this._receipt, this.pseudoReceipt]);
+                }
+                else {
+                    this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [this.pseudoReceipt]);
                 }
             }
             initialize() {
@@ -2220,41 +2244,44 @@ var CdvPurchase;
                             const transaction = await this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.APPROVED);
                             transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId);
                             this.removeTransactionInProgress(productId);
-                            this.receiptUpdated();
+                            this.receiptsUpdated();
                         },
                         purchaseEnqueued: async (productId, quantity) => {
                             this.log.info('purchaseEnqueued: ' + productId + ' - ' + quantity);
                             // let create a temporary transaction
                             await this.upsertTransactionInProgress(productId, CdvPurchase.TransactionState.INITIATED);
-                            this.receiptUpdated();
+                            this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [this.pseudoReceipt]);
                         },
                         purchaseFailed: (productId, code, message) => {
                             this.log.info('purchaseFailed: ' + productId + ' - ' + code + ' - ' + message);
                             this.removeTransactionInProgress(productId);
-                            this.receiptUpdated();
+                            this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [this.pseudoReceipt]);
                         },
                         purchasing: async (productId) => {
                             // purchase has been requested, but there's no transactionIdentifier yet.
                             // we can create a dummy transaction
                             this.log.info('purchasing: ' + productId);
                             await this.upsertTransactionInProgress(productId, CdvPurchase.TransactionState.INITIATED);
-                            this.receiptUpdated();
+                            // In order to prevent a receipt validation attempt here
+                            // (which might happen if it hasn't been possible earlier)
+                            // We should add "purchasing" transactions into a second, pseudo receipt.
+                            this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [this.pseudoReceipt]);
                         },
                         deferred: async (productId) => {
                             this.log.info('deferred: ' + productId);
                             await this.upsertTransactionInProgress(productId, CdvPurchase.TransactionState.PENDING);
-                            this.receiptUpdated();
+                            this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [this.pseudoReceipt]);
                         },
                         finished: async (transactionIdentifier, productId) => {
                             this.log.info('finish: ' + transactionIdentifier + ' - ' + productId);
                             this.removeTransactionInProgress(productId);
                             await this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.FINISHED);
-                            this.receiptUpdated();
+                            this.receiptsUpdated();
                         },
                         restored: async (transactionIdentifier, productId) => {
                             this.log.info('restore: ' + transactionIdentifier + ' - ' + productId);
                             await this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.APPROVED);
-                            this.receiptUpdated();
+                            this.receiptsUpdated();
                         },
                         receiptsRefreshed: (receipt) => {
                             this.log.info('receiptsRefreshed');
@@ -2269,7 +2296,7 @@ var CdvPurchase;
                         },
                     }, () => {
                         this.log.info('bridge.init done');
-                        setTimeout(() => this.initializeAppReceipt(() => this.receiptUpdated()), 300);
+                        setTimeout(() => this.initializeAppReceipt(() => this.receiptsUpdated()), 300);
                         resolve(undefined);
                     }, (code, message) => {
                         this.log.info('bridge.init failed: ' + code + ' - ' + message);
@@ -2287,12 +2314,24 @@ var CdvPurchase;
                 const nativeData = await this.loadAppStoreReceipt();
                 if (!(nativeData === null || nativeData === void 0 ? void 0 : nativeData.appStoreReceipt)) {
                     this.log.warn('no appStoreReceipt');
+                    return callback(CdvPurchase.storeError(CdvPurchase.ErrorCode.REFRESH, 'No appStoreReceipt'));
                 }
                 this._receipt = new AppleAppStore.SKApplicationReceipt(nativeData, this.needAppReceipt, this.context.apiDecorators);
                 callback(undefined);
             }
+            prepareReceipt(nativeData) {
+                if (nativeData === null || nativeData === void 0 ? void 0 : nativeData.appStoreReceipt) {
+                    if (!this._receipt) {
+                        this._receipt = new AppleAppStore.SKApplicationReceipt(nativeData, this.needAppReceipt, this.context.apiDecorators);
+                    }
+                    else {
+                        this._receipt.refresh(nativeData, this.needAppReceipt, this.context.apiDecorators);
+                    }
+                }
+            }
             /** Promisified loading of the AppStore receipt */
             async loadAppStoreReceipt() {
+                let resolved = false;
                 return new Promise(resolve => {
                     this.log.debug('using cached appstore receipt');
                     if (this.bridge.appStoreReceipt)
@@ -2300,12 +2339,22 @@ var CdvPurchase;
                     this.log.debug('loading appstore receipt...');
                     this.bridge.loadReceipts(receipt => {
                         this.log.debug('appstore receipt loaded');
-                        resolve(receipt);
+                        if (!resolved)
+                            resolve(receipt);
+                        resolved = true;
                     }, (code, message) => {
-                        this.log.warn('Failed to load appStoreReceipt: ' + code + ' - ' + message);
                         // this should not happen: native side never triggers an error
-                        // resolve(null);
+                        this.log.warn('Failed to load appStoreReceipt: ' + code + ' - ' + message);
+                        if (!resolved)
+                            resolve(undefined);
+                        resolved = true;
                     });
+                    // If the receipt cannot be loaded, timeout after 5 seconds
+                    setTimeout(function () {
+                        if (!resolved)
+                            resolve(undefined);
+                        resolved = true;
+                    }, 5000);
                 });
             }
             async loadEligibility(validProducts) {
@@ -2400,7 +2449,7 @@ var CdvPurchase;
                     };
                     // When we switch AppStore user, the cached receipt isn't from the new user.
                     // so after a purchase, we want to make sure we're using the receipt from the logged in user.
-                    this.forceReceiptRefresh = true;
+                    this.forceReceiptReload = true;
                     this.bridge.purchase(offer.productId, 1, this.context.getApplicationUsername(), discountId, success, error);
                 });
             }
@@ -2445,10 +2494,19 @@ var CdvPurchase;
             async receiptValidationBody(receipt) {
                 if (receipt.platform !== CdvPurchase.Platform.APPLE_APPSTORE)
                     return;
+                if (receipt !== this._receipt)
+                    return; // do not validate the pseudo receipt
                 const skReceipt = receipt;
                 let applicationReceipt = skReceipt.nativeData;
-                if (this.forceReceiptRefresh || !skReceipt.nativeData.appStoreReceipt) {
-                    this.forceReceiptRefresh = false;
+                if (this.forceReceiptReload) {
+                    this.forceReceiptReload = false;
+                    const nativeData = await this.loadAppStoreReceipt();
+                    if (nativeData) {
+                        applicationReceipt = nativeData;
+                        this.prepareReceipt(nativeData);
+                    }
+                }
+                if (!skReceipt.nativeData.appStoreReceipt) {
                     this.log.info('Cannot prepare the receipt validation body, because appStoreReceipt is missing. Refreshing...');
                     const result = await this.refreshReceipt();
                     if (!result || 'isError' in result) {
@@ -2512,7 +2570,7 @@ var CdvPurchase;
             }
             restorePurchases() {
                 return new Promise(resolve => {
-                    this.forceReceiptRefresh = true;
+                    this.forceReceiptReload = true;
                     this.bridge.restore();
                     this.bridge.refreshReceipts(obj => {
                         resolve();

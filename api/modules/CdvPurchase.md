@@ -152,7 +152,7 @@ ___
 
 ### PLUGIN\_VERSION
 
-• `Const` **PLUGIN\_VERSION**: ``"13.1.4"``
+• `Const` **PLUGIN\_VERSION**: ``"13.1.5"``
 
 Current release number of the plugin.
 

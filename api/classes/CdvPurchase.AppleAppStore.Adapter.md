@@ -21,11 +21,12 @@ Adapter for Apple AppStore using StoreKit version 1
 - [bridge](CdvPurchase.AppleAppStore.Adapter.md#bridge)
 - [context](CdvPurchase.AppleAppStore.Adapter.md#context)
 - [discountEligibilityDeterminer](CdvPurchase.AppleAppStore.Adapter.md#discounteligibilitydeterminer)
-- [forceReceiptRefresh](CdvPurchase.AppleAppStore.Adapter.md#forcereceiptrefresh)
+- [forceReceiptReload](CdvPurchase.AppleAppStore.Adapter.md#forcereceiptreload)
 - [id](CdvPurchase.AppleAppStore.Adapter.md#id)
 - [log](CdvPurchase.AppleAppStore.Adapter.md#log)
 - [name](CdvPurchase.AppleAppStore.Adapter.md#name)
 - [needAppReceipt](CdvPurchase.AppleAppStore.Adapter.md#needappreceipt)
+- [pseudoReceipt](CdvPurchase.AppleAppStore.Adapter.md#pseudoreceipt)
 - [ready](CdvPurchase.AppleAppStore.Adapter.md#ready)
 
 ### Accessors
@@ -103,9 +104,9 @@ Component that determine eligibility to a given discount offer
 
 ___
 
-### forceReceiptRefresh
+### forceReceiptReload
 
-• **forceReceiptRefresh**: `boolean` = `false`
+• **forceReceiptReload**: `boolean` = `false`
 
 Set to true to force a full refresh of the receipt when preparing a receipt validation call.
 
@@ -148,6 +149,14 @@ ___
 • **needAppReceipt**: `boolean`
 
 True when we need to validate the application receipt
+
+___
+
+### pseudoReceipt
+
+• **pseudoReceipt**: [`Receipt`](CdvPurchase.Receipt.md)
+
+The pseudo receipt stores purchases in progress
 
 ___
 
