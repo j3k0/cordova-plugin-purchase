@@ -71,7 +71,7 @@ namespace CdvPurchase {
              *
              * This is typically done when placing an order and restoring purchases.
              */
-            forceReceiptRefresh = false;
+            forceReceiptReload = false;
 
             /** List of products loaded from AppStore */
             _products: SKProduct[] = [];
@@ -279,25 +279,45 @@ namespace CdvPurchase {
                 const nativeData = await this.loadAppStoreReceipt();
                 if (!nativeData?.appStoreReceipt) {
                     this.log.warn('no appStoreReceipt');
+                    return callback(storeError(ErrorCode.REFRESH, 'No appStoreReceipt'));
                 }
                 this._receipt = new SKApplicationReceipt(nativeData, this.needAppReceipt, this.context.apiDecorators);
                 callback(undefined);
             }
 
+            private prepareReceipt(nativeData: ApplicationReceipt | undefined) {
+                if (nativeData?.appStoreReceipt) {
+                    if (!this._receipt) {
+                        this._receipt = new SKApplicationReceipt(nativeData, this.needAppReceipt, this.context.apiDecorators);
+                    }
+                    else {
+                        this._receipt.refresh(nativeData, this.needAppReceipt, this.context.apiDecorators);
+                    }
+                }
+            }
+
             /** Promisified loading of the AppStore receipt */
-            private async loadAppStoreReceipt(): Promise<ApplicationReceipt> {
+            private async loadAppStoreReceipt(): Promise<undefined | ApplicationReceipt> {
+                let resolved = false;
                 return new Promise(resolve => {
                     this.log.debug('using cached appstore receipt');
                     if (this.bridge.appStoreReceipt) return resolve(this.bridge.appStoreReceipt);
                     this.log.debug('loading appstore receipt...');
                     this.bridge.loadReceipts(receipt => {
                         this.log.debug('appstore receipt loaded');
-                        resolve(receipt);
+                        if (!resolved) resolve(receipt);
+                        resolved = true;
                     }, (code, message) => {
-                        this.log.warn('Failed to load appStoreReceipt: ' + code + ' - ' + message);
                         // this should not happen: native side never triggers an error
-                        // resolve(null);
+                        this.log.warn('Failed to load appStoreReceipt: ' + code + ' - ' + message);
+                        if (!resolved) resolve(undefined);
+                        resolved = true;
                     });
+                    // If the receipt cannot be loaded, timeout after 5 seconds
+                    setTimeout(function() {
+                        if (!resolved) resolve(undefined);
+                        resolved = true;
+                    }, 5000);
                 });
             }
 
@@ -399,7 +419,7 @@ namespace CdvPurchase {
                     }
                     // When we switch AppStore user, the cached receipt isn't from the new user.
                     // so after a purchase, we want to make sure we're using the receipt from the logged in user.
-                    this.forceReceiptRefresh = true;
+                    this.forceReceiptReload = true;
                     this.bridge.purchase(offer.productId, 1, this.context.getApplicationUsername(), discountId, success, error);
                 });
             }
@@ -449,8 +469,15 @@ namespace CdvPurchase {
                 if (receipt.platform !== Platform.APPLE_APPSTORE) return;
                 const skReceipt = receipt as SKApplicationReceipt;
                 let applicationReceipt = skReceipt.nativeData;
-                if (this.forceReceiptRefresh || !skReceipt.nativeData.appStoreReceipt) {
-                    this.forceReceiptRefresh = false;
+                if (this.forceReceiptReload) {
+                    this.forceReceiptReload = false;
+                    const nativeData = await this.loadAppStoreReceipt();
+                    if (nativeData) {
+                        applicationReceipt = nativeData;
+                        this.prepareReceipt(nativeData);
+                    }
+                }
+                if (!skReceipt.nativeData.appStoreReceipt) {
                     this.log.info('Cannot prepare the receipt validation body, because appStoreReceipt is missing. Refreshing...');
                     const result = await this.refreshReceipt();
                     if (!result || 'isError' in result) {
@@ -517,7 +544,7 @@ namespace CdvPurchase {
 
             restorePurchases(): Promise<void> {
                 return new Promise(resolve => {
-                    this.forceReceiptRefresh = true;
+                    this.forceReceiptReload = true;
                     this.bridge.restore();
                     this.bridge.refreshReceipts(obj => {
                         resolve();
