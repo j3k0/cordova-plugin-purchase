@@ -2333,9 +2333,11 @@ var CdvPurchase;
             async loadAppStoreReceipt() {
                 let resolved = false;
                 return new Promise(resolve => {
-                    this.log.debug('using cached appstore receipt');
-                    if (this.bridge.appStoreReceipt)
+                    var _a;
+                    if ((_a = this.bridge.appStoreReceipt) === null || _a === void 0 ? void 0 : _a.appStoreReceipt) {
+                        this.log.debug('using cached appstore receipt');
                         return resolve(this.bridge.appStoreReceipt);
+                    }
                     this.log.debug('loading appstore receipt...');
                     this.bridge.loadReceipts(receipt => {
                         this.log.debug('appstore receipt loaded');

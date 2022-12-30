@@ -331,8 +331,10 @@ namespace CdvPurchase {
             private async loadAppStoreReceipt(): Promise<undefined | ApplicationReceipt> {
                 let resolved = false;
                 return new Promise(resolve => {
-                    this.log.debug('using cached appstore receipt');
-                    if (this.bridge.appStoreReceipt) return resolve(this.bridge.appStoreReceipt);
+                    if (this.bridge.appStoreReceipt?.appStoreReceipt) {
+                        this.log.debug('using cached appstore receipt');
+                        return resolve(this.bridge.appStoreReceipt);
+                    }
                     this.log.debug('loading appstore receipt...');
                     this.bridge.loadReceipts(receipt => {
                         this.log.debug('appstore receipt loaded');
