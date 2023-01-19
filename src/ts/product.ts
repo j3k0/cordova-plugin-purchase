@@ -58,7 +58,10 @@ namespace CdvPurchase {
          *
          * Useful when you know products have a single offer and a single pricing phase.
          */
-        get pricing(): PricingPhase | undefined { return this.offers[0]?.pricingPhases[0]; }
+        get pricing(): PricingPhase | undefined {
+            // see Object.defineProperty in the constructor for the actual implementation.
+            return this.offers[0]?.pricingPhases[0];
+        }
 
         /**
          * Returns true if the product can be purchased.
@@ -85,7 +88,7 @@ namespace CdvPurchase {
             this.id = p.id;
             this.group = p.group;
             this.offers = [];
-            Object.defineProperty(this, 'pricing', { enumerable: false });
+            Object.defineProperty(this, 'pricing', { enumerable: false, get: () => this.offers[0]?.pricingPhases[0] });
             Object.defineProperty(this, 'canPurchase', { enumerable: false, get: () => decorator.canPurchase(this) });
             Object.defineProperty(this, 'owned', { enumerable: false, get: () => decorator.owned(this) });
         }

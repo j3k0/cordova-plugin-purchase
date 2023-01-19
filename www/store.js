@@ -359,7 +359,7 @@ var CdvPurchase;
             this.id = p.id;
             this.group = p.group;
             this.offers = [];
-            Object.defineProperty(this, 'pricing', { enumerable: false });
+            Object.defineProperty(this, 'pricing', { enumerable: false, get: () => { var _a; return (_a = this.offers[0]) === null || _a === void 0 ? void 0 : _a.pricingPhases[0]; } });
             Object.defineProperty(this, 'canPurchase', { enumerable: false, get: () => decorator.canPurchase(this) });
             Object.defineProperty(this, 'owned', { enumerable: false, get: () => decorator.owned(this) });
         }
@@ -368,7 +368,11 @@ var CdvPurchase;
          *
          * Useful when you know products have a single offer and a single pricing phase.
          */
-        get pricing() { var _a; return (_a = this.offers[0]) === null || _a === void 0 ? void 0 : _a.pricingPhases[0]; }
+        get pricing() {
+            var _a;
+            // see Object.defineProperty in the constructor for the actual implementation.
+            return (_a = this.offers[0]) === null || _a === void 0 ? void 0 : _a.pricingPhases[0];
+        }
         /**
          * Returns true if the product can be purchased.
          */
