@@ -26,7 +26,7 @@ SOFTWARE.
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     id="cordova-plugin-purchase"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    version="13.1.6">
+    version="13.2.0">
 
     <name>Purchase</name>
 	<description>Cordova Purchase plugin for iOS (AppStore), Android (PlayStore) and Windows</description>
@@ -77,6 +77,7 @@ SOFTWARE.
             <clobbers target="CdvPurchase" />
             <clobbers target="store" />
         </js-module>
+
         <js-module src="www/cordova-osx-polyfill.js" name="CordovaOSXPolyfill">
             <runs />
         </js-module>

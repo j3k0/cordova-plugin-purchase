@@ -66,6 +66,7 @@ const {store, ProductType, Platform, LogLevel} = CdvPurchase;
 - [PostalAddress](../interfaces/CdvPurchase.PostalAddress.md)
 - [PricingPhase](../interfaces/CdvPurchase.PricingPhase.md)
 - [TransactionMonitor](../interfaces/CdvPurchase.TransactionMonitor.md)
+- [UnverifiedReceipt](../interfaces/CdvPurchase.UnverifiedReceipt.md)
 - [VerifiedPurchase](../interfaces/CdvPurchase.VerifiedPurchase.md)
 - [When](../interfaces/CdvPurchase.When.md)
 
@@ -152,7 +153,7 @@ ___
 
 ### PLUGIN\_VERSION
 
-• `Const` **PLUGIN\_VERSION**: ``"13.1.6"``
+• `Const` **PLUGIN\_VERSION**: ``"13.2.0"``
 
 Current release number of the plugin.
 

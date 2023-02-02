@@ -497,9 +497,9 @@ var CdvPurchase;
                         this.controller.verifiedCallbacks.trigger(vr);
                         // this.verifiedCallbacks.trigger(data.receipt);
                     }
-                    // else {
-                    // }
-                    // TODO: update transactions
+                    else {
+                        this.controller.unverifiedCallbacks.trigger({ receipt, payload });
+                    }
                 };
                 receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));
             }
@@ -821,7 +821,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.1.6';
+    CdvPurchase.PLUGIN_VERSION = '13.2.0';
     /**
      * Entry class of the plugin.
      */
@@ -867,6 +867,8 @@ var CdvPurchase;
             this.finishedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'finished()');
             /** Callbacks when a receipt has been validated */
             this.verifiedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'verified()');
+            /** Callbacks when a receipt has been validated */
+            this.unverifiedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'unverified()');
             /** Callbacks for errors */
             this.errorCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'error()');
             /**
@@ -888,6 +890,7 @@ var CdvPurchase;
                 get validator() { return store.validator; },
                 get validator_privacy_policy() { return store.validator_privacy_policy; },
                 verifiedCallbacks: this.verifiedCallbacks,
+                unverifiedCallbacks: this.unverifiedCallbacks,
                 finish: (receipt) => this.finish(receipt),
             }, this.log);
         }
@@ -997,6 +1000,7 @@ var CdvPurchase;
                 approved: (cb) => (this.approvedCallbacks.push(cb), ret),
                 finished: (cb) => (this.finishedCallbacks.push(cb), ret),
                 verified: (cb) => (this.verifiedCallbacks.push(cb), ret),
+                unverified: (cb) => (this.unverifiedCallbacks.push(cb), ret),
             };
             return ret;
         }

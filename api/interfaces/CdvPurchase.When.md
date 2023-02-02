@@ -12,6 +12,7 @@ Store events listener
 - [finished](CdvPurchase.When.md#finished)
 - [productUpdated](CdvPurchase.When.md#productupdated)
 - [receiptUpdated](CdvPurchase.When.md#receiptupdated)
+- [unverified](CdvPurchase.When.md#unverified)
 - [updated](CdvPurchase.When.md#updated)
 - [verified](CdvPurchase.When.md#verified)
 
@@ -82,6 +83,24 @@ Register a function called when a receipt is updated.
 | Name | Type |
 | :------ | :------ |
 | `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<[`Receipt`](../classes/CdvPurchase.Receipt.md)\> |
+
+#### Returns
+
+[`When`](CdvPurchase.When.md)
+
+___
+
+### unverified
+
+▸ **unverified**(`cb`): [`When`](CdvPurchase.When.md)
+
+Register a function called when a receipt failed validation.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<[`UnverifiedReceipt`](CdvPurchase.UnverifiedReceipt.md)\> |
 
 #### Returns
 

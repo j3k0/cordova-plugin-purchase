@@ -322,6 +322,7 @@ declare namespace CdvPurchase {
             get validator_privacy_policy(): PrivacyPolicyItem | PrivacyPolicyItem[] | undefined;
             getApplicationUsername(): string | undefined;
             get verifiedCallbacks(): Callbacks<VerifiedReceipt>;
+            get unverifiedCallbacks(): Callbacks<UnverifiedReceipt>;
             finish(receipt: VerifiedReceipt): Promise<void>;
         }
         /** Handles communication with the remote receipt validation service */
@@ -503,7 +504,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.1.6";
+    const PLUGIN_VERSION = "13.2.0";
     /**
      * Entry class of the plugin.
      */
@@ -604,6 +605,8 @@ declare namespace CdvPurchase {
         private finishedCallbacks;
         /** Callbacks when a receipt has been validated */
         private verifiedCallbacks;
+        /** Callbacks when a receipt has been validated */
+        private unverifiedCallbacks;
         /** Callbacks for errors */
         private errorCallbacks;
         /** Internal implementation of the receipt validation service integration */
@@ -1045,6 +1048,8 @@ declare namespace CdvPurchase {
         finished(cb: Callback<Transaction>): When;
         /** Register a function called when a receipt is verified. */
         verified(cb: Callback<VerifiedReceipt>): When;
+        /** Register a function called when a receipt failed validation. */
+        unverified(cb: Callback<UnverifiedReceipt>): When;
     }
     /** Whether or not the user intends to let the subscription auto-renew. */
     enum RenewalIntent {
@@ -5394,6 +5399,10 @@ declare namespace CdvPurchase {
         interface VerifiedReceiptDecorator {
             finish(receipt: VerifiedReceipt): Promise<void>;
         }
+    }
+    interface UnverifiedReceipt {
+        receipt: Receipt;
+        payload: Validator.Response.ErrorPayload;
     }
     /** Receipt data as validated by the receipt validation server */
     class VerifiedReceipt {
