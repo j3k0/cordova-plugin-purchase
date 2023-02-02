@@ -282,6 +282,9 @@ namespace CdvPurchase {
 
         /** Register a function called when a receipt is verified. */
         verified(cb: Callback<VerifiedReceipt>): When;
+
+        /** Register a function called when a receipt failed validation. */
+        unverified(cb: Callback<UnverifiedReceipt>): When;
     }
 
     /** Whether or not the user intends to let the subscription auto-renew. */

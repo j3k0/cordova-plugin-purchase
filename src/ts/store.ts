@@ -150,6 +150,9 @@ namespace CdvPurchase {
         /** Callbacks when a receipt has been validated */
         private verifiedCallbacks = new Internal.Callbacks<VerifiedReceipt>(this.log, 'verified()');
 
+        /** Callbacks when a receipt has been validated */
+        private unverifiedCallbacks = new Internal.Callbacks<UnverifiedReceipt>(this.log, 'unverified()');
+
         /** Callbacks for errors */
         private errorCallbacks = new Internal.Callbacks<IError>(this.log, 'error()');
 
@@ -176,6 +179,7 @@ namespace CdvPurchase {
                 get validator() { return store.validator; },
                 get validator_privacy_policy() { return store.validator_privacy_policy; },
                 verifiedCallbacks: this.verifiedCallbacks,
+                unverifiedCallbacks: this.unverifiedCallbacks,
                 finish: (receipt: VerifiedReceipt) => this.finish(receipt),
             }, this.log);
         }
@@ -271,6 +275,7 @@ namespace CdvPurchase {
                 approved: (cb: Callback<Transaction>) => (this.approvedCallbacks.push(cb), ret),
                 finished: (cb: Callback<Transaction>) => (this.finishedCallbacks.push(cb), ret),
                 verified: (cb: Callback<VerifiedReceipt>) => (this.verifiedCallbacks.push(cb), ret),
+                unverified: (cb: Callback<UnverifiedReceipt>) => (this.unverifiedCallbacks.push(cb), ret),
             };
             return ret;
         }

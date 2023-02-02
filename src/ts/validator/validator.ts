@@ -41,6 +41,7 @@ namespace CdvPurchase {
             get validator_privacy_policy(): PrivacyPolicyItem | PrivacyPolicyItem[] | undefined;
             getApplicationUsername(): string | undefined;
             get verifiedCallbacks(): Callbacks<VerifiedReceipt>;
+            get unverifiedCallbacks(): Callbacks<UnverifiedReceipt>;
             finish(receipt:VerifiedReceipt): Promise<void>;
         }
 
@@ -102,9 +103,9 @@ namespace CdvPurchase {
                         this.controller.verifiedCallbacks.trigger(vr);
                         // this.verifiedCallbacks.trigger(data.receipt);
                     }
-                    // else {
-                    // }
-                    // TODO: update transactions
+                    else {
+                        this.controller.unverifiedCallbacks.trigger({receipt, payload});
+                    }
                 };
                 receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));
             }

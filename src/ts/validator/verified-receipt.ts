@@ -10,6 +10,11 @@ namespace CdvPurchase {
         }
     }
 
+    export interface UnverifiedReceipt {
+        receipt: Receipt;
+        payload: Validator.Response.ErrorPayload;
+    }
+
     /** Receipt data as validated by the receipt validation server */
     export class VerifiedReceipt {
 
