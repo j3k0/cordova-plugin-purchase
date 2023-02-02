@@ -4154,7 +4154,11 @@ var CdvPurchase;
             /** @inheritDoc */
             finish(transaction) {
                 return new Promise(resolve => {
-                    const onSuccess = () => resolve(undefined);
+                    const onSuccess = () => {
+                        transaction.state = CdvPurchase.TransactionState.FINISHED;
+                        this.context.listener.receiptsUpdated(CdvPurchase.Platform.GOOGLE_PLAY, [transaction.parentReceipt]);
+                        resolve(undefined);
+                    };
                     const onFailure = (message, code) => resolve(CdvPurchase.storeError(code || CdvPurchase.ErrorCode.UNKNOWN, message));
                     const firstProduct = transaction.products[0];
                     if (!firstProduct)
