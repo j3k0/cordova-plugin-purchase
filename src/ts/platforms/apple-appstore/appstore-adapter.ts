@@ -540,8 +540,8 @@ namespace CdvPurchase {
                 // we can add the purchaseDate to the application transaction
                 let localReceiptUpdated = false;
                 if (response.ok) {
-                    const vTransaction = response.data.transaction;
-                    if (vTransaction.type === 'ios-appstore' && 'original_application_version' in vTransaction) {
+                    const vTransaction = response.data?.transaction;
+                    if (vTransaction?.type === 'ios-appstore' && 'original_application_version' in vTransaction) {
                         this._receipt?.transactions.forEach(t => {
                             if (t.transactionId === APPLICATION_VIRTUAL_TRANSACTION_ID) {
                                 if (vTransaction.original_purchase_date_ms) {

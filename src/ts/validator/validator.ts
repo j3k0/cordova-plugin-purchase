@@ -96,15 +96,20 @@ namespace CdvPurchase {
 
                 const onResponse = async (r: ReceiptResponse) => {
                     const { receipt, payload } = r;
-                    const adapter = this.controller.adapters.find(receipt.platform);
-                    await adapter?.handleReceiptValidationResponse(receipt, payload);
-                    if (payload.ok) {
-                        const vr = this.addVerifiedReceipt(receipt, payload.data);
-                        this.controller.verifiedCallbacks.trigger(vr);
-                        // this.verifiedCallbacks.trigger(data.receipt);
+                    try {
+                        const adapter = this.controller.adapters.find(receipt.platform);
+                        await adapter?.handleReceiptValidationResponse(receipt, payload);
+                        if (payload.ok) {
+                            const vr = this.addVerifiedReceipt(receipt, payload.data);
+                            this.controller.verifiedCallbacks.trigger(vr);
+                            // this.verifiedCallbacks.trigger(data.receipt);
+                        }
+                        else {
+                            this.controller.unverifiedCallbacks.trigger({receipt, payload});
+                        }
                     }
-                    else {
-                        this.controller.unverifiedCallbacks.trigger({receipt, payload});
+                    catch (err) {
+                        this.log.error('Exception probably caused by an invalid response from the validator.' + (err as Error).message);
                     }
                 };
                 receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));
