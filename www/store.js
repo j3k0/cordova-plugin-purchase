@@ -490,15 +490,20 @@ var CdvPurchase;
                 this.receiptsToValidate.clear();
                 const onResponse = async (r) => {
                     const { receipt, payload } = r;
-                    const adapter = this.controller.adapters.find(receipt.platform);
-                    await (adapter === null || adapter === void 0 ? void 0 : adapter.handleReceiptValidationResponse(receipt, payload));
-                    if (payload.ok) {
-                        const vr = this.addVerifiedReceipt(receipt, payload.data);
-                        this.controller.verifiedCallbacks.trigger(vr);
-                        // this.verifiedCallbacks.trigger(data.receipt);
+                    try {
+                        const adapter = this.controller.adapters.find(receipt.platform);
+                        await (adapter === null || adapter === void 0 ? void 0 : adapter.handleReceiptValidationResponse(receipt, payload));
+                        if (payload.ok) {
+                            const vr = this.addVerifiedReceipt(receipt, payload.data);
+                            this.controller.verifiedCallbacks.trigger(vr);
+                            // this.verifiedCallbacks.trigger(data.receipt);
+                        }
+                        else {
+                            this.controller.unverifiedCallbacks.trigger({ receipt, payload });
+                        }
                     }
-                    else {
-                        this.controller.unverifiedCallbacks.trigger({ receipt, payload });
+                    catch (err) {
+                        this.log.error('Exception probably caused by an invalid response from the validator.' + err.message);
                     }
                 };
                 receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));
@@ -821,7 +826,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.2.0';
+    CdvPurchase.PLUGIN_VERSION = '13.2.1';
     /**
      * Entry class of the plugin.
      */
@@ -2542,13 +2547,13 @@ var CdvPurchase;
                 };
             }
             async handleReceiptValidationResponse(_receipt, response) {
-                var _a;
+                var _a, _b;
                 // we can add the purchaseDate to the application transaction
                 let localReceiptUpdated = false;
                 if (response.ok) {
-                    const vTransaction = response.data.transaction;
-                    if (vTransaction.type === 'ios-appstore' && 'original_application_version' in vTransaction) {
-                        (_a = this._receipt) === null || _a === void 0 ? void 0 : _a.transactions.forEach(t => {
+                    const vTransaction = (_a = response.data) === null || _a === void 0 ? void 0 : _a.transaction;
+                    if ((vTransaction === null || vTransaction === void 0 ? void 0 : vTransaction.type) === 'ios-appstore' && 'original_application_version' in vTransaction) {
+                        (_b = this._receipt) === null || _b === void 0 ? void 0 : _b.transactions.forEach(t => {
                             if (t.transactionId === AppleAppStore.APPLICATION_VIRTUAL_TRANSACTION_ID) {
                                 if (vTransaction.original_purchase_date_ms) {
                                     t.purchaseDate = new Date(parseInt(vTransaction.original_purchase_date_ms));
