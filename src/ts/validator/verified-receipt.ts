@@ -95,10 +95,17 @@ namespace CdvPurchase {
     /** A purchase object returned by the receipt validator */
     export interface VerifiedPurchase {
 
-        platform?: Platform;
-
         /** Product identifier */
         id: string;
+
+        /** Platform this purchase was made on */
+        platform?: Platform;
+
+        /** Purchase identifier (optional) */
+        purchaseId?: string;
+
+        /** Identifier of the last transaction (optional) */
+        transactionId?: string;
 
         /** Date of first purchase (timestamp). */
         purchaseDate?: number;
