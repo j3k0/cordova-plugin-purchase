@@ -20,8 +20,10 @@ A purchase object returned by the receipt validator
 - [platform](CdvPurchase.VerifiedPurchase.md#platform)
 - [priceConsentStatus](CdvPurchase.VerifiedPurchase.md#priceconsentstatus)
 - [purchaseDate](CdvPurchase.VerifiedPurchase.md#purchasedate)
+- [purchaseId](CdvPurchase.VerifiedPurchase.md#purchaseid)
 - [renewalIntent](CdvPurchase.VerifiedPurchase.md#renewalintent)
 - [renewalIntentChangeDate](CdvPurchase.VerifiedPurchase.md#renewalintentchangedate)
+- [transactionId](CdvPurchase.VerifiedPurchase.md#transactionid)
 
 ## Properties
 
@@ -103,6 +105,8 @@ ___
 
 • `Optional` **platform**: [`Platform`](../enums/CdvPurchase.Platform.md)
 
+Platform this purchase was made on
+
 ___
 
 ### priceConsentStatus
@@ -121,6 +125,14 @@ Date of first purchase (timestamp).
 
 ___
 
+### purchaseId
+
+• `Optional` **purchaseId**: `string`
+
+Purchase identifier (optional)
+
+___
+
 ### renewalIntent
 
 • `Optional` **renewalIntent**: `string`
@@ -134,3 +146,11 @@ ___
 • `Optional` **renewalIntentChangeDate**: `number`
 
 Date the renewal intent was updated by the user.
+
+___
+
+### transactionId
+
+• `Optional` **transactionId**: `string`
+
+Identifier of the last transaction (optional)

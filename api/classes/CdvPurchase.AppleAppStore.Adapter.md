@@ -18,6 +18,7 @@ Adapter for Apple AppStore using StoreKit version 1
 
 - [\_products](CdvPurchase.AppleAppStore.Adapter.md#_products)
 - [\_receipt](CdvPurchase.AppleAppStore.Adapter.md#_receipt)
+- [autoFinish](CdvPurchase.AppleAppStore.Adapter.md#autofinish)
 - [bridge](CdvPurchase.AppleAppStore.Adapter.md#bridge)
 - [context](CdvPurchase.AppleAppStore.Adapter.md#context)
 - [discountEligibilityDeterminer](CdvPurchase.AppleAppStore.Adapter.md#discounteligibilitydeterminer)
@@ -81,6 +82,14 @@ ___
 • `Optional` **\_receipt**: [`SKApplicationReceipt`](CdvPurchase.AppleAppStore.SKApplicationReceipt.md)
 
 The application receipt, contains all transactions
+
+___
+
+### autoFinish
+
+• **autoFinish**: `boolean`
+
+True to auto-finish all transactions
 
 ___
 

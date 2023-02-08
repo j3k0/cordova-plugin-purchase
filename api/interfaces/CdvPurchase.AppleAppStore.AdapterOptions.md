@@ -8,10 +8,23 @@ Optional options for the AppleAppStore adapter
 
 ### Properties
 
+- [autoFinish](CdvPurchase.AppleAppStore.AdapterOptions.md#autofinish)
 - [discountEligibilityDeterminer](CdvPurchase.AppleAppStore.AdapterOptions.md#discounteligibilitydeterminer)
 - [needAppReceipt](CdvPurchase.AppleAppStore.AdapterOptions.md#needappreceipt)
 
 ## Properties
+
+### autoFinish
+
+• `Optional` **autoFinish**: `boolean`
+
+Auto-finish pending transaction
+
+Use this if the transaction queue is filled with unwanted transactions (in development).
+It's safe to keep this option to "true" when using a receipt validation server and you only
+sell subscriptions.
+
+___
 
 ### discountEligibilityDeterminer
 

@@ -826,7 +826,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.2.1';
+    CdvPurchase.PLUGIN_VERSION = '13.3.0';
     /**
      * Entry class of the plugin.
      */
@@ -2123,7 +2123,7 @@ var CdvPurchase;
          */
         class Adapter {
             constructor(context, options) {
-                var _a;
+                var _a, _b;
                 this.id = CdvPurchase.Platform.APPLE_APPSTORE;
                 this.name = 'AppStore';
                 this.ready = false;
@@ -2136,11 +2136,16 @@ var CdvPurchase;
                 /** List of products loaded from AppStore */
                 this._products = [];
                 this.validProducts = {};
+                /** True iff the appStoreReceipt is already being initialized */
+                this._appStoreReceiptLoading = false;
+                /** List of functions waiting for the appStoreReceipt to be initialized */
+                this._appStoreReceiptCallbacks = [];
                 this.context = context;
                 this.bridge = new AppleAppStore.Bridge.Bridge();
                 this.log = context.log.child('AppleAppStore');
                 this.discountEligibilityDeterminer = options.discountEligibilityDeterminer;
                 this.needAppReceipt = (_a = options.needAppReceipt) !== null && _a !== void 0 ? _a : true;
+                this.autoFinish = (_b = options.autoFinish) !== null && _b !== void 0 ? _b : false;
                 this.pseudoReceipt = new CdvPurchase.Receipt(CdvPurchase.Platform.APPLE_APPSTORE, this.context.apiDecorators);
                 this.receiptsUpdated = CdvPurchase.Utils.debounce(() => {
                     this._receiptsUpdated();
@@ -2233,7 +2238,7 @@ var CdvPurchase;
                     this.log.info('bridge.init');
                     const bridgeLogger = this.log.child('Bridge');
                     this.bridge.init({
-                        autoFinish: false,
+                        autoFinish: this.autoFinish,
                         debug: this.context.verbosity === CdvPurchase.LogLevel.DEBUG,
                         log: msg => bridgeLogger.debug(msg),
                         error: (code, message, options) => {
@@ -2321,16 +2326,32 @@ var CdvPurchase;
              * Create the application receipt
              */
             async initializeAppReceipt(callback) {
-                if (this._receipt)
-                    return callback(undefined); // already loaded
-                this.log.debug('emitAppReceipt()');
+                if (this._receipt) {
+                    this.log.debug('initializeAppReceipt() => already initialized.');
+                    return callback(undefined);
+                }
+                this._appStoreReceiptCallbacks.push(callback);
+                if (this._appStoreReceiptLoading) {
+                    this.log.debug('initializeAppReceipt() => already loading.');
+                    return;
+                }
+                this._appStoreReceiptLoading = true;
                 const nativeData = await this.loadAppStoreReceipt();
+                const callCallbacks = (arg) => {
+                    const callbacks = this._appStoreReceiptCallbacks;
+                    this._appStoreReceiptCallbacks = [];
+                    callbacks.forEach(cb => {
+                        cb(arg);
+                    });
+                };
                 if (!(nativeData === null || nativeData === void 0 ? void 0 : nativeData.appStoreReceipt)) {
                     this.log.warn('no appStoreReceipt');
-                    return callback(CdvPurchase.storeError(CdvPurchase.ErrorCode.REFRESH, 'No appStoreReceipt'));
+                    this._appStoreReceiptLoading = false;
+                    callCallbacks(CdvPurchase.storeError(CdvPurchase.ErrorCode.REFRESH, 'No appStoreReceipt'));
+                    return;
                 }
                 this._receipt = new AppleAppStore.SKApplicationReceipt(nativeData, this.needAppReceipt, this.context.apiDecorators);
-                callback(undefined);
+                callCallbacks(undefined);
             }
             prepareReceipt(nativeData) {
                 if (nativeData === null || nativeData === void 0 ? void 0 : nativeData.appStoreReceipt) {

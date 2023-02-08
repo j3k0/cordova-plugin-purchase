@@ -504,7 +504,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.2.1";
+    const PLUGIN_VERSION = "13.3.0";
     /**
      * Entry class of the plugin.
      */
@@ -2180,6 +2180,14 @@ declare namespace CdvPurchase {
              * The default is "true", use "false" is an optimization.
              */
             needAppReceipt?: boolean;
+            /**
+             * Auto-finish pending transaction
+             *
+             * Use this if the transaction queue is filled with unwanted transactions (in development).
+             * It's safe to keep this option to "true" when using a receipt validation server and you only
+             * sell subscriptions.
+             */
+            autoFinish?: boolean;
         }
         /**
          * Adapter for Apple AppStore using StoreKit version 1
@@ -2213,6 +2221,8 @@ declare namespace CdvPurchase {
             discountEligibilityDeterminer?: DiscountEligibilityDeterminer;
             /** True when we need to validate the application receipt */
             needAppReceipt: boolean;
+            /** True to auto-finish all transactions */
+            autoFinish: boolean;
             constructor(context: CdvPurchase.Internal.AdapterContext, options: AdapterOptions);
             /** Returns true on Android, the only platform supported by this adapter */
             get isSupported(): boolean;
@@ -2225,6 +2235,10 @@ declare namespace CdvPurchase {
             /** Notify the store that the receipts have been updated */
             private _receiptsUpdated;
             initialize(): Promise<IError | undefined>;
+            /** True iff the appStoreReceipt is already being initialized */
+            private _appStoreReceiptLoading;
+            /** List of functions waiting for the appStoreReceipt to be initialized */
+            private _appStoreReceiptCallbacks;
             /**
              * Create the application receipt
              */
@@ -5454,9 +5468,14 @@ declare namespace CdvPurchase {
     }
     /** A purchase object returned by the receipt validator */
     interface VerifiedPurchase {
-        platform?: Platform;
         /** Product identifier */
         id: string;
+        /** Platform this purchase was made on */
+        platform?: Platform;
+        /** Purchase identifier (optional) */
+        purchaseId?: string;
+        /** Identifier of the last transaction (optional) */
+        transactionId?: string;
         /** Date of first purchase (timestamp). */
         purchaseDate?: number;
         /** Date of expiry for a subscription. */
