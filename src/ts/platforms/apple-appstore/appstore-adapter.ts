@@ -314,19 +314,42 @@ namespace CdvPurchase {
                 });
             }
 
+            /** True iff the appStoreReceipt is already being initialized */
+            private _appStoreReceiptLoading = false;
+
+            /** List of functions waiting for the appStoreReceipt to be initialized */
+            private _appStoreReceiptCallbacks: Callback<IError | undefined>[] = [];
+
             /**
              * Create the application receipt
              */
             private async initializeAppReceipt(callback: Callback<IError | undefined>) {
-                if (this._receipt) return callback(undefined); // already loaded
-                this.log.debug('emitAppReceipt()');
+                if (this._receipt) {
+                    this.log.debug('initializeAppReceipt() => already initialized.');
+                    return callback(undefined);
+                }
+                this._appStoreReceiptCallbacks.push(callback);
+                if (this._appStoreReceiptLoading) {
+                    this.log.debug('initializeAppReceipt() => already loading.');
+                    return;
+                }
+                this._appStoreReceiptLoading = true;
                 const nativeData = await this.loadAppStoreReceipt();
+                const callCallbacks = (arg: IError | undefined) => {
+                    const callbacks = this._appStoreReceiptCallbacks;
+                    this._appStoreReceiptCallbacks = [];
+                    callbacks.forEach(cb => {
+                        cb(arg);
+                    });
+                }
                 if (!nativeData?.appStoreReceipt) {
                     this.log.warn('no appStoreReceipt');
-                    return callback(storeError(ErrorCode.REFRESH, 'No appStoreReceipt'));
+                    this._appStoreReceiptLoading = false;
+                    callCallbacks(storeError(ErrorCode.REFRESH, 'No appStoreReceipt'));
+                    return;
                 }
                 this._receipt = new SKApplicationReceipt(nativeData, this.needAppReceipt, this.context.apiDecorators);
-                callback(undefined);
+                callCallbacks(undefined);
             }
 
             private prepareReceipt(nativeData: ApplicationReceipt | undefined) {
