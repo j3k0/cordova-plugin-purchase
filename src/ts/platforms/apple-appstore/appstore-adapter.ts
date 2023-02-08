@@ -46,6 +46,15 @@ namespace CdvPurchase {
              * The default is "true", use "false" is an optimization.
              */
             needAppReceipt?: boolean;
+
+            /**
+             * Auto-finish pending transaction
+             *
+             * Use this if the transaction queue is filled with unwanted transactions (in development).
+             * It's safe to keep this option to "true" when using a receipt validation server and you only
+             * sell subscriptions.
+             */
+            autoFinish?: boolean;
         }
 
         /**
@@ -113,12 +122,16 @@ namespace CdvPurchase {
             /** True when we need to validate the application receipt */
             needAppReceipt: boolean;
 
+            /** True to auto-finish all transactions */
+            autoFinish: boolean;
+
             constructor(context: CdvPurchase.Internal.AdapterContext, options: AdapterOptions) {
                 this.context = context;
                 this.bridge = new Bridge.Bridge();
                 this.log = context.log.child('AppleAppStore');
                 this.discountEligibilityDeterminer = options.discountEligibilityDeterminer;
                 this.needAppReceipt = options.needAppReceipt ?? true;
+                this.autoFinish = options.autoFinish ?? false;
                 this.pseudoReceipt = new Receipt(Platform.APPLE_APPSTORE, this.context.apiDecorators);
                 this.receiptsUpdated = Utils.debounce(() => {
                     this._receiptsUpdated();
@@ -205,7 +218,7 @@ namespace CdvPurchase {
                     this.log.info('bridge.init');
                     const bridgeLogger = this.log.child('Bridge');
                     this.bridge.init({
-                        autoFinish: false,
+                        autoFinish: this.autoFinish,
                         debug: this.context.verbosity === LogLevel.DEBUG,
                         log: msg => bridgeLogger.debug(msg),
 
