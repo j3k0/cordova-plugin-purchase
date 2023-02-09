@@ -504,7 +504,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.3.0";
+    const PLUGIN_VERSION = "13.3.1";
     /**
      * Entry class of the plugin.
      */
@@ -2148,6 +2148,8 @@ declare namespace CdvPurchase {
      * Apple AppStore adapter using StoreKit version 1
      */
     namespace AppleAppStore {
+        type PaymentMonitorStatus = 'cancelled' | 'failed' | 'purchased' | 'deferred';
+        type PaymentMonitor = (status: PaymentMonitorStatus) => void;
         /**
          * Determine which discount the user is eligible to.
          *
@@ -2234,6 +2236,9 @@ declare namespace CdvPurchase {
             private receiptsUpdated;
             /** Notify the store that the receipts have been updated */
             private _receiptsUpdated;
+            private _paymentMonitor;
+            private setPaymentMonitor;
+            private callPaymentMonitor;
             initialize(): Promise<IError | undefined>;
             /** True iff the appStoreReceipt is already being initialized */
             private _appStoreReceiptLoading;

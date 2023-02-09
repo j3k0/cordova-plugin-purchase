@@ -29,6 +29,8 @@ Apple AppStore adapter using StoreKit version 1
 
 - [DiscountEligibilityDeterminer](CdvPurchase.AppleAppStore.md#discounteligibilitydeterminer)
 - [DiscountType](CdvPurchase.AppleAppStore.md#discounttype)
+- [PaymentMonitor](CdvPurchase.AppleAppStore.md#paymentmonitor)
+- [PaymentMonitorStatus](CdvPurchase.AppleAppStore.md#paymentmonitorstatus)
 - [SKOfferType](CdvPurchase.AppleAppStore.md#skoffertype)
 
 ### Variables
@@ -65,6 +67,32 @@ ___
 ### DiscountType
 
 Ƭ **DiscountType**: ``"Introductory"`` \| ``"Subscription"``
+
+___
+
+### PaymentMonitor
+
+Ƭ **PaymentMonitor**: (`status`: [`PaymentMonitorStatus`](CdvPurchase.AppleAppStore.md#paymentmonitorstatus)) => `void`
+
+#### Type declaration
+
+▸ (`status`): `void`
+
+##### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `status` | [`PaymentMonitorStatus`](CdvPurchase.AppleAppStore.md#paymentmonitorstatus) |
+
+##### Returns
+
+`void`
+
+___
+
+### PaymentMonitorStatus
+
+Ƭ **PaymentMonitorStatus**: ``"cancelled"`` \| ``"failed"`` \| ``"purchased"`` \| ``"deferred"``
 
 ___
 
