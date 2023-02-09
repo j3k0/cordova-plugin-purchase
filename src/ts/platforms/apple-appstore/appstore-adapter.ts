@@ -11,6 +11,8 @@ namespace CdvPurchase {
      */
     export namespace AppleAppStore {
 
+        export type PaymentMonitorStatus = 'cancelled' | 'failed' | 'purchased' | 'deferred';
+        export type PaymentMonitor = (status: PaymentMonitorStatus) => void;
 
         /**
          * Determine which discount the user is eligible to.
@@ -213,6 +215,14 @@ namespace CdvPurchase {
                 }
             }
 
+            private _paymentMonitor: PaymentMonitor = () => {};
+            private setPaymentMonitor(fn: PaymentMonitor) {
+                this._paymentMonitor = fn;
+            }
+            private callPaymentMonitor(status: PaymentMonitorStatus, code?: ErrorCode, message?: string) {
+                this._paymentMonitor(status);
+            }
+
             initialize(): Promise<IError | undefined> {
                 return new Promise(resolve => {
                     this.log.info('bridge.init');
@@ -228,6 +238,7 @@ namespace CdvPurchase {
                                 // When the user closes the payment sheet, this generates a
                                 // PAYMENT_CANCELLED error that isn't an error anymore since version 13
                                 // of the plugin.
+                                this.callPaymentMonitor('cancelled', ErrorCode.PAYMENT_CANCELLED, message);
                                 return;
                             }
                             else {
@@ -246,6 +257,7 @@ namespace CdvPurchase {
                             transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId);
                             this.removeTransactionInProgress(productId);
                             this.receiptsUpdated();
+                            this.callPaymentMonitor('purchased');
                         },
 
                         purchaseEnqueued: async (productId: string, quantity: number) => {
@@ -259,6 +271,7 @@ namespace CdvPurchase {
                             this.log.info('purchaseFailed: ' + productId + ' - ' + code + ' - ' + message);
                             this.removeTransactionInProgress(productId);
                             this.context.listener.receiptsUpdated(Platform.APPLE_APPSTORE, [this.pseudoReceipt]);
+                            this.callPaymentMonitor('failed', code, message);
                         },
 
                         purchasing: async (productId: string) => {
@@ -276,6 +289,7 @@ namespace CdvPurchase {
                             this.log.info('deferred: ' + productId);
                             await this.upsertTransactionInProgress(productId, TransactionState.PENDING);
                             this.context.listener.receiptsUpdated(Platform.APPLE_APPSTORE, [this.pseudoReceipt]);
+                            this.callPaymentMonitor('deferred');
                         },
 
                         finished: async (transactionIdentifier: string, productId: string) => {
@@ -475,16 +489,43 @@ namespace CdvPurchase {
             }
 
             async order(offer: Offer): Promise<undefined | IError> {
+                let resolved = false;
                 return new Promise(resolve => {
+                    const callResolve = (result: undefined | IError) => {
+                        if (resolved) return;
+                        this.setPaymentMonitor(() => { });
+                        resolved = true;
+                        resolve(result);
+                    }
                     this.log.info('order');
                     const discountId = offer.id !== DEFAULT_OFFER_ID ? offer.id : undefined;
+                    this.setPaymentMonitor((status: PaymentMonitorStatus, code?: ErrorCode, message?: string) => {
+                        this.log.info('order.paymentMonitor => ' + status + ' ' + (code ?? '') + ' ' + (message ?? ''));
+                        if (resolved) return;
+                        switch (status) {
+                            case 'cancelled':
+                                callResolve(storeError(code ?? ErrorCode.PAYMENT_CANCELLED, message ?? 'The user cancelled the order.'));
+                                break;
+                            case 'failed':
+                                // note, "failed" might be triggered before "cancelled",
+                                // so we'll give some time to catch the "cancelled" event.
+                                setTimeout(() => {
+                                    callResolve(storeError(code ?? ErrorCode.PURCHASE, message ?? 'Purchase failed'));
+                                }, 500);
+                                break;
+                            case 'purchased':
+                            case 'deferred':
+                                callResolve(undefined);
+                                break;
+                        }
+                    });
                     const success = () => {
                         this.log.info('order.success');
-                        resolve(undefined);
+                        // We'll monitor the payment before resolving.
                     }
                     const error = () => {
                         this.log.info('order.error');
-                        resolve(storeError(ErrorCode.PURCHASE, 'Failed to place order'));
+                        callResolve(storeError(ErrorCode.PURCHASE, 'Failed to place order'));
                     }
                     // When we switch AppStore user, the cached receipt isn't from the new user.
                     // so after a purchase, we want to make sure we're using the receipt from the logged in user.
