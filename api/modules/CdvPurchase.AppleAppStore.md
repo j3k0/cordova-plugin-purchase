@@ -22,8 +22,10 @@ Apple AppStore adapter using StoreKit version 1
 ### Interfaces
 
 - [AdapterOptions](../interfaces/CdvPurchase.AppleAppStore.AdapterOptions.md)
+- [AdditionalData](../interfaces/CdvPurchase.AppleAppStore.AdditionalData.md)
 - [ApplicationReceipt](../interfaces/CdvPurchase.AppleAppStore.ApplicationReceipt.md)
 - [DiscountEligibilityRequest](../interfaces/CdvPurchase.AppleAppStore.DiscountEligibilityRequest.md)
+- [PaymentDiscount](../interfaces/CdvPurchase.AppleAppStore.PaymentDiscount.md)
 
 ### Type Aliases
 

@@ -13,11 +13,20 @@ Data to attach to a transaction.
 
 ### Properties
 
+- [appStore](CdvPurchase.AdditionalData.md#appstore)
 - [applicationUsername](CdvPurchase.AdditionalData.md#applicationusername)
 - [braintree](CdvPurchase.AdditionalData.md#braintree)
 - [googlePlay](CdvPurchase.AdditionalData.md#googleplay)
 
 ## Properties
+
+### appStore
+
+• `Optional` **appStore**: [`AdditionalData`](CdvPurchase.AppleAppStore.AdditionalData.md)
+
+Apple AppStore specific additional data
+
+___
 
 ### applicationUsername
 

@@ -414,7 +414,7 @@ ___
 
 ### order
 
-▸ **order**(`offer`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **order**(`offer`, `additionalData`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Initializes an order.
 
@@ -423,6 +423,7 @@ Initializes an order.
 | Name | Type |
 | :------ | :------ |
 | `offer` | [`Offer`](CdvPurchase.Offer.md) |
+| `additionalData` | [`AdditionalData`](../interfaces/CdvPurchase.AdditionalData.md) |
 
 #### Returns
 

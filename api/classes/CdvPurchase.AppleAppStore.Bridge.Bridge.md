@@ -294,7 +294,7 @@ ___
 | `productId` | `string` |
 | `quantity` | `number` |
 | `applicationUsername` | `undefined` \| `string` |
-| `discount` | `undefined` \| `string` |
+| `discount` | `undefined` \| [`PaymentDiscount`](../interfaces/CdvPurchase.AppleAppStore.PaymentDiscount.md) |
 | `success` | () => `void` |
 | `error` | () => `void` |
 

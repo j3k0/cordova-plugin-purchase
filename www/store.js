@@ -826,7 +826,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.3.1';
+    CdvPurchase.PLUGIN_VERSION = '13.3.2';
     /**
      * Entry class of the plugin.
      */
@@ -2482,9 +2482,10 @@ var CdvPurchase;
                     });
                 });
             }
-            async order(offer) {
+            async order(offer, additionalData) {
                 let resolved = false;
                 return new Promise(resolve => {
+                    var _a;
                     const callResolve = (result) => {
                         if (resolved)
                             return;
@@ -2494,6 +2495,13 @@ var CdvPurchase;
                     };
                     this.log.info('order');
                     const discountId = offer.id !== AppleAppStore.DEFAULT_OFFER_ID ? offer.id : undefined;
+                    const discount = (_a = additionalData === null || additionalData === void 0 ? void 0 : additionalData.appStore) === null || _a === void 0 ? void 0 : _a.discount;
+                    if (discountId && !discount) {
+                        return callResolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.MISSING_OFFER_PARAMS, 'Missing additionalData.appStore.discount when ordering a discount offer'));
+                    }
+                    if (discountId && ((discount === null || discount === void 0 ? void 0 : discount.id) !== discountId)) {
+                        return callResolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.INVALID_OFFER_IDENTIFIER, 'Offer identifier does not match additionalData.appStore.discount.id'));
+                    }
                     this.setPaymentMonitor((status, code, message) => {
                         this.log.info('order.paymentMonitor => ' + status + ' ' + (code !== null && code !== void 0 ? code : '') + ' ' + (message !== null && message !== void 0 ? message : ''));
                         if (resolved)
@@ -2526,7 +2534,7 @@ var CdvPurchase;
                     // When we switch AppStore user, the cached receipt isn't from the new user.
                     // so after a purchase, we want to make sure we're using the receipt from the logged in user.
                     this.forceReceiptReload = true;
-                    this.bridge.purchase(offer.productId, 1, this.context.getApplicationUsername(), discountId, success, error);
+                    this.bridge.purchase(offer.productId, 1, this.context.getApplicationUsername(), discount, success, error);
                 });
             }
             finish(transaction) {

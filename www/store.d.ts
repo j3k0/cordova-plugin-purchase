@@ -504,7 +504,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.3.1";
+    const PLUGIN_VERSION = "13.3.2";
     /**
      * Entry class of the plugin.
      */
@@ -998,6 +998,8 @@ declare namespace CdvPurchase {
         googlePlay?: GooglePlay.AdditionalData;
         /** Braintree specific additional data */
         braintree?: Braintree.AdditionalData;
+        /** Apple AppStore specific additional data */
+        appStore?: AppleAppStore.AdditionalData;
     }
     /**
      * Purchase platforms supported by the plugin
@@ -2150,6 +2152,11 @@ declare namespace CdvPurchase {
     namespace AppleAppStore {
         type PaymentMonitorStatus = 'cancelled' | 'failed' | 'purchased' | 'deferred';
         type PaymentMonitor = (status: PaymentMonitorStatus) => void;
+        /** Additional data passed with an order on AppStore */
+        interface AdditionalData {
+            /** Information about the payment discount */
+            discount?: PaymentDiscount;
+        }
         /**
          * Determine which discount the user is eligible to.
          *
@@ -2254,7 +2261,7 @@ declare namespace CdvPurchase {
             private loadEligibility;
             private callDiscountEligibilityDeterminer;
             load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
-            order(offer: Offer): Promise<undefined | IError>;
+            order(offer: Offer, additionalData: CdvPurchase.AdditionalData): Promise<undefined | IError>;
             finish(transaction: Transaction): Promise<undefined | IError>;
             refreshReceipt(): Promise<undefined | IError | ApplicationReceipt>;
             receiptValidationBody(receipt: Receipt): Promise<Validator.Request.Body | undefined>;
@@ -2284,6 +2291,23 @@ declare namespace CdvPurchase {
             bundleNumericVersion: number;
             /** Bundle signature */
             bundleSignature: string;
+        }
+        /**
+         * The signed discount applied to a payment
+         *
+         * @see {@link https://developer.apple.com/documentation/storekit/skpaymentdiscount?language=objc}
+         */
+        interface PaymentDiscount {
+            /** A string used to uniquely identify a discount offer for a product. */
+            id: string;
+            /** A string that identifies the key used to generate the signature. */
+            key: string;
+            /** A universally unique ID (UUID) value that you define. */
+            nonce: string;
+            /** A string representing the properties of a specific promotional offer, cryptographically signed. */
+            signature: string;
+            /** The date and time of the signature's creation in milliseconds, formatted in Unix epoch time. */
+            timestamp: string;
         }
         namespace Bridge {
             /**
@@ -2417,7 +2441,7 @@ declare namespace CdvPurchase {
                 constructor();
                 init(options: Partial<BridgeOptions>, success: () => void, error: (code: ErrorCode, message: string) => void): void;
                 processPendingTransactions(): void;
-                purchase(productId: string, quantity: number, applicationUsername: string | undefined, discount: string | undefined, success: () => void, error: () => void): void;
+                purchase(productId: string, quantity: number, applicationUsername: string | undefined, discount: PaymentDiscount | undefined, success: () => void, error: () => void): void;
                 canMakePayments(success: () => void, error: (message: string) => void): void;
                 restore(callback?: Callback<any>): void;
                 manageSubscriptions(callback?: Callback<any>): void;
