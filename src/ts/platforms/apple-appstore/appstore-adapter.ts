@@ -14,6 +14,13 @@ namespace CdvPurchase {
         export type PaymentMonitorStatus = 'cancelled' | 'failed' | 'purchased' | 'deferred';
         export type PaymentMonitor = (status: PaymentMonitorStatus) => void;
 
+        /** Additional data passed with an order on AppStore */
+        export interface AdditionalData {
+
+            /** Information about the payment discount */
+            discount?: PaymentDiscount;
+        }
+
         /**
          * Determine which discount the user is eligible to.
          *
@@ -488,7 +495,7 @@ namespace CdvPurchase {
                 });
             }
 
-            async order(offer: Offer): Promise<undefined | IError> {
+            async order(offer: Offer, additionalData: CdvPurchase.AdditionalData): Promise<undefined | IError> {
                 let resolved = false;
                 return new Promise(resolve => {
                     const callResolve = (result: undefined | IError) => {
@@ -499,6 +506,13 @@ namespace CdvPurchase {
                     }
                     this.log.info('order');
                     const discountId = offer.id !== DEFAULT_OFFER_ID ? offer.id : undefined;
+                    const discount = additionalData?.appStore?.discount;
+                    if (discountId && !discount) {
+                        return callResolve(storeError(ErrorCode.MISSING_OFFER_PARAMS, 'Missing additionalData.appStore.discount when ordering a discount offer'));
+                    }
+                    if (discountId && (discount?.id !== discountId)) {
+                        return callResolve(storeError(ErrorCode.INVALID_OFFER_IDENTIFIER, 'Offer identifier does not match additionalData.appStore.discount.id'));
+                    }
                     this.setPaymentMonitor((status: PaymentMonitorStatus, code?: ErrorCode, message?: string) => {
                         this.log.info('order.paymentMonitor => ' + status + ' ' + (code ?? '') + ' ' + (message ?? ''));
                         if (resolved) return;
@@ -530,7 +544,7 @@ namespace CdvPurchase {
                     // When we switch AppStore user, the cached receipt isn't from the new user.
                     // so after a purchase, we want to make sure we're using the receipt from the logged in user.
                     this.forceReceiptReload = true;
-                    this.bridge.purchase(offer.productId, 1, this.context.getApplicationUsername(), discountId, success, error);
+                    this.bridge.purchase(offer.productId, 1, this.context.getApplicationUsername(), discount, success, error);
                 });
             }
 

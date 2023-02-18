@@ -17,6 +17,24 @@ namespace CdvPurchase {
             bundleSignature: string;
         }
 
+        /**
+         * The signed discount applied to a payment
+         *
+         * @see {@link https://developer.apple.com/documentation/storekit/skpaymentdiscount?language=objc}
+         */
+        export interface PaymentDiscount {
+            /** A string used to uniquely identify a discount offer for a product. */
+            id: string;
+            /** A string that identifies the key used to generate the signature. */
+            key: string;
+            /** A universally unique ID (UUID) value that you define. */
+            nonce: string;
+            /** A string representing the properties of a specific promotional offer, cryptographically signed. */
+            signature: string;
+            /** The date and time of the signature's creation in milliseconds, formatted in Unix epoch time. */
+            timestamp: string;
+        }
+
         export namespace Bridge {
 
             /**
@@ -340,7 +358,7 @@ namespace CdvPurchase {
                  * @param {String} productId The product identifier. e.g. "com.example.MyApp.myproduct"
                  * @param {int} quantity Quantity of product to purchase
                  */
-                purchase(productId: string, quantity: number, applicationUsername: string | undefined, discount: string | undefined, success: () => void, error: () => void) {
+                purchase(productId: string, quantity: number, applicationUsername: string | undefined, discount: PaymentDiscount | undefined, success: () => void, error: () => void) {
                     quantity = (quantity | 0) || 1;
                     const options = this.options;
 

@@ -207,6 +207,9 @@ namespace CdvPurchase {
 
         /** Braintree specific additional data */
         braintree?: Braintree.AdditionalData;
+
+        /** Apple AppStore specific additional data */
+        appStore?: AppleAppStore.AdditionalData;
     }
 
     /**
