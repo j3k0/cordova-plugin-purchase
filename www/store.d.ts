@@ -504,7 +504,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.3.2";
+    const PLUGIN_VERSION = "13.3.3";
     /**
      * Entry class of the plugin.
      */
@@ -2205,6 +2205,7 @@ declare namespace CdvPurchase {
             id: Platform;
             name: string;
             ready: boolean;
+            _canMakePayments: boolean;
             /**
              * Set to true to force a full refresh of the receipt when preparing a receipt validation call.
              *
@@ -2233,7 +2234,7 @@ declare namespace CdvPurchase {
             /** True to auto-finish all transactions */
             autoFinish: boolean;
             constructor(context: CdvPurchase.Internal.AdapterContext, options: AdapterOptions);
-            /** Returns true on Android, the only platform supported by this adapter */
+            /** Returns true on iOS, the only platform supported by this adapter */
             get isSupported(): boolean;
             private upsertTransactionInProgress;
             private removeTransactionInProgress;
@@ -2247,6 +2248,7 @@ declare namespace CdvPurchase {
             private setPaymentMonitor;
             private callPaymentMonitor;
             initialize(): Promise<IError | undefined>;
+            private canMakePayments;
             /** True iff the appStoreReceipt is already being initialized */
             private _appStoreReceiptLoading;
             /** List of functions waiting for the appStoreReceipt to be initialized */

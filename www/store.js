@@ -826,7 +826,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.3.2';
+    CdvPurchase.PLUGIN_VERSION = '13.3.3';
     /**
      * Entry class of the plugin.
      */
@@ -1101,6 +1101,9 @@ var CdvPurchase;
         /** Return true if a product or offer can be purchased */
         canPurchase(offer) {
             const product = (offer instanceof CdvPurchase.Offer) ? this.get(offer.productId, offer.platform) : offer;
+            const adapter = this.adapters.findReady(offer.platform);
+            if (!(adapter === null || adapter === void 0 ? void 0 : adapter.checkSupport('order')))
+                return false;
             return CdvPurchase.Internal.LocalReceipts.canPurchase(this.localReceipts, product);
         }
         /**
@@ -2127,6 +2130,7 @@ var CdvPurchase;
                 this.id = CdvPurchase.Platform.APPLE_APPSTORE;
                 this.name = 'AppStore';
                 this.ready = false;
+                this._canMakePayments = false;
                 /**
                  * Set to true to force a full refresh of the receipt when preparing a receipt validation call.
                  *
@@ -2167,7 +2171,7 @@ var CdvPurchase;
                     this.validProducts[vp.id] = Object.assign(Object.assign({}, vp), rp);
                 });
             }
-            /** Returns true on Android, the only platform supported by this adapter */
+            /** Returns true on iOS, the only platform supported by this adapter */
             get isSupported() {
                 return window.cordova.platformId === 'ios';
             }
@@ -2323,13 +2327,26 @@ var CdvPurchase;
                         restoreCompleted: () => {
                             this.log.info('restoreCompleted');
                         },
-                    }, () => {
+                    }, async () => {
                         this.log.info('bridge.init done');
                         setTimeout(() => this.initializeAppReceipt(() => this.receiptsUpdated()), 300);
+                        await this.canMakePayments();
                         resolve(undefined);
                     }, (code, message) => {
                         this.log.info('bridge.init failed: ' + code + ' - ' + message);
                         resolve(CdvPurchase.storeError(code, message));
+                    });
+                });
+            }
+            async canMakePayments() {
+                return new Promise(resolve => {
+                    this.bridge.canMakePayments(() => {
+                        this._canMakePayments = true;
+                        resolve(true);
+                    }, (message) => {
+                        this.log.warn(`canMakePayments: ${message}`);
+                        this._canMakePayments = false;
+                        resolve(false);
                     });
                 });
             }
@@ -2647,6 +2664,8 @@ var CdvPurchase;
                 return;
             }
             checkSupport(functionality) {
+                if (functionality === 'order')
+                    return this._canMakePayments;
                 const supported = [
                     'order', 'manageBilling', 'manageSubscriptions'
                 ];

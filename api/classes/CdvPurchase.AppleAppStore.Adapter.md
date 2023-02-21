@@ -16,6 +16,7 @@ Adapter for Apple AppStore using StoreKit version 1
 
 ### Properties
 
+- [\_canMakePayments](CdvPurchase.AppleAppStore.Adapter.md#_canmakepayments)
 - [\_products](CdvPurchase.AppleAppStore.Adapter.md#_products)
 - [\_receipt](CdvPurchase.AppleAppStore.Adapter.md#_receipt)
 - [autoFinish](CdvPurchase.AppleAppStore.Adapter.md#autofinish)
@@ -68,6 +69,12 @@ Adapter for Apple AppStore using StoreKit version 1
 | `options` | [`AdapterOptions`](../interfaces/CdvPurchase.AppleAppStore.AdapterOptions.md) |
 
 ## Properties
+
+### \_canMakePayments
+
+• **\_canMakePayments**: `boolean` = `false`
+
+___
 
 ### \_products
 
@@ -187,7 +194,7 @@ The value is set by the "Adapters" class (which is responsible for initializing 
 
 • `get` **isSupported**(): `boolean`
 
-Returns true on Android, the only platform supported by this adapter
+Returns true on iOS, the only platform supported by this adapter
 
 #### Returns
 

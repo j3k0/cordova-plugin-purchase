@@ -9,6 +9,11 @@ function demo() {
 
     const store = CdvPurchase.store;
 
+    const appStore = store.getAdapter(CdvPurchase.Platform.APPLE_APPSTORE);
+    if (appStore && appStore.checkSupport('order')) {
+        // user can make payments
+    }
+
     // Shortcuts
     const ProductType = CdvPurchase.ProductType;
     const Platform = CdvPurchase.Platform;
