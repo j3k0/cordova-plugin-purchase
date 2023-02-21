@@ -1,6 +1,152 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.3
+
+Adding back functionalities that existed in version 11 of the plugin, mostly on iOS, and a few fixes. Detail below.
+
+### 13.3.3 - Use canMakePayments on Apple AppStore
+
+`offer.canPurchase` will be false if the platform reports that it doesn't support the "order" functionality.
+
+When you check if the offer can be purchased, the plugin will now use the value from `canMakePurchases` (for Apple AppStore).
+
+```ts
+if (!offer.canPurchase) {
+  // the given offer cannot be purchased. hide it or hide the buy button.
+}
+```
+
+If none of the offers can be purchased, you can choose to hide the whole store.
+
+There are 2 reasons why an offer cannot be purchased:
+
+1. Product is already owned (see `product.owned`)
+2. The adapter don't support "order()"
+
+If you really want to access the low-level value of `canMakePurchases` you can do it like so:
+
+```
+const appStore = store.getAdapter(CdvPurchase.Platform.APPLE_APPSTORE);
+if (appStore && appStore.checkSupport('order')) {
+  // user can make payments
+}
+```
+
+Ref #1378
+
+### 13.3.2 - Add support for promotional offers on Apple AppStore
+
+You can order a discount offer by providing additional data to "offer.order()" like so:
+
+```ts
+offer.order({
+  appStore: {
+    discount: {
+      id: "discount-id",
+      key: "...",
+      nonce: "...",
+      signature: "...",
+      timestamp: "...",
+    }
+  }
+});
+```
+
+Check Apple documentation about the meaning of those fields and how to fill them. https://developer.apple.com/documentation/storekit/in-app_purchase/original_api_for_in-app_purchase/subscriptions_and_offers/setting_up_promotional_offers?language=objc
+
+You can check this old example server here: https://github.com/j3k0/nodejs-suboffer-signature-server
+
+### 13.3.1 - Fix "store.order" promise resolution
+
+Wait for the transaction to be purchased or the purchase cancelled before resolving.
+
+Example usage:
+
+```ts
+store.order(offer)
+  .then((result) => {
+    if (result && result.isError) {
+      if (result.code === CdvPurchase.ErrorCode.PAYMENT_CANCELLED) {
+        // Payment cancelled: window closed by user
+      }
+      else {
+        // Payment failed: check result.message
+      }
+    }
+    else {
+      // Success
+    }
+  });
+```
+
+### 13.3.0
+
+#### Add the AppStore `autoFinish` option
+
+Use this if the transaction queue is filled with unwanted transactions (in development).
+It's safe to keep this option to "true" when using a receipt validation server and you only sell subscriptions
+
+Example:
+
+```ts
+store.initialize([
+  {
+    platform: Platform.APPLE_APPSTORE,
+    options: { autoFinish: true }
+  },
+  Platform.GOOGLE_PLAY
+]);
+```
+
+#### Optimize AppStore receipt loaded multiple times in parallel
+
+When the Apple `appStoreReceipt` is loaded from multiple source, it resulted in a lot of duplicate calls. 13.3.0 optimizes this use case.
+
+#### Add transactionId and purchaseId to VerifiedPurchase
+
+It's just a TypeScript definition since the plugin doesn't do much with it, but it has been requested by a few users.
+
+## 13.2
+
+### 13.2.1 - Fixing parsing of incorrectly formatted validator response
+
+### 13.2.0
+
+#### Adding store.when().unverified()
+
+`unverified` will be called when receipt validation failed.
+
+#### Fixing `Product.pricing`
+
+Issue #1368 fixed: `product.pricing` was always `undefined`.
+
 ## 13.1
+
+### 13.1.6 - Fixing `appStoreReceipt` null on first launch
+
+Bug hasn't been reproduced, but the fix should handle the error case that happened to this user (based on the provided logs).
+
+### 13.1.5 - AppStore fixes
+
+- 51400ab Adding in-progress transaction to a pseudo receipt
+- c0e47b3 Reloading receipt from native side before receipt validation
+- 5a8542b Improved error reporting
+- 7a80a6d Do not call "finished" for failed transactions
+- 348431e Report success/failure of purchase
+- e53017c Fix crash when logged out of iCloud (#1354)
+
+### 13.1.4 - AppStore fixes
+
+* b692e21 Don't error if finishing already finished transaction
+* 49c0508 Force receipt refresh after order() and restorePurchases()
+
+### 13.1.3
+
+Fixing some receipt validation use cases on Apple devices.
+
+* 9cfce2d Load missing iOS appStoreReceipt when validation call is requested
+* 2569147 Update validator functions to include the receipts
+* f03a751 Refresh appStoreReceipt if empty at validation stage
 
 ### Update to requestPayment()
 
