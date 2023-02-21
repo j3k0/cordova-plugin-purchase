@@ -83,6 +83,7 @@ namespace CdvPurchase {
             id = Platform.APPLE_APPSTORE;
             name = 'AppStore';
             ready = false;
+            _canMakePayments = false;
 
             /**
              * Set to true to force a full refresh of the receipt when preparing a receipt validation call.
@@ -324,13 +325,27 @@ namespace CdvPurchase {
                         restoreCompleted: () => {
                             this.log.info('restoreCompleted');
                         },
-                    }, () => {
+                    }, async () => {
                         this.log.info('bridge.init done');
                         setTimeout(() => this.initializeAppReceipt(() => this.receiptsUpdated()), 300);
+                        await this.canMakePayments();
                         resolve(undefined);
                     }, (code: ErrorCode, message: string) => {
                         this.log.info('bridge.init failed: ' + code + ' - ' + message);
                         resolve(storeError(code, message));
+                    });
+                });
+            }
+
+            private async canMakePayments(): Promise<boolean> {
+                return new Promise(resolve => {
+                    this.bridge.canMakePayments(() => {
+                        this._canMakePayments = true;
+                        resolve(true);
+                    }, (message) => {
+                        this.log.warn(`canMakePayments: ${message}`);
+                        this._canMakePayments = false;
+                        resolve(false);
                     });
                 });
             }
@@ -661,6 +676,7 @@ namespace CdvPurchase {
             }
 
             checkSupport(functionality: PlatformFunctionality): boolean {
+                if (functionality === 'order') return this._canMakePayments;
                 const supported: PlatformFunctionality[] = [
                     'order', 'manageBilling', 'manageSubscriptions'
                 ];

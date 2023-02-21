@@ -383,6 +383,8 @@ namespace CdvPurchase {
         /** Return true if a product or offer can be purchased */
         private canPurchase(offer: Offer | Product) {
             const product = (offer instanceof Offer) ? this.get(offer.productId, offer.platform) : offer;
+            const adapter = this.adapters.findReady(offer.platform);
+            if (!adapter?.checkSupport('order')) return false;
             return Internal.LocalReceipts.canPurchase(this.localReceipts, product);
         }
 
