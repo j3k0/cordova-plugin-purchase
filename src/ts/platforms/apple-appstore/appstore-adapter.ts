@@ -148,7 +148,7 @@ namespace CdvPurchase {
                 }, 300);
             }
 
-            /** Returns true on Android, the only platform supported by this adapter */
+            /** Returns true on iOS, the only platform supported by this adapter */
             get isSupported(): boolean {
                 return window.cordova.platformId === 'ios';
             }
