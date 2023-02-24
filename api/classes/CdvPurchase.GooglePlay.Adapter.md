@@ -409,6 +409,8 @@ ___
 
 ▸ **onPurchaseConsumed**(`purchase`): `void`
 
+Called by the bridge when a purchase has been consumed
+
 #### Parameters
 
 | Name | Type |

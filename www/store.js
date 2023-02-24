@@ -826,7 +826,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.3.3';
+    CdvPurchase.PLUGIN_VERSION = '13.3.4';
     /**
      * Entry class of the plugin.
      */
@@ -4276,8 +4276,11 @@ var CdvPurchase;
                     resolve(undefined);
                 });
             }
+            /** Called by the bridge when a purchase has been consumed */
             onPurchaseConsumed(purchase) {
                 this.log.debug("onPurchaseConsumed: " + purchase.orderId);
+                purchase.acknowledged = true; // consumed is the equivalent of acknowledged for consumables
+                this.onPurchasesUpdated([purchase]);
             }
             /** Called when the platform reports update for some purchases */
             onPurchasesUpdated(purchases) {

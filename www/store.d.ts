@@ -504,7 +504,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.3.3";
+    const PLUGIN_VERSION = "13.3.4";
     /**
      * Entry class of the plugin.
      */
@@ -3960,6 +3960,7 @@ declare namespace CdvPurchase {
             load(products: IRegisterProduct[]): Promise<(GProduct | IError)[]>;
             /** @inheritDoc */
             finish(transaction: CdvPurchase.Transaction): Promise<IError | undefined>;
+            /** Called by the bridge when a purchase has been consumed */
             onPurchaseConsumed(purchase: Bridge.Purchase): void;
             /** Called when the platform reports update for some purchases */
             onPurchasesUpdated(purchases: Bridge.Purchase[]): void;
