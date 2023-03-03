@@ -1056,9 +1056,14 @@ public final class PurchasePlugin
         Log.d(mTag, "onConsumeResponse() -> Success");
         sendToListener("purchaseConsumed", new JSONObject()
             .put("purchase", toJSON(purchase)));
+        callSuccess();
+      } else {
+        Log.d(mTag, result.getDebugMessage());
+        callError(Constants.ERR_FINISH, result.getDebugMessage());
       }
     } catch (JSONException e) {
       Log.d(mTag, "onConsumeResponse() -> Failed: " + e.getMessage());
+      callError(Constants.ERR_UNKNOWN, e.getMessage());
     }
   }
 

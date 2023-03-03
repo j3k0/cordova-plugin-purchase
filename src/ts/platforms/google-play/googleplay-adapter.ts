@@ -214,7 +214,11 @@ namespace CdvPurchase {
             finish(transaction: CdvPurchase.Transaction): Promise<IError | undefined> {
                 return new Promise(resolve => {
 
-                    const onSuccess = () => resolve(undefined);
+                    const onSuccess = () => {
+                        transaction.state = TransactionState.FINISHED;
+                        this.context.listener.receiptsUpdated(Platform.GOOGLE_PLAY, [transaction.parentReceipt]);
+                        resolve(undefined);
+                    };
                     const onFailure = (message: string, code?: ErrorCode) => resolve(storeError(code || ErrorCode.UNKNOWN, message));
 
                     const firstProduct = transaction.products[0];
