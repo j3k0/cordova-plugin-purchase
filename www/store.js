@@ -826,7 +826,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.3.4';
+    CdvPurchase.PLUGIN_VERSION = '13.3.5';
     /**
      * Entry class of the plugin.
      */
@@ -4252,8 +4252,10 @@ var CdvPurchase;
             finish(transaction) {
                 return new Promise(resolve => {
                     const onSuccess = () => {
-                        transaction.state = CdvPurchase.TransactionState.FINISHED;
-                        this.context.listener.receiptsUpdated(CdvPurchase.Platform.GOOGLE_PLAY, [transaction.parentReceipt]);
+                        if (transaction.state !== CdvPurchase.TransactionState.FINISHED) {
+                            transaction.state = CdvPurchase.TransactionState.FINISHED;
+                            this.context.listener.receiptsUpdated(CdvPurchase.Platform.GOOGLE_PLAY, [transaction.parentReceipt]);
+                        }
                         resolve(undefined);
                     };
                     const onFailure = (message, code) => resolve(CdvPurchase.storeError(code || CdvPurchase.ErrorCode.UNKNOWN, message));
