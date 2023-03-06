@@ -215,8 +215,10 @@ namespace CdvPurchase {
                 return new Promise(resolve => {
 
                     const onSuccess = () => {
-                        transaction.state = TransactionState.FINISHED;
-                        this.context.listener.receiptsUpdated(Platform.GOOGLE_PLAY, [transaction.parentReceipt]);
+                        if (transaction.state !== TransactionState.FINISHED) {
+                            transaction.state = TransactionState.FINISHED;
+                            this.context.listener.receiptsUpdated(Platform.GOOGLE_PLAY, [transaction.parentReceipt]);
+                        }
                         resolve(undefined);
                     };
                     const onFailure = (message: string, code?: ErrorCode) => resolve(storeError(code || ErrorCode.UNKNOWN, message));
