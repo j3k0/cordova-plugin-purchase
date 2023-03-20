@@ -618,7 +618,7 @@ namespace CdvPurchase {
     /**
      * The global store object.
      */
-    export let store: Store = new CdvPurchase.Store();
+    export let store: Store;
 
     //
     // Documentation for sub-namespaces
