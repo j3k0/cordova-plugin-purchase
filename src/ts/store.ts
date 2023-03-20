@@ -634,7 +634,11 @@ namespace CdvPurchase {
 
 // Create the CdvPurchase.store object at startup.
 setTimeout(() => {
-    if (!window.CdvPurchase) {
+    console.log('Create CdvPurchase...');
+    if (window.CdvPurchase) {
+        Object.assign(window.CdvPurchase, CdvPurchase, { store: window.CdvPurchase.store });
+    }
+    else {
         window.CdvPurchase = CdvPurchase;
     }
     if (!window.CdvPurchase.store) {
