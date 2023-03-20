@@ -826,7 +826,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.3.7';
+    CdvPurchase.PLUGIN_VERSION = '13.3.8';
     /**
      * Entry class of the plugin.
      */
@@ -1319,10 +1319,6 @@ var CdvPurchase;
         }
     }
     CdvPurchase.Store = Store;
-    /**
-     * The global store object.
-     */
-    CdvPurchase.store = new CdvPurchase.Store();
 })(CdvPurchase || (CdvPurchase = {}));
 // Create the CdvPurchase.store object at startup.
 setTimeout(() => {
