@@ -618,7 +618,7 @@ namespace CdvPurchase {
     /**
      * The global store object.
      */
-    export let store: Store;
+    export let store: Store = new CdvPurchase.Store();
 
     //
     // Documentation for sub-namespaces
@@ -636,6 +636,8 @@ namespace CdvPurchase {
 setTimeout(() => {
     if (!window.CdvPurchase) {
         window.CdvPurchase = CdvPurchase;
+    }
+    if (!window.CdvPurchase.store) {
         window.CdvPurchase.store = new CdvPurchase.Store();
         // Let's maximize backward compatibility
         Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode, CdvPurchase.Platform);
