@@ -634,10 +634,12 @@ namespace CdvPurchase {
 
 // Create the CdvPurchase.store object at startup.
 setTimeout(() => {
-    window.CdvPurchase = CdvPurchase;
-    window.CdvPurchase.store = new CdvPurchase.Store();
-    // Let's maximize backward compatibility
-    Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode, CdvPurchase.Platform);
+    if (!window.CdvPurchase) {
+        window.CdvPurchase = CdvPurchase;
+        window.CdvPurchase.store = new CdvPurchase.Store();
+        // Let's maximize backward compatibility
+        Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode, CdvPurchase.Platform);
+    }
 }, 0);
 
 // Ensure utility are included when compiling typescript.
