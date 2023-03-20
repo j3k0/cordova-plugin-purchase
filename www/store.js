@@ -826,7 +826,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.3.8';
+    CdvPurchase.PLUGIN_VERSION = '13.3.9';
     /**
      * Entry class of the plugin.
      */
@@ -1322,7 +1322,11 @@ var CdvPurchase;
 })(CdvPurchase || (CdvPurchase = {}));
 // Create the CdvPurchase.store object at startup.
 setTimeout(() => {
-    if (!window.CdvPurchase) {
+    console.log('Create CdvPurchase...');
+    if (window.CdvPurchase) {
+        Object.assign(window.CdvPurchase, CdvPurchase, { store: window.CdvPurchase.store });
+    }
+    else {
         window.CdvPurchase = CdvPurchase;
     }
     if (!window.CdvPurchase.store) {
