@@ -826,7 +826,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.3.6';
+    CdvPurchase.PLUGIN_VERSION = '13.3.7';
     /**
      * Entry class of the plugin.
      */
@@ -1319,11 +1319,17 @@ var CdvPurchase;
         }
     }
     CdvPurchase.Store = Store;
+    /**
+     * The global store object.
+     */
+    CdvPurchase.store = new CdvPurchase.Store();
 })(CdvPurchase || (CdvPurchase = {}));
 // Create the CdvPurchase.store object at startup.
 setTimeout(() => {
     if (!window.CdvPurchase) {
         window.CdvPurchase = CdvPurchase;
+    }
+    if (!window.CdvPurchase.store) {
         window.CdvPurchase.store = new CdvPurchase.Store();
         // Let's maximize backward compatibility
         Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode, CdvPurchase.Platform);
