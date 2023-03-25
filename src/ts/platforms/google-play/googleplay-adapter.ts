@@ -379,9 +379,9 @@ namespace CdvPurchase {
             }
 
             async handleReceiptValidationResponse(receipt: CdvPurchase.Receipt, response: Validator.Response.Payload): Promise<void> {
-                if (response.ok) {
-                    const transaction = response.data.transaction;
-                    if (transaction.type !== Platform.GOOGLE_PLAY) return;
+                if (response?.ok) {
+                    const transaction = response?.data?.transaction;
+                    if (transaction?.type !== Platform.GOOGLE_PLAY) return;
                     switch (transaction.kind) {
                         case 'androidpublisher#productPurchase':
                             break;
