@@ -826,7 +826,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.3.9';
+    CdvPurchase.PLUGIN_VERSION = '13.3.10';
     /**
      * Entry class of the plugin.
      */
@@ -1323,6 +1323,7 @@ var CdvPurchase;
 // Create the CdvPurchase.store object at startup.
 setTimeout(() => {
     console.log('Create CdvPurchase...');
+    /*
     if (window.CdvPurchase) {
         Object.assign(window.CdvPurchase, CdvPurchase, { store: window.CdvPurchase.store });
     }
@@ -1334,6 +1335,11 @@ setTimeout(() => {
         // Let's maximize backward compatibility
         Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode, CdvPurchase.Platform);
     }
+    */
+    window.CdvPurchase = CdvPurchase;
+    window.CdvPurchase.store = new CdvPurchase.Store();
+    // Let's maximize backward compatibility
+    Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode, CdvPurchase.Platform);
 }, 0);
 // Ensure utility are included when compiling typescript.
 /// <reference path="utils/format-billing-cycle.ts" />
