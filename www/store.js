@@ -826,7 +826,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.3.10';
+    CdvPurchase.PLUGIN_VERSION = '13.3.11';
     /**
      * Entry class of the plugin.
      */
@@ -4423,9 +4423,10 @@ var CdvPurchase;
                 };
             }
             async handleReceiptValidationResponse(receipt, response) {
-                if (response.ok) {
-                    const transaction = response.data.transaction;
-                    if (transaction.type !== CdvPurchase.Platform.GOOGLE_PLAY)
+                var _a;
+                if (response === null || response === void 0 ? void 0 : response.ok) {
+                    const transaction = (_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.transaction;
+                    if ((transaction === null || transaction === void 0 ? void 0 : transaction.type) !== CdvPurchase.Platform.GOOGLE_PLAY)
                         return;
                     switch (transaction.kind) {
                         case 'androidpublisher#productPurchase':
