@@ -1,5 +1,15 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.4
+
+### 13.4.0 - Product groups and Google Play
+
+Products are now part of the `"default"` group when none is provided, as per the documentation. This is used on Google Play to automatically replace existing subscription by the newly ordered one.
+
+This update can break your app if you have multiple **independent** subscription products on Google Play, as purchasing a subscription product will now cancel any existing one by default.
+
+Use the `group` property in `store.register` to force legacy subscription products to be part of different groups.
+
 ## 13.3
 
 Adding back functionalities that existed in version 11 of the plugin, mostly on iOS, and a few fixes. Detail below.

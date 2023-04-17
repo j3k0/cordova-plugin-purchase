@@ -6,7 +6,7 @@ VPP="$(cat plugin.xml | grep -E '^[ ]+version="' | head -1 | cut -d \" -f2)"
 VJ="$(cat src/ts/store.ts | grep -E "PLUGIN_VERSION = '" | head -1 | cut -d \' -f2)"
 
 if [ "x$1" = "x--edit" ]; then
-  exec vim package.json package-lock.json plugin.xml src/ts/store.ts
+  exec vim package.json package-lock.json plugin.xml src/ts/store.ts RELEASE_NOTES.md
 fi
 
 echo

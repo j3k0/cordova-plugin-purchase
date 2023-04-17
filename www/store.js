@@ -357,7 +357,7 @@ var CdvPurchase;
             this.platform = p.platform;
             this.type = p.type;
             this.id = p.id;
-            this.group = p.group;
+            this.group = p.group || 'default';
             this.offers = [];
             Object.defineProperty(this, 'pricing', { enumerable: false, get: () => { var _a; return (_a = this.offers[0]) === null || _a === void 0 ? void 0 : _a.pricingPhases[0]; } });
             Object.defineProperty(this, 'canPurchase', { enumerable: false, get: () => decorator.canPurchase(this) });
@@ -826,7 +826,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.3.11';
+    CdvPurchase.PLUGIN_VERSION = '13.4.0';
     /**
      * Entry class of the plugin.
      */
