@@ -27,7 +27,7 @@ namespace CdvPurchase {
         if (!product) return false;
         const purchase = VerifiedReceipts.find(verifiedReceipts, product);
         if (!purchase) return false;
-        if (purchase?.isExpired) return true;
+        if (purchase?.isExpired) return false;
         if (purchase?.expiryDate) {
           return (purchase.expiryDate > +new Date());
         }
