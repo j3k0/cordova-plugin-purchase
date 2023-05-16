@@ -2,6 +2,10 @@
 
 ## 13.4
 
+### 13.4.1 - Fix "owned" status when validator returns "isExpired"
+
+Issue #1408 fixed. If the validator returns `isExpired`, the `owned()` method was returning an incorrect result.
+
 ### 13.4.0 - Product groups and Google Play
 
 Products are now part of the `"default"` group when none is provided, as per the documentation. This is used on Google Play to automatically replace existing subscription by the newly ordered one.
