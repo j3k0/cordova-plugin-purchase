@@ -2,6 +2,10 @@
 
 ## 13.4
 
+### 13.4.2 - Fix "owned" status when validator returns "isExpired"
+
+Attempt to fix issue #1406 on iOS, with Ionic v6: `applicationUsername` isn't attached to purchase, it seems like this is due to strings passed as a subclass of NSString on this platform.
+
 ### 13.4.1 - Fix "owned" status when validator returns "isExpired"
 
 Issue #1408 fixed. If the validator returns `isExpired`, the `owned()` method was returning an incorrect result.

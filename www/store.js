@@ -826,7 +826,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.4.0';
+    CdvPurchase.PLUGIN_VERSION = '13.4.2';
     /**
      * Entry class of the plugin.
      */
@@ -2007,7 +2007,7 @@ var CdvPurchase;
                 if (!purchase)
                     return false;
                 if (purchase === null || purchase === void 0 ? void 0 : purchase.isExpired)
-                    return true;
+                    return false;
                 if (purchase === null || purchase === void 0 ? void 0 : purchase.expiryDate) {
                     return (purchase.expiryDate > +new Date());
                 }
