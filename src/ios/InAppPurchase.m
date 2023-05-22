@@ -383,7 +383,7 @@ static NSString *toTimestamp(NSDate *date) {
 }
 
 - (NSString *) stringArgument: (id)value {
-    if (value != nil && value != NSNull.null && [value isMemberOfClass:[NSString class]]) {
+    if (value != nil && value != NSNull.null && [value isKindOfClass:[NSString class]]) {
         return value;
     }
     else {
