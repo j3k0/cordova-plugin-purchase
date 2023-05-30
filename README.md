@@ -77,7 +77,7 @@ When making receipt validation requests, the purchase plugin uses, by default, t
 
 ### Note for Capacitor users
 
-Capacitor users can install this new version of the plugin without the help of the awesome-cordova-plugins wrapper. Just install the `cordova-plugin-purchase` module and `import "cordova-plugin-purchase"` in files where it's needed.
+Capacitor users can install this new version of the plugin without the help of the awesome-cordova-plugins wrapper. Just install the `cordova-plugin-purchase` module and `import "cordova-plugin-purchase"` in files where it's needed. (some user reported using `import "cordova-plugin-purchase/www/store.d"` to get it working).
 
 As with other plugins, you should wait for Capacitor `this.platform.ready()` before using the plugin.
 
