@@ -2,6 +2,18 @@
 
 ## 13.4
 
+### 13.4.3 - Add HTTP status to receipt validation error payload
+
+Let the app know the HTTP status for a failed receipt validation call, in "response.payload.status".
+
+```ts
+CdvPurchase.store.when().unverified(response => {
+    if (response.payload.code === CdvPurchase.ErrorCode.COMMUNICATION) {
+        console.log("HTTP ERROR: " + response.payload.status);
+    }
+});
+```
+
 ### 13.4.2 - Fix "owned" status when validator returns "isExpired"
 
 Attempt to fix issue #1406 on iOS, with Ionic v6: `applicationUsername` isn't attached to purchase, it seems like this is due to strings passed as a subclass of NSString on this platform.
