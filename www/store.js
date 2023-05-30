@@ -616,6 +616,8 @@ var CdvPurchase;
                             payload: {
                                 ok: false,
                                 message: fullMessage,
+                                code: CdvPurchase.ErrorCode.COMMUNICATION,
+                                status: status,
                                 data: {},
                             }
                         });
@@ -826,7 +828,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.4.2';
+    CdvPurchase.PLUGIN_VERSION = '13.4.3';
     /**
      * Entry class of the plugin.
      */
