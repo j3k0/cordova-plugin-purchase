@@ -252,6 +252,8 @@ namespace CdvPurchase {
                             payload: {
                                 ok: false,
                                 message: fullMessage,
+                                code: ErrorCode.COMMUNICATION,
+                                status: status,
                                 data: {},
                             }
                         });
