@@ -8,6 +8,8 @@
 
 ▸ **Function**(`receipt`, `callback`): `void`
 
+Receipt validator as a function.
+
 #### Parameters
 
 | Name | Type |

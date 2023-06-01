@@ -521,7 +521,10 @@ var CdvPurchase;
                 if (typeof this.controller.validator === 'function')
                     return this.runValidatorFunction(this.controller.validator, receipt, body, callback);
                 const target = typeof this.controller.validator === 'string'
-                    ? { url: this.controller.validator }
+                    ? {
+                        url: this.controller.validator,
+                        timeout: 20000, // validation request will timeout after 20 seconds by default
+                    }
                     : this.controller.validator;
                 return this.runValidatorRequest(target, receipt, body, callback);
             }
@@ -587,6 +590,7 @@ var CdvPurchase;
                     url: target.url,
                     method: 'POST',
                     customHeaders: target.headers,
+                    timeout: target.timeout,
                     data: body,
                     success: (response) => {
                         var _a;
@@ -828,7 +832,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.4.3';
+    CdvPurchase.PLUGIN_VERSION = '13.5.0';
     /**
      * Entry class of the plugin.
      */
@@ -5526,6 +5530,11 @@ var CdvPurchase;
 (function (CdvPurchase) {
     let Utils;
     (function (Utils) {
+        let Ajax;
+        (function (Ajax) {
+            /** HTTP status returned when a request times out */
+            Ajax.HTTP_REQUEST_TIMEOUT = 408;
+        })(Ajax = Utils.Ajax || (Utils.Ajax = {}));
         /**
          * Simplified version of jQuery's ajax method based on XMLHttpRequest.
          *
@@ -5539,6 +5548,13 @@ var CdvPurchase;
             }
             var doneCb = function () { };
             var xhr = new XMLHttpRequest();
+            if (options.timeout) {
+                xhr.timeout = options.timeout;
+                xhr.ontimeout = function ( /*event*/) {
+                    log.warn("ajax -> request to " + options.url + " timeout");
+                    Utils.callExternal(log, 'ajax.error', options.error, Ajax.HTTP_REQUEST_TIMEOUT, "Timeout");
+                };
+            }
             xhr.open(options.method || 'POST', options.url, true);
             xhr.onreadystatechange = function ( /*event*/) {
                 try {

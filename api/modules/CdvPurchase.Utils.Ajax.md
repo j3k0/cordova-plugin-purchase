@@ -13,6 +13,10 @@
 - [ErrorCallback](CdvPurchase.Utils.Ajax.md#errorcallback)
 - [SuccessCallback](CdvPurchase.Utils.Ajax.md#successcallback)
 
+### Variables
+
+- [HTTP\_REQUEST\_TIMEOUT](CdvPurchase.Utils.Ajax.md#http_request_timeout)
+
 ## Type Aliases
 
 ### ErrorCallback
@@ -64,3 +68,11 @@ Success callback for an ajax call
 ##### Returns
 
 `void`
+
+## Variables
+
+### HTTP\_REQUEST\_TIMEOUT
+
+• `Const` **HTTP\_REQUEST\_TIMEOUT**: ``408``
+
+HTTP status returned when a request times out

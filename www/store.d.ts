@@ -504,7 +504,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.4.3";
+    const PLUGIN_VERSION = "13.5.0";
     /**
      * Entry class of the plugin.
      */
@@ -4980,6 +4980,8 @@ declare var msCrypto: any;
 declare namespace CdvPurchase {
     namespace Utils {
         namespace Ajax {
+            /** HTTP status returned when a request times out */
+            const HTTP_REQUEST_TIMEOUT = 408;
             /** Success callback for an ajax call */
             type SuccessCallback<T> = (body: T) => void;
             /** Error callback for an ajax call */
@@ -5000,6 +5002,8 @@ declare namespace CdvPurchase {
                 customHeaders?: {
                     [key: string]: string;
                 };
+                /** Request timeout in milliseconds */
+                timeout?: number;
             }
         }
         /**
@@ -5425,14 +5429,24 @@ declare namespace CdvPurchase {
          * Dates stored as a ISO formatted string
          */
         type ISODate = string;
+        /**
+         * Receipt validator as a function.
+         */
         interface Function {
             (receipt: Validator.Request.Body, callback: Callback<Validator.Response.Payload>): void;
         }
+        /**
+         * Custom definition of the validation request target.
+         */
         interface Target {
+            /** URL of the receipt validator */
             url: string;
+            /** Custom headers */
             headers?: {
                 [token: string]: string;
             };
+            /** Request timeout in millseconds */
+            timeout?: number;
         }
     }
 }

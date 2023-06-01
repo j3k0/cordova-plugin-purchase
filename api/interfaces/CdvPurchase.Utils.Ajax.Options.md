@@ -19,6 +19,7 @@ Option for an external HTTP request
 - [error](CdvPurchase.Utils.Ajax.Options.md#error)
 - [method](CdvPurchase.Utils.Ajax.Options.md#method)
 - [success](CdvPurchase.Utils.Ajax.Options.md#success)
+- [timeout](CdvPurchase.Utils.Ajax.Options.md#timeout)
 - [url](CdvPurchase.Utils.Ajax.Options.md#url)
 
 ## Properties
@@ -64,6 +65,14 @@ ___
 • `Optional` **success**: [`SuccessCallback`](../modules/CdvPurchase.Utils.Ajax.md#successcallback)<`T`\>
 
 A success callback taking the body as an argument
+
+___
+
+### timeout
+
+• `Optional` **timeout**: `number`
+
+Request timeout in milliseconds
 
 ___
 
