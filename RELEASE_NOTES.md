@@ -1,5 +1,32 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.5
+
+### 13.5.0 - Add timeout to validation requests
+
+By default, the plugin will now setup a 20 seconds timeout for receipt validation requests.
+
+Receipt validation timeout can be detected using the following code:
+
+```ts
+CdvPurchase.store.when().unverified(function(response) {
+  if (response.payload.code === CdvPurchase.ErrorCode.COMMUNICATION) {
+    if (response.payload.status === CdvPurchase.Utils.Ajax.HTTP_REQUEST_TIMEOUT) {
+      // request timeout
+    }
+  }
+});
+```
+
+The value for timeout can be customized by specifying the validator this way:
+
+```ts
+CdvPurchase.store.validator = {
+  url: 'https://validator.iaptic.com',
+  timeout: 30000, // in milliseconds
+}
+```
+
 ## 13.4
 
 ### 13.4.3 - Add HTTP status to receipt validation error payload
