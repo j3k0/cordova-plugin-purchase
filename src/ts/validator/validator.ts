@@ -129,7 +129,10 @@ namespace CdvPurchase {
                     return this.runValidatorFunction(this.controller.validator, receipt, body, callback);
 
                 const target: Validator.Target = typeof this.controller.validator === 'string'
-                    ? { url: this.controller.validator }
+                    ? {
+                        url: this.controller.validator,
+                        timeout: 20000, // validation request will timeout after 20 seconds by default
+                    }
                     : this.controller.validator;
 
                 return this.runValidatorRequest(target, receipt, body, callback);
@@ -224,6 +227,7 @@ namespace CdvPurchase {
                     url: target.url,
                     method: 'POST',
                     customHeaders: target.headers,
+                    timeout: target.timeout,
                     data: body,
                     success: (response) => {
                         this.log.debug("validator success, response: " + JSON.stringify(response));

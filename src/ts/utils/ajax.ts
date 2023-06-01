@@ -7,6 +7,9 @@ namespace CdvPurchase {
 
         export namespace Ajax {
 
+            /** HTTP status returned when a request times out */
+            export const HTTP_REQUEST_TIMEOUT = 408;
+
             /** Success callback for an ajax call */
             export type SuccessCallback<T> = (body: T) => void;
 
@@ -33,6 +36,9 @@ namespace CdvPurchase {
 
                 /** Custom headers to pass tot the HTTP request. */
                 customHeaders?: { [key: string]: string };
+
+                /** Request timeout in milliseconds */
+                timeout?: number;
             }
 
 
@@ -52,6 +58,13 @@ namespace CdvPurchase {
             }
             var doneCb = function () { };
             var xhr = new XMLHttpRequest();
+            if (options.timeout) {
+                xhr.timeout = options.timeout;
+                xhr.ontimeout = function (/*event*/) {
+                    log.warn("ajax -> request to " + options.url + " timeout");
+                    Utils.callExternal(log, 'ajax.error', options.error as Function, Ajax.HTTP_REQUEST_TIMEOUT, "Timeout");
+                };
+            }
             xhr.open(options.method || 'POST', options.url, true);
             xhr.onreadystatechange = function (/*event*/) {
                 try {
