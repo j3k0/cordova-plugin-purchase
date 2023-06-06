@@ -280,6 +280,9 @@ namespace CdvPurchase {
         /** Register a function called when transaction is approved. */
         approved(cb: Callback<Transaction>): When;
 
+        /** Register a function called when transaction is pending. */
+        pending(cb: Callback<Transaction>): When;
+
         /** Register a function called when a transaction is finished. */
         finished(cb: Callback<Transaction>): When;
 

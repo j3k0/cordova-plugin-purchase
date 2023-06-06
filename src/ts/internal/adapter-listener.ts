@@ -4,6 +4,7 @@ namespace CdvPurchase
 
         export interface StoreAdapterDelegate {
             approvedCallbacks: Callbacks<Transaction>;
+            pendingCallbacks: Callbacks<Transaction>;
             finishedCallbacks: Callbacks<Transaction>;
             updatedCallbacks: Callbacks<Product>;
             updatedReceiptCallbacks: Callbacks<Receipt>;
@@ -41,6 +42,9 @@ namespace CdvPurchase
                         else if (lastState !== transaction.state) {
                             if (transaction.state === TransactionState.FINISHED) {
                                 this.delegate.finishedCallbacks.trigger(transaction);
+                            }
+                            else if (transaction.state === TransactionState.PENDING) {
+                                this.delegate.pendingCallbacks.trigger(transaction);
                             }
                         }
                         this.lastTransactionState[transactionToken] = transaction.state;

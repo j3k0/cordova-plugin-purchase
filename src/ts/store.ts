@@ -147,6 +147,9 @@ namespace CdvPurchase {
         /** Callbacks when a transaction has been finished */
         private finishedCallbacks = new Internal.Callbacks<Transaction>(this.log, 'finished()');
 
+        /** Callbacks when a transaction is pending */
+        private pendingCallbacks = new Internal.Callbacks<Transaction>(this.log, 'pending()');
+
         /** Callbacks when a receipt has been validated */
         private verifiedCallbacks = new Internal.Callbacks<VerifiedReceipt>(this.log, 'verified()');
 
@@ -168,6 +171,7 @@ namespace CdvPurchase {
                 updatedReceiptCallbacks: this.updatedReceiptsCallbacks,
                 approvedCallbacks: this.approvedCallbacks,
                 finishedCallbacks: this.finishedCallbacks,
+                pendingCallbacks: this.pendingCallbacks,
             });
             this.transactionStateMonitors = new Internal.TransactionStateMonitors(this.when());
 
@@ -273,6 +277,7 @@ namespace CdvPurchase {
                 updated: (cb: Callback<Product | Receipt>) => (this.updatedCallbacks.push(cb), this.updatedReceiptsCallbacks.push(cb), ret),
                 // owned: (cb: Callback<Product>) => (this.ownedCallbacks.push(cb), ret),
                 approved: (cb: Callback<Transaction>) => (this.approvedCallbacks.push(cb), ret),
+                pending: (cb: Callback<Transaction>) => (this.pendingCallbacks.push(cb), ret),
                 finished: (cb: Callback<Transaction>) => (this.finishedCallbacks.push(cb), ret),
                 verified: (cb: Callback<VerifiedReceipt>) => (this.verifiedCallbacks.push(cb), ret),
                 unverified: (cb: Callback<UnverifiedReceipt>) => (this.unverifiedCallbacks.push(cb), ret),
@@ -288,6 +293,7 @@ namespace CdvPurchase {
             this.updatedReceiptsCallbacks.remove(callback as any);
             this.approvedCallbacks.remove(callback as any);
             this.finishedCallbacks.remove(callback as any);
+            this.pendingCallbacks.remove(callback as any);
             this.verifiedCallbacks.remove(callback as any);
             this.errorCallbacks.remove(callback as any);
             this._readyCallbacks.remove(callback as any);
