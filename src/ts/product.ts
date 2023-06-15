@@ -86,7 +86,7 @@ namespace CdvPurchase {
             this.platform = p.platform;
             this.type = p.type;
             this.id = p.id;
-            this.group = p.group || 'default';
+            this.group = p.group;
             this.offers = [];
             Object.defineProperty(this, 'pricing', { enumerable: false, get: () => this.offers[0]?.pricingPhases[0] });
             Object.defineProperty(this, 'canPurchase', { enumerable: false, get: () => decorator.canPurchase(this) });
