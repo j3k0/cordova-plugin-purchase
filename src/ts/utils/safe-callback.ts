@@ -25,6 +25,7 @@ namespace CdvPurchase {
     export function safeCall<T>(logger: Logger, className: string, callback: Callback<T>, value: T): void {
       setTimeout(() => {
         try {
+          logger.debug(`Calling callback: type=${className} name=${callback.name}`);
           callback(value);
         }
         catch (error) {
