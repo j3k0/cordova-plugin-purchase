@@ -37,7 +37,8 @@ Adapter for a payment or in-app purchase platform
 - [finish](CdvPurchase.Braintree.Adapter.md#finish)
 - [handleReceiptValidationResponse](CdvPurchase.Braintree.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.Braintree.Adapter.md#initialize)
-- [load](CdvPurchase.Braintree.Adapter.md#load)
+- [loadProducts](CdvPurchase.Braintree.Adapter.md#loadproducts)
+- [loadReceipts](CdvPurchase.Braintree.Adapter.md#loadreceipts)
 - [manageBilling](CdvPurchase.Braintree.Adapter.md#managebilling)
 - [manageSubscriptions](CdvPurchase.Braintree.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.Braintree.Adapter.md#order)
@@ -258,9 +259,9 @@ Initialize the Braintree Adapter.
 
 ___
 
-### load
+### loadProducts
 
-▸ **load**(`products`): `Promise`<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`Product`](CdvPurchase.Product.md))[]\>
+▸ **loadProducts**(`products`): `Promise`<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`Product`](CdvPurchase.Product.md))[]\>
 
 Load product definitions from the platform.
 
@@ -276,7 +277,23 @@ Load product definitions from the platform.
 
 #### Implementation of
 
-[Adapter](../interfaces/CdvPurchase.Adapter.md).[load](../interfaces/CdvPurchase.Adapter.md#load)
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[loadProducts](../interfaces/CdvPurchase.Adapter.md#loadproducts)
+
+___
+
+### loadReceipts
+
+▸ **loadReceipts**(): `Promise`<[`Receipt`](CdvPurchase.Receipt.md)[]\>
+
+Load the receipts
+
+#### Returns
+
+`Promise`<[`Receipt`](CdvPurchase.Receipt.md)[]\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[loadReceipts](../interfaces/CdvPurchase.Adapter.md#loadreceipts)
 
 ___
 

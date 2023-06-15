@@ -32,7 +32,8 @@ Adapter for a payment or in-app purchase platform
 - [finish](CdvPurchase.WindowsStore.Adapter.md#finish)
 - [handleReceiptValidationResponse](CdvPurchase.WindowsStore.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.WindowsStore.Adapter.md#initialize)
-- [load](CdvPurchase.WindowsStore.Adapter.md#load)
+- [loadProducts](CdvPurchase.WindowsStore.Adapter.md#loadproducts)
+- [loadReceipts](CdvPurchase.WindowsStore.Adapter.md#loadreceipts)
 - [manageBilling](CdvPurchase.WindowsStore.Adapter.md#managebilling)
 - [manageSubscriptions](CdvPurchase.WindowsStore.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.WindowsStore.Adapter.md#order)
@@ -214,9 +215,9 @@ In other case of a potentially recoverable error, the adapter will keep retrying
 
 ___
 
-### load
+### loadProducts
 
-▸ **load**(`products`): `Promise`<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`Product`](CdvPurchase.Product.md))[]\>
+▸ **loadProducts**(`products`): `Promise`<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`Product`](CdvPurchase.Product.md))[]\>
 
 Load product definitions from the platform.
 
@@ -232,7 +233,23 @@ Load product definitions from the platform.
 
 #### Implementation of
 
-[Adapter](../interfaces/CdvPurchase.Adapter.md).[load](../interfaces/CdvPurchase.Adapter.md#load)
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[loadProducts](../interfaces/CdvPurchase.Adapter.md#loadproducts)
+
+___
+
+### loadReceipts
+
+▸ **loadReceipts**(): `Promise`<[`Receipt`](CdvPurchase.Receipt.md)[]\>
+
+Load the receipts
+
+#### Returns
+
+`Promise`<[`Receipt`](CdvPurchase.Receipt.md)[]\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[loadReceipts](../interfaces/CdvPurchase.Adapter.md#loadreceipts)
 
 ___
 

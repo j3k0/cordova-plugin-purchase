@@ -45,7 +45,8 @@ Adapter for Apple AppStore using StoreKit version 1
 - [getProduct](CdvPurchase.AppleAppStore.Adapter.md#getproduct)
 - [handleReceiptValidationResponse](CdvPurchase.AppleAppStore.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.AppleAppStore.Adapter.md#initialize)
-- [load](CdvPurchase.AppleAppStore.Adapter.md#load)
+- [loadProducts](CdvPurchase.AppleAppStore.Adapter.md#loadproducts)
+- [loadReceipts](CdvPurchase.AppleAppStore.Adapter.md#loadreceipts)
 - [manageBilling](CdvPurchase.AppleAppStore.Adapter.md#managebilling)
 - [manageSubscriptions](CdvPurchase.AppleAppStore.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.AppleAppStore.Adapter.md#order)
@@ -365,9 +366,9 @@ In other case of a potentially recoverable error, the adapter will keep retrying
 
 ___
 
-### load
+### loadProducts
 
-▸ **load**(`products`): `Promise`<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`Product`](CdvPurchase.Product.md))[]\>
+▸ **loadProducts**(`products`): `Promise`<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`Product`](CdvPurchase.Product.md))[]\>
 
 Load product definitions from the platform.
 
@@ -383,7 +384,23 @@ Load product definitions from the platform.
 
 #### Implementation of
 
-[Adapter](../interfaces/CdvPurchase.Adapter.md).[load](../interfaces/CdvPurchase.Adapter.md#load)
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[loadProducts](../interfaces/CdvPurchase.Adapter.md#loadproducts)
+
+___
+
+### loadReceipts
+
+▸ **loadReceipts**(): `Promise`<[`Receipt`](CdvPurchase.Receipt.md)[]\>
+
+Load the receipts
+
+#### Returns
+
+`Promise`<[`Receipt`](CdvPurchase.Receipt.md)[]\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[loadReceipts](../interfaces/CdvPurchase.Adapter.md#loadreceipts)
 
 ___
 

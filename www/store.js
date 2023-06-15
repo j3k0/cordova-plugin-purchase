@@ -357,7 +357,7 @@ var CdvPurchase;
             this.platform = p.platform;
             this.type = p.type;
             this.id = p.id;
-            this.group = p.group || 'default';
+            this.group = p.group;
             this.offers = [];
             Object.defineProperty(this, 'pricing', { enumerable: false, get: () => { var _a; return (_a = this.offers[0]) === null || _a === void 0 ? void 0 : _a.pricingPhases[0]; } });
             Object.defineProperty(this, 'canPurchase', { enumerable: false, get: () => decorator.canPurchase(this) });
@@ -428,6 +428,9 @@ var CdvPurchase;
             constructor() {
                 this.array = [];
             }
+            get length() {
+                return this.array.length;
+            }
             get() {
                 return this.array.concat();
             }
@@ -451,6 +454,8 @@ var CdvPurchase;
                 this.receiptsToValidate = new ReceiptsToValidate();
                 /** List of verified receipts */
                 this.verifiedReceipts = [];
+                this.numRequests = 0;
+                this.numResponses = 0;
                 /**
                  * For each md5-hashed values of the validator request's ".transaction" field,
                  * store the response from the server.
@@ -461,6 +466,14 @@ var CdvPurchase;
                 this.cache = {};
                 this.controller = controller;
                 this.log = log.child('Validator');
+            }
+            incrRequestsCounter() {
+                this.numRequests = (this.numRequests + 1) | 0;
+                this.log.debug(`Validation requests=${this.numRequests} responses=${this.numResponses}`);
+            }
+            incrResponsesCounter() {
+                this.numResponses = (this.numResponses + 1) | 0;
+                this.log.debug(`Validation requests=${this.numRequests} responses=${this.numResponses}`);
             }
             /** Add/update a verified receipt from the server response */
             addVerifiedReceipt(receipt, data) {
@@ -481,7 +494,10 @@ var CdvPurchase;
             add(receiptOrTransaction) {
                 this.log.debug("Schedule validation: " + JSON.stringify(receiptOrTransaction));
                 const receipt = (receiptOrTransaction instanceof CdvPurchase.Transaction) ? receiptOrTransaction.parentReceipt : receiptOrTransaction;
-                this.receiptsToValidate.add(receipt);
+                if (!this.receiptsToValidate.has(receipt)) {
+                    this.incrRequestsCounter();
+                    this.receiptsToValidate.add(receipt);
+                }
             }
             /** Run validation for all receipts in the queue */
             run() {
@@ -490,6 +506,7 @@ var CdvPurchase;
                 this.receiptsToValidate.clear();
                 const onResponse = async (r) => {
                     const { receipt, payload } = r;
+                    this.incrResponsesCounter();
                     try {
                         const adapter = this.controller.adapters.find(receipt.platform);
                         await (adapter === null || adapter === void 0 ? void 0 : adapter.handleReceiptValidationResponse(receipt, payload));
@@ -504,6 +521,11 @@ var CdvPurchase;
                     }
                     catch (err) {
                         this.log.error('Exception probably caused by an invalid response from the validator.' + err.message);
+                        this.controller.unverifiedCallbacks.trigger({ receipt, payload: {
+                                ok: false,
+                                code: CdvPurchase.ErrorCode.VERIFICATION_FAILED,
+                                message: err.message,
+                            } });
                     }
                 };
                 receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));
@@ -513,11 +535,15 @@ var CdvPurchase;
                     this.log.debug('Using Test Adapter mock verify function.');
                     return CdvPurchase.Test.Adapter.verify(receipt, callback);
                 }
-                if (!this.controller.validator)
+                if (!this.controller.validator) {
+                    this.incrResponsesCounter();
                     return;
+                }
                 const body = await this.buildRequestBody(receipt);
-                if (!body)
+                if (!body) {
+                    this.incrResponsesCounter();
                     return;
+                }
                 if (typeof this.controller.validator === 'function')
                     return this.runValidatorFunction(this.controller.validator, receipt, body, callback);
                 const target = typeof this.controller.validator === 'string'
@@ -708,11 +734,13 @@ var CdvPurchase;
                     log.info(`${adapter.name} products: ${JSON.stringify(platformProducts)}`);
                     if (platformProducts.length === 0)
                         return;
-                    const loadResult = await adapter.load(platformProducts);
-                    log.info(`${adapter.name} loaded: ${JSON.stringify(loadResult)}`);
-                    const loadedProducts = loadResult.filter(p => p instanceof CdvPurchase.Product);
+                    const loadProductsResult = await adapter.loadProducts(platformProducts);
+                    log.info(`${adapter.name} products loaded: ${JSON.stringify(loadProductsResult)}`);
+                    const loadedProducts = loadProductsResult.filter(p => p instanceof CdvPurchase.Product);
                     context.listener.productsUpdated(platformToInit.platform, loadedProducts);
-                    return loadResult.filter(lr => 'code' in lr && 'message' in lr)[0];
+                    const loadReceiptsResult = await adapter.loadReceipts();
+                    log.info(`${adapter.name} receipts loaded: ${JSON.stringify(loadReceiptsResult)}`);
+                    return loadProductsResult.filter(lr => 'code' in lr && 'message' in lr)[0];
                 }));
                 return result.filter(err => err);
             }
@@ -876,24 +904,33 @@ var CdvPurchase;
             this.approvedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'approved()');
             /** Callbacks when a transaction has been finished */
             this.finishedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'finished()');
+            /** Callbacks when a transaction is pending */
+            this.pendingCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'pending()');
             /** Callbacks when a receipt has been validated */
             this.verifiedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'verified()');
             /** Callbacks when a receipt has been validated */
             this.unverifiedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'unverified()');
+            /** Callbacks when all receipts have been loaded */
+            this.receiptsReadyCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'receiptsReady()');
+            /** Callbacks when all receipts have been verified */
+            this.receiptsVerifiedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'receiptsVerified()');
             /** Callbacks for errors */
             this.errorCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'error()');
+            this.initializedHasBeenCalled = false;
             /**
              * Version of the plugin currently installed.
              */
             this.version = CdvPurchase.PLUGIN_VERSION;
+            const store = this;
             this.listener = new CdvPurchase.Internal.StoreAdapterListener({
                 updatedCallbacks: this.updatedCallbacks,
                 updatedReceiptCallbacks: this.updatedReceiptsCallbacks,
                 approvedCallbacks: this.approvedCallbacks,
                 finishedCallbacks: this.finishedCallbacks,
-            });
+                pendingCallbacks: this.pendingCallbacks,
+                receiptsReadyCallbacks: this.receiptsReadyCallbacks,
+            }, this.log);
             this.transactionStateMonitors = new CdvPurchase.Internal.TransactionStateMonitors(this.when());
-            const store = this;
             this._validator = new CdvPurchase.Internal.Validator({
                 adapters: this.adapters,
                 getApplicationUsername: this.getApplicationUsername.bind(this),
@@ -904,6 +941,16 @@ var CdvPurchase;
                 unverifiedCallbacks: this.unverifiedCallbacks,
                 finish: (receipt) => this.finish(receipt),
             }, this.log);
+            new CdvPurchase.Internal.ReceiptsMonitor({
+                hasLocalReceipts: () => this.localReceipts.length > 0,
+                hasValidator: () => !!this.validator,
+                numValidationRequests: () => this._validator.numRequests,
+                numValidationResponses: () => this._validator.numResponses,
+                off: this.off.bind(this),
+                when: this.when.bind(this),
+                receiptsVerified: () => { store.receiptsVerifiedCallbacks.trigger(); },
+                log: this.log,
+            }).launch();
         }
         /**
          * Retrieve a platform adapter.
@@ -950,7 +997,12 @@ var CdvPurchase;
          * @param platforms - List of payment platforms to initialize, default to Store.defaultPlatform().
          */
         async initialize(platforms = [this.defaultPlatform()]) {
+            if (this.initializedHasBeenCalled) {
+                this.log.warn('store.initialized() has been called already.');
+                return [];
+            }
             this.log.info('initialize()');
+            this.initializedHasBeenCalled = true;
             const store = this;
             const ret = this.adapters.initialize(platforms, {
                 error: this.triggerError.bind(this),
@@ -967,7 +1019,10 @@ var CdvPurchase;
                     verify: this.verify.bind(this),
                 },
             });
-            ret.then(() => this._readyCallbacks.trigger());
+            ret.then(() => {
+                this._readyCallbacks.trigger();
+                this.listener.setSupportedPlatforms(this.adapters.list.filter(a => a.isSupported).map(a => a.id));
+            });
             return ret;
         }
         /**
@@ -984,15 +1039,21 @@ var CdvPurchase;
             this.log.info('update()');
             // Load products metadata
             for (const registration of this.registeredProducts.byPlatform()) {
-                const products = await ((_a = this.adapters.findReady(registration.platform)) === null || _a === void 0 ? void 0 : _a.load(registration.products));
+                const products = await ((_a = this.adapters.findReady(registration.platform)) === null || _a === void 0 ? void 0 : _a.loadProducts(registration.products));
                 products === null || products === void 0 ? void 0 : products.forEach(p => {
                     if (p instanceof CdvPurchase.Product)
                         this.updatedCallbacks.trigger(p);
                 });
             }
         }
-        /** Register a callback to be called when the plugin is ready. */
+        /**
+         * Register a callback to be called when the plugin is ready.
+         *
+         * This happens when all the platforms are initialized and their products loaded.
+         */
         ready(cb) { this._readyCallbacks.add(cb); }
+        /** true if the plugin is initialized and ready */
+        get isReady() { return this._readyCallbacks.isReady; }
         /**
          * Setup events listener.
          *
@@ -1009,9 +1070,12 @@ var CdvPurchase;
                 updated: (cb) => (this.updatedCallbacks.push(cb), this.updatedReceiptsCallbacks.push(cb), ret),
                 // owned: (cb: Callback<Product>) => (this.ownedCallbacks.push(cb), ret),
                 approved: (cb) => (this.approvedCallbacks.push(cb), ret),
+                pending: (cb) => (this.pendingCallbacks.push(cb), ret),
                 finished: (cb) => (this.finishedCallbacks.push(cb), ret),
                 verified: (cb) => (this.verifiedCallbacks.push(cb), ret),
                 unverified: (cb) => (this.unverifiedCallbacks.push(cb), ret),
+                receiptsReady: (cb) => (this.receiptsReadyCallbacks.push(cb), ret),
+                receiptsVerified: (cb) => (this.receiptsVerifiedCallbacks.push(cb), ret),
             };
             return ret;
         }
@@ -1023,7 +1087,11 @@ var CdvPurchase;
             this.updatedReceiptsCallbacks.remove(callback);
             this.approvedCallbacks.remove(callback);
             this.finishedCallbacks.remove(callback);
+            this.pendingCallbacks.remove(callback);
             this.verifiedCallbacks.remove(callback);
+            this.unverifiedCallbacks.remove(callback);
+            this.receiptsReadyCallbacks.remove(callback);
+            this.receiptsVerifiedCallbacks.remove(callback);
             this.errorCallbacks.remove(callback);
             this._readyCallbacks.remove(callback);
         }
@@ -1698,12 +1766,37 @@ var CdvPurchase;
          * Call the callbacks when appropriate.
          */
         class StoreAdapterListener {
-            constructor(delegate) {
+            constructor(delegate, log) {
+                /** The list of supported platforms, needs to be set by "store.initialize" */
+                this.supportedPlatforms = [];
+                /** Those platforms have reported that their receipts are ready */
+                this.platformWithReceiptsReady = [];
                 this.lastTransactionState = {};
                 this.delegate = delegate;
+                this.log = log.child('AdapterListener');
             }
             static makeTransactionToken(transaction) {
                 return transaction.platform + '|' + transaction.transactionId;
+            }
+            setSupportedPlatforms(platforms) {
+                this.log.debug('setSupportedPlatforms: ' + platforms.join(','));
+                this.supportedPlatforms = platforms;
+                if (this.supportedPlatforms.length === this.platformWithReceiptsReady.length) {
+                    this.delegate.receiptsReadyCallbacks.trigger();
+                }
+            }
+            receiptsReady(platform) {
+                if (this.supportedPlatforms.length > 0 && this.platformWithReceiptsReady.length === this.supportedPlatforms.length) {
+                    return;
+                }
+                if (this.platformWithReceiptsReady.indexOf(platform) < 0) {
+                    this.log.debug('receiptsReady: ' + platform);
+                    this.platformWithReceiptsReady.push(platform);
+                    if (this.platformWithReceiptsReady.length === this.supportedPlatforms.length) {
+                        this.log.debug('calling receiptsReady()');
+                        this.delegate.receiptsReadyCallbacks.trigger();
+                    }
+                }
             }
             productsUpdated(platform, products) {
                 products.forEach(product => this.delegate.updatedCallbacks.trigger(product));
@@ -1721,6 +1814,9 @@ var CdvPurchase;
                         else if (lastState !== transaction.state) {
                             if (transaction.state === CdvPurchase.TransactionState.FINISHED) {
                                 this.delegate.finishedCallbacks.trigger(transaction);
+                            }
+                            else if (transaction.state === CdvPurchase.TransactionState.PENDING) {
+                                this.delegate.pendingCallbacks.trigger(transaction);
                             }
                         }
                         this.lastTransactionState[transactionToken] = transaction.state;
@@ -1844,6 +1940,52 @@ var CdvPurchase;
             }
         }
         Internal.PromiseLike = PromiseLike;
+    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Internal;
+    (function (Internal) {
+        class ReceiptsMonitor {
+            constructor(controller) {
+                this.hasCalledReceiptsVerified = false;
+                this.controller = controller;
+                this.log = controller.log.child('ReceiptsMonitor');
+            }
+            callReceiptsVerified() {
+                if (this.hasCalledReceiptsVerified)
+                    return;
+                this.hasCalledReceiptsVerified = true;
+                this.log.info('receiptsVerified()');
+                this.controller.receiptsVerified();
+            }
+            launch() {
+                const check = () => {
+                    this.log.debug(`check(${this.controller.numValidationResponses()}/${this.controller.numValidationRequests()})`);
+                    if (this.controller.numValidationRequests() === this.controller.numValidationResponses()) {
+                        this.callReceiptsVerified();
+                        this.controller.off(check);
+                    }
+                };
+                this.controller.when()
+                    .verified(check)
+                    .unverified(check)
+                    .receiptsReady(() => {
+                    this.log.debug('receiptsReady...');
+                    if (!this.controller.hasLocalReceipts() || !this.controller.hasValidator()) {
+                        setTimeout(() => {
+                            check();
+                        }, 0);
+                    }
+                    // after 5s, if no "verified" or "unverified" have been triggered, we'll run a final test.
+                    setTimeout(() => {
+                        this.log.debug('check after 5s');
+                        check();
+                    }, 5000);
+                });
+            }
+        }
+        Internal.ReceiptsMonitor = ReceiptsMonitor;
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -2253,6 +2395,7 @@ var CdvPurchase;
             _receiptsUpdated() {
                 if (this._receipt) {
                     this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [this._receipt, this.pseudoReceipt]);
+                    this.context.listener.receiptsReady(CdvPurchase.Platform.APPLE_APPSTORE);
                 }
                 else {
                     this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [this.pseudoReceipt]);
@@ -2349,13 +2492,27 @@ var CdvPurchase;
                         },
                     }, async () => {
                         this.log.info('bridge.init done');
-                        setTimeout(() => this.initializeAppReceipt(() => this.receiptsUpdated()), 300);
                         await this.canMakePayments();
                         resolve(undefined);
                     }, (code, message) => {
                         this.log.info('bridge.init failed: ' + code + ' - ' + message);
                         resolve(CdvPurchase.storeError(code, message));
                     });
+                });
+            }
+            loadReceipts() {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        this.initializeAppReceipt(() => {
+                            this.receiptsUpdated();
+                            if (this._receipt) {
+                                resolve([this._receipt, this.pseudoReceipt]);
+                            }
+                            else {
+                                resolve([this.pseudoReceipt]);
+                            }
+                        });
+                    }, 300);
                 });
             }
             async canMakePayments() {
@@ -2480,7 +2637,7 @@ var CdvPurchase;
                     this.discountEligibilityDeterminer(applicationReceipt, eligibilityRequests, resolve);
                 });
             }
-            load(products) {
+            loadProducts(products) {
                 return new Promise(resolve => {
                     this.log.info('bridge.load');
                     this.bridge.load(products.map(p => p.id), async (validProducts, invalidProducts) => {
@@ -2840,7 +2997,7 @@ var CdvPurchase;
                         this.finalizeTransactionUpdates();
                     }, undefined);
                 }
-                /*
+                /**
                  * Makes an in-app purchase.
                  *
                  * @param {String} productId The product identifier. e.g. "com.example.MyApp.myproduct"
@@ -2877,16 +3034,16 @@ var CdvPurchase;
                     };
                     exec('purchase', [productId, quantity, applicationUsername, discount || {}], purchaseOk, purchaseFailed);
                 }
-                /*
+                /**
                  * Checks if device/user is allowed to make in-app purchases
                  */
                 canMakePayments(success, error) {
                     return exec("canMakePayments", [], success, error);
                 }
-                /*
+                /**
                  * Asks the payment queue to restore previously completed purchases.
-                 * The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
                  *
+                 * The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
                  */
                 restore(callback) {
                     this.needRestoreNotification = true;
@@ -3395,10 +3552,15 @@ var CdvPurchase;
                         this.log.info("platform not supported...");
                         resolve(undefined);
                     }
+                    this.context.listener.receiptsReady(CdvPurchase.Platform.BRAINTREE);
                 });
             }
-            async load(products) {
+            async loadProducts(products) {
                 return products.map(p => CdvPurchase.storeError(CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, 'N/A'));
+            }
+            async loadReceipts() {
+                this.context.listener.receiptsReady(CdvPurchase.Platform.BRAINTREE);
+                return [];
             }
             async order(offer) {
                 return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'N/A: Not implemented with Braintree');
@@ -4235,8 +4397,18 @@ var CdvPurchase;
                 }
                 return { inAppSkus, subsSkus };
             }
+            /** @inheritdoc */
+            loadReceipts() {
+                return new Promise((resolve) => {
+                    // let's also refresh purchases
+                    this.getPurchases()
+                        .then(err => {
+                        resolve(this._receipts);
+                    });
+                });
+            }
             /** @inheritDoc */
-            load(products) {
+            loadProducts(products) {
                 return new Promise((resolve) => {
                     this.log.debug("Load: " + JSON.stringify(products));
                     /** Called when a list of product definitions have been loaded */
@@ -4252,8 +4424,6 @@ var CdvPurchase;
                             }
                         });
                         resolve(ret);
-                        // let's also refresh purchases
-                        this.getPurchases();
                     };
                     /** Start loading products */
                     const go = () => {
@@ -4329,6 +4499,7 @@ var CdvPurchase;
             onSetPurchases(purchases) {
                 this.log.debug("onSetPurchases: " + JSON.stringify(purchases));
                 this.onPurchasesUpdated(purchases);
+                this.context.listener.receiptsReady(CdvPurchase.Platform.GOOGLE_PLAY);
             }
             onPriceChangeConfirmationResult(result) {
             }
@@ -5096,7 +5267,15 @@ var CdvPurchase;
                 return true;
             }
             async initialize() { return; }
-            async load(products) {
+            async loadReceipts() {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        this.context.listener.receiptsReady(CdvPurchase.Platform.TEST);
+                        resolve(this.receipts);
+                    }, 600);
+                });
+            }
+            async loadProducts(products) {
                 return products.map(registerProduct => {
                     if (!Test.testProductsArray.find(p => p.id === registerProduct.id && p.type === registerProduct.type)) {
                         return CdvPurchase.storeError(CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, 'This product is not available');
@@ -5493,8 +5672,11 @@ var CdvPurchase;
             get isSupported() {
                 return false;
             }
-            async load(products) {
+            async loadProducts(products) {
                 return products.map(p => CdvPurchase.storeError(CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, 'TODO'));
+            }
+            async loadReceipts() {
+                return [];
             }
             async order(offer) {
                 return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'TODO: Not implemented');
@@ -5975,6 +6157,7 @@ var CdvPurchase;
         function safeCall(logger, className, callback, value) {
             setTimeout(() => {
                 try {
+                    logger.debug(`Calling callback: type=${className} name=${callback.name}`);
                     callback(value);
                 }
                 catch (error) {

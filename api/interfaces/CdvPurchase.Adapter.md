@@ -32,7 +32,8 @@ Adapter for a payment or in-app purchase platform
 - [finish](CdvPurchase.Adapter.md#finish)
 - [handleReceiptValidationResponse](CdvPurchase.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.Adapter.md#initialize)
-- [load](CdvPurchase.Adapter.md#load)
+- [loadProducts](CdvPurchase.Adapter.md#loadproducts)
+- [loadReceipts](CdvPurchase.Adapter.md#loadreceipts)
 - [manageBilling](CdvPurchase.Adapter.md#managebilling)
 - [manageSubscriptions](CdvPurchase.Adapter.md#managesubscriptions)
 - [order](CdvPurchase.Adapter.md#order)
@@ -180,9 +181,9 @@ In other case of a potentially recoverable error, the adapter will keep retrying
 
 ___
 
-### load
+### loadProducts
 
-▸ **load**(`products`): `Promise`<([`IError`](CdvPurchase.IError.md) \| [`Product`](../classes/CdvPurchase.Product.md))[]\>
+▸ **loadProducts**(`products`): `Promise`<([`IError`](CdvPurchase.IError.md) \| [`Product`](../classes/CdvPurchase.Product.md))[]\>
 
 Load product definitions from the platform.
 
@@ -195,6 +196,18 @@ Load product definitions from the platform.
 #### Returns
 
 `Promise`<([`IError`](CdvPurchase.IError.md) \| [`Product`](../classes/CdvPurchase.Product.md))[]\>
+
+___
+
+### loadReceipts
+
+▸ **loadReceipts**(): `Promise`<[`Receipt`](../classes/CdvPurchase.Receipt.md)[]\>
+
+Load the receipts
+
+#### Returns
+
+`Promise`<[`Receipt`](../classes/CdvPurchase.Receipt.md)[]\>
 
 ___
 

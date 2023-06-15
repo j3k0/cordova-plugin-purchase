@@ -40,7 +40,8 @@ Adapter for a payment or in-app purchase platform
 - [getSkusOf](CdvPurchase.GooglePlay.Adapter.md#getskusof)
 - [handleReceiptValidationResponse](CdvPurchase.GooglePlay.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.GooglePlay.Adapter.md#initialize)
-- [load](CdvPurchase.GooglePlay.Adapter.md#load)
+- [loadProducts](CdvPurchase.GooglePlay.Adapter.md#loadproducts)
+- [loadReceipts](CdvPurchase.GooglePlay.Adapter.md#loadreceipts)
 - [manageBilling](CdvPurchase.GooglePlay.Adapter.md#managebilling)
 - [manageSubscriptions](CdvPurchase.GooglePlay.Adapter.md#managesubscriptions)
 - [onPriceChangeConfirmationResult](CdvPurchase.GooglePlay.Adapter.md#onpricechangeconfirmationresult)
@@ -335,9 +336,9 @@ In other case of a potentially recoverable error, the adapter will keep retrying
 
 ___
 
-### load
+### loadProducts
 
-▸ **load**(`products`): `Promise`<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`GProduct`](CdvPurchase.GooglePlay.GProduct.md))[]\>
+▸ **loadProducts**(`products`): `Promise`<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`GProduct`](CdvPurchase.GooglePlay.GProduct.md))[]\>
 
 Load product definitions from the platform.
 
@@ -353,7 +354,23 @@ Load product definitions from the platform.
 
 #### Implementation of
 
-[Adapter](../interfaces/CdvPurchase.Adapter.md).[load](../interfaces/CdvPurchase.Adapter.md#load)
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[loadProducts](../interfaces/CdvPurchase.Adapter.md#loadproducts)
+
+___
+
+### loadReceipts
+
+▸ **loadReceipts**(): `Promise`<[`Receipt`](CdvPurchase.Receipt.md)[]\>
+
+Load the receipts
+
+#### Returns
+
+`Promise`<[`Receipt`](CdvPurchase.Receipt.md)[]\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[loadReceipts](../interfaces/CdvPurchase.Adapter.md#loadreceipts)
 
 ___
 

@@ -310,6 +310,7 @@ declare namespace CdvPurchase {
         /** Queue of receipts to validate */
         class ReceiptsToValidate {
             private array;
+            get length(): number;
             get(): Receipt[];
             add(receipt: Receipt): void;
             clear(): void;
@@ -336,6 +337,10 @@ declare namespace CdvPurchase {
             /** List of verified receipts */
             verifiedReceipts: VerifiedReceipt[];
             constructor(controller: ValidatorController, log: Logger);
+            numRequests: number;
+            numResponses: number;
+            incrRequestsCounter(): void;
+            incrResponsesCounter(): void;
             /** Add/update a verified receipt from the server response */
             addVerifiedReceipt(receipt: Receipt, data: Validator.Response.SuccessPayload['data']): VerifiedReceipt;
             /** Add a receipt to the validation queue. It'll get validated after a few milliseconds. */
@@ -389,6 +394,7 @@ declare namespace CdvPurchase {
         interface AdapterListener {
             productsUpdated(platform: Platform, products: Product[]): void;
             receiptsUpdated(platform: Platform, receipts: Receipt[]): void;
+            receiptsReady(platform: Platform): void;
         }
         /** Adapter execution context */
         interface AdapterContext {
@@ -603,10 +609,16 @@ declare namespace CdvPurchase {
         private approvedCallbacks;
         /** Callbacks when a transaction has been finished */
         private finishedCallbacks;
+        /** Callbacks when a transaction is pending */
+        private pendingCallbacks;
         /** Callbacks when a receipt has been validated */
         private verifiedCallbacks;
         /** Callbacks when a receipt has been validated */
         private unverifiedCallbacks;
+        /** Callbacks when all receipts have been loaded */
+        private receiptsReadyCallbacks;
+        /** Callbacks when all receipts have been verified */
+        private receiptsVerifiedCallbacks;
         /** Callbacks for errors */
         private errorCallbacks;
         /** Internal implementation of the receipt validation service integration */
@@ -633,6 +645,7 @@ declare namespace CdvPurchase {
          *   }]);
          */
         register(product: IRegisterProduct | IRegisterProduct[]): void;
+        private initializedHasBeenCalled;
         /**
          * Call to initialize the in-app purchase plugin.
          *
@@ -647,8 +660,14 @@ declare namespace CdvPurchase {
          * Call to refresh the price of products and status of purchases.
          */
         update(): Promise<void>;
-        /** Register a callback to be called when the plugin is ready. */
+        /**
+         * Register a callback to be called when the plugin is ready.
+         *
+         * This happens when all the platforms are initialized and their products loaded.
+         */
         ready(cb: Callback<void>): void;
+        /** true if the plugin is initialized and ready */
+        get isReady(): boolean;
         /**
          * Setup events listener.
          *
@@ -942,7 +961,11 @@ declare namespace CdvPurchase {
         /**
          * Load product definitions from the platform.
          */
-        load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
+        loadProducts(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
+        /**
+         * Load the receipts
+         */
+        loadReceipts(): Promise<Receipt[]>;
         /**
          * Initializes an order.
          */
@@ -1046,12 +1069,31 @@ declare namespace CdvPurchase {
         productUpdated(cb: Callback<Product>): When;
         /** Register a function called when transaction is approved. */
         approved(cb: Callback<Transaction>): When;
+        /** Register a function called when transaction is pending. */
+        pending(cb: Callback<Transaction>): When;
         /** Register a function called when a transaction is finished. */
         finished(cb: Callback<Transaction>): When;
         /** Register a function called when a receipt is verified. */
         verified(cb: Callback<VerifiedReceipt>): When;
         /** Register a function called when a receipt failed validation. */
         unverified(cb: Callback<UnverifiedReceipt>): When;
+        /**
+         * Register a function called when all receipts have been loaded.
+         *
+         * This handler is called only once. Use this when you want to run some code at startup after
+         * all the local receipts have been loaded, for example to process the initial ownership status
+         * of your products. When you have a receipt validation server in place, a better option is to
+         * use the sister method "receiptsVerified".
+         *
+         * If no platforms have any receipts (the user made no purchase), this will also get called.
+         */
+        receiptsReady(cb: Callback<void>): When;
+        /**
+         * Register a function called when all receipts have been verified.
+         *
+         * If no platforms have any receipts (user made no purchase), this will also get called.
+         */
+        receiptsVerified(cb: Callback<void>): When;
     }
     /** Whether or not the user intends to let the subscription auto-renew. */
     enum RenewalIntent {
@@ -1442,9 +1484,11 @@ declare namespace CdvPurchase {
     namespace Internal {
         interface StoreAdapterDelegate {
             approvedCallbacks: Callbacks<Transaction>;
+            pendingCallbacks: Callbacks<Transaction>;
             finishedCallbacks: Callbacks<Transaction>;
             updatedCallbacks: Callbacks<Product>;
             updatedReceiptCallbacks: Callbacks<Receipt>;
+            receiptsReadyCallbacks: Callbacks<void>;
         }
         /**
          * Monitor the updates for products and receipt.
@@ -1453,11 +1497,18 @@ declare namespace CdvPurchase {
          */
         class StoreAdapterListener implements AdapterListener {
             delegate: StoreAdapterDelegate;
-            constructor(delegate: StoreAdapterDelegate);
+            private log;
+            /** The list of supported platforms, needs to be set by "store.initialize" */
+            private supportedPlatforms;
+            constructor(delegate: StoreAdapterDelegate, log: Logger);
+            /** Those platforms have reported that their receipts are ready */
+            private platformWithReceiptsReady;
             lastTransactionState: {
                 [transactionToken: string]: TransactionState;
             };
             static makeTransactionToken(transaction: Transaction): string;
+            setSupportedPlatforms(platforms: Platform[]): void;
+            receiptsReady(platform: Platform): void;
             productsUpdated(platform: Platform, products: Product[]): void;
             receiptsUpdated(platform: Platform, receipts: Receipt[]): void;
         }
@@ -1517,6 +1568,28 @@ declare namespace CdvPurchase {
             push(callback: Callback<T>): void;
             /** Call all registered callbacks with the given value */
             resolve(value: T): void;
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace Internal {
+        interface ReceiptsMonitorController {
+            when(): When;
+            hasLocalReceipts(): boolean;
+            receiptsVerified(): void;
+            hasValidator(): boolean;
+            numValidationRequests(): number;
+            numValidationResponses(): number;
+            off<T>(callback: Callback<T>): void;
+            log: Logger;
+        }
+        class ReceiptsMonitor {
+            controller: ReceiptsMonitorController;
+            log: Logger;
+            constructor(controller: ReceiptsMonitorController);
+            private hasCalledReceiptsVerified;
+            callReceiptsVerified(): void;
+            launch(): void;
         }
     }
 }
@@ -2248,6 +2321,7 @@ declare namespace CdvPurchase {
             private setPaymentMonitor;
             private callPaymentMonitor;
             initialize(): Promise<IError | undefined>;
+            loadReceipts(): Promise<Receipt[]>;
             private canMakePayments;
             /** True iff the appStoreReceipt is already being initialized */
             private _appStoreReceiptLoading;
@@ -2262,7 +2336,7 @@ declare namespace CdvPurchase {
             private loadAppStoreReceipt;
             private loadEligibility;
             private callDiscountEligibilityDeterminer;
-            load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
+            loadProducts(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
             order(offer: Offer, additionalData: CdvPurchase.AdditionalData): Promise<undefined | IError>;
             finish(transaction: Transaction): Promise<undefined | IError>;
             refreshReceipt(): Promise<undefined | IError | ApplicationReceipt>;
@@ -2443,8 +2517,22 @@ declare namespace CdvPurchase {
                 constructor();
                 init(options: Partial<BridgeOptions>, success: () => void, error: (code: ErrorCode, message: string) => void): void;
                 processPendingTransactions(): void;
+                /**
+                 * Makes an in-app purchase.
+                 *
+                 * @param {String} productId The product identifier. e.g. "com.example.MyApp.myproduct"
+                 * @param {int} quantity Quantity of product to purchase
+                 */
                 purchase(productId: string, quantity: number, applicationUsername: string | undefined, discount: PaymentDiscount | undefined, success: () => void, error: () => void): void;
+                /**
+                 * Checks if device/user is allowed to make in-app purchases
+                 */
                 canMakePayments(success: () => void, error: (message: string) => void): void;
+                /**
+                 * Asks the payment queue to restore previously completed purchases.
+                 *
+                 * The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
+                 */
                 restore(callback?: Callback<any>): void;
                 manageSubscriptions(callback?: Callback<any>): void;
                 manageBilling(callback?: Callback<any>): void;
@@ -3019,7 +3107,8 @@ declare namespace CdvPurchase {
              * Initialize the Braintree Adapter.
              */
             initialize(): Promise<IError | undefined>;
-            load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
+            loadProducts(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
+            loadReceipts(): Promise<Receipt[]>;
             order(offer: Offer): Promise<undefined | IError>;
             finish(transaction: Transaction): Promise<undefined | IError>;
             manageSubscriptions(): Promise<IError | undefined>;
@@ -3956,8 +4045,10 @@ declare namespace CdvPurchase {
                 inAppSkus: string[];
                 subsSkus: string[];
             };
+            /** @inheritdoc */
+            loadReceipts(): Promise<CdvPurchase.Receipt[]>;
             /** @inheritDoc */
-            load(products: IRegisterProduct[]): Promise<(GProduct | IError)[]>;
+            loadProducts(products: IRegisterProduct[]): Promise<(GProduct | IError)[]>;
             /** @inheritDoc */
             finish(transaction: CdvPurchase.Transaction): Promise<IError | undefined>;
             /** Called by the bridge when a purchase has been consumed */
@@ -4743,7 +4834,8 @@ declare namespace CdvPurchase {
             constructor(context: Internal.AdapterContext);
             get isSupported(): boolean;
             initialize(): Promise<IError | undefined>;
-            load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
+            loadReceipts(): Promise<Receipt[]>;
+            loadProducts(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
             order(offer: Offer): Promise<undefined | IError>;
             finish(transaction: Transaction): Promise<undefined | IError>;
             receiptValidationBody(receipt: Receipt): Promise<Validator.Request.Body | undefined>;
@@ -4878,7 +4970,8 @@ declare namespace CdvPurchase {
             receipts: Receipt[];
             initialize(): Promise<IError | undefined>;
             get isSupported(): boolean;
-            load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
+            loadProducts(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
+            loadReceipts(): Promise<Receipt[]>;
             order(offer: Offer): Promise<undefined | IError>;
             finish(transaction: Transaction): Promise<undefined | IError>;
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;

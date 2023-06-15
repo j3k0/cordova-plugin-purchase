@@ -102,6 +102,8 @@ Transactions for a given product
 
 ▸ **canMakePayments**(`success`, `error`): `void`
 
+Checks if device/user is allowed to make in-app purchases
+
 #### Parameters
 
 | Name | Type |
@@ -287,16 +289,18 @@ ___
 
 ▸ **purchase**(`productId`, `quantity`, `applicationUsername`, `discount`, `success`, `error`): `void`
 
+Makes an in-app purchase.
+
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `productId` | `string` |
-| `quantity` | `number` |
-| `applicationUsername` | `undefined` \| `string` |
-| `discount` | `undefined` \| [`PaymentDiscount`](../interfaces/CdvPurchase.AppleAppStore.PaymentDiscount.md) |
-| `success` | () => `void` |
-| `error` | () => `void` |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `productId` | `string` | The product identifier. e.g. "com.example.MyApp.myproduct" |
+| `quantity` | `number` | Quantity of product to purchase |
+| `applicationUsername` | `undefined` \| `string` | - |
+| `discount` | `undefined` \| [`PaymentDiscount`](../interfaces/CdvPurchase.AppleAppStore.PaymentDiscount.md) | - |
+| `success` | () => `void` | - |
+| `error` | () => `void` | - |
 
 #### Returns
 
@@ -324,6 +328,10 @@ ___
 ### restore
 
 ▸ **restore**(`callback?`): `void`
+
+Asks the payment queue to restore previously completed purchases.
+
+The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
 
 #### Parameters
 
