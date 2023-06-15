@@ -217,6 +217,7 @@ namespace CdvPurchase {
             private _receiptsUpdated() {
                 if (this._receipt) {
                     this.context.listener.receiptsUpdated(Platform.APPLE_APPSTORE, [this._receipt, this.pseudoReceipt]);
+                    this.context.listener.receiptsReady(Platform.APPLE_APPSTORE);
                 }
                 else {
                     this.context.listener.receiptsUpdated(Platform.APPLE_APPSTORE, [this.pseudoReceipt]);
@@ -327,13 +328,28 @@ namespace CdvPurchase {
                         },
                     }, async () => {
                         this.log.info('bridge.init done');
-                        setTimeout(() => this.initializeAppReceipt(() => this.receiptsUpdated()), 300);
                         await this.canMakePayments();
                         resolve(undefined);
                     }, (code: ErrorCode, message: string) => {
                         this.log.info('bridge.init failed: ' + code + ' - ' + message);
                         resolve(storeError(code, message));
                     });
+                });
+            }
+
+            loadReceipts(): Promise<Receipt[]> {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        this.initializeAppReceipt(() => {
+                            this.receiptsUpdated();
+                            if (this._receipt) {
+                               resolve([this._receipt, this.pseudoReceipt]);
+                            }
+                            else {
+                                resolve([this.pseudoReceipt]);
+                            }
+                        });
+                    }, 300);
                 });
             }
 
@@ -467,7 +483,7 @@ namespace CdvPurchase {
                 });
             }
 
-            load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
+            loadProducts(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
                 return new Promise(resolve => {
                     this.log.info('bridge.load');
                     this.bridge.load(

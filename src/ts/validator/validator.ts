@@ -15,6 +15,10 @@ namespace CdvPurchase {
         export class ReceiptsToValidate {
             private array: Receipt[] = [];
 
+            get length(): number {
+                return this.array.length;
+            }
+
             get(): Receipt[] {
                 return this.array.concat();
             }
@@ -65,6 +69,18 @@ namespace CdvPurchase {
                 this.log = log.child('Validator');
             }
 
+            public numRequests: number = 0;
+            public numResponses: number = 0;
+
+            incrRequestsCounter() {
+                this.numRequests = (this.numRequests + 1) | 0;
+                this.log.debug(`Validation requests=${this.numRequests} responses=${this.numResponses}`);
+            }
+            incrResponsesCounter() {
+                this.numResponses = (this.numResponses + 1) | 0;
+                this.log.debug(`Validation requests=${this.numRequests} responses=${this.numResponses}`);
+            }
+
             /** Add/update a verified receipt from the server response */
             addVerifiedReceipt(receipt: Receipt, data: Validator.Response.SuccessPayload['data']): VerifiedReceipt {
                 for (const vr of this.verifiedReceipts) {
@@ -85,7 +101,10 @@ namespace CdvPurchase {
             add(receiptOrTransaction: Receipt | Transaction) {
                 this.log.debug("Schedule validation: " + JSON.stringify(receiptOrTransaction));
                 const receipt: Receipt = (receiptOrTransaction instanceof Transaction) ? receiptOrTransaction.parentReceipt : receiptOrTransaction;
-                this.receiptsToValidate.add(receipt);
+                if (!this.receiptsToValidate.has(receipt)) {
+                    this.incrRequestsCounter();
+                    this.receiptsToValidate.add(receipt);
+                }
             }
 
             /** Run validation for all receipts in the queue */
@@ -96,6 +115,7 @@ namespace CdvPurchase {
 
                 const onResponse = async (r: ReceiptResponse) => {
                     const { receipt, payload } = r;
+                    this.incrResponsesCounter();
                     try {
                         const adapter = this.controller.adapters.find(receipt.platform);
                         await adapter?.handleReceiptValidationResponse(receipt, payload);
@@ -110,6 +130,11 @@ namespace CdvPurchase {
                     }
                     catch (err) {
                         this.log.error('Exception probably caused by an invalid response from the validator.' + (err as Error).message);
+                        this.controller.unverifiedCallbacks.trigger({ receipt, payload: {
+                            ok: false,
+                            code: ErrorCode.VERIFICATION_FAILED,
+                            message: (err as Error).message,
+                        }});
                     }
                 };
                 receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));
@@ -121,9 +146,15 @@ namespace CdvPurchase {
                     this.log.debug('Using Test Adapter mock verify function.');
                     return Test.Adapter.verify(receipt, callback);
                 }
-                if (!this.controller.validator) return;
+                if (!this.controller.validator) {
+                    this.incrResponsesCounter();
+                    return;
+                }
                 const body = await this.buildRequestBody(receipt);
-                if (!body) return;
+                if (!body) {
+                    this.incrResponsesCounter();
+                    return;
+                }
 
                 if (typeof this.controller.validator === 'function')
                     return this.runValidatorFunction(this.controller.validator, receipt, body, callback);

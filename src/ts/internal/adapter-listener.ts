@@ -8,6 +8,7 @@ namespace CdvPurchase
             finishedCallbacks: Callbacks<Transaction>;
             updatedCallbacks: Callbacks<Product>;
             updatedReceiptCallbacks: Callbacks<Receipt>;
+            receiptsReadyCallbacks: Callbacks<void>;
         }
 
         /**
@@ -18,11 +19,46 @@ namespace CdvPurchase
         export class StoreAdapterListener implements AdapterListener {
 
             delegate: StoreAdapterDelegate;
-            constructor(delegate: StoreAdapterDelegate) { this.delegate = delegate; }
+
+            private log: Logger;
+
+            /** The list of supported platforms, needs to be set by "store.initialize" */
+            private supportedPlatforms: Platform[] = [];
+
+            constructor(delegate: StoreAdapterDelegate, log: Logger) {
+                this.delegate = delegate;
+                this.log = log.child('AdapterListener');
+            }
+
+            /** Those platforms have reported that their receipts are ready */
+            private platformWithReceiptsReady: Platform[] = [];
 
             lastTransactionState: { [transactionToken: string]: TransactionState } = {};
             static makeTransactionToken(transaction: Transaction): string {
                 return transaction.platform + '|' + transaction.transactionId;
+            }
+
+            setSupportedPlatforms(platforms: Platform[]) {
+
+                this.log.debug('setSupportedPlatforms: ' + platforms.join(','));
+                this.supportedPlatforms = platforms;
+                if (this.supportedPlatforms.length === this.platformWithReceiptsReady.length) {
+                    this.delegate.receiptsReadyCallbacks.trigger();
+                }
+            }
+
+            receiptsReady(platform: Platform): void {
+                if (this.supportedPlatforms.length > 0 && this.platformWithReceiptsReady.length === this.supportedPlatforms.length) {
+                    return;
+                }
+                if (this.platformWithReceiptsReady.indexOf(platform) < 0) {
+                    this.log.debug('receiptsReady: ' + platform);
+                    this.platformWithReceiptsReady.push(platform);
+                    if (this.platformWithReceiptsReady.length === this.supportedPlatforms.length) {
+                        this.log.debug('calling receiptsReady()');
+                        this.delegate.receiptsReadyCallbacks.trigger();
+                    }
+                }
             }
 
             productsUpdated(platform: Platform, products: Product[]): void {

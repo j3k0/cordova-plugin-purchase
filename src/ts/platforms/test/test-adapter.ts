@@ -59,7 +59,16 @@ namespace CdvPurchase {
 
             async initialize(): Promise<IError | undefined> { return; }
 
-            async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
+            async loadReceipts(): Promise<Receipt[]> {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        this.context.listener.receiptsReady(Platform.TEST);
+                        resolve(this.receipts);
+                    }, 600);
+                });
+            }
+
+            async loadProducts(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
 
                 return products.map(registerProduct => {
                     if (!testProductsArray.find(p => p.id === registerProduct.id && p.type === registerProduct.type)) {

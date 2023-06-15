@@ -246,11 +246,17 @@ namespace CdvPurchase {
                         this.log.info("platform not supported...");
                         resolve(undefined);
                     }
+                    this.context.listener.receiptsReady(Platform.BRAINTREE);
                 });
             }
 
-            async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
+            async loadProducts(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
                 return products.map(p => storeError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'N/A'));
+            }
+
+            async loadReceipts(): Promise<Receipt[]> {
+                this.context.listener.receiptsReady(Platform.BRAINTREE);
+                return [];
             }
 
             async order(offer: Offer): Promise<undefined | IError> {

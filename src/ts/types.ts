@@ -137,7 +137,12 @@ namespace CdvPurchase {
         /**
          * Load product definitions from the platform.
          */
-        load(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
+        loadProducts(products: IRegisterProduct[]): Promise<(Product | IError)[]>;
+
+        /**
+         * Load the receipts
+         */
+        loadReceipts(): Promise<Receipt[]>;
 
         /**
          * Initializes an order.
@@ -291,6 +296,25 @@ namespace CdvPurchase {
 
         /** Register a function called when a receipt failed validation. */
         unverified(cb: Callback<UnverifiedReceipt>): When;
+
+        /**
+         * Register a function called when all receipts have been loaded.
+         *
+         * This handler is called only once. Use this when you want to run some code at startup after
+         * all the local receipts have been loaded, for example to process the initial ownership status
+         * of your products. When you have a receipt validation server in place, a better option is to
+         * use the sister method "receiptsVerified".
+         *
+         * If no platforms have any receipts (the user made no purchase), this will also get called.
+         */
+        receiptsReady(cb: Callback<void>): When;
+
+        /**
+         * Register a function called when all receipts have been verified.
+         *
+         * If no platforms have any receipts (user made no purchase), this will also get called.
+         */
+        receiptsVerified(cb: Callback<void>): When;
     }
 
     /** Whether or not the user intends to let the subscription auto-renew. */

@@ -352,7 +352,7 @@ namespace CdvPurchase {
                     }, undefined);
                 }
 
-                /*
+                /**
                  * Makes an in-app purchase.
                  *
                  * @param {String} productId The product identifier. e.g. "com.example.MyApp.myproduct"
@@ -392,17 +392,17 @@ namespace CdvPurchase {
                     exec('purchase', [productId, quantity, applicationUsername, discount || {}], purchaseOk, purchaseFailed);
                 }
 
-                /*
+                /**
                  * Checks if device/user is allowed to make in-app purchases
                  */
                 canMakePayments(success: () => void, error: (message: string) => void) {
                     return exec("canMakePayments", [], success, error);
                 }
 
-                /*
+                /**
                  * Asks the payment queue to restore previously completed purchases.
-                 * The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
                  *
+                 * The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
                  */
                 restore(callback?: Callback<any>) {
                     this.needRestoreNotification = true;

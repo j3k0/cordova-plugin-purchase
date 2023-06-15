@@ -10,8 +10,11 @@ namespace CdvPurchase {
             get isSupported(): boolean {
                 return false;
             }
-            async load(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
+            async loadProducts(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
                 return products.map(p => storeError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'TODO'));
+            }
+            async loadReceipts(): Promise<Receipt[]> {
+                return [];
             }
             async order(offer: Offer): Promise<undefined | IError> {
                 return storeError(ErrorCode.UNKNOWN, 'TODO: Not implemented');
