@@ -1,5 +1,108 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.6
+
+### 13.6.0
+
+#### Add store.when().receiptsReady(cb)
+
+The "receiptsReady" event is triggered only once, as soon as all platforms are
+done loading the receipts from the SDK.
+
+It can be used by applications that do not rely on receipt validation, in order
+to wait for the list of purchases reported by the native SDK to have been
+processed. For example, before running some code that check products ownership
+statuses at startup.
+
+```ts
+// at startup
+CdvPurchase.store.when().receiptsReady(() => {
+  console.log('All platforms have loaded their local receipts');
+  console.log('Feature X: ' + CdvPurchase.store.get('unlock-feature-x').owned);
+});
+```
+
+If the receipts have already been loaded before you setup this event handler,
+it will be called immediately.
+
+Users using a receipt validation server should rely on receiptsVerified()
+instead (see below).
+
+#### Add store.when().receiptsVerified(cb)
+
+Similarly to "receiptsReady", "receiptsVerified" is triggered only once: after
+all platforms have loaded their receipts and those have been verified by the
+receipt validation server.
+
+It can be used by applications that DO rely on receipt validation, in order to
+wait for all receipts to have been processed by the receipt validation service.
+A good use case is to encapsulate startup code that check products ownership
+status.
+
+```ts
+// at startup
+CdvPurchase.store.when().receiptsVerified(() => {
+  console.log('Receipts have been validated');
+  if (CdvPurchase.store.get('monthly').owned) {
+    openMainScreen();
+  }
+  else {
+    openSubscriptionScreen();
+  }
+});
+```
+
+If the receipts have already been verified before you setup this event handler,
+it will be called immediately.
+
+#### Add store.when().pending(cb)
+
+This event handler can be notified when a transaction enters the "PENDING"
+state, which happens when a user has "Ask to Buy" enabled, or in country where
+cash payment is an option.
+
+```ts
+store.when().pending(transaction => {
+  // Transaction is pending (waiting for parent approval, cash payment, ...)
+});
+```
+
+#### Remove autogrouping of products
+
+Starting at version 13.4.0, products were automatically added to the "default"
+group. This created more issues than it solved, because it let the plugin
+automatically try to replace potentially unrelated products.
+
+People willing to rely on automatic subscription replacement on Android should
+explicitely set those product's `group` property when registering them. Or
+should use the `oldPurchaseToken` property when making an order.
+
+**Examples:**
+
+```ts
+// Replace an old purchase when finalizing the new one on google play.
+store.order(product, {
+  googlePlay: {
+    oldPurchaseToken: 'abcdefghijkl',
+    prorationMode: CdvPurchase.GooglePlay.ProrationMode.IMMEDIATE_AND_CHARGE_PRORATED_PRICE,
+  }
+});
+
+// For those 2 subscription products, the plugin will automatically replace
+// the currently owned one (if any) when placing a new order.
+store.register([{
+  id: 'no_ads_yearly',
+  type: ProductType.PAID_SUBSCRIPTION,
+  platform: Platform.GOOGLE_PLAY,
+  group: 'noAds'
+}, {
+  id: 'no_ads_monthly',
+  type: ProductType.PAID_SUBSCRIPTION,
+  platform: Platform.GOOGLE_PLAY,
+  group: 'noAds'
+}]);
+```
+
 ## 13.5
 
 ### 13.5.0 - Add timeout to validation requests
