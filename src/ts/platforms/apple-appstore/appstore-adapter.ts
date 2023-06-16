@@ -418,7 +418,7 @@ namespace CdvPurchase {
             /** Promisified loading of the AppStore receipt */
             private async loadAppStoreReceipt(): Promise<undefined | ApplicationReceipt> {
                 let resolved = false;
-                return new Promise(resolve => {
+                return new Promise<undefined | ApplicationReceipt>(resolve => {
                     if (this.bridge.appStoreReceipt?.appStoreReceipt) {
                         this.log.debug('using cached appstore receipt');
                         return resolve(this.bridge.appStoreReceipt);
@@ -439,6 +439,12 @@ namespace CdvPurchase {
                         if (!resolved) resolve(undefined);
                         resolved = true;
                     }, 5000);
+                }).then(result => {
+                    this.context.listener.receiptsReady(Platform.APPLE_APPSTORE);
+                    return result;
+                }).catch(reason => {
+                    this.context.listener.receiptsReady(Platform.APPLE_APPSTORE);
+                    return reason;
                 });
             }
 
