@@ -157,10 +157,10 @@ namespace CdvPurchase {
         private unverifiedCallbacks = new Internal.Callbacks<UnverifiedReceipt>(this.log, 'unverified()');
 
         /** Callbacks when all receipts have been loaded */
-        private receiptsReadyCallbacks = new Internal.Callbacks<void>(this.log, 'receiptsReady()');
+        private receiptsReadyCallbacks = new Internal.Callbacks<void>(this.log, 'receiptsReady()', true);
 
         /** Callbacks when all receipts have been verified */
-        private receiptsVerifiedCallbacks = new Internal.Callbacks<void>(this.log, 'receiptsVerified()');
+        private receiptsVerifiedCallbacks = new Internal.Callbacks<void>(this.log, 'receiptsVerified()', true);
 
         /** Callbacks for errors */
         private errorCallbacks = new Internal.Callbacks<IError>(this.log, 'error()');
