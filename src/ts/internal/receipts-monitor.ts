@@ -17,6 +17,7 @@ namespace CdvPurchase
 
             controller: ReceiptsMonitorController;
             log: Logger;
+            intervalChecker?: number;
 
             constructor(controller: ReceiptsMonitorController) {
                 this.controller = controller;
@@ -29,15 +30,24 @@ namespace CdvPurchase
                 if (this.hasCalledReceiptsVerified) return;
                 this.hasCalledReceiptsVerified = true;
                 this.log.info('receiptsVerified()');
-                this.controller.receiptsVerified();
+                // ensure those 2 events are called in order.
+                this.controller.when().receiptsReady(() => {
+                    setTimeout(() => {
+                        this.controller.receiptsVerified();
+                    }, 0);
+                });
             }
 
             launch() {
                 const check = () => {
                     this.log.debug(`check(${this.controller.numValidationResponses()}/${this.controller.numValidationRequests()})`);
                     if (this.controller.numValidationRequests() === this.controller.numValidationResponses()) {
-                        this.callReceiptsVerified();
+                        if (this.intervalChecker !== undefined) {
+                            clearInterval(this.intervalChecker);
+                            this.intervalChecker = undefined;
+                        }
                         this.controller.off(check);
+                        this.callReceiptsVerified();
                     }
                 }
                 this.controller.when()
@@ -50,11 +60,11 @@ namespace CdvPurchase
                             check();
                         }, 0);
                     }
-                    // after 5s, if no "verified" or "unverified" have been triggered, we'll run a final test.
-                    setTimeout(() => {
-                        this.log.debug('check after 5s');
+                    // check every 10s, to handle cases where neither "verified" nor "unverified" have been triggered.
+                    this.intervalChecker = setInterval(() => {
+                        this.log.debug('keep checking every 10s...');
                         check();
-                    }, 5000);
+                    }, 10000);
                 });
             }
         }
