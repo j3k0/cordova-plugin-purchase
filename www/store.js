@@ -775,20 +775,36 @@ var CdvPurchase;
         class Callbacks {
             /**
              * @param className - Type of callbacks (used to help with debugging)
+             * @param finalStateMode - If true, newly registered callbacks will be called immediately when the event was already triggered.
              */
-            constructor(logger, className) {
+            constructor(logger, className, finalStateMode = false) {
                 /** List of registered callbacks */
                 this.callbacks = [];
+                /** Number of times those callbacks have been triggered */
+                this.numTriggers = 0;
                 this.logger = logger;
                 this.className = className;
+                this.finalStateMode = finalStateMode;
             }
             /** Add a callback to the list */
             push(callback) {
-                this.callbacks.push(callback);
+                if (this.finalStateMode && this.numTriggers > 0) {
+                    callback(this.lastTriggerArgument);
+                }
+                else {
+                    this.callbacks.push(callback);
+                }
             }
             /** Call all registered callbacks with the given value */
             trigger(value) {
-                this.callbacks.forEach(callback => {
+                this.lastTriggerArgument = value;
+                this.numTriggers++;
+                const callbacks = this.callbacks;
+                if (this.finalStateMode) {
+                    // in final state mode, callbacks are only triggered once
+                    this.callbacks = [];
+                }
+                callbacks.forEach(callback => {
                     CdvPurchase.Utils.safeCall(this.logger, this.className, callback, value);
                 });
             }
@@ -860,7 +876,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.5.0';
+    CdvPurchase.PLUGIN_VERSION = '13.6.0';
     /**
      * Entry class of the plugin.
      */
@@ -911,9 +927,9 @@ var CdvPurchase;
             /** Callbacks when a receipt has been validated */
             this.unverifiedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'unverified()');
             /** Callbacks when all receipts have been loaded */
-            this.receiptsReadyCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'receiptsReady()');
+            this.receiptsReadyCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'receiptsReady()', true);
             /** Callbacks when all receipts have been verified */
-            this.receiptsVerifiedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'receiptsVerified()');
+            this.receiptsVerifiedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'receiptsVerified()', true);
             /** Callbacks for errors */
             this.errorCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'error()');
             this.initializedHasBeenCalled = false;
@@ -1957,14 +1973,23 @@ var CdvPurchase;
                     return;
                 this.hasCalledReceiptsVerified = true;
                 this.log.info('receiptsVerified()');
-                this.controller.receiptsVerified();
+                // ensure those 2 events are called in order.
+                this.controller.when().receiptsReady(() => {
+                    setTimeout(() => {
+                        this.controller.receiptsVerified();
+                    }, 0);
+                });
             }
             launch() {
                 const check = () => {
                     this.log.debug(`check(${this.controller.numValidationResponses()}/${this.controller.numValidationRequests()})`);
                     if (this.controller.numValidationRequests() === this.controller.numValidationResponses()) {
-                        this.callReceiptsVerified();
+                        if (this.intervalChecker !== undefined) {
+                            clearInterval(this.intervalChecker);
+                            this.intervalChecker = undefined;
+                        }
                         this.controller.off(check);
+                        this.callReceiptsVerified();
                     }
                 };
                 this.controller.when()
@@ -1977,11 +2002,11 @@ var CdvPurchase;
                             check();
                         }, 0);
                     }
-                    // after 5s, if no "verified" or "unverified" have been triggered, we'll run a final test.
-                    setTimeout(() => {
-                        this.log.debug('check after 5s');
+                    // check every 10s, to handle cases where neither "verified" nor "unverified" have been triggered.
+                    this.intervalChecker = setInterval(() => {
+                        this.log.debug('keep checking every 10s...');
                         check();
-                    }, 5000);
+                    }, 10000);
                 });
             }
         }
@@ -2596,6 +2621,12 @@ var CdvPurchase;
                             resolve(undefined);
                         resolved = true;
                     }, 5000);
+                }).then(result => {
+                    this.context.listener.receiptsReady(CdvPurchase.Platform.APPLE_APPSTORE);
+                    return result;
+                }).catch(reason => {
+                    this.context.listener.receiptsReady(CdvPurchase.Platform.APPLE_APPSTORE);
+                    return reason;
                 });
             }
             async loadEligibility(validProducts) {

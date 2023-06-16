@@ -456,10 +456,19 @@ declare namespace CdvPurchase {
             logger: Logger;
             /** List of registered callbacks */
             callbacks: Callback<T>[];
+            /** If true, newly registered callbacks will be called immediately when the event was already triggered.
+             *
+             * Those callbacks are used to ensure the plugin has reached a given state. */
+            finalStateMode: boolean;
+            /** Number of times those callbacks have been triggered */
+            numTriggers: number;
+            /** Argument used the last time callbacks have been triggered */
+            lastTriggerArgument?: T;
             /**
              * @param className - Type of callbacks (used to help with debugging)
+             * @param finalStateMode - If true, newly registered callbacks will be called immediately when the event was already triggered.
              */
-            constructor(logger: Logger, className: string);
+            constructor(logger: Logger, className: string, finalStateMode?: boolean);
             /** Add a callback to the list */
             push(callback: Callback<T>): void;
             /** Call all registered callbacks with the given value */
@@ -510,7 +519,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.5.0";
+    const PLUGIN_VERSION = "13.6.0";
     /**
      * Entry class of the plugin.
      */
@@ -1586,6 +1595,7 @@ declare namespace CdvPurchase {
         class ReceiptsMonitor {
             controller: ReceiptsMonitorController;
             log: Logger;
+            intervalChecker?: number;
             constructor(controller: ReceiptsMonitorController);
             private hasCalledReceiptsVerified;
             callReceiptsVerified(): void;
