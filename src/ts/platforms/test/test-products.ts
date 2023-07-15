@@ -1,3 +1,4 @@
+/// <reference path="../../utils/compatibility.ts" />
 namespace CdvPurchase {
   export namespace Test {
 
@@ -82,7 +83,7 @@ namespace CdvPurchase {
     /**
      * List of test products definitions as an array.
      */
-    export const testProductsArray: IRegisterProduct[] = Object.values(testProducts);
+    export const testProductsArray: IRegisterProduct[] = Utils.objectValues(testProducts);
 
     /**
      * Initialize a test product.

@@ -655,7 +655,7 @@ namespace CdvPurchase {
                     id: applicationReceipt.bundleIdentifier,
                     type: ProductType.APPLICATION,
                     // send all products and offers so validator get pricing information
-                    products: Object.values(this.validProducts).map(vp => new SKProduct(vp, vp, this.context.apiDecorators, { isEligible: () => true })),
+                    products: Utils.objectValues(this.validProducts).map(vp => new SKProduct(vp, vp, this.context.apiDecorators, { isEligible: () => true })),
                     transaction: {
                         type: 'ios-appstore',
                         id: transaction?.transactionId,
