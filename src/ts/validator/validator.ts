@@ -148,6 +148,18 @@ namespace CdvPurchase {
                 }
                 if (!this.controller.validator) {
                     this.incrResponsesCounter();
+                    // for backward compatibility, we consider that the receipt is verified.
+                    callback({
+                        receipt,
+                        payload: {
+                            ok: true,
+                            data: {
+                                id: receipt.transactions[0].transactionId,
+                                latest_receipt: true,
+                                transaction: { type: 'test' } // dummy data
+                            }
+                        }
+                    });
                     return;
                 }
                 const body = await this.buildRequestBody(receipt);
