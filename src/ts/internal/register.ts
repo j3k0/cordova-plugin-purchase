@@ -9,10 +9,7 @@ namespace CdvPurchase {
         id: string;
 
         /**
-         * List of payment platforms the product is available on
-         *
-         * If you do not specify anything, the product is assumed to be available only on the
-         * default payment platform. (Apple AppStore on iOS, Google Play on Android)
+         * The payment platform the product is available on.
          */
         platform: Platform;
 
@@ -20,7 +17,7 @@ namespace CdvPurchase {
         type: ProductType;
 
         /**
-         * Name of the group your subscription product is a member of (default to "default").
+         * Name of the group your subscription product is a member of.
          *
          * If you don't set anything, all subscription will be members of the same group.
          */
