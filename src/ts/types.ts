@@ -111,17 +111,17 @@ namespace CdvPurchase {
         /**
          * List of products managed by the adapter.
          */
-        get products(): Product[];
+        products: Product[];
 
         /**
          * List of purchase receipts.
          */
-        get receipts(): Receipt[];
+        receipts: Receipt[];
 
         /**
          * Returns true is the adapter is supported on this device.
          */
-        get isSupported(): boolean;
+        isSupported: boolean;
 
         /**
          * Initializes a platform adapter.

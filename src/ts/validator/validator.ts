@@ -39,13 +39,13 @@ namespace CdvPurchase {
         }
 
         export interface ValidatorController {
-            get validator(): string | Validator.Function | Validator.Target | undefined;
-            get localReceipts(): Receipt[];
-            get adapters(): Adapters;
-            get validator_privacy_policy(): PrivacyPolicyItem | PrivacyPolicyItem[] | undefined;
+            validator: string | Validator.Function | Validator.Target | undefined;
+            localReceipts: Receipt[];
+            adapters: Adapters;
+            validator_privacy_policy: PrivacyPolicyItem | PrivacyPolicyItem[] | undefined;
             getApplicationUsername(): string | undefined;
-            get verifiedCallbacks(): Callbacks<VerifiedReceipt>;
-            get unverifiedCallbacks(): Callbacks<UnverifiedReceipt>;
+            verifiedCallbacks: Callbacks<VerifiedReceipt>;
+            unverifiedCallbacks: Callbacks<UnverifiedReceipt>;
             finish(receipt:VerifiedReceipt): Promise<void>;
         }
 

@@ -44,7 +44,7 @@ namespace CdvPurchase {
         export namespace Internal {
 
             export interface PrivacyPolicyProvider {
-                get validator_privacy_policy(): undefined | string | string[];
+                validator_privacy_policy: undefined | string | string[];
             }
 
             function isArray<T>(arg: any): arg is Array<T> {
