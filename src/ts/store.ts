@@ -223,7 +223,11 @@ namespace CdvPurchase {
          *   }]);
          */
         register(product: IRegisterProduct | IRegisterProduct[]) {
-            this.registeredProducts.add(product);
+            const errors = this.registeredProducts.add(product);
+            errors.forEach(error => {
+                store.errorCallbacks.trigger(error);
+                this.log.error(error);
+            });
         }
 
         private initializedHasBeenCalled = false;
