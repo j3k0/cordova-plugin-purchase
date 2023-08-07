@@ -4259,7 +4259,7 @@ declare namespace CdvPurchase {
                 init(success: () => void, fail: ErrorCallback, options: Options): void;
                 load(success: () => void, fail: ErrorCallback, skus: string[], inAppSkus: string[], subsSkus: string[]): void;
                 listener(msg: Message): void;
-                getPurchases(success: () => void, fail: ErrorCallback): void;
+                getPurchases(success:  (products: CdvPurchase.GooglePlay.Bridge.Purchase[]) => void, fail: ErrorCallback): void;
                 buy(success: () => void, fail: ErrorCallback, productId: string, additionalData: CdvPurchase.AdditionalData): void;
                 subscribe(success: () => void, fail: ErrorCallback, productId: string, additionalData: CdvPurchase.AdditionalData): void;
                 consumePurchase(success: () => void, fail: ErrorCallback, purchaseToken: string): void;
