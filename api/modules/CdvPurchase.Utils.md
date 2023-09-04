@@ -16,6 +16,7 @@
 - [formatDurationEN](CdvPurchase.Utils.md#formatdurationen)
 - [md5](CdvPurchase.Utils.md#md5)
 - [nonEnumerable](CdvPurchase.Utils.md#nonenumerable)
+- [objectValues](CdvPurchase.Utils.md#objectvalues)
 - [safeCall](CdvPurchase.Utils.md#safecall)
 - [safeCallback](CdvPurchase.Utils.md#safecallback)
 - [uuidv4](CdvPurchase.Utils.md#uuidv4)
@@ -181,6 +182,30 @@ ___
 #### Returns
 
 `PropertyDescriptor`
+
+___
+
+### objectValues
+
+▸ **objectValues**<`T`\>(`obj`): `T`[]
+
+Object.values() for ES6
+
+#### Type parameters
+
+| Name |
+| :------ |
+| `T` |
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `obj` | `Object` |
+
+#### Returns
+
+`T`[]
 
 ___
 

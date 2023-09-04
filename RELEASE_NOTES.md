@@ -1,5 +1,27 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.7
+
+### 13.7.0
+
+#### Fix AppStore introctory prices
+
+Fix a regression with introctory prices on iOS. Unclear when this happened,
+according to Apple documentation, the "discounts" array should contain the
+introctory prices, but it turns out it does not anymore.
+
+#### Set ES6 as minimal javascript version
+
+Down from ES2015, for broader compatibility.
+
+#### Ensure verify() resolves even if there's no validator
+
+Some user do not specify a receipt validator but want to call
+"transaction.verify()" (for example app building frameworks).
+
+This changes makes sure the behavior gets back like it used to be in earlier
+versions of the plugin.
+
 ## 13.6
 
 ### 13.6.0

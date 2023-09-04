@@ -17,13 +17,10 @@ Adapter for a payment or in-app purchase platform
 ### Properties
 
 - [id](CdvPurchase.Adapter.md#id)
-- [name](CdvPurchase.Adapter.md#name)
-- [ready](CdvPurchase.Adapter.md#ready)
-
-### Accessors
-
 - [isSupported](CdvPurchase.Adapter.md#issupported)
+- [name](CdvPurchase.Adapter.md#name)
 - [products](CdvPurchase.Adapter.md#products)
+- [ready](CdvPurchase.Adapter.md#ready)
 - [receipts](CdvPurchase.Adapter.md#receipts)
 
 ### Methods
@@ -51,11 +48,27 @@ Platform identifier
 
 ___
 
+### isSupported
+
+• **isSupported**: `boolean`
+
+Returns true is the adapter is supported on this device.
+
+___
+
 ### name
 
 • **name**: `string`
 
 Nice name for the adapter
+
+___
+
+### products
+
+• **products**: [`Product`](../classes/CdvPurchase.Product.md)[]
+
+List of products managed by the adapter.
 
 ___
 
@@ -67,41 +80,13 @@ true after the platform has been successfully initialized.
 
 The value is set by the "Adapters" class (which is responsible for initializing adapters).
 
-## Accessors
-
-### isSupported
-
-• `get` **isSupported**(): `boolean`
-
-Returns true is the adapter is supported on this device.
-
-#### Returns
-
-`boolean`
-
-___
-
-### products
-
-• `get` **products**(): [`Product`](../classes/CdvPurchase.Product.md)[]
-
-List of products managed by the adapter.
-
-#### Returns
-
-[`Product`](../classes/CdvPurchase.Product.md)[]
-
 ___
 
 ### receipts
 
-• `get` **receipts**(): [`Receipt`](../classes/CdvPurchase.Receipt.md)[]
+• **receipts**: [`Receipt`](../classes/CdvPurchase.Receipt.md)[]
 
 List of purchase receipts.
-
-#### Returns
-
-[`Receipt`](../classes/CdvPurchase.Receipt.md)[]
 
 ## Methods
 

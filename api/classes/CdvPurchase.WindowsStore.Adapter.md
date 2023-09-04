@@ -77,6 +77,8 @@ ___
 
 • **products**: [`Product`](CdvPurchase.Product.md)[] = `[]`
 
+List of products managed by the adapter.
+
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[products](../interfaces/CdvPurchase.Adapter.md#products)
@@ -101,6 +103,8 @@ ___
 
 • **receipts**: [`Receipt`](CdvPurchase.Receipt.md)[] = `[]`
 
+List of purchase receipts.
+
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[receipts](../interfaces/CdvPurchase.Adapter.md#receipts)
@@ -119,7 +123,7 @@ Returns true is the adapter is supported on this device.
 
 #### Implementation of
 
-CdvPurchase.Adapter.isSupported
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[isSupported](../interfaces/CdvPurchase.Adapter.md#issupported)
 
 ## Methods
 

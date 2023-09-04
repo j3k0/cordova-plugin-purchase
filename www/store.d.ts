@@ -299,6 +299,14 @@ declare namespace CdvPurchase {
     }
 }
 declare namespace CdvPurchase {
+    namespace Utils {
+        /** Object.values() for ES6 */
+        function objectValues<T>(obj: {
+            [key: string]: T;
+        }): T[];
+    }
+}
+declare namespace CdvPurchase {
     /**
      * @internal
      */
@@ -1611,16 +1619,13 @@ declare namespace CdvPurchase {
         /** Identifier of the product on the store */
         id: string;
         /**
-         * List of payment platforms the product is available on
-         *
-         * If you do not specify anything, the product is assumed to be available only on the
-         * default payment platform. (Apple AppStore on iOS, Google Play on Android)
+         * The payment platform the product is available on.
          */
         platform: Platform;
         /** Product type, should be one of the defined product types */
         type: ProductType;
         /**
-         * Name of the group your subscription product is a member of (default to "default").
+         * Name of the group your subscription product is a member of.
          *
          * If you don't set anything, all subscription will be members of the same group.
          */
@@ -1630,7 +1635,7 @@ declare namespace CdvPurchase {
         class RegisteredProducts {
             list: IRegisterProduct[];
             find(platform: Platform, id: string): IRegisterProduct | undefined;
-            add(product: IRegisterProduct | IRegisterProduct[]): void;
+            add(product: IRegisterProduct | IRegisterProduct[]): IError[];
             byPlatform(): {
                 platform: Platform;
                 products: IRegisterProduct[];
@@ -4259,7 +4264,7 @@ declare namespace CdvPurchase {
                 init(success: () => void, fail: ErrorCallback, options: Options): void;
                 load(success: () => void, fail: ErrorCallback, skus: string[], inAppSkus: string[], subsSkus: string[]): void;
                 listener(msg: Message): void;
-                getPurchases(success:  (products: CdvPurchase.GooglePlay.Bridge.Purchase[]) => void, fail: ErrorCallback): void;
+                getPurchases(success: () => void, fail: ErrorCallback): void;
                 buy(success: () => void, fail: ErrorCallback, productId: string, additionalData: CdvPurchase.AdditionalData): void;
                 subscribe(success: () => void, fail: ErrorCallback, productId: string, additionalData: CdvPurchase.AdditionalData): void;
                 consumePurchase(success: () => void, fail: ErrorCallback, purchaseToken: string): void;
