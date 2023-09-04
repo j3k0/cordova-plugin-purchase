@@ -883,7 +883,7 @@ static NSString *toTimestamp(NSDate *date) {
         NSNumber *introPriceNumberOfPeriods = nil;
         NSString *introPriceSubscriptionPeriod  = nil;
 
-        // Introductory price are supported from those iOS and macOS versions
+        // Introductory price are supported since iOS 11.2 and macOS 10.13.2
         if (@available(iOS 11.2, macOS 10.13.2, *)) {
             SKProductDiscount *introPrice = product.introductoryPrice;
             if (introPrice != nil) {
@@ -896,7 +896,7 @@ static NSString *toTimestamp(NSDate *date) {
         }
 
         NSMutableArray *discounts = [NSMutableArray array];
-        // Subscription discounts are supported on recent iOS and macOS
+        // Subscription discounts are supported since iOS 12.2 and macOS 10.14.4
         if (@available(iOS 12.2, macOS 10.14.4, *)) {
             for (SKProductDiscount *discount in product.discounts) {
                 NSNumber *numberOfPeriods = [NSNumber numberWithUnsignedLong:
