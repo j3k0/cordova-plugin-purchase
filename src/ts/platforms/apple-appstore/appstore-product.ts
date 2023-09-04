@@ -58,19 +58,6 @@ namespace CdvPurchase {
           paymentMode: this.type === ProductType.PAID_SUBSCRIPTION ? PaymentMode.PAY_AS_YOU_GO : PaymentMode.UP_FRONT,
           recurrenceMode: this.type === ProductType.PAID_SUBSCRIPTION ? RecurrenceMode.INFINITE_RECURRING : RecurrenceMode.NON_RECURRING,
         }
-        // intro price is now in the discounts array
-        // if (valid.introPrice && valid.introPriceMicros !== undefined) {
-        //     const introPrice: PricingPhase = {
-        //         price: valid.introPrice,
-        //         priceMicros: valid.introPriceMicros,
-        //         currency: valid.currency,
-        //         billingPeriod: formatBillingPeriod(valid.introPricePeriod, valid.introPricePeriodUnit),
-        //         paymentMode: valid.introPricePaymentMode,
-        //         recurrenceMode: RecurrenceMode.FINITE_RECURRING,
-        //         billingCycles: 1,
-        //     }
-        //     pricingPhases.push(introPrice);
-        // }
 
         // discounts
         valid.discounts?.forEach(discount => {
@@ -94,17 +81,39 @@ namespace CdvPurchase {
         });
 
         if (!hasIntroductoryOffer(this)) {
+
+          const defaultPhases: PricingPhase[] = [];
+
+          // According to specs, intro price should be in the discounts array, but it turns out
+          // it's not always the case (when there are no discount offers maybe?)...
+          if (valid.introPrice && valid.introPriceMicros !== undefined) {
+              const introPrice: PricingPhase = {
+                  price: valid.introPrice,
+                  priceMicros: valid.introPriceMicros,
+                  currency: valid.currency,
+                  billingPeriod: formatBillingPeriod(valid.introPricePeriod, valid.introPricePeriodUnit),
+                  paymentMode: valid.introPricePaymentMode,
+                  recurrenceMode: RecurrenceMode.FINITE_RECURRING,
+                  billingCycles: 1,
+              }
+              defaultPhases.push(introPrice);
+          }
+
+          defaultPhases.push(finalPhase);
+
           this.addOffer(new SKOffer({
             id: DEFAULT_OFFER_ID,
             product: this,
-            pricingPhases: [finalPhase],
+            pricingPhases: defaultPhases,
             offerType: 'Default',
           }, decorator));
         }
 
         function hasIntroductoryOffer(product: SKProduct) {
           return product.offers.filter(offer => {
-            return (offer as SKOffer).offerType === 'Introductory';
+            const skOffer = offer as SKOffer;
+            return (skOffer.offerType === 'Introductory') || (skOffer.offerType === 'Default' && skOffer.pricingPhases.length > 1);
+            // return (offer as SKOffer).offerType === 'Introductory';
           }).length > 0;
         }
 
