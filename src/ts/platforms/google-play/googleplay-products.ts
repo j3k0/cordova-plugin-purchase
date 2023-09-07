@@ -72,9 +72,31 @@ namespace CdvPurchase {
             private onSubsV12Loaded(product: GProduct, vp: Bridge.Subscription): GProduct {
                 // console.log('iabSubsV12Loaded: ' + JSON.stringify(vp));
                 vp.offers.forEach((productOffer) => {
+
+                    // Add the base plan's pricing phase to offers that do not end-up as infinite recurring.
+                    const lastPhase = productOffer.pricing_phases.slice(-1)[0];
+                    if (lastPhase?.recurrence_mode === RecurrenceMode.FINITE_RECURRING) {
+                        const baseOffer = findBasePlan(productOffer.base_plan_id);
+                        if (baseOffer && (baseOffer !== productOffer)) {
+                            productOffer.pricing_phases.push(...baseOffer.pricing_phases);
+                        }
+                    }
+
+                    // Convert the offer to the generic representation
                     const offer = this.iabSubsOfferV12Loaded(product, vp, productOffer);
                     product.addOffer(offer);
                 });
+
+
+                function findBasePlan(basePlanId: string | null): Bridge.SubscriptionOffer | null {
+                    if (!basePlanId) return null;
+                    for (const offer of vp.offers) {
+                        if (offer.base_plan_id === basePlanId && !offer.offer_id) {
+                            return offer;
+                        }
+                    }
+                    return null;
+                }
                 /*
                 var firstOffer = vp.offers[0];
                 if (firstOffer && firstOffer.pricing_phases.length > 0) {
@@ -95,9 +117,20 @@ namespace CdvPurchase {
                 return product;
             }
 
+            private makeOfferId(productId: string, productOffer: Bridge.SubscriptionOffer): string {
+                let id = productId;
+                if (productOffer.base_plan_id) {
+                    if (productOffer.offer_id) {
+                        return productId + '@' + productOffer.base_plan_id + '@' + productOffer.offer_id;
+                    }
+                    return productId + '@' + productOffer.base_plan_id;
+                }
+                return productId + '@' + productOffer.token;
+            }
+
             private iabSubsOfferV12Loaded(product: GProduct, vp: Bridge.Subscription, productOffer: Bridge.SubscriptionOffer): GOffer {
 
-                const offerId = vp.productId + '@' + productOffer.token;
+                const offerId = this.makeOfferId(vp.productId, productOffer);
                 const existingOffer = this.getOffer(offerId);
                 const pricingPhases: PricingPhase[] = productOffer.pricing_phases.map(p => this.toPricingPhase(p));
                 if (existingOffer) {

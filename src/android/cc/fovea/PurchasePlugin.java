@@ -495,6 +495,8 @@ public final class PurchasePlugin
       List<SubscriptionOfferDetails> subscriptionOfferDetailsList = product.getSubscriptionOfferDetails();
       for (SubscriptionOfferDetails details: subscriptionOfferDetailsList) {
         JSONObject offer = new JSONObject()
+          .put("base_plan_id", details.getBasePlanId())
+          .put("offer_id", details.getOfferId())
           .put("token", details.getOfferToken())
           .put("tags", new JSONArray(details.getOfferTags()));
         JSONArray pricingPhases = new JSONArray();

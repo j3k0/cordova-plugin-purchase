@@ -38,8 +38,15 @@ namespace CdvPurchase {
             }
 
             export interface SubscriptionOffer {
+                /** Base plan id associated with the subscription product (since billing library v6). */
+                base_plan_id: string | null;
+                /** Offer id associated with the subscription product (since billing library v6). */
+                offer_id: string | null;
+                /** Token required to pass in launchBillingFlow to purchase the subscription product with these pricing phases. */
                 token: string;
+                /** Tags associated with this Subscription Offer. */
                 tags: string[];
+                /** Pricing phases for the subscription product. */
                 pricing_phases: PricingPhase[];
             }
 

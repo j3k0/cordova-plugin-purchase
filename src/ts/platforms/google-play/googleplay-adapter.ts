@@ -320,7 +320,7 @@ namespace CdvPurchase {
                         resolve(storeError(code ?? ErrorCode.UNKNOWN, message));
                     };
                     if (offer.productType === ProductType.PAID_SUBSCRIPTION) {
-                        const idAndToken = offer.id; // offerId contains the productId and token (format productId@offerToken)
+                        const idAndToken = 'token' in offer ? offer.productId + '@' + offer.token : offer.productId;
                         // find if the user already owns a product in the same group
                         const oldPurchaseToken = this.findOldPurchaseToken(offer.productId, offer.productGroup);
                         if (oldPurchaseToken) {
