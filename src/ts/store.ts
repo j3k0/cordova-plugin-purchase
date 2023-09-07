@@ -245,6 +245,7 @@ namespace CdvPurchase {
             }
             this.log.info('initialize()');
             this.initializedHasBeenCalled = true;
+            this.lastUpdate = +new Date();
             const store = this;
             const ret = this.adapters.initialize(platforms, {
                 error: this.triggerError.bind(this),
@@ -275,11 +276,29 @@ namespace CdvPurchase {
             throw new Error("use store.initialize() or store.update()");
         }
 
+        /** Stores the last time the store was updated (or initialized), to skip calls in quick succession. */
+        private lastUpdate: number = 0;
+
+        /**
+         * Avoid invoking store.update() if the most recent call occurred within this specific number of milliseconds.
+         */
+        minTimeBetweenUpdates: number = 600000;
+
         /**
          * Call to refresh the price of products and status of purchases.
          */
         async update() {
             this.log.info('update()');
+            if (!this._readyCallbacks.isReady) {
+                this.log.warn('Do not call store.update() at startup! It is meant to reload the price of products (if needed) long after initialization.');
+                return;
+            }
+            const now = +new Date();
+            if (this.lastUpdate > now - this.minTimeBetweenUpdates) {
+                this.log.info('Skipping store.update() as the last call occurred less than store.minTimeBetweenUpdates millis ago.');
+                return;
+            }
+            this.lastUpdate = now;
             // Load products metadata
             for (const registration of this.registeredProducts.byPlatform()) {
                 const products = await this.adapters.findReady(registration.platform)?.loadProducts(registration.products);
