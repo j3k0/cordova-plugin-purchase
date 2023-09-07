@@ -64,7 +64,13 @@ declare namespace CdvPurchase {
         /** Error: The signature in a payment discount is not valid. */
         INVALID_SIGNATURE,
         /** Error: Parameters are missing in a payment discount. */
-        MISSING_OFFER_PARAMS
+        MISSING_OFFER_PARAMS,
+        /**
+         * Server code used when a subscription expired.
+         *
+         * @deprecated Validator should now return the transaction in the collection as expired.
+         */
+        VALIDATOR_SUBSCRIPTION_EXPIRED = 6778003
     }
     /**
      * Create an {@link IError} instance
@@ -527,7 +533,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.6.0";
+    const PLUGIN_VERSION = "13.8.0";
     /**
      * Entry class of the plugin.
      */
@@ -673,6 +679,12 @@ declare namespace CdvPurchase {
          * @deprecated - use store.initialize(), store.update() or store.restorePurchases()
          */
         refresh(): void;
+        /** Stores the last time the store was updated (or initialized), to skip calls in quick succession. */
+        private lastUpdate;
+        /**
+         * Avoid invoking store.update() if the most recent call occurred within this specific number of milliseconds.
+         */
+        minTimeBetweenUpdates: number;
         /**
          * Call to refresh the price of products and status of purchases.
          */
@@ -1524,6 +1536,10 @@ declare namespace CdvPurchase {
                 [transactionToken: string]: TransactionState;
             };
             static makeTransactionToken(transaction: Transaction): string;
+            /** Store the listener's latest calling time (in ms) for a given transaction at a given state */
+            lastCallTimeForState: {
+                [transactionTokenWithState: string]: number;
+            };
             setSupportedPlatforms(platforms: Platform[]): void;
             receiptsReady(platform: Platform): void;
             productsUpdated(platform: Platform, products: Product[]): void;
@@ -4112,8 +4128,15 @@ declare namespace CdvPurchase {
                 offers: SubscriptionOffer[];
             }
             interface SubscriptionOffer {
+                /** Base plan id associated with the subscription product (since billing library v6). */
+                base_plan_id: string | null;
+                /** Offer id associated with the subscription product (since billing library v6). */
+                offer_id: string | null;
+                /** Token required to pass in launchBillingFlow to purchase the subscription product with these pricing phases. */
                 token: string;
+                /** Tags associated with this Subscription Offer. */
                 tags: string[];
+                /** Pricing phases for the subscription product. */
                 pricing_phases: PricingPhase[];
             }
             enum RecurrenceMode {
@@ -4310,6 +4333,7 @@ declare namespace CdvPurchase {
             /**  */
             addProduct(registeredProduct: IRegisterProduct, vp: Bridge.InAppProduct | Bridge.Subscription): GProduct;
             private onSubsV12Loaded;
+            private makeOfferId;
             private iabSubsOfferV12Loaded;
             private onInAppLoaded;
             private toPaymentMode;

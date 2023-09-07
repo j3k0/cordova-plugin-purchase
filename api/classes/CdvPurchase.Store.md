@@ -14,6 +14,7 @@ Entry class of the plugin.
 
 - [applicationUsername](CdvPurchase.Store.md#applicationusername)
 - [log](CdvPurchase.Store.md#log)
+- [minTimeBetweenUpdates](CdvPurchase.Store.md#mintimebetweenupdates)
 - [validator](CdvPurchase.Store.md#validator)
 - [validator\_privacy\_policy](CdvPurchase.Store.md#validator_privacy_policy)
 - [verbosity](CdvPurchase.Store.md#verbosity)
@@ -74,6 +75,14 @@ ___
 • **log**: [`Logger`](CdvPurchase.Logger.md)
 
 Logger
+
+___
+
+### minTimeBetweenUpdates
+
+• **minTimeBetweenUpdates**: `number` = `600000`
+
+Avoid invoking store.update() if the most recent call occurred within this specific number of milliseconds.
 
 ___
 

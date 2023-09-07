@@ -38,6 +38,7 @@ Error codes
 - [SUBSCRIPTION\_UPDATE\_NOT\_AVAILABLE](CdvPurchase.ErrorCode.md#subscription_update_not_available)
 - [UNAUTHORIZED\_REQUEST\_DATA](CdvPurchase.ErrorCode.md#unauthorized_request_data)
 - [UNKNOWN](CdvPurchase.ErrorCode.md#unknown)
+- [VALIDATOR\_SUBSCRIPTION\_EXPIRED](CdvPurchase.ErrorCode.md#validator_subscription_expired)
 - [VERIFICATION\_FAILED](CdvPurchase.ErrorCode.md#verification_failed)
 
 ## Enumeration Members
@@ -279,6 +280,18 @@ ___
 • **UNKNOWN** = `number`
 
 Error: Unknown error
+
+___
+
+### VALIDATOR\_SUBSCRIPTION\_EXPIRED
+
+• **VALIDATOR\_SUBSCRIPTION\_EXPIRED** = ``6778003``
+
+Server code used when a subscription expired.
+
+**`Deprecated`**
+
+Validator should now return the transaction in the collection as expired.
 
 ___
 

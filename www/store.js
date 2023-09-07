@@ -78,6 +78,12 @@ var CdvPurchase;
         ErrorCode[ErrorCode["INVALID_SIGNATURE"] = ERROR_CODES_BASE + 31] = "INVALID_SIGNATURE";
         /** Error: Parameters are missing in a payment discount. */
         ErrorCode[ErrorCode["MISSING_OFFER_PARAMS"] = ERROR_CODES_BASE + 32] = "MISSING_OFFER_PARAMS";
+        /**
+         * Server code used when a subscription expired.
+         *
+         * @deprecated Validator should now return the transaction in the collection as expired.
+         */
+        ErrorCode[ErrorCode["VALIDATOR_SUBSCRIPTION_EXPIRED"] = 6778003] = "VALIDATOR_SUBSCRIPTION_EXPIRED";
     })(ErrorCode = CdvPurchase.ErrorCode || (CdvPurchase.ErrorCode = {}));
     /**
      * Create an {@link IError} instance
@@ -532,6 +538,7 @@ var CdvPurchase;
                 const receipts = this.receiptsToValidate.get();
                 this.receiptsToValidate.clear();
                 const onResponse = (r) => __awaiter(this, void 0, void 0, function* () {
+                    var _a;
                     const { receipt, payload } = r;
                     this.incrResponsesCounter();
                     try {
@@ -541,6 +548,21 @@ var CdvPurchase;
                             const vr = this.addVerifiedReceipt(receipt, payload.data);
                             this.controller.verifiedCallbacks.trigger(vr);
                             // this.verifiedCallbacks.trigger(data.receipt);
+                        }
+                        else if (payload.code === CdvPurchase.ErrorCode.VALIDATOR_SUBSCRIPTION_EXPIRED) {
+                            // find the subscription in an existing verified receipt and mark as expired.
+                            const transactionId = (_a = receipt.lastTransaction()) === null || _a === void 0 ? void 0 : _a.transactionId;
+                            const vr = transactionId ? this.verifiedReceipts.find(r => { var _a; return ((_a = r.collection[0]) === null || _a === void 0 ? void 0 : _a.transactionId) === transactionId; }) : undefined;
+                            if (vr) {
+                                vr === null || vr === void 0 ? void 0 : vr.collection.forEach(col => {
+                                    if (col.transactionId === transactionId)
+                                        col.isExpired = true;
+                                });
+                                this.controller.verifiedCallbacks.trigger(vr);
+                            }
+                            else {
+                                this.controller.unverifiedCallbacks.trigger({ receipt, payload });
+                            }
                         }
                         else {
                             this.controller.unverifiedCallbacks.trigger({ receipt, payload });
@@ -837,6 +859,12 @@ var CdvPurchase;
                     callback(this.lastTriggerArgument);
                 }
                 else {
+                    // Detecting double registration to help with debugging issues
+                    for (const existing of this.callbacks) {
+                        if (existing === callback) {
+                            throw new Error('REGISTERING THE SAME CALLBACK TWICE? This is indicative of a bug in your integration.');
+                        }
+                    }
                     this.callbacks.push(callback);
                 }
             }
@@ -922,7 +950,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.6.0';
+    CdvPurchase.PLUGIN_VERSION = '13.8.0';
     /**
      * Entry class of the plugin.
      */
@@ -979,6 +1007,12 @@ var CdvPurchase;
             /** Callbacks for errors */
             this.errorCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'error()');
             this.initializedHasBeenCalled = false;
+            /** Stores the last time the store was updated (or initialized), to skip calls in quick succession. */
+            this.lastUpdate = 0;
+            /**
+             * Avoid invoking store.update() if the most recent call occurred within this specific number of milliseconds.
+             */
+            this.minTimeBetweenUpdates = 600000;
             /**
              * Version of the plugin currently installed.
              */
@@ -1070,6 +1104,7 @@ var CdvPurchase;
                 }
                 this.log.info('initialize()');
                 this.initializedHasBeenCalled = true;
+                this.lastUpdate = +new Date();
                 const store = this;
                 const ret = this.adapters.initialize(platforms, {
                     error: this.triggerError.bind(this),
@@ -1106,6 +1141,16 @@ var CdvPurchase;
             var _a;
             return __awaiter(this, void 0, void 0, function* () {
                 this.log.info('update()');
+                if (!this._readyCallbacks.isReady) {
+                    this.log.warn('Do not call store.update() at startup! It is meant to reload the price of products (if needed) long after initialization.');
+                    return;
+                }
+                const now = +new Date();
+                if (this.lastUpdate > now - this.minTimeBetweenUpdates) {
+                    this.log.info('Skipping store.update() as the last call occurred less than store.minTimeBetweenUpdates millis ago.');
+                    return;
+                }
+                this.lastUpdate = now;
                 // Load products metadata
                 for (const registration of this.registeredProducts.byPlatform()) {
                     const products = yield ((_a = this.adapters.findReady(registration.platform)) === null || _a === void 0 ? void 0 : _a.loadProducts(registration.products));
@@ -1864,6 +1909,8 @@ var CdvPurchase;
                 /** Those platforms have reported that their receipts are ready */
                 this.platformWithReceiptsReady = [];
                 this.lastTransactionState = {};
+                /** Store the listener's latest calling time (in ms) for a given transaction at a given state */
+                this.lastCallTimeForState = {};
                 this.delegate = delegate;
                 this.log = log.child('AdapterListener');
             }
@@ -1894,21 +1941,29 @@ var CdvPurchase;
                 products.forEach(product => this.delegate.updatedCallbacks.trigger(product));
             }
             receiptsUpdated(platform, receipts) {
+                const now = +new Date();
                 receipts.forEach(receipt => {
                     this.delegate.updatedReceiptCallbacks.trigger(receipt);
                     receipt.transactions.forEach(transaction => {
                         const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
+                        const tokenWithState = transactionToken + '@' + transaction.state;
                         const lastState = this.lastTransactionState[transactionToken];
+                        // Retrigger "approved", so validation is rerun on potential update.
                         if (transaction.state === CdvPurchase.TransactionState.APPROVED) {
-                            this.delegate.approvedCallbacks.trigger(transaction);
-                            // better retrigger (so validation is rerun on potential update)
+                            // prevent calling approved twice in a very short period (5 seconds).
+                            if ((this.lastCallTimeForState[tokenWithState] | 0) < now - 5000) {
+                                this.delegate.approvedCallbacks.trigger(transaction);
+                                this.lastCallTimeForState[tokenWithState] = now;
+                            }
                         }
                         else if (lastState !== transaction.state) {
                             if (transaction.state === CdvPurchase.TransactionState.FINISHED) {
                                 this.delegate.finishedCallbacks.trigger(transaction);
+                                this.lastCallTimeForState[tokenWithState] = now;
                             }
                             else if (transaction.state === CdvPurchase.TransactionState.PENDING) {
                                 this.delegate.pendingCallbacks.trigger(transaction);
+                                this.lastCallTimeForState[tokenWithState] = now;
                             }
                         }
                         this.lastTransactionState[transactionToken] = transaction.state;
@@ -2437,6 +2492,8 @@ var CdvPurchase;
             /** Find a given product from ID */
             getProduct(id) { return this._products.find(p => p.id === id); }
             get receipts() {
+                if (!this.isSupported)
+                    return [];
                 return (this._receipt ? [this._receipt] : [])
                     .concat(this.pseudoReceipt ? this.pseudoReceipt : []);
             }
@@ -4705,7 +4762,7 @@ var CdvPurchase;
                             resolve(CdvPurchase.storeError(code !== null && code !== void 0 ? code : CdvPurchase.ErrorCode.UNKNOWN, message));
                         };
                         if (offer.productType === CdvPurchase.ProductType.PAID_SUBSCRIPTION) {
-                            const idAndToken = offer.id; // offerId contains the productId and token (format productId@offerToken)
+                            const idAndToken = 'token' in offer ? offer.productId + '@' + offer.token : offer.productId;
                             // find if the user already owns a product in the same group
                             const oldPurchaseToken = this.findOldPurchaseToken(offer.productId, offer.productGroup);
                             if (oldPurchaseToken) {
@@ -5142,9 +5199,28 @@ var CdvPurchase;
             onSubsV12Loaded(product, vp) {
                 // console.log('iabSubsV12Loaded: ' + JSON.stringify(vp));
                 vp.offers.forEach((productOffer) => {
+                    // Add the base plan's pricing phase to offers that do not end-up as infinite recurring.
+                    const lastPhase = productOffer.pricing_phases.slice(-1)[0];
+                    if ((lastPhase === null || lastPhase === void 0 ? void 0 : lastPhase.recurrence_mode) === CdvPurchase.RecurrenceMode.FINITE_RECURRING) {
+                        const baseOffer = findBasePlan(productOffer.base_plan_id);
+                        if (baseOffer && (baseOffer !== productOffer)) {
+                            productOffer.pricing_phases.push(...baseOffer.pricing_phases);
+                        }
+                    }
+                    // Convert the offer to the generic representation
                     const offer = this.iabSubsOfferV12Loaded(product, vp, productOffer);
                     product.addOffer(offer);
                 });
+                function findBasePlan(basePlanId) {
+                    if (!basePlanId)
+                        return null;
+                    for (const offer of vp.offers) {
+                        if (offer.base_plan_id === basePlanId && !offer.offer_id) {
+                            return offer;
+                        }
+                    }
+                    return null;
+                }
                 /*
                 var firstOffer = vp.offers[0];
                 if (firstOffer && firstOffer.pricing_phases.length > 0) {
@@ -5164,8 +5240,18 @@ var CdvPurchase;
                 */
                 return product;
             }
+            makeOfferId(productId, productOffer) {
+                let id = productId;
+                if (productOffer.base_plan_id) {
+                    if (productOffer.offer_id) {
+                        return productId + '@' + productOffer.base_plan_id + '@' + productOffer.offer_id;
+                    }
+                    return productId + '@' + productOffer.base_plan_id;
+                }
+                return productId + '@' + productOffer.token;
+            }
             iabSubsOfferV12Loaded(product, vp, productOffer) {
-                const offerId = vp.productId + '@' + productOffer.token;
+                const offerId = this.makeOfferId(vp.productId, productOffer);
                 const existingOffer = this.getOffer(offerId);
                 const pricingPhases = productOffer.pricing_phases.map(p => this.toPricingPhase(p));
                 if (existingOffer) {
