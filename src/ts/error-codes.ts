@@ -69,6 +69,13 @@ namespace CdvPurchase {
         INVALID_SIGNATURE = ERROR_CODES_BASE + 31,
         /** Error: Parameters are missing in a payment discount. */
         MISSING_OFFER_PARAMS = ERROR_CODES_BASE + 32,
+
+        /**
+         * Server code used when a subscription expired.
+         *
+         * @deprecated Validator should now return the transaction in the collection as expired.
+         */
+        VALIDATOR_SUBSCRIPTION_EXPIRED = 6778003
     }
 
     /**

@@ -124,6 +124,21 @@ namespace CdvPurchase {
                             this.controller.verifiedCallbacks.trigger(vr);
                             // this.verifiedCallbacks.trigger(data.receipt);
                         }
+                        else if (payload.code === ErrorCode.VALIDATOR_SUBSCRIPTION_EXPIRED) {
+                            // find the subscription in an existing verified receipt and mark as expired.
+                            const transactionId = receipt.lastTransaction()?.transactionId;
+                            const vr = transactionId ? this.verifiedReceipts.find(r => r.collection[0]?.transactionId === transactionId) : undefined;
+                            if (vr) {
+                                vr?.collection.forEach(col => {
+                                    if (col.transactionId === transactionId)
+                                        col.isExpired = true;
+                                });
+                                this.controller.verifiedCallbacks.trigger(vr);
+                            }
+                            else {
+                                this.controller.unverifiedCallbacks.trigger({receipt, payload});
+                            }
+                        }
                         else {
                             this.controller.unverifiedCallbacks.trigger({receipt, payload});
                         }
