@@ -1,8 +1,41 @@
 # Release Notes - Cordova Plugin Purchase
 
-## 13.7
+## 13.8.0
 
-### 13.7.0
+#### Upgrade to Google Play Billing library 5.2.1
+
+Adds access to offer and base plan identifiers.
+
+#### Handle validator answer with code `VALIDATOR_SUBSCRIPTION_EXPIRED`
+
+For backward compatibility, the validator also support responses with a 6778003
+error code (expired) when the validated transaction is expired.
+
+#### Fix: AppStore adapter should only return a localReceipt on iOS
+
+A dummy appstore receipt was listed on other platforms, this is fixed.
+
+#### Prevent various issues
+
+**Prevent double calls to approved callbacks**
+
+Make sure `.approved()` is only called once during a small time frame.
+
+**Skip quick successive calls to store.update()**
+
+The update will be performed only if `store.update()` or `store.initialize()`
+was called less than `store.minTimeBetweenUpdates` milliseconds.
+
+This make it safer to always call `store.update()` when entering the app's
+Store screen.
+
+**Block double callback registrations**
+
+Throw an error when attempting the re-register an existing callback for a given
+event handler. This is indicative of initialization code being run more than
+once.
+
+## 13.7.0
 
 #### Fix AppStore introctory prices
 
