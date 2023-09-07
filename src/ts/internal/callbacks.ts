@@ -43,6 +43,12 @@ namespace CdvPurchase {
                     callback(this.lastTriggerArgument!);
                 }
                 else {
+                    // Detecting double registration to help with debugging issues
+                    for (const existing of this.callbacks) {
+                        if (existing === callback) {
+                            throw new Error('REGISTERING THE SAME CALLBACK TWICE? This is indicative of a bug in your integration.');
+                        }
+                    }
                     this.callbacks.push(callback);
                 }
             }
