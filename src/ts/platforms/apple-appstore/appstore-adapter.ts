@@ -106,6 +106,7 @@ namespace CdvPurchase {
             pseudoReceipt: Receipt;
 
             get receipts(): Receipt[] {
+                if (!this.isSupported) return [];
                 return ((this._receipt ? [this._receipt] : []) as Receipt[])
                     .concat(this.pseudoReceipt ? this.pseudoReceipt : []);
             }
