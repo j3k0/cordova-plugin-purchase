@@ -38,6 +38,9 @@ namespace CdvPurchase
                 return transaction.platform + '|' + transaction.transactionId;
             }
 
+            /** Store the listener's latest calling time (in ms) for a given transaction at a given state */
+            lastCallTimeForState: { [transactionTokenWithState: string]: number } = {};
+
             setSupportedPlatforms(platforms: Platform[]) {
 
                 this.log.debug('setSupportedPlatforms: ' + platforms.join(','));
@@ -66,21 +69,29 @@ namespace CdvPurchase
             }
 
             receiptsUpdated(platform: Platform, receipts: Receipt[]): void {
+                const now = +new Date();
                 receipts.forEach(receipt => {
                     this.delegate.updatedReceiptCallbacks.trigger(receipt);
                     receipt.transactions.forEach(transaction => {
                         const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
+                        const tokenWithState = transactionToken + '@' + transaction.state;
                         const lastState = this.lastTransactionState[transactionToken];
+                        // Retrigger "approved", so validation is rerun on potential update.
                         if (transaction.state === TransactionState.APPROVED) {
-                            this.delegate.approvedCallbacks.trigger(transaction);
-                            // better retrigger (so validation is rerun on potential update)
+                            // prevent calling approved twice in a very short period (5 seconds).
+                            if ((this.lastCallTimeForState[tokenWithState] | 0) < now - 5000) {
+                                this.delegate.approvedCallbacks.trigger(transaction);
+                                this.lastCallTimeForState[tokenWithState] = now;
+                            }
                         }
                         else if (lastState !== transaction.state) {
                             if (transaction.state === TransactionState.FINISHED) {
                                 this.delegate.finishedCallbacks.trigger(transaction);
+                                this.lastCallTimeForState[tokenWithState] = now;
                             }
                             else if (transaction.state === TransactionState.PENDING) {
                                 this.delegate.pendingCallbacks.trigger(transaction);
+                                this.lastCallTimeForState[tokenWithState] = now;
                             }
                         }
                         this.lastTransactionState[transactionToken] = transaction.state;
