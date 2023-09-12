@@ -74,7 +74,7 @@ namespace CdvPurchase {
         public verbosity: LogLevel = LogLevel.ERROR;
 
         /** Return the identifier of the user for your application */
-        public applicationUsername?: string | (() => string);
+        public applicationUsername?: string | (() => string | undefined);
 
         /**
          * Get the application username as a string by either calling or returning {@link Store.applicationUsername}
