@@ -36,7 +36,7 @@ namespace CdvPurchase {
         this.offers = this.offers.filter(offer => {
           const skOffer = offer as SKOffer;
           if (skOffer.offerType === 'Default') return true;
-          return eligibilities.isEligible(this.id, skOffer.offerType, offer.id)
+          return eligibilities.isEligible(this.id, skOffer.offerType, offer.id);
         });
       }
 
@@ -86,7 +86,7 @@ namespace CdvPurchase {
 
           // According to specs, intro price should be in the discounts array, but it turns out
           // it's not always the case (when there are no discount offers maybe?)...
-          if (valid.introPrice && valid.introPriceMicros !== undefined) {
+          if (valid.introPrice && valid.introPriceMicros !== undefined && eligibilities.isEligible(valid.id, 'Introductory', 'intro')) {
               const introPrice: PricingPhase = {
                   price: valid.introPrice,
                   priceMicros: valid.introPriceMicros,
