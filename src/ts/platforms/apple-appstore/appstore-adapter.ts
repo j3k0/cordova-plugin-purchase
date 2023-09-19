@@ -28,7 +28,9 @@ namespace CdvPurchase {
          * @param requests List of discount offers to evaluate eligibility for
          * @param callback Get the response, a boolean for each request (matched by index).
          */
-        export type DiscountEligibilityDeterminer = (applicationReceipt: ApplicationReceipt, requests: DiscountEligibilityRequest[], callback: (response: boolean[]) => void) => void;
+        export type DiscountEligibilityDeterminer = ((applicationReceipt: ApplicationReceipt, requests: DiscountEligibilityRequest[], callback: (response: boolean[]) => void) => void) & {
+            cacheReceipt?: (receipt: VerifiedReceipt) => void;
+        };
 
         /**
          * Optional options for the AppleAppStore adapter
