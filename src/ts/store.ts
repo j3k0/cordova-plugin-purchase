@@ -1,9 +1,14 @@
+/// <reference path="types.ts" />
 /// <reference path="utils/compatibility.ts" />
 /// <reference path="validator/validator.ts" />
 /// <reference path="log.ts" />
 /// <reference path="internal/adapters.ts" />
+/// <reference path="internal/adapter-listener.ts" />
 /// <reference path="internal/callbacks.ts" />
 /// <reference path="internal/ready.ts" />
+/// <reference path="internal/register.ts" />
+/// <reference path="internal/transaction-monitor.ts" />
+/// <reference path="internal/receipts-monitor.ts" />
 
 /**
  * Namespace for the cordova-plugin-purchase plugin.
@@ -701,7 +706,13 @@ namespace CdvPurchase {
 }
 
 // Create the CdvPurchase.store object at startup.
-setTimeout(() => {
+if (window.cordova) {
+    setTimeout(initCDVPurchase, 0); // somehow with Cordova this needs to be delayed.
+}
+else {
+    initCDVPurchase();
+}
+function initCDVPurchase() {
     console.log('Create CdvPurchase...');
     /*
     if (window.CdvPurchase) {
@@ -720,7 +731,7 @@ setTimeout(() => {
     window.CdvPurchase.store = new CdvPurchase.Store();
     // Let's maximize backward compatibility
     Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode, CdvPurchase.Platform);
-}, 0);
+}
 
 // Ensure utility are included when compiling typescript.
 /// <reference path="utils/format-billing-cycle.ts" />
