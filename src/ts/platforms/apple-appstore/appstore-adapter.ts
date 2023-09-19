@@ -450,7 +450,9 @@ namespace CdvPurchase {
             }
 
             private async loadEligibility(validProducts: Bridge.ValidProduct[]): Promise<Internal.DiscountEligibilities> {
+                this.log.debug('load eligibility: ' + JSON.stringify(validProducts));
                 if (!this.discountEligibilityDeterminer) {
+                    this.log.debug('No discount eligibility determiner, skipping...');
                     return new Internal.DiscountEligibilities([], []);
                 }
 
@@ -508,7 +510,7 @@ namespace CdvPurchase {
                             this.log.info('bridge.loaded: ' + JSON.stringify({ validProducts, invalidProducts }));
                             this.addValidProducts(products, validProducts);
                             const eligibilities = await this.loadEligibility(validProducts);
-                            this.log.info('eligibilities ready.');
+                            this.log.info('eligibilities ready: ' + JSON.stringify(eligibilities));
                             // for any valid product that includes a discount, check the eligibility.
                             const ret = products.map(p => {
                                 if (invalidProducts.indexOf(p.id) >= 0) {
