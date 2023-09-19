@@ -172,7 +172,7 @@ var CdvPurchase;
                     latestReceipt = receipt;
                 }
             });
-            return (_appStoreReceipt, requests, callback) => {
+            const determiner = (_appStoreReceipt, requests, callback) => {
                 this.log.debug("AppStore eligibility determiner");
                 if (latestReceipt) {
                     this.log.debug("Using cached receipt");
@@ -188,6 +188,10 @@ var CdvPurchase;
                 this.log.debug("Waiting for receipt");
                 this.store.when().verified(onVerified);
             };
+            determiner.cacheReceipt = function (receipt) {
+                latestReceipt = receipt;
+            };
+            return determiner;
             function analyzeReceipt(receipt, requests) {
                 const ineligibleIntro = receipt.raw.ineligible_for_intro_price;
                 return requests.map(request => {
@@ -837,6 +841,87 @@ var CdvPurchase;
     let Internal;
     (function (Internal) {
         /**
+         * Monitor the updates for products and receipt.
+         *
+         * Call the callbacks when appropriate.
+         */
+        class StoreAdapterListener {
+            constructor(delegate, log) {
+                /** The list of supported platforms, needs to be set by "store.initialize" */
+                this.supportedPlatforms = [];
+                /** Those platforms have reported that their receipts are ready */
+                this.platformWithReceiptsReady = [];
+                this.lastTransactionState = {};
+                /** Store the listener's latest calling time (in ms) for a given transaction at a given state */
+                this.lastCallTimeForState = {};
+                this.delegate = delegate;
+                this.log = log.child('AdapterListener');
+            }
+            static makeTransactionToken(transaction) {
+                return transaction.platform + '|' + transaction.transactionId;
+            }
+            setSupportedPlatforms(platforms) {
+                this.log.debug('setSupportedPlatforms: ' + platforms.join(','));
+                this.supportedPlatforms = platforms;
+                if (this.supportedPlatforms.length === this.platformWithReceiptsReady.length) {
+                    this.delegate.receiptsReadyCallbacks.trigger();
+                }
+            }
+            receiptsReady(platform) {
+                if (this.supportedPlatforms.length > 0 && this.platformWithReceiptsReady.length === this.supportedPlatforms.length) {
+                    return;
+                }
+                if (this.platformWithReceiptsReady.indexOf(platform) < 0) {
+                    this.log.debug('receiptsReady: ' + platform);
+                    this.platformWithReceiptsReady.push(platform);
+                    if (this.platformWithReceiptsReady.length === this.supportedPlatforms.length) {
+                        this.log.debug('calling receiptsReady()');
+                        this.delegate.receiptsReadyCallbacks.trigger();
+                    }
+                }
+            }
+            productsUpdated(platform, products) {
+                products.forEach(product => this.delegate.updatedCallbacks.trigger(product));
+            }
+            receiptsUpdated(platform, receipts) {
+                const now = +new Date();
+                receipts.forEach(receipt => {
+                    this.delegate.updatedReceiptCallbacks.trigger(receipt);
+                    receipt.transactions.forEach(transaction => {
+                        const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
+                        const tokenWithState = transactionToken + '@' + transaction.state;
+                        const lastState = this.lastTransactionState[transactionToken];
+                        // Retrigger "approved", so validation is rerun on potential update.
+                        if (transaction.state === CdvPurchase.TransactionState.APPROVED) {
+                            // prevent calling approved twice in a very short period (5 seconds).
+                            if ((this.lastCallTimeForState[tokenWithState] | 0) < now - 5000) {
+                                this.delegate.approvedCallbacks.trigger(transaction);
+                                this.lastCallTimeForState[tokenWithState] = now;
+                            }
+                        }
+                        else if (lastState !== transaction.state) {
+                            if (transaction.state === CdvPurchase.TransactionState.FINISHED) {
+                                this.delegate.finishedCallbacks.trigger(transaction);
+                                this.lastCallTimeForState[tokenWithState] = now;
+                            }
+                            else if (transaction.state === CdvPurchase.TransactionState.PENDING) {
+                                this.delegate.pendingCallbacks.trigger(transaction);
+                                this.lastCallTimeForState[tokenWithState] = now;
+                            }
+                        }
+                        this.lastTransactionState[transactionToken] = transaction.state;
+                    });
+                });
+            }
+        }
+        Internal.StoreAdapterListener = StoreAdapterListener;
+    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Internal;
+    (function (Internal) {
+        /**
          * Manage a list of callbacks
          */
         class Callbacks {
@@ -924,12 +1009,169 @@ var CdvPurchase;
         Internal.ReadyCallbacks = ReadyCallbacks;
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Internal;
+    (function (Internal) {
+        function isValidRegisteredProduct(product) {
+            if (typeof product !== 'object')
+                return false;
+            return product.hasOwnProperty('platform')
+                && product.hasOwnProperty('id')
+                && product.hasOwnProperty('type');
+        }
+        class RegisteredProducts {
+            constructor() {
+                this.list = [];
+            }
+            find(platform, id) {
+                return this.list.find(rp => rp.platform === platform && rp.id === id);
+            }
+            add(product) {
+                const errors = [];
+                const products = Array.isArray(product) ? product : [product];
+                const newProducts = products.filter(p => !this.find(p.platform, p.id));
+                for (const p of newProducts) {
+                    if (isValidRegisteredProduct(p))
+                        this.list.push(p);
+                    else
+                        errors.push(CdvPurchase.storeError(CdvPurchase.ErrorCode.LOAD, 'Invalid parameter to "register", expected "id", "type" and "platform". '
+                            + 'Got: ' + JSON.stringify(p)));
+                }
+                return errors;
+            }
+            byPlatform() {
+                const byPlatform = {};
+                this.list.forEach(p => {
+                    byPlatform[p.platform] = (byPlatform[p.platform] || []).concat(p);
+                });
+                return Object.keys(byPlatform).map(platform => ({
+                    platform: platform,
+                    products: byPlatform[platform]
+                }));
+            }
+        }
+        Internal.RegisteredProducts = RegisteredProducts;
+    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    /** @internal */
+    let Internal;
+    (function (Internal) {
+        /**
+         * Helper class to monitor changes in transaction states.
+         *
+         * @example
+         * const monitor = monitors.start(transaction, (state) => {
+         *   // ... transaction state has changed
+         * });
+         * monitor.stop();
+         */
+        class TransactionStateMonitors {
+            constructor(when) {
+                this.monitors = [];
+                when
+                    .approved(transaction => this.callOnChange(transaction))
+                    .finished(transaction => this.callOnChange(transaction));
+            }
+            findMonitors(transaction) {
+                return this.monitors.filter(monitor => monitor.transaction.platform === transaction.platform
+                    && monitor.transaction.transactionId === transaction.transactionId);
+            }
+            callOnChange(transaction) {
+                this.findMonitors(transaction).forEach(monitor => {
+                    if (monitor.lastChange !== transaction.state) {
+                        monitor.lastChange = transaction.state;
+                        monitor.onChange(transaction.state);
+                    }
+                });
+            }
+            /**
+             * Start monitoring the provided transaction for state changes.
+             */
+            start(transaction, onChange) {
+                const monitorId = CdvPurchase.Utils.uuidv4();
+                this.monitors.push({ monitorId, transaction, onChange, lastChange: transaction.state });
+                setTimeout(onChange, 0, transaction.state);
+                return {
+                    transaction,
+                    stop: () => this.stop(monitorId),
+                };
+            }
+            stop(monitorId) {
+                this.monitors = this.monitors.filter(m => m.monitorId !== monitorId);
+            }
+        }
+        Internal.TransactionStateMonitors = TransactionStateMonitors;
+    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Internal;
+    (function (Internal) {
+        class ReceiptsMonitor {
+            constructor(controller) {
+                this.hasCalledReceiptsVerified = false;
+                this.controller = controller;
+                this.log = controller.log.child('ReceiptsMonitor');
+            }
+            callReceiptsVerified() {
+                if (this.hasCalledReceiptsVerified)
+                    return;
+                this.hasCalledReceiptsVerified = true;
+                this.log.info('receiptsVerified()');
+                // ensure those 2 events are called in order.
+                this.controller.when().receiptsReady(() => {
+                    setTimeout(() => {
+                        this.controller.receiptsVerified();
+                    }, 0);
+                });
+            }
+            launch() {
+                const check = () => {
+                    this.log.debug(`check(${this.controller.numValidationResponses()}/${this.controller.numValidationRequests()})`);
+                    if (this.controller.numValidationRequests() === this.controller.numValidationResponses()) {
+                        if (this.intervalChecker !== undefined) {
+                            clearInterval(this.intervalChecker);
+                            this.intervalChecker = undefined;
+                        }
+                        this.controller.off(check);
+                        this.callReceiptsVerified();
+                    }
+                };
+                this.controller.when()
+                    .verified(check)
+                    .unverified(check)
+                    .receiptsReady(() => {
+                    this.log.debug('receiptsReady...');
+                    if (!this.controller.hasLocalReceipts() || !this.controller.hasValidator()) {
+                        setTimeout(() => {
+                            check();
+                        }, 0);
+                    }
+                    // check every 10s, to handle cases where neither "verified" nor "unverified" have been triggered.
+                    this.intervalChecker = setInterval(() => {
+                        this.log.debug('keep checking every 10s...');
+                        check();
+                    }, 10000);
+                });
+            }
+        }
+        Internal.ReceiptsMonitor = ReceiptsMonitor;
+    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+/// <reference path="types.ts" />
 /// <reference path="utils/compatibility.ts" />
 /// <reference path="validator/validator.ts" />
 /// <reference path="log.ts" />
 /// <reference path="internal/adapters.ts" />
+/// <reference path="internal/adapter-listener.ts" />
 /// <reference path="internal/callbacks.ts" />
 /// <reference path="internal/ready.ts" />
+/// <reference path="internal/register.ts" />
+/// <reference path="internal/transaction-monitor.ts" />
+/// <reference path="internal/receipts-monitor.ts" />
 /**
  * Namespace for the cordova-plugin-purchase plugin.
  *
@@ -950,7 +1192,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.8.0';
+    CdvPurchase.PLUGIN_VERSION = '13.8.1';
     /**
      * Entry class of the plugin.
      */
@@ -1522,7 +1764,13 @@ var CdvPurchase;
     CdvPurchase.Store = Store;
 })(CdvPurchase || (CdvPurchase = {}));
 // Create the CdvPurchase.store object at startup.
-setTimeout(() => {
+if (window.cordova) {
+    setTimeout(initCDVPurchase, 0); // somehow with Cordova this needs to be delayed.
+}
+else {
+    initCDVPurchase();
+}
+function initCDVPurchase() {
     console.log('Create CdvPurchase...');
     /*
     if (window.CdvPurchase) {
@@ -1541,7 +1789,7 @@ setTimeout(() => {
     window.CdvPurchase.store = new CdvPurchase.Store();
     // Let's maximize backward compatibility
     Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode, CdvPurchase.Platform);
-}, 0);
+}
 // Ensure utility are included when compiling typescript.
 /// <reference path="utils/format-billing-cycle.ts" />
 /// <reference path="store.ts" />
@@ -1897,87 +2145,6 @@ var CdvPurchase;
 (function (CdvPurchase) {
     let Internal;
     (function (Internal) {
-        /**
-         * Monitor the updates for products and receipt.
-         *
-         * Call the callbacks when appropriate.
-         */
-        class StoreAdapterListener {
-            constructor(delegate, log) {
-                /** The list of supported platforms, needs to be set by "store.initialize" */
-                this.supportedPlatforms = [];
-                /** Those platforms have reported that their receipts are ready */
-                this.platformWithReceiptsReady = [];
-                this.lastTransactionState = {};
-                /** Store the listener's latest calling time (in ms) for a given transaction at a given state */
-                this.lastCallTimeForState = {};
-                this.delegate = delegate;
-                this.log = log.child('AdapterListener');
-            }
-            static makeTransactionToken(transaction) {
-                return transaction.platform + '|' + transaction.transactionId;
-            }
-            setSupportedPlatforms(platforms) {
-                this.log.debug('setSupportedPlatforms: ' + platforms.join(','));
-                this.supportedPlatforms = platforms;
-                if (this.supportedPlatforms.length === this.platformWithReceiptsReady.length) {
-                    this.delegate.receiptsReadyCallbacks.trigger();
-                }
-            }
-            receiptsReady(platform) {
-                if (this.supportedPlatforms.length > 0 && this.platformWithReceiptsReady.length === this.supportedPlatforms.length) {
-                    return;
-                }
-                if (this.platformWithReceiptsReady.indexOf(platform) < 0) {
-                    this.log.debug('receiptsReady: ' + platform);
-                    this.platformWithReceiptsReady.push(platform);
-                    if (this.platformWithReceiptsReady.length === this.supportedPlatforms.length) {
-                        this.log.debug('calling receiptsReady()');
-                        this.delegate.receiptsReadyCallbacks.trigger();
-                    }
-                }
-            }
-            productsUpdated(platform, products) {
-                products.forEach(product => this.delegate.updatedCallbacks.trigger(product));
-            }
-            receiptsUpdated(platform, receipts) {
-                const now = +new Date();
-                receipts.forEach(receipt => {
-                    this.delegate.updatedReceiptCallbacks.trigger(receipt);
-                    receipt.transactions.forEach(transaction => {
-                        const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
-                        const tokenWithState = transactionToken + '@' + transaction.state;
-                        const lastState = this.lastTransactionState[transactionToken];
-                        // Retrigger "approved", so validation is rerun on potential update.
-                        if (transaction.state === CdvPurchase.TransactionState.APPROVED) {
-                            // prevent calling approved twice in a very short period (5 seconds).
-                            if ((this.lastCallTimeForState[tokenWithState] | 0) < now - 5000) {
-                                this.delegate.approvedCallbacks.trigger(transaction);
-                                this.lastCallTimeForState[tokenWithState] = now;
-                            }
-                        }
-                        else if (lastState !== transaction.state) {
-                            if (transaction.state === CdvPurchase.TransactionState.FINISHED) {
-                                this.delegate.finishedCallbacks.trigger(transaction);
-                                this.lastCallTimeForState[tokenWithState] = now;
-                            }
-                            else if (transaction.state === CdvPurchase.TransactionState.PENDING) {
-                                this.delegate.pendingCallbacks.trigger(transaction);
-                                this.lastCallTimeForState[tokenWithState] = now;
-                            }
-                        }
-                        this.lastTransactionState[transactionToken] = transaction.state;
-                    });
-                });
-            }
-        }
-        Internal.StoreAdapterListener = StoreAdapterListener;
-    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
-})(CdvPurchase || (CdvPurchase = {}));
-var CdvPurchase;
-(function (CdvPurchase) {
-    let Internal;
-    (function (Internal) {
         /** Analyze the list of local receipts. */
         class LocalReceipts {
             /**
@@ -2093,106 +2260,6 @@ var CdvPurchase;
 (function (CdvPurchase) {
     let Internal;
     (function (Internal) {
-        class ReceiptsMonitor {
-            constructor(controller) {
-                this.hasCalledReceiptsVerified = false;
-                this.controller = controller;
-                this.log = controller.log.child('ReceiptsMonitor');
-            }
-            callReceiptsVerified() {
-                if (this.hasCalledReceiptsVerified)
-                    return;
-                this.hasCalledReceiptsVerified = true;
-                this.log.info('receiptsVerified()');
-                // ensure those 2 events are called in order.
-                this.controller.when().receiptsReady(() => {
-                    setTimeout(() => {
-                        this.controller.receiptsVerified();
-                    }, 0);
-                });
-            }
-            launch() {
-                const check = () => {
-                    this.log.debug(`check(${this.controller.numValidationResponses()}/${this.controller.numValidationRequests()})`);
-                    if (this.controller.numValidationRequests() === this.controller.numValidationResponses()) {
-                        if (this.intervalChecker !== undefined) {
-                            clearInterval(this.intervalChecker);
-                            this.intervalChecker = undefined;
-                        }
-                        this.controller.off(check);
-                        this.callReceiptsVerified();
-                    }
-                };
-                this.controller.when()
-                    .verified(check)
-                    .unverified(check)
-                    .receiptsReady(() => {
-                    this.log.debug('receiptsReady...');
-                    if (!this.controller.hasLocalReceipts() || !this.controller.hasValidator()) {
-                        setTimeout(() => {
-                            check();
-                        }, 0);
-                    }
-                    // check every 10s, to handle cases where neither "verified" nor "unverified" have been triggered.
-                    this.intervalChecker = setInterval(() => {
-                        this.log.debug('keep checking every 10s...');
-                        check();
-                    }, 10000);
-                });
-            }
-        }
-        Internal.ReceiptsMonitor = ReceiptsMonitor;
-    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
-})(CdvPurchase || (CdvPurchase = {}));
-var CdvPurchase;
-(function (CdvPurchase) {
-    let Internal;
-    (function (Internal) {
-        function isValidRegisteredProduct(product) {
-            if (typeof product !== 'object')
-                return false;
-            return product.hasOwnProperty('platform')
-                && product.hasOwnProperty('id')
-                && product.hasOwnProperty('type');
-        }
-        class RegisteredProducts {
-            constructor() {
-                this.list = [];
-            }
-            find(platform, id) {
-                return this.list.find(rp => rp.platform === platform && rp.id === id);
-            }
-            add(product) {
-                const errors = [];
-                const products = Array.isArray(product) ? product : [product];
-                const newProducts = products.filter(p => !this.find(p.platform, p.id));
-                for (const p of newProducts) {
-                    if (isValidRegisteredProduct(p))
-                        this.list.push(p);
-                    else
-                        errors.push(CdvPurchase.storeError(CdvPurchase.ErrorCode.LOAD, 'Invalid parameter to "register", expected "id", "type" and "platform". '
-                            + 'Got: ' + JSON.stringify(p)));
-                }
-                return errors;
-            }
-            byPlatform() {
-                const byPlatform = {};
-                this.list.forEach(p => {
-                    byPlatform[p.platform] = (byPlatform[p.platform] || []).concat(p);
-                });
-                return Object.keys(byPlatform).map(platform => ({
-                    platform: platform,
-                    products: byPlatform[platform]
-                }));
-            }
-        }
-        Internal.RegisteredProducts = RegisteredProducts;
-    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
-})(CdvPurchase || (CdvPurchase = {}));
-var CdvPurchase;
-(function (CdvPurchase) {
-    let Internal;
-    (function (Internal) {
         /**
          * Retry failed requests
          *
@@ -2237,58 +2304,6 @@ var CdvPurchase;
             }
         }
         Internal.Retry = Retry;
-    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
-})(CdvPurchase || (CdvPurchase = {}));
-var CdvPurchase;
-(function (CdvPurchase) {
-    /** @internal */
-    let Internal;
-    (function (Internal) {
-        /**
-         * Helper class to monitor changes in transaction states.
-         *
-         * @example
-         * const monitor = monitors.start(transaction, (state) => {
-         *   // ... transaction state has changed
-         * });
-         * monitor.stop();
-         */
-        class TransactionStateMonitors {
-            constructor(when) {
-                this.monitors = [];
-                when
-                    .approved(transaction => this.callOnChange(transaction))
-                    .finished(transaction => this.callOnChange(transaction));
-            }
-            findMonitors(transaction) {
-                return this.monitors.filter(monitor => monitor.transaction.platform === transaction.platform
-                    && monitor.transaction.transactionId === transaction.transactionId);
-            }
-            callOnChange(transaction) {
-                this.findMonitors(transaction).forEach(monitor => {
-                    if (monitor.lastChange !== transaction.state) {
-                        monitor.lastChange = transaction.state;
-                        monitor.onChange(transaction.state);
-                    }
-                });
-            }
-            /**
-             * Start monitoring the provided transaction for state changes.
-             */
-            start(transaction, onChange) {
-                const monitorId = CdvPurchase.Utils.uuidv4();
-                this.monitors.push({ monitorId, transaction, onChange, lastChange: transaction.state });
-                setTimeout(onChange, 0, transaction.state);
-                return {
-                    transaction,
-                    stop: () => this.stop(monitorId),
-                };
-            }
-            stop(monitorId) {
-                this.monitors = this.monitors.filter(m => m.monitorId !== monitorId);
-            }
-        }
-        Internal.TransactionStateMonitors = TransactionStateMonitors;
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -2786,7 +2801,9 @@ var CdvPurchase;
             }
             loadEligibility(validProducts) {
                 return __awaiter(this, void 0, void 0, function* () {
+                    this.log.debug('load eligibility: ' + JSON.stringify(validProducts));
                     if (!this.discountEligibilityDeterminer) {
+                        this.log.debug('No discount eligibility determiner, skipping...');
                         return new AppleAppStore.Internal.DiscountEligibilities([], []);
                     }
                     const eligibilityRequests = [];
@@ -2799,6 +2816,15 @@ var CdvPurchase;
                                 discountType: discount.type,
                             });
                         });
+                        if (!valid.discounts && valid.introPrice) {
+                            // sometime apple returns the discounts in the deprecated "introductory" info
+                            // we create a special "discount" with the id "intro" to check for eligibility.
+                            eligibilityRequests.push({
+                                productId: valid.id,
+                                discountId: 'intro',
+                                discountType: 'Introductory',
+                            });
+                        }
                     });
                     if (eligibilityRequests.length > 0) {
                         const applicationReceipt = yield this.loadAppStoreReceipt();
@@ -2832,7 +2858,7 @@ var CdvPurchase;
                         this.log.info('bridge.loaded: ' + JSON.stringify({ validProducts, invalidProducts }));
                         this.addValidProducts(products, validProducts);
                         const eligibilities = yield this.loadEligibility(validProducts);
-                        this.log.info('eligibilities ready.');
+                        this.log.info('eligibilities ready: ' + JSON.stringify(eligibilities));
                         // for any valid product that includes a discount, check the eligibility.
                         const ret = products.map(p => {
                             if (invalidProducts.indexOf(p.id) >= 0) {
@@ -3549,7 +3575,7 @@ var CdvPurchase;
                     const defaultPhases = [];
                     // According to specs, intro price should be in the discounts array, but it turns out
                     // it's not always the case (when there are no discount offers maybe?)...
-                    if (valid.introPrice && valid.introPriceMicros !== undefined) {
+                    if (valid.introPrice && valid.introPriceMicros !== undefined && eligibilities.isEligible(valid.id, 'Introductory', 'intro')) {
                         const introPrice = {
                             price: valid.introPrice,
                             priceMicros: valid.introPriceMicros,

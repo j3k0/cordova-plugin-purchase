@@ -44,25 +44,21 @@ Apple AppStore adapter using StoreKit version 1
 
 ### DiscountEligibilityDeterminer
 
-Ƭ **DiscountEligibilityDeterminer**: (`applicationReceipt`: [`ApplicationReceipt`](../interfaces/CdvPurchase.AppleAppStore.ApplicationReceipt.md), `requests`: [`DiscountEligibilityRequest`](../interfaces/CdvPurchase.AppleAppStore.DiscountEligibilityRequest.md)[], `callback`: (`response`: `boolean`[]) => `void`) => `void`
-
-#### Type declaration
-
-▸ (`applicationReceipt`, `requests`, `callback`): `void`
+Ƭ **DiscountEligibilityDeterminer**: (`applicationReceipt`: [`ApplicationReceipt`](../interfaces/CdvPurchase.AppleAppStore.ApplicationReceipt.md), `requests`: [`DiscountEligibilityRequest`](../interfaces/CdvPurchase.AppleAppStore.DiscountEligibilityRequest.md)[], `callback`: (`response`: `boolean`[]) => `void`) => `void` & { `cacheReceipt?`: (`receipt`: [`VerifiedReceipt`](../classes/CdvPurchase.VerifiedReceipt.md)) => `void`  }
 
 Determine which discount the user is eligible to.
 
-##### Parameters
+**`Param`**
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `applicationReceipt` | [`ApplicationReceipt`](../interfaces/CdvPurchase.AppleAppStore.ApplicationReceipt.md) | An apple appstore receipt |
-| `requests` | [`DiscountEligibilityRequest`](../interfaces/CdvPurchase.AppleAppStore.DiscountEligibilityRequest.md)[] | List of discount offers to evaluate eligibility for |
-| `callback` | (`response`: `boolean`[]) => `void` | Get the response, a boolean for each request (matched by index). |
+An apple appstore receipt
 
-##### Returns
+**`Param`**
 
-`void`
+List of discount offers to evaluate eligibility for
+
+**`Param`**
+
+Get the response, a boolean for each request (matched by index).
 
 ___
 

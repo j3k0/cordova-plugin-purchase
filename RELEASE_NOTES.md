@@ -1,6 +1,15 @@
 # Release Notes - Cordova Plugin Purchase
 
-## 13.8.0
+## 13.8
+
+### 13.8.1
+
+#### Fix AppStore eligibility determination of intro period
+
+In the case where the StoreKit SDK doesn't return a "discounts" array,
+determining the eligility of the intro period using iaptic was not functional.
+
+### 13.8.0
 
 #### Upgrade to Google Play Billing library 5.2.1
 

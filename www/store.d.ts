@@ -460,6 +460,44 @@ declare namespace CdvPurchase {
 }
 declare namespace CdvPurchase {
     namespace Internal {
+        interface StoreAdapterDelegate {
+            approvedCallbacks: Callbacks<Transaction>;
+            pendingCallbacks: Callbacks<Transaction>;
+            finishedCallbacks: Callbacks<Transaction>;
+            updatedCallbacks: Callbacks<Product>;
+            updatedReceiptCallbacks: Callbacks<Receipt>;
+            receiptsReadyCallbacks: Callbacks<void>;
+        }
+        /**
+         * Monitor the updates for products and receipt.
+         *
+         * Call the callbacks when appropriate.
+         */
+        class StoreAdapterListener implements AdapterListener {
+            delegate: StoreAdapterDelegate;
+            private log;
+            /** The list of supported platforms, needs to be set by "store.initialize" */
+            private supportedPlatforms;
+            constructor(delegate: StoreAdapterDelegate, log: Logger);
+            /** Those platforms have reported that their receipts are ready */
+            private platformWithReceiptsReady;
+            lastTransactionState: {
+                [transactionToken: string]: TransactionState;
+            };
+            static makeTransactionToken(transaction: Transaction): string;
+            /** Store the listener's latest calling time (in ms) for a given transaction at a given state */
+            lastCallTimeForState: {
+                [transactionTokenWithState: string]: number;
+            };
+            setSupportedPlatforms(platforms: Platform[]): void;
+            receiptsReady(platform: Platform): void;
+            productsUpdated(platform: Platform, products: Product[]): void;
+            receiptsUpdated(platform: Platform, receipts: Receipt[]): void;
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace Internal {
         /**
          * Manage a list of callbacks
          */
@@ -514,6 +552,97 @@ declare namespace CdvPurchase {
         }
     }
 }
+declare namespace CdvPurchase {
+    /**
+     * Data provided to store.register()
+     */
+    interface IRegisterProduct {
+        /** Identifier of the product on the store */
+        id: string;
+        /**
+         * The payment platform the product is available on.
+         */
+        platform: Platform;
+        /** Product type, should be one of the defined product types */
+        type: ProductType;
+        /**
+         * Name of the group your subscription product is a member of.
+         *
+         * If you don't set anything, all subscription will be members of the same group.
+         */
+        group?: string;
+    }
+    namespace Internal {
+        class RegisteredProducts {
+            list: IRegisterProduct[];
+            find(platform: Platform, id: string): IRegisterProduct | undefined;
+            add(product: IRegisterProduct | IRegisterProduct[]): IError[];
+            byPlatform(): {
+                platform: Platform;
+                products: IRegisterProduct[];
+            }[];
+        }
+    }
+}
+declare namespace CdvPurchase {
+    /**
+     * Instance of a function monitoring changes to a given transaction.
+     *
+     * Can be stopped with `monitor.stop()`.
+     */
+    interface TransactionMonitor {
+        /** Stop monitoring the transaction. */
+        stop(): void;
+        /** Transaction being monitored. */
+        transaction: Transaction;
+    }
+    /** @internal */
+    namespace Internal {
+        /**
+         * Helper class to monitor changes in transaction states.
+         *
+         * @example
+         * const monitor = monitors.start(transaction, (state) => {
+         *   // ... transaction state has changed
+         * });
+         * monitor.stop();
+         */
+        class TransactionStateMonitors {
+            private monitors;
+            private findMonitors;
+            constructor(when: When);
+            private callOnChange;
+            /**
+             * Start monitoring the provided transaction for state changes.
+             */
+            start(transaction: Transaction, onChange: Callback<TransactionState>): TransactionMonitor;
+            stop(monitorId: string): void;
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace Internal {
+        interface ReceiptsMonitorController {
+            when(): When;
+            hasLocalReceipts(): boolean;
+            receiptsVerified(): void;
+            hasValidator(): boolean;
+            numValidationRequests(): number;
+            numValidationResponses(): number;
+            off<T>(callback: Callback<T>): void;
+            log: Logger;
+        }
+        class ReceiptsMonitor {
+            controller: ReceiptsMonitorController;
+            log: Logger;
+            intervalChecker?: number;
+            constructor(controller: ReceiptsMonitorController);
+            private hasCalledReceiptsVerified;
+            callReceiptsVerified(): void;
+            launch(): void;
+        }
+    }
+}
 /**
  * Namespace for the cordova-plugin-purchase plugin.
  *
@@ -533,7 +662,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.8.0";
+    const PLUGIN_VERSION = "13.8.1";
     /**
      * Entry class of the plugin.
      */
@@ -876,6 +1005,7 @@ declare namespace CdvPurchase {
      */
     namespace Internal { }
 }
+declare function initCDVPurchase(): void;
 declare namespace CdvPurchase {
     /** Callback */
     type Callback<T> = (t: T) => void;
@@ -1511,44 +1641,6 @@ declare namespace CdvPurchase {
 }
 declare namespace CdvPurchase {
     namespace Internal {
-        interface StoreAdapterDelegate {
-            approvedCallbacks: Callbacks<Transaction>;
-            pendingCallbacks: Callbacks<Transaction>;
-            finishedCallbacks: Callbacks<Transaction>;
-            updatedCallbacks: Callbacks<Product>;
-            updatedReceiptCallbacks: Callbacks<Receipt>;
-            receiptsReadyCallbacks: Callbacks<void>;
-        }
-        /**
-         * Monitor the updates for products and receipt.
-         *
-         * Call the callbacks when appropriate.
-         */
-        class StoreAdapterListener implements AdapterListener {
-            delegate: StoreAdapterDelegate;
-            private log;
-            /** The list of supported platforms, needs to be set by "store.initialize" */
-            private supportedPlatforms;
-            constructor(delegate: StoreAdapterDelegate, log: Logger);
-            /** Those platforms have reported that their receipts are ready */
-            private platformWithReceiptsReady;
-            lastTransactionState: {
-                [transactionToken: string]: TransactionState;
-            };
-            static makeTransactionToken(transaction: Transaction): string;
-            /** Store the listener's latest calling time (in ms) for a given transaction at a given state */
-            lastCallTimeForState: {
-                [transactionTokenWithState: string]: number;
-            };
-            setSupportedPlatforms(platforms: Platform[]): void;
-            receiptsReady(platform: Platform): void;
-            productsUpdated(platform: Platform, products: Product[]): void;
-            receiptsUpdated(platform: Platform, receipts: Receipt[]): void;
-        }
-    }
-}
-declare namespace CdvPurchase {
-    namespace Internal {
         /** Analyze the list of local receipts. */
         class LocalReceipts {
             /**
@@ -1606,61 +1698,6 @@ declare namespace CdvPurchase {
 }
 declare namespace CdvPurchase {
     namespace Internal {
-        interface ReceiptsMonitorController {
-            when(): When;
-            hasLocalReceipts(): boolean;
-            receiptsVerified(): void;
-            hasValidator(): boolean;
-            numValidationRequests(): number;
-            numValidationResponses(): number;
-            off<T>(callback: Callback<T>): void;
-            log: Logger;
-        }
-        class ReceiptsMonitor {
-            controller: ReceiptsMonitorController;
-            log: Logger;
-            intervalChecker?: number;
-            constructor(controller: ReceiptsMonitorController);
-            private hasCalledReceiptsVerified;
-            callReceiptsVerified(): void;
-            launch(): void;
-        }
-    }
-}
-declare namespace CdvPurchase {
-    /**
-     * Data provided to store.register()
-     */
-    interface IRegisterProduct {
-        /** Identifier of the product on the store */
-        id: string;
-        /**
-         * The payment platform the product is available on.
-         */
-        platform: Platform;
-        /** Product type, should be one of the defined product types */
-        type: ProductType;
-        /**
-         * Name of the group your subscription product is a member of.
-         *
-         * If you don't set anything, all subscription will be members of the same group.
-         */
-        group?: string;
-    }
-    namespace Internal {
-        class RegisteredProducts {
-            list: IRegisterProduct[];
-            find(platform: Platform, id: string): IRegisterProduct | undefined;
-            add(product: IRegisterProduct | IRegisterProduct[]): IError[];
-            byPlatform(): {
-                platform: Platform;
-                products: IRegisterProduct[];
-            }[];
-        }
-    }
-}
-declare namespace CdvPurchase {
-    namespace Internal {
         /**
          * Retry failed requests
          *
@@ -1681,42 +1718,6 @@ declare namespace CdvPurchase {
             }[];
             constructor(minTimeout?: number, maxTimeout?: number);
             retry(fn: F): void;
-        }
-    }
-}
-declare namespace CdvPurchase {
-    /**
-     * Instance of a function monitoring changes to a given transaction.
-     *
-     * Can be stopped with `monitor.stop()`.
-     */
-    interface TransactionMonitor {
-        /** Stop monitoring the transaction. */
-        stop(): void;
-        /** Transaction being monitored. */
-        transaction: Transaction;
-    }
-    /** @internal */
-    namespace Internal {
-        /**
-         * Helper class to monitor changes in transaction states.
-         *
-         * @example
-         * const monitor = monitors.start(transaction, (state) => {
-         *   // ... transaction state has changed
-         * });
-         * monitor.stop();
-         */
-        class TransactionStateMonitors {
-            private monitors;
-            private findMonitors;
-            constructor(when: When);
-            private callOnChange;
-            /**
-             * Start monitoring the provided transaction for state changes.
-             */
-            start(transaction: Transaction, onChange: Callback<TransactionState>): TransactionMonitor;
-            stop(monitorId: string): void;
         }
     }
 }
@@ -2268,7 +2269,9 @@ declare namespace CdvPurchase {
          * @param requests List of discount offers to evaluate eligibility for
          * @param callback Get the response, a boolean for each request (matched by index).
          */
-        type DiscountEligibilityDeterminer = (applicationReceipt: ApplicationReceipt, requests: DiscountEligibilityRequest[], callback: (response: boolean[]) => void) => void;
+        type DiscountEligibilityDeterminer = ((applicationReceipt: ApplicationReceipt, requests: DiscountEligibilityRequest[], callback: (response: boolean[]) => void) => void) & {
+            cacheReceipt?: (receipt: VerifiedReceipt) => void;
+        };
         /**
          * Optional options for the AppleAppStore adapter
          */

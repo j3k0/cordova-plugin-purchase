@@ -7,6 +7,43 @@
 
 function demo() {
 
+    CdvPurchase.store.when().receiptsReady(() => {
+        console.log('All platforms are done loading their local receipts');
+    });
+
+    CdvPurchase.store.localTransactions.forEach(t => {
+        if (t.platform === CdvPurchase.Platform.APPLE_APPSTORE) {
+            const appleTransaction = t as CdvPurchase.AppleAppStore.SKTransaction;
+            appleTransaction.originalTransactionId;
+        }
+    });
+
+    const myProduct = CdvPurchase.store.get('my-product');
+    if (myProduct) {
+        const transaction = CdvPurchase.store.findInLocalReceipts(myProduct);
+    }
+
+    function readyAndVerified(callback: Function) {
+        CdvPurchase.store.ready(function () {
+            var localReceipts = CdvPurchase.store.localReceipts;
+            var verifiedReceipts = CdvPurchase.store.verifiedReceipts;
+            if (!CdvPurchase.store.validator || verifiedReceipts.length === localReceipts.length) {
+                callback();
+                return;
+            }
+            var onVerified = function() {
+                if (localReceipts.length === verifiedReceipts.length) {
+                    CdvPurchase.store.off(onVerified);
+                    if (callback) {
+                        callback();
+                        callback = null;
+                    }
+                }
+            }
+            CdvPurchase.store.when().verified(onVerified);
+        });
+    }
+
     const store = CdvPurchase.store;
 
     const appStore = store.getAdapter(CdvPurchase.Platform.APPLE_APPSTORE);
@@ -32,12 +69,48 @@ function demo() {
         platform: Platform.BRAINTREE,
     }]);
 
+    store.validator = {
+        url: 'https://validator.iaptic.com',
+        timeout: 30000,
+    }
+    Platform.APPLE_APPSTORE
+
+    store.when().pending(transaction => {
+        // transaction is pending (waiting for parent approval, cash payment, ...)
+    });
+
+    // Replace an old purchase when finalizing the new one on google play.
+    store.order(product, {
+        googlePlay: {
+            oldPurchaseToken: 'abcdefghijkl',
+            prorationMode: CdvPurchase.GooglePlay.ProrationMode.IMMEDIATE_AND_CHARGE_PRORATED_PRICE,
+        }
+    });
+
+    // For those 2 subscription products, the plugin will automatically replace the currently owned one (if any) when placing a new order.
+    store.register([{
+        id: 'no_ads_yearly',
+        type: ProductType.PAID_SUBSCRIPTION,
+        platform: Platform.GOOGLE_PLAY,
+        group: 'noAds'
+    }, {
+        id: 'no_ads_monthly',
+        type: ProductType.PAID_SUBSCRIPTION,
+        platform: Platform.GOOGLE_PLAY,
+        group: 'noAds'
+    }]);
+
     store.when()
         .approved(transaction => transaction.verify())
         .verified(receipt => receipt.finish())
         .finished(transaction => console.log('Products owned: ' + transaction.products.map(p => p.id).join(',')))
         .receiptUpdated(r => updatePurchases(r))
-        .productUpdated(p => updateUI(p));
+        .productUpdated(p => updateUI(p))
+        .unverified(r => {
+            if (r.payload.code === CdvPurchase.ErrorCode.COMMUNICATION) {
+                console.log("HTTP ERROR: " + r.payload.status);
+            }
+        })
 
     const iaptic = new CdvPurchase.Iaptic({
         appName: 'demo',
@@ -68,6 +141,18 @@ function demo() {
             console.log('Store is ready!');
         });
 
+    store.localReceipts.forEach(x => x.verify());
+store.register({
+    id: '',
+    platform: CdvPurchase.Platform.APPLE_APPSTORE,
+});
+store.initialize().then().catch();
+store.when().verified(verifiedReceipt => {
+})
+.productUpdated(p => p.pricing?.price)
+
+store.defaultPlatform
+
     function updatePurchases(receipt: CdvPurchase.Receipt) {
         receipt.transactions.forEach(transaction => {
             transaction.products.forEach(trProduct => {
@@ -94,7 +179,14 @@ function demo() {
                     console.log("subscription1 ordered successfully");
                 }
             });
+            store.localTransactions[0].state
     }
+    store.localTransactions.findIndex(transaction => {
+        transaction.state === CdvPurchase.TransactionState.
+    })
+
+    store.verifiedReceipts[0].sourceReceipt
+    instanceof CdvPurchase.GooglePlay.Receipt
 
     function manageSubscriptions() {
         store.manageSubscriptions(Platform.GOOGLE_PLAY);
