@@ -68,7 +68,7 @@ namespace CdvPurchase {
           },
           error: err => {
             this.log.info('clientTokenProvider error: ' + JSON.stringify(err));
-            callback(storeError(err as ErrorCode, 'ERROR ' + err));
+            callback(storeError(err as ErrorCode, 'ERROR ' + err, Platform.BRAINTREE, null));
           },
         })
       }

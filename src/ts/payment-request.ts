@@ -55,8 +55,8 @@ namespace CdvPurchase {
      *
      * @internal
      */
-    static failed(code: ErrorCode, message: string) {
-      return new PaymentRequestPromise().trigger(storeError(code, message));
+    static failed(code: ErrorCode, message: string, platform: Platform | null, productId: string | null) {
+      return new PaymentRequestPromise().trigger(storeError(code, message, platform, productId));
     }
 
     /**

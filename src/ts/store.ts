@@ -480,7 +480,7 @@ namespace CdvPurchase {
         async order(offer: Offer, additionalData?: AdditionalData): Promise<IError | undefined> {
             this.log.info(`order(${offer.productId})`);
             const adapter = this.adapters.findReady(offer.platform);
-            if (!adapter) return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + offer.platform + ')');
+            if (!adapter) return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + offer.platform + ')', offer.platform, null);
             const ret = await adapter.order(offer, additionalData || {});
             if (ret && 'isError' in ret) store.triggerError(ret);
             return ret;
@@ -498,7 +498,7 @@ namespace CdvPurchase {
         requestPayment(paymentRequest: PaymentRequest, additionalData?: AdditionalData): PaymentRequestPromise {
             const adapter = this.adapters.findReady(paymentRequest.platform);
             if (!adapter)
-                return PaymentRequestPromise.failed(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + paymentRequest.platform + ')');
+                return PaymentRequestPromise.failed(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + paymentRequest.platform + ')', paymentRequest.platform, null);
 
             // fill-in missing total amount as the sum of all items.
             if (!paymentRequest.amountMicros) {
@@ -520,7 +520,7 @@ namespace CdvPurchase {
                 for (const item of paymentRequest.items) {
                     if (item?.pricing?.currency) {
                         if (paymentRequest.currency !== item.pricing.currency) {
-                            return PaymentRequestPromise.failed(ErrorCode.PAYMENT_INVALID, 'Currencies do not match');
+                            return PaymentRequestPromise.failed(ErrorCode.PAYMENT_INVALID, 'Currencies do not match', paymentRequest.platform, item.id);
                         }
                     }
                     else if (item?.pricing) {
@@ -623,7 +623,7 @@ namespace CdvPurchase {
         async manageSubscriptions(platform?: Platform): Promise<IError | undefined> {
             this.log.info('manageSubscriptions()');
             const adapter = this.adapters.findReady(platform);
-            if (!adapter) return storeError(ErrorCode.SETUP, "Found no adapter ready to handle 'manageSubscription'");
+            if (!adapter) return storeError(ErrorCode.SETUP, "Found no adapter ready to handle 'manageSubscription'", platform ?? null, null);
             return adapter.manageSubscriptions();
         }
 
@@ -641,7 +641,7 @@ namespace CdvPurchase {
         async manageBilling(platform?: Platform): Promise<IError | undefined> {
             this.log.info('manageBilling()');
             const adapter = this.adapters.findReady(platform);
-            if (!adapter) return storeError(ErrorCode.SETUP, "Found no adapter ready to handle 'manageBilling'");
+            if (!adapter) return storeError(ErrorCode.SETUP, "Found no adapter ready to handle 'manageBilling'", platform ?? null, null);
             return adapter.manageBilling();
         }
 

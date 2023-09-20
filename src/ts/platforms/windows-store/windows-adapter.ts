@@ -11,16 +11,16 @@ namespace CdvPurchase {
                 return false;
             }
             async loadProducts(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
-                return products.map(p => storeError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'TODO'));
+                return products.map(p => windowsStoreError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'TODO', p.id));
             }
             async loadReceipts(): Promise<Receipt[]> {
                 return [];
             }
             async order(offer: Offer): Promise<undefined | IError> {
-                return storeError(ErrorCode.UNKNOWN, 'TODO: Not implemented');
+                return windowsStoreError(ErrorCode.UNKNOWN, 'TODO: Not implemented', offer.productId);
             }
             async finish(transaction: Transaction): Promise<undefined | IError> {
-                return storeError(ErrorCode.UNKNOWN, 'TODO: Not implemented');
+                return windowsStoreError(ErrorCode.UNKNOWN, 'TODO: Not implemented', null);
             }
             async handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void> {
                 return;
@@ -29,19 +29,23 @@ namespace CdvPurchase {
                 return;
             }
             async requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined> {
-                return storeError(ErrorCode.UNKNOWN, 'requestPayment not supported');
+                return windowsStoreError(ErrorCode.UNKNOWN, 'requestPayment not supported', null);
             }
             async manageSubscriptions(): Promise<IError | undefined> {
-                return storeError(ErrorCode.UNKNOWN, 'manageSubscriptions not supported');
+                return windowsStoreError(ErrorCode.UNKNOWN, 'manageSubscriptions not supported', null);
             }
             async manageBilling(): Promise<IError | undefined> {
-                return storeError(ErrorCode.UNKNOWN, 'manageBilling not supported');
+                return windowsStoreError(ErrorCode.UNKNOWN, 'manageBilling not supported', null);
             }
             checkSupport(functionality: PlatformFunctionality): boolean {
                 return false;
             }
             async restorePurchases(): Promise<void> {
             }
+        }
+
+        function windowsStoreError(code: ErrorCode, message: string, productId: string | null) {
+            return storeError(code, message, Platform.WINDOWS_STORE, productId);
         }
     }
 }

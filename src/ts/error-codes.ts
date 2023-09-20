@@ -83,7 +83,7 @@ namespace CdvPurchase {
      *
      * @internal
      */
-    export function storeError(code: ErrorCode, message: string): IError {
-        return { isError: true, code, message };
+    export function storeError(code: ErrorCode, message: string, platform: Platform | null, productId: string | null): IError {
+        return { isError: true, code, message, platform, productId };
     }
 }

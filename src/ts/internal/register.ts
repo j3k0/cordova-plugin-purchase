@@ -51,7 +51,7 @@ namespace CdvPurchase {
                     else
                         errors.push(storeError(ErrorCode.LOAD,
                             'Invalid parameter to "register", expected "id", "type" and "platform". '
-                            + 'Got: ' + JSON.stringify(p)));
+                            + 'Got: ' + JSON.stringify(p), null, null));
                 }
                 return errors;
             }

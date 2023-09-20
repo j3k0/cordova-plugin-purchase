@@ -111,7 +111,7 @@ namespace CdvPurchase {
             this.log.info('Result from Apple Pay: ' + JSON.stringify(result));
             if ('isError' in result) return result;
             if (result.userCancelled) {
-              return storeError(ErrorCode.PAYMENT_CANCELLED, 'User cancelled the payment request');
+              return braintreeError(ErrorCode.PAYMENT_CANCELLED, 'User cancelled the payment request');
             }
             return {
               paymentMethodNonce: {
@@ -141,10 +141,10 @@ namespace CdvPurchase {
                 this.log.info("dropInFailure: " + errorString);
                 const [errCode, errMessage] = errorString.split('|');
                 if (errCode === "UserCanceledException") {
-                    resolve(storeError(ErrorCode.PAYMENT_CANCELLED, errMessage));
+                    resolve(braintreeError(ErrorCode.PAYMENT_CANCELLED, errMessage));
                 }
                 else {
-                    resolve(storeError(ErrorCode.UNKNOWN, 'ERROR ' + errCode + ': ' + errMessage));
+                    resolve(braintreeError(ErrorCode.UNKNOWN, 'ERROR ' + errCode + ': ' + errMessage));
                 }
               }
 

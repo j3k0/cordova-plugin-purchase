@@ -18,6 +18,12 @@ namespace CdvPurchase {
 
         /** Human readable message, in plain english */
         message: string;
+
+        /** Optional platform the error occured on */
+        platform: Platform | null;
+
+        /** Optional ID of the product the error occurred on */
+        productId: string | null;
     }
 
     /** Types of In-App Products */

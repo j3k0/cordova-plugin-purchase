@@ -72,7 +72,7 @@ namespace CdvPurchase {
 
                 return products.map(registerProduct => {
                     if (!testProductsArray.find(p => p.id === registerProduct.id && p.type === registerProduct.type)) {
-                        return storeError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'This product is not available');
+                        return testStoreError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'This product is not available', registerProduct.id);
                     }
                     // Ensure it's not been loaded already.
                     const existingProduct = this.products.find(p => p.id === registerProduct.id);
@@ -86,7 +86,7 @@ namespace CdvPurchase {
                     }
 
                     const product = initTestProduct(registerProduct.id, this.context.apiDecorators);
-                    if (!product) return storeError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'Could not load this product');
+                    if (!product) return testStoreError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'Could not load this product', registerProduct.id);
                     this.products.push(product);
                     this.context.listener.productsUpdated(Platform.TEST, [product]);
                     return product;
@@ -96,16 +96,16 @@ namespace CdvPurchase {
             async order(offer: Offer): Promise<undefined | IError> {
                 // Purchasing products with "-fail-" in the id will fail.
                 if (offer.id.indexOf("-fail-") > 0) {
-                    return storeError(ErrorCode.PURCHASE, 'Purchase failed.');
+                    return testStoreError(ErrorCode.PURCHASE, 'Purchase failed.', offer.productId);
                 }
                 const product = this.products.find(p => p.id === offer.productId);
                 if (!Internal.LocalReceipts.canPurchase(this.receipts, product)) {
-                    return storeError(ErrorCode.PURCHASE, 'Product already owned');
+                    return testStoreError(ErrorCode.PURCHASE, 'Product already owned', offer.productId);
                 }
                 // a receipt containing a transaction with the given product.
                 const response = prompt(`Do you want to purchase ${offer.productId} for ${offer.pricingPhases[0].price}?\nEnter "Y" to confirm.\nEnter "E" to fail with an error.\Anything else to cancel.`);
-                if (response?.toUpperCase() === 'E') return storeError(ErrorCode.PURCHASE, 'Purchase failed');
-                if (response?.toUpperCase() !== 'Y') return storeError(ErrorCode.PAYMENT_CANCELLED, 'Purchase flow has been cancelled by the user');
+                if (response?.toUpperCase() === 'E') return testStoreError(ErrorCode.PURCHASE, 'Purchase failed', offer.productId);
+                if (response?.toUpperCase() !== 'Y') return testStoreError(ErrorCode.PAYMENT_CANCELLED, 'Purchase flow has been cancelled by the user', offer.productId);
                 // purchase succeeded, let's generate a mock receipt.
                 const receipt = new Receipt(platform, this.context.apiDecorators);
                 const tr = new Transaction(platform, receipt, this.context.apiDecorators);
@@ -177,7 +177,7 @@ namespace CdvPurchase {
 
                 await Utils.asyncDelay(100); // maybe app has some UI to update... and "prompt" prevents that
                 const response = prompt(`Mock payment of ${(paymentRequest.amountMicros ?? 0) / 1000000} ${paymentRequest.currency}. Enter "Y" to confirm. Enter "E" to trigger an error.`);
-                if (response?.toUpperCase() === 'E') return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Payment not allowed');
+                if (response?.toUpperCase() === 'E') return testStoreError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Payment not allowed', null);
                 if (response?.toUpperCase() !== 'Y') return;
                 const receipt = new Receipt(platform, this.context.apiDecorators);
                 const transaction = new Transaction(Platform.TEST, receipt, this.context.apiDecorators);
@@ -272,6 +272,10 @@ namespace CdvPurchase {
 
             async restorePurchases(): Promise<void> {
             }
+        }
+
+        function testStoreError(code: ErrorCode, message: string, productId: string | null) {
+            return storeError(code, message, Platform.TEST, productId);
         }
     }
 }

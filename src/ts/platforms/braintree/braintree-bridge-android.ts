@@ -77,7 +77,7 @@ namespace CdvPurchase {
                     }
                     catch (err) {
                         this.log.warn("initialization failed: " + (err as Error)?.message);
-                        callback(storeError(ErrorCode.SETUP, 'Failed to initialize Braintree Android Bridge: ' + (err as Error)?.message));
+                        callback(braintreeError(ErrorCode.SETUP, 'Failed to initialize Braintree Android Bridge: ' + (err as Error)?.message));
                     }
                 }
 
@@ -126,13 +126,13 @@ namespace CdvPurchase {
                                 const errCode = err.split("|")[0];
                                 const errMessage = err.split("|").slice(1).join('');
                                 if (errCode === "UserCanceledException") {
-                                    resolve(storeError(ErrorCode.PAYMENT_CANCELLED, errMessage));
+                                    resolve(braintreeError(ErrorCode.PAYMENT_CANCELLED, errMessage));
                                 }
                                 else if (errCode === "AuthorizationException") {
-                                    resolve(storeError(ErrorCode.UNAUTHORIZED_REQUEST_DATA, errMessage));
+                                    resolve(braintreeError(ErrorCode.UNAUTHORIZED_REQUEST_DATA, errMessage));
                                 }
                                 else {
-                                    resolve(storeError(ErrorCode.UNKNOWN, err));
+                                    resolve(braintreeError(ErrorCode.UNKNOWN, err));
                                 }
                             },
                             PLUGIN_ID, "launchDropIn", [dropInRequest]);

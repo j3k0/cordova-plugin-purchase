@@ -27,7 +27,7 @@ namespace CdvPurchase {
         static requestPayment(request: ApplePay.PaymentRequest): Promise<ApplePayPaymentResult | IError> {
           return new Promise(resolve => {
             if (!ApplePayPlugin.get()?.installed) {
-              return resolve(storeError(ErrorCode.SETUP, 'cordova-plugin-purchase-braintree-applepay does not appear to be installed.'));
+              return resolve(braintreeError(ErrorCode.SETUP, 'cordova-plugin-purchase-braintree-applepay does not appear to be installed.'));
             }
             else {
               const success = (result: ApplePayPaymentResult) => {
@@ -35,7 +35,7 @@ namespace CdvPurchase {
               };
               const failure = (err?: string) => {
                 const message = err ?? 'payment request failed';
-                resolve(storeError(ErrorCode.PURCHASE, 'Braintree+ApplePay ERROR: ' + message));
+                resolve(braintreeError(ErrorCode.PURCHASE, 'Braintree+ApplePay ERROR: ' + message));
               };
               window.cordova.exec(success, failure, PLUGIN_ID, 'presentDropInPaymentUI', [request]);
             }
