@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
-    "types": ["jest"]
+    "types": ["jest"],
+    "lib": ["ES2015", "DOM"]
   }
 }

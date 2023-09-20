@@ -30,10 +30,11 @@ help:
 
 all: build doc
 
-build: javalint check-tsc compile
-	@make test-js
+build: compile
+	@make tests
 
 compile:
+	@make check-tsc
 	@echo "- Compiling TypeScript"
 	@${NODE_MODULES}/.bin/tsc
 
@@ -49,12 +50,7 @@ test-js:
 javalint: .checkstyle.jar
 	java -jar .checkstyle.jar -c /google_checks.xml src/android/cc/fovea/PurchasePlugin.java
 
-test-install: build
-	@echo 'ok'
-	@# ./test/run.sh cc.fovea.babygoo babygooinapp1
-
-tests: test-js test-install
-	@echo 'ok'
+tests: test-js javalint
 
 check-tsc:
 	@test -e "${NODE_MODULES}/.bin/tsc" || ( echo "${NODE_MODULES} not found."; echo 'Please install dependencies: npm install'; exit 1 )
