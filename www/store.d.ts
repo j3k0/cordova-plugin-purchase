@@ -77,7 +77,7 @@ declare namespace CdvPurchase {
      *
      * @internal
      */
-    function storeError(code: ErrorCode, message: string): IError;
+    function storeError(code: ErrorCode, message: string, platform: Platform | null, productId: string | null): IError;
 }
 declare namespace CdvPurchase {
     interface IapticConfig {
@@ -662,7 +662,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.8.1";
+    const PLUGIN_VERSION = "13.8.2";
     /**
      * Entry class of the plugin.
      */
@@ -702,7 +702,7 @@ declare namespace CdvPurchase {
          */
         verbosity: LogLevel;
         /** Return the identifier of the user for your application */
-        applicationUsername?: string | (() => string);
+        applicationUsername?: string | (() => string | undefined);
         /**
          * Get the application username as a string by either calling or returning {@link Store.applicationUsername}
         */
@@ -1019,6 +1019,10 @@ declare namespace CdvPurchase {
         code: ErrorCode;
         /** Human readable message, in plain english */
         message: string;
+        /** Optional platform the error occured on */
+        platform: Platform | null;
+        /** Optional ID of the product the error occurred on */
+        productId: string | null;
     }
     /** Types of In-App Products */
     enum ProductType {
@@ -1370,7 +1374,7 @@ declare namespace CdvPurchase {
          *
          * @internal
          */
-        static failed(code: ErrorCode, message: string): PaymentRequestPromise;
+        static failed(code: ErrorCode, message: string, platform: Platform | null, productId: string | null): PaymentRequestPromise;
         /**
          * Return a failed promise.
          *
@@ -3161,6 +3165,7 @@ declare namespace CdvPurchase {
             checkSupport(functionality: PlatformFunctionality): boolean;
             restorePurchases(): Promise<void>;
         }
+        function braintreeError(code: ErrorCode, message: string): IError;
     }
 }
 declare namespace CdvPurchase {

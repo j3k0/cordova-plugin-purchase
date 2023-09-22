@@ -2,6 +2,18 @@
 
 ## 13.8
 
+### 13.8.2
+
+#### store.applicationUsername can return `undefined`
+
+If no user is logged in, you `applicationUsername` function can return
+undefined.
+
+#### Add "productId" and "platform" to Error objects
+
+All errors now include the "platform" and "productId" field (when applicable),
+to get more context.
+
 ### 13.8.1
 
 #### Fix AppStore eligibility determination of intro period

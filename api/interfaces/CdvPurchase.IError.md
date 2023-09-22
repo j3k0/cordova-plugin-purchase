@@ -11,6 +11,8 @@ An error triggered by the In-App Purchase plugin
 - [code](CdvPurchase.IError.md#code)
 - [isError](CdvPurchase.IError.md#iserror)
 - [message](CdvPurchase.IError.md#message)
+- [platform](CdvPurchase.IError.md#platform)
+- [productId](CdvPurchase.IError.md#productid)
 
 ## Properties
 
@@ -37,3 +39,19 @@ ___
 • **message**: `string`
 
 Human readable message, in plain english
+
+___
+
+### platform
+
+• **platform**: ``null`` \| [`Platform`](../enums/CdvPurchase.Platform.md)
+
+Optional platform the error occured on
+
+___
+
+### productId
+
+• **productId**: ``null`` \| `string`
+
+Optional ID of the product the error occurred on

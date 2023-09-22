@@ -64,7 +64,7 @@ Entry class of the plugin.
 
 ### applicationUsername
 
-• `Optional` **applicationUsername**: `string` \| () => `string`
+• `Optional` **applicationUsername**: `string` \| () => `undefined` \| `string`
 
 Return the identifier of the user for your application
 

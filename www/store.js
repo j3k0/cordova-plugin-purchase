@@ -90,8 +90,8 @@ var CdvPurchase;
      *
      * @internal
      */
-    function storeError(code, message) {
-        return { isError: true, code, message };
+    function storeError(code, message, platform, productId) {
+        return { isError: true, code, message, platform, productId };
     }
     CdvPurchase.storeError = storeError;
 })(CdvPurchase || (CdvPurchase = {}));
@@ -148,7 +148,7 @@ var CdvPurchase;
                     },
                     error: err => {
                         this.log.info('clientTokenProvider error: ' + JSON.stringify(err));
-                        callback(CdvPurchase.storeError(err, 'ERROR ' + err));
+                        callback(CdvPurchase.storeError(err, 'ERROR ' + err, CdvPurchase.Platform.BRAINTREE, null));
                     },
                 });
             };
@@ -1036,7 +1036,7 @@ var CdvPurchase;
                         this.list.push(p);
                     else
                         errors.push(CdvPurchase.storeError(CdvPurchase.ErrorCode.LOAD, 'Invalid parameter to "register", expected "id", "type" and "platform". '
-                            + 'Got: ' + JSON.stringify(p)));
+                            + 'Got: ' + JSON.stringify(p), null, null));
                 }
                 return errors;
             }
@@ -1192,7 +1192,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.8.1';
+    CdvPurchase.PLUGIN_VERSION = '13.8.2';
     /**
      * Entry class of the plugin.
      */
@@ -1557,7 +1557,7 @@ var CdvPurchase;
                 this.log.info(`order(${offer.productId})`);
                 const adapter = this.adapters.findReady(offer.platform);
                 if (!adapter)
-                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + offer.platform + ')');
+                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + offer.platform + ')', offer.platform, null);
                 const ret = yield adapter.order(offer, additionalData || {});
                 if (ret && 'isError' in ret)
                     CdvPurchase.store.triggerError(ret);
@@ -1577,7 +1577,7 @@ var CdvPurchase;
             var _a, _b, _c, _d, _e;
             const adapter = this.adapters.findReady(paymentRequest.platform);
             if (!adapter)
-                return CdvPurchase.PaymentRequestPromise.failed(CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + paymentRequest.platform + ')');
+                return CdvPurchase.PaymentRequestPromise.failed(CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + paymentRequest.platform + ')', paymentRequest.platform, null);
             // fill-in missing total amount as the sum of all items.
             if (!paymentRequest.amountMicros) {
                 paymentRequest.amountMicros = 0;
@@ -1597,7 +1597,7 @@ var CdvPurchase;
                 for (const item of paymentRequest.items) {
                     if ((_d = item === null || item === void 0 ? void 0 : item.pricing) === null || _d === void 0 ? void 0 : _d.currency) {
                         if (paymentRequest.currency !== item.pricing.currency) {
-                            return CdvPurchase.PaymentRequestPromise.failed(CdvPurchase.ErrorCode.PAYMENT_INVALID, 'Currencies do not match');
+                            return CdvPurchase.PaymentRequestPromise.failed(CdvPurchase.ErrorCode.PAYMENT_INVALID, 'Currencies do not match', paymentRequest.platform, item.id);
                         }
                     }
                     else if (item === null || item === void 0 ? void 0 : item.pricing) {
@@ -1702,7 +1702,7 @@ var CdvPurchase;
                 this.log.info('manageSubscriptions()');
                 const adapter = this.adapters.findReady(platform);
                 if (!adapter)
-                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, "Found no adapter ready to handle 'manageSubscription'");
+                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, "Found no adapter ready to handle 'manageSubscription'", platform !== null && platform !== void 0 ? platform : null, null);
                 return adapter.manageSubscriptions();
             });
         }
@@ -1722,7 +1722,7 @@ var CdvPurchase;
                 this.log.info('manageBilling()');
                 const adapter = this.adapters.findReady(platform);
                 if (!adapter)
-                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, "Found no adapter ready to handle 'manageBilling'");
+                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, "Found no adapter ready to handle 'manageBilling'", platform !== null && platform !== void 0 ? platform : null, null);
                 return adapter.manageBilling();
             });
         }
@@ -2027,8 +2027,8 @@ var CdvPurchase;
          *
          * @internal
          */
-        static failed(code, message) {
-            return new PaymentRequestPromise().trigger(CdvPurchase.storeError(code, message));
+        static failed(code, message, platform, productId) {
+            return new PaymentRequestPromise().trigger(CdvPurchase.storeError(code, message, platform, productId));
         }
         /**
          * Return a failed promise.
@@ -2614,7 +2614,7 @@ var CdvPurchase;
                                 return;
                             }
                             else {
-                                this.context.error(CdvPurchase.storeError(code, message));
+                                this.context.error(appStoreError(code, message, (options === null || options === void 0 ? void 0 : options.productId) || null));
                             }
                         },
                         ready: () => {
@@ -2685,7 +2685,7 @@ var CdvPurchase;
                         resolve(undefined);
                     }), (code, message) => {
                         this.log.info('bridge.init failed: ' + code + ' - ' + message);
-                        resolve(CdvPurchase.storeError(code, message));
+                        resolve(appStoreError(code, message, null));
                     });
                 });
             }
@@ -2744,7 +2744,7 @@ var CdvPurchase;
                     if (!(nativeData === null || nativeData === void 0 ? void 0 : nativeData.appStoreReceipt)) {
                         this.log.warn('no appStoreReceipt');
                         this._appStoreReceiptLoading = false;
-                        callCallbacks(CdvPurchase.storeError(CdvPurchase.ErrorCode.REFRESH, 'No appStoreReceipt'));
+                        callCallbacks(appStoreError(CdvPurchase.ErrorCode.REFRESH, 'No appStoreReceipt', null));
                         return;
                     }
                     this._receipt = new AppleAppStore.SKApplicationReceipt(nativeData, this.needAppReceipt, this.context.apiDecorators);
@@ -2863,13 +2863,13 @@ var CdvPurchase;
                         const ret = products.map(p => {
                             if (invalidProducts.indexOf(p.id) >= 0) {
                                 this.log.debug(`${p.id} is invalid`);
-                                return CdvPurchase.storeError(CdvPurchase.ErrorCode.INVALID_PRODUCT_ID, 'Product not found in AppStore. #400');
+                                return appStoreError(CdvPurchase.ErrorCode.INVALID_PRODUCT_ID, 'Product not found in AppStore. #400', p.id);
                             }
                             else {
                                 const valid = validProducts.find(v => v.id === p.id);
                                 this.log.debug(`${p.id} is valid: ${JSON.stringify(valid)}`);
                                 if (!valid)
-                                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.INVALID_PRODUCT_ID, 'Product not found in AppStore. #404');
+                                    return appStoreError(CdvPurchase.ErrorCode.INVALID_PRODUCT_ID, 'Product not found in AppStore. #404', p.id);
                                 let product = this.getProduct(p.id);
                                 if (product) {
                                     this.log.debug('refreshing existing product');
@@ -2886,7 +2886,7 @@ var CdvPurchase;
                         this.log.debug(`Products loaded: ${JSON.stringify(ret)}`);
                         resolve(ret);
                     }), (code, message) => {
-                        return products.map(p => CdvPurchase.storeError(code, message));
+                        return products.map(p => appStoreError(code, message, null));
                     });
                 });
             }
@@ -2906,10 +2906,10 @@ var CdvPurchase;
                         const discountId = offer.id !== AppleAppStore.DEFAULT_OFFER_ID ? offer.id : undefined;
                         const discount = (_a = additionalData === null || additionalData === void 0 ? void 0 : additionalData.appStore) === null || _a === void 0 ? void 0 : _a.discount;
                         if (discountId && !discount) {
-                            return callResolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.MISSING_OFFER_PARAMS, 'Missing additionalData.appStore.discount when ordering a discount offer'));
+                            return callResolve(appStoreError(CdvPurchase.ErrorCode.MISSING_OFFER_PARAMS, 'Missing additionalData.appStore.discount when ordering a discount offer', offer.productId));
                         }
                         if (discountId && ((discount === null || discount === void 0 ? void 0 : discount.id) !== discountId)) {
-                            return callResolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.INVALID_OFFER_IDENTIFIER, 'Offer identifier does not match additionalData.appStore.discount.id'));
+                            return callResolve(appStoreError(CdvPurchase.ErrorCode.INVALID_OFFER_IDENTIFIER, 'Offer identifier does not match additionalData.appStore.discount.id', offer.productId));
                         }
                         this.setPaymentMonitor((status, code, message) => {
                             this.log.info('order.paymentMonitor => ' + status + ' ' + (code !== null && code !== void 0 ? code : '') + ' ' + (message !== null && message !== void 0 ? message : ''));
@@ -2917,13 +2917,13 @@ var CdvPurchase;
                                 return;
                             switch (status) {
                                 case 'cancelled':
-                                    callResolve(CdvPurchase.storeError(code !== null && code !== void 0 ? code : CdvPurchase.ErrorCode.PAYMENT_CANCELLED, message !== null && message !== void 0 ? message : 'The user cancelled the order.'));
+                                    callResolve(appStoreError(code !== null && code !== void 0 ? code : CdvPurchase.ErrorCode.PAYMENT_CANCELLED, message !== null && message !== void 0 ? message : 'The user cancelled the order.', offer.productId));
                                     break;
                                 case 'failed':
                                     // note, "failed" might be triggered before "cancelled",
                                     // so we'll give some time to catch the "cancelled" event.
                                     setTimeout(() => {
-                                        callResolve(CdvPurchase.storeError(code !== null && code !== void 0 ? code : CdvPurchase.ErrorCode.PURCHASE, message !== null && message !== void 0 ? message : 'Purchase failed'));
+                                        callResolve(appStoreError(code !== null && code !== void 0 ? code : CdvPurchase.ErrorCode.PURCHASE, message !== null && message !== void 0 ? message : 'Purchase failed', offer.productId));
                                     }, 500);
                                     break;
                                 case 'purchased':
@@ -2938,7 +2938,7 @@ var CdvPurchase;
                         };
                         const error = () => {
                             this.log.info('order.error');
-                            callResolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Failed to place order'));
+                            callResolve(appStoreError(CdvPurchase.ErrorCode.PURCHASE, 'Failed to place order', offer.productId));
                         };
                         // When we switch AppStore user, the cached receipt isn't from the new user.
                         // so after a purchase, we want to make sure we're using the receipt from the logged in user.
@@ -2962,12 +2962,13 @@ var CdvPurchase;
                         resolve(undefined);
                     };
                     const error = (msg) => {
+                        var _a, _b;
                         if (msg === null || msg === void 0 ? void 0 : msg.includes('[#CdvPurchase:100]')) {
                             // already finished
                             success();
                         }
                         else {
-                            resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.FINISH, 'Failed to finish transaction'));
+                            resolve(appStoreError(CdvPurchase.ErrorCode.FINISH, 'Failed to finish transaction', (_b = (_a = transaction.products[0]) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : null));
                         }
                     };
                     this.bridge.finish(transaction.transactionId, success, error);
@@ -2980,7 +2981,7 @@ var CdvPurchase;
                         resolve(receipt);
                     };
                     const error = (code, message) => {
-                        resolve(CdvPurchase.storeError(code, message));
+                        resolve(appStoreError(code, message, null));
                     };
                     this.bridge.refreshReceipts(success, error);
                 });
@@ -3051,7 +3052,7 @@ var CdvPurchase;
             }
             requestPayment(payment, additionalData) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'requestPayment not supported');
+                    return appStoreError(CdvPurchase.ErrorCode.UNKNOWN, 'requestPayment not supported', null);
                 });
             }
             manageSubscriptions() {
@@ -3092,6 +3093,9 @@ var CdvPurchase;
             }
         }
         AppleAppStore.Adapter = Adapter;
+        function appStoreError(code, message, productId) {
+            return CdvPurchase.storeError(code, message, CdvPurchase.Platform.APPLE_APPSTORE, productId);
+        }
     })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -3764,7 +3768,7 @@ var CdvPurchase;
                             else if (this.options.clientTokenProvider)
                                 this.options.clientTokenProvider(callback);
                             else
-                                callback(CdvPurchase.storeError(CdvPurchase.ErrorCode.CLIENT_INVALID, 'Braintree iOS Bridge requires a clientTokenProvider or tokenizationKey'));
+                                callback(braintreeError(CdvPurchase.ErrorCode.CLIENT_INVALID, 'Braintree iOS Bridge requires a clientTokenProvider or tokenizationKey'));
                         }, this.options.applePay);
                         this.iosBridge.initialize(this.context, resolve);
                     }
@@ -3788,7 +3792,7 @@ var CdvPurchase;
             }
             loadProducts(products) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return products.map(p => CdvPurchase.storeError(CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, 'N/A'));
+                    return products.map(p => braintreeError(CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, 'N/A'));
                 });
             }
             loadReceipts() {
@@ -3799,7 +3803,7 @@ var CdvPurchase;
             }
             order(offer) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'N/A: Not implemented with Braintree');
+                    return braintreeError(CdvPurchase.ErrorCode.UNKNOWN, 'N/A: Not implemented with Braintree');
                 });
             }
             finish(transaction) {
@@ -3840,7 +3844,7 @@ var CdvPurchase;
                         return this.androidBridge.launchDropIn(dropInRequest);
                     if (this.iosBridge)
                         return this.iosBridge.launchDropIn(paymentRequest, dropInRequest);
-                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Braintree is not available');
+                    return braintreeError(CdvPurchase.ErrorCode.PURCHASE, 'Braintree is not available');
                 });
             }
             requestPayment(paymentRequest, additionalData) {
@@ -3896,7 +3900,7 @@ var CdvPurchase;
                     const dropInResult = response;
                     this.log.info("launchDropIn success: " + JSON.stringify({ paymentRequest, dropInResult }));
                     if (!((_j = dropInResult.paymentMethodNonce) === null || _j === void 0 ? void 0 : _j.nonce)) {
-                        return CdvPurchase.storeError(CdvPurchase.ErrorCode.BAD_RESPONSE, 'launchDropIn returned no paymentMethodNonce');
+                        return braintreeError(CdvPurchase.ErrorCode.BAD_RESPONSE, 'launchDropIn returned no paymentMethodNonce');
                     }
                     let receipt = this._receipts.find(r => { var _a, _b; return ((_a = r.dropInResult.paymentMethodNonce) === null || _a === void 0 ? void 0 : _a.nonce) === ((_b = dropInResult.paymentMethodNonce) === null || _b === void 0 ? void 0 : _b.nonce); });
                     if (receipt) {
@@ -3985,7 +3989,7 @@ var CdvPurchase;
         const dropInResponseError = (log, response) => {
             if (!response) {
                 log.warn("launchDropIn failed: no response");
-                return CdvPurchase.storeError(CdvPurchase.ErrorCode.BAD_RESPONSE, 'Braintree failed to launch drop in');
+                return braintreeError(CdvPurchase.ErrorCode.BAD_RESPONSE, 'Braintree failed to launch drop in');
             }
             else {
                 // Failed
@@ -3997,6 +4001,10 @@ var CdvPurchase;
                 return response;
             }
         };
+        function braintreeError(code, message) {
+            return CdvPurchase.storeError(code, message, CdvPurchase.Platform.BRAINTREE, null);
+        }
+        Braintree.braintreeError = braintreeError;
     })(Braintree = CdvPurchase.Braintree || (CdvPurchase.Braintree = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -4059,7 +4067,7 @@ var CdvPurchase;
                     }
                     catch (err) {
                         this.log.warn("initialization failed: " + (err === null || err === void 0 ? void 0 : err.message));
-                        callback(CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, 'Failed to initialize Braintree Android Bridge: ' + (err === null || err === void 0 ? void 0 : err.message)));
+                        callback(Braintree.braintreeError(CdvPurchase.ErrorCode.SETUP, 'Failed to initialize Braintree Android Bridge: ' + (err === null || err === void 0 ? void 0 : err.message)));
                     }
                 }
                 /**
@@ -4104,13 +4112,13 @@ var CdvPurchase;
                             const errCode = err.split("|")[0];
                             const errMessage = err.split("|").slice(1).join('');
                             if (errCode === "UserCanceledException") {
-                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_CANCELLED, errMessage));
+                                resolve(Braintree.braintreeError(CdvPurchase.ErrorCode.PAYMENT_CANCELLED, errMessage));
                             }
                             else if (errCode === "AuthorizationException") {
-                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.UNAUTHORIZED_REQUEST_DATA, errMessage));
+                                resolve(Braintree.braintreeError(CdvPurchase.ErrorCode.UNAUTHORIZED_REQUEST_DATA, errMessage));
                             }
                             else {
-                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, err));
+                                resolve(Braintree.braintreeError(CdvPurchase.ErrorCode.UNKNOWN, err));
                             }
                         }, PLUGIN_ID, "launchDropIn", [dropInRequest]);
                     });
@@ -4231,7 +4239,7 @@ var CdvPurchase;
                     return new Promise(resolve => {
                         var _a;
                         if (!((_a = ApplePayPlugin.get()) === null || _a === void 0 ? void 0 : _a.installed)) {
-                            return resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, 'cordova-plugin-purchase-braintree-applepay does not appear to be installed.'));
+                            return resolve(Braintree.braintreeError(CdvPurchase.ErrorCode.SETUP, 'cordova-plugin-purchase-braintree-applepay does not appear to be installed.'));
                         }
                         else {
                             const success = (result) => {
@@ -4239,7 +4247,7 @@ var CdvPurchase;
                             };
                             const failure = (err) => {
                                 const message = err !== null && err !== void 0 ? err : 'payment request failed';
-                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Braintree+ApplePay ERROR: ' + message));
+                                resolve(Braintree.braintreeError(CdvPurchase.ErrorCode.PURCHASE, 'Braintree+ApplePay ERROR: ' + message));
                             };
                             window.cordova.exec(success, failure, PLUGIN_ID, 'presentDropInPaymentUI', [request]);
                         }
@@ -4328,7 +4336,7 @@ var CdvPurchase;
                         if ('isError' in result)
                             return result;
                         if (result.userCancelled) {
-                            return CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_CANCELLED, 'User cancelled the payment request');
+                            return Braintree.braintreeError(CdvPurchase.ErrorCode.PAYMENT_CANCELLED, 'User cancelled the payment request');
                         }
                         return {
                             paymentMethodNonce: {
@@ -4358,10 +4366,10 @@ var CdvPurchase;
                             this.log.info("dropInFailure: " + errorString);
                             const [errCode, errMessage] = errorString.split('|');
                             if (errCode === "UserCanceledException") {
-                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_CANCELLED, errMessage));
+                                resolve(Braintree.braintreeError(CdvPurchase.ErrorCode.PAYMENT_CANCELLED, errMessage));
                             }
                             else {
-                                resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'ERROR ' + errCode + ': ' + errMessage));
+                                resolve(Braintree.braintreeError(CdvPurchase.ErrorCode.UNKNOWN, 'ERROR ' + errCode + ': ' + errMessage));
                             }
                         };
                         this.clientTokenProvider((clientToken) => {
@@ -4637,7 +4645,7 @@ var CdvPurchase;
                         };
                         const iabError = (err) => {
                             this.initialized = false;
-                            this.context.error(CdvPurchase.storeError(CdvPurchase.ErrorCode.SETUP, "Init failed - " + err));
+                            this.context.error(playStoreError(CdvPurchase.ErrorCode.SETUP, "Init failed - " + err, null));
                             this.retry.retry(() => this.initialize());
                         };
                         this.bridge.init(iabReady, iabError, iabOptions);
@@ -4679,7 +4687,7 @@ var CdvPurchase;
                                 return this._products.addProduct(registeredProduct, validProduct);
                             }
                             else {
-                                return CdvPurchase.storeError(CdvPurchase.ErrorCode.INVALID_PRODUCT_ID, `Product with id ${registeredProduct.id} not found.`);
+                                return playStoreError(CdvPurchase.ErrorCode.INVALID_PRODUCT_ID, `Product with id ${registeredProduct.id} not found.`, registeredProduct.id);
                             }
                         });
                         resolve(ret);
@@ -4691,7 +4699,7 @@ var CdvPurchase;
                         this.bridge.getAvailableProducts(inAppSkus, subsSkus, iabLoaded, (err) => {
                             // failed to load products, retry later.
                             this.retry.retry(go);
-                            this.context.error(CdvPurchase.storeError(CdvPurchase.ErrorCode.LOAD, 'Loading product info failed - ' + err + ' - retrying later...'));
+                            this.context.error(playStoreError(CdvPurchase.ErrorCode.LOAD, 'Loading product info failed - ' + err + ' - retrying later...', null));
                         });
                     };
                     go();
@@ -4707,18 +4715,18 @@ var CdvPurchase;
                         }
                         resolve(undefined);
                     };
-                    const onFailure = (message, code) => resolve(CdvPurchase.storeError(code || CdvPurchase.ErrorCode.UNKNOWN, message));
                     const firstProduct = transaction.products[0];
                     if (!firstProduct)
-                        return resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.FINISH, 'Cannot finish a transaction with no product'));
+                        return resolve(playStoreError(CdvPurchase.ErrorCode.FINISH, 'Cannot finish a transaction with no product', null));
                     const product = this._products.getProduct(firstProduct.id);
                     if (!product)
-                        return resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.FINISH, 'Cannot finish transaction, unknown product ' + firstProduct.id));
+                        return resolve(playStoreError(CdvPurchase.ErrorCode.FINISH, 'Cannot finish transaction, unknown product ' + firstProduct.id, firstProduct.id));
                     const receipt = this._receipts.find(r => r.hasTransaction(transaction));
                     if (!receipt)
-                        return resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.FINISH, 'Cannot finish transaction, linked receipt not found.'));
+                        return resolve(playStoreError(CdvPurchase.ErrorCode.FINISH, 'Cannot finish transaction, linked receipt not found.', product.id));
                     if (!receipt.purchaseToken)
-                        return resolve(CdvPurchase.storeError(CdvPurchase.ErrorCode.FINISH, 'Cannot finish transaction, linked receipt contains no purchaseToken.'));
+                        return resolve(playStoreError(CdvPurchase.ErrorCode.FINISH, 'Cannot finish transaction, linked receipt contains no purchaseToken.', product.id));
+                    const onFailure = (message, code) => resolve(playStoreError(code || CdvPurchase.ErrorCode.UNKNOWN, message, product.id));
                     if (product.type === CdvPurchase.ProductType.NON_RENEWING_SUBSCRIPTION || product.type === CdvPurchase.ProductType.CONSUMABLE) {
                         if (!transaction.isConsumed)
                             return this.bridge.consumePurchase(onSuccess, onFailure, receipt.purchaseToken);
@@ -4772,7 +4780,7 @@ var CdvPurchase;
                     };
                     const failure = (message, code) => {
                         this.log.warn('getPurchases failed: ' + message + ' (' + code + ')');
-                        setTimeout(() => resolve(CdvPurchase.storeError(code || CdvPurchase.ErrorCode.UNKNOWN, message)), 0);
+                        setTimeout(() => resolve(playStoreError(code || CdvPurchase.ErrorCode.UNKNOWN, message, null)), 0);
                     };
                     this.bridge.getPurchases(success, failure);
                 });
@@ -4785,7 +4793,7 @@ var CdvPurchase;
                         const buySuccess = () => resolve(undefined);
                         const buyFailed = (message, code) => {
                             this.log.warn('Order failed: ' + JSON.stringify({ message, code }));
-                            resolve(CdvPurchase.storeError(code !== null && code !== void 0 ? code : CdvPurchase.ErrorCode.UNKNOWN, message));
+                            resolve(playStoreError(code !== null && code !== void 0 ? code : CdvPurchase.ErrorCode.UNKNOWN, message, offer.productId));
                         };
                         if (offer.productType === CdvPurchase.ProductType.PAID_SUBSCRIPTION) {
                             const idAndToken = 'token' in offer ? offer.productId + '@' + offer.token : offer.productId;
@@ -4887,7 +4895,7 @@ var CdvPurchase;
             }
             requestPayment(payment, additionalData) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'requestPayment not supported');
+                    return playStoreError(CdvPurchase.ErrorCode.UNKNOWN, 'requestPayment not supported', null);
                 });
             }
             manageSubscriptions() {
@@ -4918,6 +4926,9 @@ var CdvPurchase;
             }
         }
         GooglePlay.Adapter = Adapter;
+        function playStoreError(code, message, productId) {
+            return CdvPurchase.storeError(code, message, CdvPurchase.Platform.GOOGLE_PLAY, productId);
+        }
     })(GooglePlay = CdvPurchase.GooglePlay || (CdvPurchase.GooglePlay = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -5583,7 +5594,7 @@ var CdvPurchase;
                 return __awaiter(this, void 0, void 0, function* () {
                     return products.map(registerProduct => {
                         if (!Test.testProductsArray.find(p => p.id === registerProduct.id && p.type === registerProduct.type)) {
-                            return CdvPurchase.storeError(CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, 'This product is not available');
+                            return testStoreError(CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, 'This product is not available', registerProduct.id);
                         }
                         // Ensure it's not been loaded already.
                         const existingProduct = this.products.find(p => p.id === registerProduct.id);
@@ -5597,7 +5608,7 @@ var CdvPurchase;
                         }
                         const product = Test.initTestProduct(registerProduct.id, this.context.apiDecorators);
                         if (!product)
-                            return CdvPurchase.storeError(CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, 'Could not load this product');
+                            return testStoreError(CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, 'Could not load this product', registerProduct.id);
                         this.products.push(product);
                         this.context.listener.productsUpdated(CdvPurchase.Platform.TEST, [product]);
                         return product;
@@ -5608,18 +5619,18 @@ var CdvPurchase;
                 return __awaiter(this, void 0, void 0, function* () {
                     // Purchasing products with "-fail-" in the id will fail.
                     if (offer.id.indexOf("-fail-") > 0) {
-                        return CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Purchase failed.');
+                        return testStoreError(CdvPurchase.ErrorCode.PURCHASE, 'Purchase failed.', offer.productId);
                     }
                     const product = this.products.find(p => p.id === offer.productId);
                     if (!CdvPurchase.Internal.LocalReceipts.canPurchase(this.receipts, product)) {
-                        return CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Product already owned');
+                        return testStoreError(CdvPurchase.ErrorCode.PURCHASE, 'Product already owned', offer.productId);
                     }
                     // a receipt containing a transaction with the given product.
                     const response = prompt(`Do you want to purchase ${offer.productId} for ${offer.pricingPhases[0].price}?\nEnter "Y" to confirm.\nEnter "E" to fail with an error.\Anything else to cancel.`);
                     if ((response === null || response === void 0 ? void 0 : response.toUpperCase()) === 'E')
-                        return CdvPurchase.storeError(CdvPurchase.ErrorCode.PURCHASE, 'Purchase failed');
+                        return testStoreError(CdvPurchase.ErrorCode.PURCHASE, 'Purchase failed', offer.productId);
                     if ((response === null || response === void 0 ? void 0 : response.toUpperCase()) !== 'Y')
-                        return CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_CANCELLED, 'Purchase flow has been cancelled by the user');
+                        return testStoreError(CdvPurchase.ErrorCode.PAYMENT_CANCELLED, 'Purchase flow has been cancelled by the user', offer.productId);
                     // purchase succeeded, let's generate a mock receipt.
                     const receipt = new CdvPurchase.Receipt(platform, this.context.apiDecorators);
                     const tr = new CdvPurchase.Transaction(platform, receipt, this.context.apiDecorators);
@@ -5695,7 +5706,7 @@ var CdvPurchase;
                     yield CdvPurchase.Utils.asyncDelay(100); // maybe app has some UI to update... and "prompt" prevents that
                     const response = prompt(`Mock payment of ${((_a = paymentRequest.amountMicros) !== null && _a !== void 0 ? _a : 0) / 1000000} ${paymentRequest.currency}. Enter "Y" to confirm. Enter "E" to trigger an error.`);
                     if ((response === null || response === void 0 ? void 0 : response.toUpperCase()) === 'E')
-                        return CdvPurchase.storeError(CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED, 'Payment not allowed');
+                        return testStoreError(CdvPurchase.ErrorCode.PAYMENT_NOT_ALLOWED, 'Payment not allowed', null);
                     if ((response === null || response === void 0 ? void 0 : response.toUpperCase()) !== 'Y')
                         return;
                     const receipt = new CdvPurchase.Receipt(platform, this.context.apiDecorators);
@@ -5791,6 +5802,9 @@ var CdvPurchase;
             }
         }
         Test.Adapter = Adapter;
+        function testStoreError(code, message, productId) {
+            return CdvPurchase.storeError(code, message, CdvPurchase.Platform.TEST, productId);
+        }
     })(Test = CdvPurchase.Test || (CdvPurchase.Test = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 /// <reference path="../../utils/compatibility.ts" />
@@ -5997,7 +6011,7 @@ var CdvPurchase;
             }
             loadProducts(products) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return products.map(p => CdvPurchase.storeError(CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, 'TODO'));
+                    return products.map(p => windowsStoreError(CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, 'TODO', p.id));
                 });
             }
             loadReceipts() {
@@ -6007,12 +6021,12 @@ var CdvPurchase;
             }
             order(offer) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'TODO: Not implemented');
+                    return windowsStoreError(CdvPurchase.ErrorCode.UNKNOWN, 'TODO: Not implemented', offer.productId);
                 });
             }
             finish(transaction) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'TODO: Not implemented');
+                    return windowsStoreError(CdvPurchase.ErrorCode.UNKNOWN, 'TODO: Not implemented', null);
                 });
             }
             handleReceiptValidationResponse(receipt, response) {
@@ -6027,17 +6041,17 @@ var CdvPurchase;
             }
             requestPayment(payment, additionalData) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'requestPayment not supported');
+                    return windowsStoreError(CdvPurchase.ErrorCode.UNKNOWN, 'requestPayment not supported', null);
                 });
             }
             manageSubscriptions() {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'manageSubscriptions not supported');
+                    return windowsStoreError(CdvPurchase.ErrorCode.UNKNOWN, 'manageSubscriptions not supported', null);
                 });
             }
             manageBilling() {
                 return __awaiter(this, void 0, void 0, function* () {
-                    return CdvPurchase.storeError(CdvPurchase.ErrorCode.UNKNOWN, 'manageBilling not supported');
+                    return windowsStoreError(CdvPurchase.ErrorCode.UNKNOWN, 'manageBilling not supported', null);
                 });
             }
             checkSupport(functionality) {
@@ -6049,6 +6063,9 @@ var CdvPurchase;
             }
         }
         WindowsStore.Adapter = Adapter;
+        function windowsStoreError(code, message, productId) {
+            return CdvPurchase.storeError(code, message, CdvPurchase.Platform.WINDOWS_STORE, productId);
+        }
     })(WindowsStore = CdvPurchase.WindowsStore || (CdvPurchase.WindowsStore = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
