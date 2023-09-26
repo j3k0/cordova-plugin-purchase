@@ -118,6 +118,10 @@ namespace CdvPurchase {
                 tr.purchaseDate = new Date();
                 tr.transactionId = offer.productId + '-' + (new Date().getTime());
                 tr.isAcknowledged = false;
+                if (offer.productType === CdvPurchase.ProductType.PAID_SUBSCRIPTION) {
+                    tr.expirationDate = new Date(+new Date() + 604800000);
+                    tr.renewalIntent = RenewalIntent.RENEW;
+                }
                 updateVerifiedPurchases(tr);
                 this.receipts.push(receipt);
                 this.context.listener.receiptsUpdated(Platform.TEST, [receipt]);
