@@ -4073,6 +4073,7 @@ declare namespace CdvPurchase {
             private context;
             private log;
             autoRefreshIntervalMillis: number;
+            static trimProductTitles: boolean;
             static _instance: Adapter;
             constructor(context: Internal.AdapterContext, autoRefreshIntervalMillis?: number);
             private initializationPromise?;

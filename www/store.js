@@ -4925,6 +4925,7 @@ var CdvPurchase;
                 });
             }
         }
+        Adapter.trimProductTitles = true;
         GooglePlay.Adapter = Adapter;
         function playStoreError(code, message, productId) {
             return CdvPurchase.storeError(code, message, CdvPurchase.Platform.GOOGLE_PLAY, productId);
@@ -5214,6 +5215,8 @@ var CdvPurchase;
                 const existingProduct = this.getProduct(registeredProduct.id);
                 const p = existingProduct !== null && existingProduct !== void 0 ? existingProduct : new GProduct(registeredProduct, this.decorator);
                 p.title = vp.title || vp.name || p.title;
+                if (GooglePlay.Adapter.trimProductTitles)
+                    p.title = p.title.replace(/ \(.*\)$/, '');
                 p.description = vp.description || p.description;
                 // Process the product depending on the format
                 if ('product_format' in vp && vp.product_format === "v12.0") {
@@ -5643,6 +5646,10 @@ var CdvPurchase;
                     tr.purchaseDate = new Date();
                     tr.transactionId = offer.productId + '-' + (new Date().getTime());
                     tr.isAcknowledged = false;
+                    if (offer.productType === CdvPurchase.ProductType.PAID_SUBSCRIPTION) {
+                        tr.expirationDate = new Date(+new Date() + 604800000);
+                        tr.renewalIntent = CdvPurchase.RenewalIntent.RENEW;
+                    }
                     updateVerifiedPurchases(tr);
                     this.receipts.push(receipt);
                     this.context.listener.receiptsUpdated(CdvPurchase.Platform.TEST, [receipt]);

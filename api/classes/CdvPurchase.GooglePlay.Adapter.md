@@ -24,6 +24,7 @@ Adapter for a payment or in-app purchase platform
 - [ready](CdvPurchase.GooglePlay.Adapter.md#ready)
 - [retry](CdvPurchase.GooglePlay.Adapter.md#retry)
 - [\_instance](CdvPurchase.GooglePlay.Adapter.md#_instance)
+- [trimProductTitles](CdvPurchase.GooglePlay.Adapter.md#trimproducttitles)
 
 ### Accessors
 
@@ -137,6 +138,12 @@ ___
 ### \_instance
 
 ▪ `Static` **\_instance**: [`Adapter`](CdvPurchase.GooglePlay.Adapter.md)
+
+___
+
+### trimProductTitles
+
+▪ `Static` **trimProductTitles**: `boolean` = `true`
 
 ## Accessors
 
