@@ -2,6 +2,10 @@
 
 ## 13.8
 
+### 13.8.3
+
+Fix npm package.
+
 ### 13.8.2
 
 #### store.applicationUsername can return `undefined`

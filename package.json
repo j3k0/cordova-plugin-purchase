@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-purchase",
-  "version": "13.8.2",
+  "version": "13.8.3",
   "description": "Cordova Purchase plugin for iOS, Android, Windows (AppStore, Play, UWP)",
   "cordova": {
     "id": "cordova-plugin-purchase",
@@ -52,5 +52,19 @@
     "typescript": "^4.7.4"
   },
   "main": "./www/store.js",
-  "types": "./www/store.d.ts"
+  "types": "./www/store.d.ts",
+  "files": [
+    "/package.json",
+    "/package-lock.json",
+    "/plugin.xml",
+    "/README.md",
+    "/RELEASE_NOTES.md",
+    "/src/android",
+    "/src/ios",
+    "/src/ts",
+    "/src/windows",
+    "/tests",
+    "/tsconfig.ts",
+    "/www"
+  ]
 }
