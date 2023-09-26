@@ -99,6 +99,7 @@ namespace CdvPurchase {
             private log: Logger;
 
             public autoRefreshIntervalMillis: number = 0;
+            static trimProductTitles: boolean = true;
 
             static _instance: Adapter;
             constructor(context: Internal.AdapterContext, autoRefreshIntervalMillis: number = 1000 * 3600 * 24) {

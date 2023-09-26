@@ -49,6 +49,8 @@ namespace CdvPurchase {
                 const existingProduct = this.getProduct(registeredProduct.id);
                 const p = existingProduct ?? new GProduct(registeredProduct, this.decorator);
                 p.title = vp.title || vp.name || p.title;
+                if (Adapter.trimProductTitles)
+                    p.title = p.title.replace(/ \(.*\)$/, '');
                 p.description = vp.description || p.description;
                 // Process the product depending on the format
                 if ('product_format' in vp && vp.product_format === "v12.0") {
