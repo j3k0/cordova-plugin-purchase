@@ -1,18 +1,8 @@
 # Namespace: CdvPurchase
 
-Namespace for the cordova-plugin-purchase plugin.
+The platform doesn't send notifications when a subscription expires.
 
-All classes, enumerations and variables defined by the plugin are in this namespace.
-
-Throughout the documentation, in order to keep examples readable, we omit the `CdvPurchase` prefix.
-
-When you see, for example `ProductType.PAID_SUBSCRIPTION`, it refers to `CdvPurchase.ProductType.PAID_SUBSCRIPTION`.
-
-In the files that interact with the plugin, I recommend creating those shortcuts (and more if needed):
-
-```ts
-const {store, ProductType, Platform, LogLevel} = CdvPurchase;
-```
+However this is useful, so let's do just that.
 
 ## Table of contents
 
@@ -153,7 +143,7 @@ ___
 
 ### PLUGIN\_VERSION
 
-• `Const` **PLUGIN\_VERSION**: ``"13.8.3"``
+• `Const` **PLUGIN\_VERSION**: ``"13.8.4"``
 
 Current release number of the plugin.
 

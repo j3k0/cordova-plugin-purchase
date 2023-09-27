@@ -1161,6 +1161,76 @@ var CdvPurchase;
         Internal.ReceiptsMonitor = ReceiptsMonitor;
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
+/**
+ * The platform doesn't send notifications when a subscription expires.
+ *
+ * However this is useful, so let's do just that.
+ */
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Internal;
+    (function (Internal) {
+        class ExpiryMonitor {
+            /** Track active local transactions */
+            // activeTransactions: {
+            //   [transactionId: string]: true;
+            // } = {};
+            /** Track notified local transactions */
+            // notifiedTransactions: {
+            //   [transactionId: string]: true;
+            // } = {};
+            constructor(controller) {
+                /** Track active verified purchases */
+                this.activePurchases = {};
+                /** Track notified verified purchases */
+                this.notifiedPurchases = {};
+                this.controller = controller;
+            }
+            launch() {
+                this.interval = setInterval(() => {
+                    var _a;
+                    const now = +new Date();
+                    // Check for verified purchases expiry
+                    for (const receipt of this.controller.verifiedReceipts) {
+                        for (const purchase of receipt.collection) {
+                            if (purchase.expiryDate) {
+                                const expiryDate = purchase.expiryDate + ExpiryMonitor.GRACE_PERIOD_MS;
+                                const transactionId = (_a = purchase.transactionId) !== null && _a !== void 0 ? _a : `${expiryDate}`;
+                                if (expiryDate > now) {
+                                    this.activePurchases[transactionId] = true;
+                                }
+                                if (expiryDate < now && this.activePurchases[transactionId] && !this.notifiedPurchases[transactionId]) {
+                                    this.notifiedPurchases[transactionId] = true;
+                                    this.controller.onVerifiedPurchaseExpired(purchase, receipt);
+                                }
+                            }
+                        }
+                    }
+                    // Check for local purchases expiry
+                    // for (const receipt of this.controller.localReceipts) {
+                    //   for (const transaction of receipt.transactions) {
+                    //     if (transaction.expirationDate) {
+                    //       const expirationDate = +transaction.expirationDate + ExpiryMonitor.GRACE_PERIOD_MS;
+                    //       const transactionId = transaction.transactionId ?? `${expirationDate}`;
+                    //       if (expirationDate > now) {
+                    //         this.activeTransactions[transactionId] = true;
+                    //       }
+                    //       if (expirationDate < now && this.activeTransactions[transactionId] && !this.notifiedTransactions[transactionId]) {
+                    //         this.notifiedTransactions[transactionId] = true;
+                    //         this.controller.onTransactionExpired(transaction);
+                    //       }
+                    //     }
+                    //   }
+                    // }
+                }, ExpiryMonitor.INTERVAL_MS);
+            }
+        }
+        /** Time between  */
+        ExpiryMonitor.INTERVAL_MS = 10000;
+        ExpiryMonitor.GRACE_PERIOD_MS = 10000;
+        Internal.ExpiryMonitor = ExpiryMonitor;
+    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
+})(CdvPurchase || (CdvPurchase = {}));
 /// <reference path="types.ts" />
 /// <reference path="utils/compatibility.ts" />
 /// <reference path="validator/validator.ts" />
@@ -1172,6 +1242,7 @@ var CdvPurchase;
 /// <reference path="internal/register.ts" />
 /// <reference path="internal/transaction-monitor.ts" />
 /// <reference path="internal/receipts-monitor.ts" />
+/// <reference path="internal/expiry-monitor.ts" />
 /**
  * Namespace for the cordova-plugin-purchase plugin.
  *
@@ -1192,7 +1263,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.8.3';
+    CdvPurchase.PLUGIN_VERSION = '13.8.4';
     /**
      * Entry class of the plugin.
      */
@@ -1289,6 +1360,17 @@ var CdvPurchase;
                 receiptsVerified: () => { store.receiptsVerifiedCallbacks.trigger(); },
                 log: this.log,
             }).launch();
+            this.expiryMonitor = new CdvPurchase.Internal.ExpiryMonitor({
+                // get localReceipts() { return store.localReceipts; },
+                get verifiedReceipts() { return store.verifiedReceipts; },
+                // onTransactionExpired(transaction) {
+                // store.approvedCallbacks.trigger(transaction);
+                // },
+                onVerifiedPurchaseExpired(verifiedPurchase, receipt) {
+                    store.verify(receipt.sourceReceipt);
+                },
+            });
+            this.expiryMonitor.launch();
         }
         /**
          * Retrieve a platform adapter.

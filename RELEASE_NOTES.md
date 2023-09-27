@@ -2,6 +2,44 @@
 
 ## 13.8
 
+### 13.8.4
+
+#### Trim product titles on Google Play
+
+Google Play returns the app name in parenthesis in product titles. The plugin
+now automatically trims it from the app name.
+
+This behavior can be disabled by setting:
+
+```ts
+CdvPurchase.GooglePlay.Adapter.trimProductTitles = false
+```
+
+#### Automatically re-validate just-expired subscriptions
+
+The plugin will now monitor active subscripion purchases (as returned by a
+receipt validation service) and re-validate the receipt automatically when the
+subscription expires or renews.
+
+You can customize the expiry monitor (which should rarely be needed):
+
+```ts
+// interval between checks in milliseconds
+CdvPurchase.Internal.ExpiryMonitor.INTERVAL_MS = 10000; // default: 10s
+
+// extra time before a subscription is considered expired (when re-validating
+// too early, sometime the new transaction isn't available yet).
+CdvPurchase.Internal.ExpiryMonitor.GRACE_PERIOD_MS = 10000; // default: 10s
+```
+
+#### Add expiry date to Test Adapter's subscription
+
+The expiry date was missing from the test product:
+
+```ts
+CdvPurchase.Test.testProducts.PAID_SUBSCRIPTION
+```
+
 ### 13.8.3
 
 Fix npm package.

@@ -644,6 +644,42 @@ declare namespace CdvPurchase {
     }
 }
 /**
+ * The platform doesn't send notifications when a subscription expires.
+ *
+ * However this is useful, so let's do just that.
+ */
+declare namespace CdvPurchase {
+    namespace Internal {
+        /** Data and callbacks to interface with the ExpiryMonitor */
+        interface ExpiryMonitorController {
+            verifiedReceipts: VerifiedReceipt[];
+            /** Called when a verified purchase expires */
+            onVerifiedPurchaseExpired(verifiedPurchase: VerifiedPurchase, receipt: VerifiedReceipt): void;
+        }
+        class ExpiryMonitor {
+            /** Time between  */
+            static INTERVAL_MS: number;
+            static GRACE_PERIOD_MS: number;
+            /** controller */
+            controller: ExpiryMonitorController;
+            /** reference to the function that runs at a given interval */
+            interval?: number;
+            /** Track active verified purchases */
+            activePurchases: {
+                [transactionId: string]: true;
+            };
+            /** Track notified verified purchases */
+            notifiedPurchases: {
+                [transactionId: string]: true;
+            };
+            /** Track active local transactions */
+            /** Track notified local transactions */
+            constructor(controller: ExpiryMonitorController);
+            launch(): void;
+        }
+    }
+}
+/**
  * Namespace for the cordova-plugin-purchase plugin.
  *
  * All classes, enumerations and variables defined by the plugin are in this namespace.
@@ -662,7 +698,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.8.3";
+    const PLUGIN_VERSION = "13.8.4";
     /**
      * Entry class of the plugin.
      */
@@ -777,6 +813,8 @@ declare namespace CdvPurchase {
         private _validator;
         /** Monitor state changes for transactions */
         private transactionStateMonitors;
+        /** Monitor subscription expiry */
+        private expiryMonitor;
         constructor();
         /**
          * Register a product.
