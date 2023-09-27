@@ -9,6 +9,7 @@
 /// <reference path="internal/register.ts" />
 /// <reference path="internal/transaction-monitor.ts" />
 /// <reference path="internal/receipts-monitor.ts" />
+/// <reference path="internal/expiry-monitor.ts" />
 
 /**
  * Namespace for the cordova-plugin-purchase plugin.
@@ -177,6 +178,9 @@ namespace CdvPurchase {
         /** Monitor state changes for transactions */
         private transactionStateMonitors: Internal.TransactionStateMonitors;
 
+        /** Monitor subscription expiry */
+        private expiryMonitor: Internal.ExpiryMonitor;
+
         constructor() {
             const store = this;
             this.listener = new Internal.StoreAdapterListener({
@@ -208,6 +212,17 @@ namespace CdvPurchase {
                 receiptsVerified: () => { store.receiptsVerifiedCallbacks.trigger(); },
                 log: this.log,
             }).launch();
+            this.expiryMonitor = new Internal.ExpiryMonitor({
+                // get localReceipts() { return store.localReceipts; },
+                get verifiedReceipts() { return store.verifiedReceipts; },
+                // onTransactionExpired(transaction) {
+                // store.approvedCallbacks.trigger(transaction);
+                // },
+                onVerifiedPurchaseExpired(verifiedPurchase, receipt) {
+                    store.verify(receipt.sourceReceipt);
+                },
+            });
+            this.expiryMonitor.launch();
         }
 
         /**
