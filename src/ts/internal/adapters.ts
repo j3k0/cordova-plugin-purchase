@@ -123,11 +123,15 @@ namespace CdvPurchase
                     if (initResult?.code) return initResult;
                     log.info(`${adapter.name} products: ${JSON.stringify(platformProducts)}`);
                     if (platformProducts.length === 0) return;
-                    const loadProductsResult = await adapter.loadProducts(platformProducts);
+                    const [loadProductsResult, loadReceiptsResult] = await Promise.all([
+                        adapter.loadProducts(platformProducts),
+                        adapter.loadReceipts()
+                    ]);
+                    // const loadProductsResult = await adapter.loadProducts(platformProducts);
                     log.info(`${adapter.name} products loaded: ${JSON.stringify(loadProductsResult)}`);
                     const loadedProducts = loadProductsResult.filter(p => p instanceof Product) as Product[];
                     context.listener.productsUpdated(platformToInit.platform, loadedProducts);
-                    const loadReceiptsResult = await adapter.loadReceipts();
+                    // const loadReceiptsResult = await adapter.loadReceipts();
                     log.info(`${adapter.name} receipts loaded: ${JSON.stringify(loadReceiptsResult)}`);
                     return loadProductsResult.filter(lr => 'code' in lr && 'message' in lr)[0] as (IError | undefined);
                 }));
