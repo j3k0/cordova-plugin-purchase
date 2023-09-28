@@ -804,11 +804,15 @@ var CdvPurchase;
                         log.info(`${adapter.name} products: ${JSON.stringify(platformProducts)}`);
                         if (platformProducts.length === 0)
                             return;
-                        const loadProductsResult = yield adapter.loadProducts(platformProducts);
+                        const [loadProductsResult, loadReceiptsResult] = yield Promise.all([
+                            adapter.loadProducts(platformProducts),
+                            adapter.loadReceipts()
+                        ]);
+                        // const loadProductsResult = await adapter.loadProducts(platformProducts);
                         log.info(`${adapter.name} products loaded: ${JSON.stringify(loadProductsResult)}`);
                         const loadedProducts = loadProductsResult.filter(p => p instanceof CdvPurchase.Product);
                         context.listener.productsUpdated(platformToInit.platform, loadedProducts);
-                        const loadReceiptsResult = yield adapter.loadReceipts();
+                        // const loadReceiptsResult = await adapter.loadReceipts();
                         log.info(`${adapter.name} receipts loaded: ${JSON.stringify(loadReceiptsResult)}`);
                         return loadProductsResult.filter(lr => 'code' in lr && 'message' in lr)[0];
                     })));
@@ -1188,14 +1192,15 @@ var CdvPurchase;
             }
             launch() {
                 this.interval = setInterval(() => {
-                    var _a;
+                    var _a, _b;
                     const now = +new Date();
                     // Check for verified purchases expiry
                     for (const receipt of this.controller.verifiedReceipts) {
+                        const gracePeriod = (_a = ExpiryMonitor.GRACE_PERIOD_MS[receipt.platform]) !== null && _a !== void 0 ? _a : ExpiryMonitor.GRACE_PERIOD_MS.DEFAULT;
                         for (const purchase of receipt.collection) {
                             if (purchase.expiryDate) {
-                                const expiryDate = purchase.expiryDate + ExpiryMonitor.GRACE_PERIOD_MS;
-                                const transactionId = (_a = purchase.transactionId) !== null && _a !== void 0 ? _a : `${expiryDate}`;
+                                const expiryDate = purchase.expiryDate + gracePeriod;
+                                const transactionId = (_b = purchase.transactionId) !== null && _b !== void 0 ? _b : `${expiryDate}`;
                                 if (expiryDate > now) {
                                     this.activePurchases[transactionId] = true;
                                 }
@@ -1227,7 +1232,10 @@ var CdvPurchase;
         }
         /** Time between  */
         ExpiryMonitor.INTERVAL_MS = 10000;
-        ExpiryMonitor.GRACE_PERIOD_MS = 10000;
+        ExpiryMonitor.GRACE_PERIOD_MS = {
+            DEFAULT: 10000,
+            "ios-appstore": 60000, // Apple takes longer to propagate renewals
+        };
         Internal.ExpiryMonitor = ExpiryMonitor;
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
@@ -2665,10 +2673,12 @@ var CdvPurchase;
             /** Notify the store that the receipts have been updated */
             _receiptsUpdated() {
                 if (this._receipt) {
+                    this.log.debug("receipt updated and ready.");
                     this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [this._receipt, this.pseudoReceipt]);
                     this.context.listener.receiptsReady(CdvPurchase.Platform.APPLE_APPSTORE);
                 }
                 else {
+                    this.log.debug("receipt updated.");
                     this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [this.pseudoReceipt]);
                 }
             }
@@ -2890,7 +2900,7 @@ var CdvPurchase;
                     }
                     const eligibilityRequests = [];
                     validProducts.forEach(valid => {
-                        var _a;
+                        var _a, _b, _c;
                         (_a = valid.discounts) === null || _a === void 0 ? void 0 : _a.forEach(discount => {
                             eligibilityRequests.push({
                                 productId: valid.id,
@@ -2898,7 +2908,7 @@ var CdvPurchase;
                                 discountType: discount.type,
                             });
                         });
-                        if (!valid.discounts && valid.introPrice) {
+                        if (((_c = (_b = valid.discounts) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 0) === 0 && valid.introPrice) {
                             // sometime apple returns the discounts in the deprecated "introductory" info
                             // we create a special "discount" with the id "intro" to check for eligibility.
                             eligibilityRequests.push({
@@ -2958,7 +2968,7 @@ var CdvPurchase;
                                     product === null || product === void 0 ? void 0 : product.refresh(valid, this.context.apiDecorators, eligibilities);
                                 }
                                 else {
-                                    this.log.debug('registering existing product');
+                                    this.log.debug('registering new product');
                                     product = new AppleAppStore.SKProduct(valid, p, this.context.apiDecorators, eligibilities);
                                     this._products.push(product);
                                 }
@@ -3583,7 +3593,8 @@ var CdvPurchase;
                             return (_a = this.response[i]) !== null && _a !== void 0 ? _a : false;
                         }
                     }
-                    return false;
+                    // No request for this product, let's say it's eligible.
+                    return true;
                 }
             }
             Internal.DiscountEligibilities = DiscountEligibilities;

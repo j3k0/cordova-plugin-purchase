@@ -659,7 +659,9 @@ declare namespace CdvPurchase {
         class ExpiryMonitor {
             /** Time between  */
             static INTERVAL_MS: number;
-            static GRACE_PERIOD_MS: number;
+            static GRACE_PERIOD_MS: {
+                [platform: string]: number;
+            };
             /** controller */
             controller: ExpiryMonitorController;
             /** reference to the function that runs at a given interval */
