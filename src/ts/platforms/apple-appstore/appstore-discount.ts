@@ -34,7 +34,8 @@ namespace CdvPurchase {
               return this.response[i] ?? false;
             }
           }
-          return false;
+          // No request for this product, let's say it's eligible.
+          return true;
         }
       }
     }

@@ -469,7 +469,7 @@ namespace CdvPurchase {
                             discountType: discount.type,
                         });
                     });
-                    if (!valid.discounts && valid.introPrice) {
+                    if ((valid.discounts?.length ?? 0) === 0 && valid.introPrice) {
                         // sometime apple returns the discounts in the deprecated "introductory" info
                         // we create a special "discount" with the id "intro" to check for eligibility.
                         eligibilityRequests.push({
