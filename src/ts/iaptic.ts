@@ -102,7 +102,7 @@ namespace CdvPurchase {
         }
         const onVerified = (receipt: VerifiedReceipt) => {
           if (receipt.platform === Platform.APPLE_APPSTORE) {
-          this.log.debug("Receipt is verified, let's analyze the content and respond.");
+            this.log.debug("Receipt is verified, let's analyze the content and respond.");
             this.store.off(onVerified);
             callback(analyzeReceipt(receipt, requests));
           }

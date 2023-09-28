@@ -219,10 +219,12 @@ namespace CdvPurchase {
             /** Notify the store that the receipts have been updated */
             private _receiptsUpdated() {
                 if (this._receipt) {
+                    this.log.debug("receipt updated and ready.");
                     this.context.listener.receiptsUpdated(Platform.APPLE_APPSTORE, [this._receipt, this.pseudoReceipt]);
                     this.context.listener.receiptsReady(Platform.APPLE_APPSTORE);
                 }
                 else {
+                    this.log.debug("receipt updated.");
                     this.context.listener.receiptsUpdated(Platform.APPLE_APPSTORE, [this.pseudoReceipt]);
                 }
             }
@@ -346,7 +348,7 @@ namespace CdvPurchase {
                         this.initializeAppReceipt(() => {
                             this.receiptsUpdated();
                             if (this._receipt) {
-                               resolve([this._receipt, this.pseudoReceipt]);
+                                resolve([this._receipt, this.pseudoReceipt]);
                             }
                             else {
                                 resolve([this.pseudoReceipt]);
@@ -530,7 +532,7 @@ namespace CdvPurchase {
                                         product?.refresh(valid, this.context.apiDecorators, eligibilities);
                                     }
                                     else {
-                                        this.log.debug('registering existing product');
+                                        this.log.debug('registering new product');
                                         product = new SKProduct(valid, p, this.context.apiDecorators, eligibilities);
                                         this._products.push(product);
                                     }
