@@ -24,7 +24,10 @@ namespace CdvPurchase {
 
       /** Time between  */
       static INTERVAL_MS = 10000;
-      static GRACE_PERIOD_MS = 10000;
+      static GRACE_PERIOD_MS: { [platform: string]: number } = {
+        DEFAULT: 10000,
+        "ios-appstore": 60000, // Apple takes longer to propagate renewals
+      }
 
       /** controller */
       controller: ExpiryMonitorController;
@@ -61,9 +64,10 @@ namespace CdvPurchase {
           const now = +new Date();
           // Check for verified purchases expiry
           for (const receipt of this.controller.verifiedReceipts) {
+            const gracePeriod = ExpiryMonitor.GRACE_PERIOD_MS[receipt.platform] ?? ExpiryMonitor.GRACE_PERIOD_MS.DEFAULT;
             for (const purchase of receipt.collection) {
               if (purchase.expiryDate) {
-                const expiryDate = purchase.expiryDate + ExpiryMonitor.GRACE_PERIOD_MS;
+                const expiryDate = purchase.expiryDate + gracePeriod;
                 const transactionId = purchase.transactionId ?? `${expiryDate}`;
                 if (expiryDate > now) {
                   this.activePurchases[transactionId] = true;
