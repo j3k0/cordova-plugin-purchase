@@ -29,6 +29,7 @@ Test.TEST_PRODUCTS
 - [products](CdvPurchase.Test.Adapter.md#products)
 - [ready](CdvPurchase.Test.Adapter.md#ready)
 - [receipts](CdvPurchase.Test.Adapter.md#receipts)
+- [supportsParallelLoading](CdvPurchase.Test.Adapter.md#supportsparallelloading)
 
 ### Accessors
 
@@ -123,6 +124,18 @@ List of purchase receipts.
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[receipts](../interfaces/CdvPurchase.Adapter.md#receipts)
+
+___
+
+### supportsParallelLoading
+
+• **supportsParallelLoading**: `boolean` = `true`
+
+Set to true if receipts and products can be loaded in parallel
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[supportsParallelLoading](../interfaces/CdvPurchase.Adapter.md#supportsparallelloading)
 
 ## Accessors
 

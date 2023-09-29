@@ -22,6 +22,7 @@ Adapter for a payment or in-app purchase platform
 - [products](CdvPurchase.Adapter.md#products)
 - [ready](CdvPurchase.Adapter.md#ready)
 - [receipts](CdvPurchase.Adapter.md#receipts)
+- [supportsParallelLoading](CdvPurchase.Adapter.md#supportsparallelloading)
 
 ### Methods
 
@@ -87,6 +88,14 @@ ___
 • **receipts**: [`Receipt`](../classes/CdvPurchase.Receipt.md)[]
 
 List of purchase receipts.
+
+___
+
+### supportsParallelLoading
+
+• **supportsParallelLoading**: `boolean`
+
+Set to true if receipts and products can be loaded in parallel
 
 ## Methods
 

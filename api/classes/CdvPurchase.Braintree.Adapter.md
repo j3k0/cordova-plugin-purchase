@@ -25,6 +25,7 @@ Adapter for a payment or in-app purchase platform
 - [options](CdvPurchase.Braintree.Adapter.md#options)
 - [products](CdvPurchase.Braintree.Adapter.md#products)
 - [ready](CdvPurchase.Braintree.Adapter.md#ready)
+- [supportsParallelLoading](CdvPurchase.Braintree.Adapter.md#supportsparallelloading)
 
 ### Accessors
 
@@ -138,6 +139,18 @@ The value is set by the "Adapters" class (which is responsible for initializing 
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[ready](../interfaces/CdvPurchase.Adapter.md#ready)
+
+___
+
+### supportsParallelLoading
+
+• **supportsParallelLoading**: `boolean` = `false`
+
+Set to true if receipts and products can be loaded in parallel
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[supportsParallelLoading](../interfaces/CdvPurchase.Adapter.md#supportsparallelloading)
 
 ## Accessors
 

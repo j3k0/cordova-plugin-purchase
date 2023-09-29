@@ -23,6 +23,7 @@ Adapter for a payment or in-app purchase platform
 - [name](CdvPurchase.GooglePlay.Adapter.md#name)
 - [ready](CdvPurchase.GooglePlay.Adapter.md#ready)
 - [retry](CdvPurchase.GooglePlay.Adapter.md#retry)
+- [supportsParallelLoading](CdvPurchase.GooglePlay.Adapter.md#supportsparallelloading)
 - [\_instance](CdvPurchase.GooglePlay.Adapter.md#_instance)
 - [trimProductTitles](CdvPurchase.GooglePlay.Adapter.md#trimproducttitles)
 
@@ -132,6 +133,18 @@ ___
 • **retry**: `Retry`<`Function`\>
 
 Used to retry failed commands
+
+___
+
+### supportsParallelLoading
+
+• **supportsParallelLoading**: `boolean` = `false`
+
+Set to true if receipts and products can be loaded in parallel
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[supportsParallelLoading](../interfaces/CdvPurchase.Adapter.md#supportsparallelloading)
 
 ___
 

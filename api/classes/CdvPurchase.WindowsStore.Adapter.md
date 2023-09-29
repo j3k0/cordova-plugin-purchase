@@ -21,6 +21,7 @@ Adapter for a payment or in-app purchase platform
 - [products](CdvPurchase.WindowsStore.Adapter.md#products)
 - [ready](CdvPurchase.WindowsStore.Adapter.md#ready)
 - [receipts](CdvPurchase.WindowsStore.Adapter.md#receipts)
+- [supportsParallelLoading](CdvPurchase.WindowsStore.Adapter.md#supportsparallelloading)
 
 ### Accessors
 
@@ -108,6 +109,18 @@ List of purchase receipts.
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[receipts](../interfaces/CdvPurchase.Adapter.md#receipts)
+
+___
+
+### supportsParallelLoading
+
+• **supportsParallelLoading**: `boolean` = `false`
+
+Set to true if receipts and products can be loaded in parallel
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[supportsParallelLoading](../interfaces/CdvPurchase.Adapter.md#supportsparallelloading)
 
 ## Accessors
 

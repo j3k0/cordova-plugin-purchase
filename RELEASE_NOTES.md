@@ -2,6 +2,27 @@
 
 ## 13.8
 
+### 13.8.5
+
+Fixes for Apple AppStore's introductory periods and
+subscription renewals.
+
+#### Load products and receipts in parallel on Apple
+
+This solves the issue with processing the eligibility of
+introductory periods.
+
+#### Increase grace period for Apple subscription before refresh
+
+After observing that Apple sometime needs more than a
+minute before the API returns the subscription renewal
+transaction, we increased the local grace period (time
+before refresh) to 90 seconds.
+
+```ts
+CdvPurchase.Internal.ExpiryMonitor.GRACE_PERIOD_MS[Platform.APPLE_APPSTORE] = 90000;
+```
+
 ### 13.8.4
 
 #### Trim product titles on Google Play

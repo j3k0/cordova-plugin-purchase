@@ -804,10 +804,18 @@ var CdvPurchase;
                         log.info(`${adapter.name} products: ${JSON.stringify(platformProducts)}`);
                         if (platformProducts.length === 0)
                             return;
-                        const [loadProductsResult, loadReceiptsResult] = yield Promise.all([
-                            adapter.loadProducts(platformProducts),
-                            adapter.loadReceipts()
-                        ]);
+                        let loadProductsResult = [];
+                        let loadReceiptsResult = [];
+                        if (adapter.supportsParallelLoading) {
+                            [loadProductsResult, loadReceiptsResult] = yield Promise.all([
+                                adapter.loadProducts(platformProducts),
+                                adapter.loadReceipts()
+                            ]);
+                        }
+                        else {
+                            loadProductsResult = yield adapter.loadProducts(platformProducts);
+                            loadReceiptsResult = yield adapter.loadReceipts();
+                        }
                         // const loadProductsResult = await adapter.loadProducts(platformProducts);
                         log.info(`${adapter.name} products loaded: ${JSON.stringify(loadProductsResult)}`);
                         const loadedProducts = loadProductsResult.filter(p => p instanceof CdvPurchase.Product);
@@ -1271,7 +1279,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.8.4';
+    CdvPurchase.PLUGIN_VERSION = '13.8.5';
     /**
      * Entry class of the plugin.
      */
@@ -2578,6 +2586,7 @@ var CdvPurchase;
                 this._products = [];
                 this.validProducts = {};
                 this._paymentMonitor = () => { };
+                this.supportsParallelLoading = true;
                 /** True iff the appStoreReceipt is already being initialized */
                 this._appStoreReceiptLoading = false;
                 /** List of functions waiting for the appStoreReceipt to be initialized */
@@ -3839,6 +3848,7 @@ var CdvPurchase;
                 this.ready = false;
                 this.products = [];
                 this._receipts = [];
+                this.supportsParallelLoading = false;
                 this.context = context;
                 this.log = context.log.child("Braintree");
                 this.options = options;
@@ -4691,6 +4701,7 @@ var CdvPurchase;
                 this.name = 'GooglePlay';
                 /** Has the adapter been successfully initialized */
                 this.ready = false;
+                this.supportsParallelLoading = false;
                 this._receipts = [];
                 /** The GooglePlay bridge */
                 this.bridge = new GooglePlay.Bridge.Bridge();
@@ -5667,6 +5678,7 @@ var CdvPurchase;
                 this.ready = false;
                 this.products = [];
                 this.receipts = [];
+                this.supportsParallelLoading = true;
                 this.context = context;
                 this.log = context.log.child("Test");
             }
@@ -6100,6 +6112,7 @@ var CdvPurchase;
                 this.id = CdvPurchase.Platform.WINDOWS_STORE;
                 this.name = 'WindowsStore';
                 this.ready = false;
+                this.supportsParallelLoading = false;
                 this.products = [];
                 this.receipts = [];
             }
