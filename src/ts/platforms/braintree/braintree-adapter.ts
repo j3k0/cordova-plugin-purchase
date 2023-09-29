@@ -213,6 +213,8 @@ namespace CdvPurchase {
                 return IosBridge.Bridge.isSupported() || AndroidBridge.Bridge.isSupported();
             }
 
+            supportsParallelLoading = false;
+
             /**
              * Initialize the Braintree Adapter.
              */

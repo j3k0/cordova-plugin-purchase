@@ -151,6 +151,11 @@ namespace CdvPurchase {
         loadReceipts(): Promise<Receipt[]>;
 
         /**
+         * Set to true if receipts and products can be loaded in parallel
+         */
+        supportsParallelLoading: boolean;
+
+        /**
          * Initializes an order.
          */
         order(offer: Offer, additionalData: AdditionalData): Promise<undefined | IError>;

@@ -79,6 +79,8 @@ namespace CdvPurchase {
             /** Has the adapter been successfully initialized */
             ready = false;
 
+            supportsParallelLoading = false;
+
             /** List of products managed by the GooglePlay adapter */
             get products(): GProduct[] { return this._products.products; }
             private _products: Products;

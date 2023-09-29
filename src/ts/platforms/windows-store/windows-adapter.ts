@@ -4,6 +4,7 @@ namespace CdvPurchase {
             id = Platform.WINDOWS_STORE;
             name = 'WindowsStore';
             ready = false;
+            supportsParallelLoading = false;
             products: Product[] = [];
             receipts: Receipt[] = [];
             async initialize(): Promise<IError | undefined> { return; }

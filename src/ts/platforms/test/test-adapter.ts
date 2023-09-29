@@ -57,6 +57,8 @@ namespace CdvPurchase {
                 return true;
             }
 
+            supportsParallelLoading = true;
+
             async initialize(): Promise<IError | undefined> { return; }
 
             async loadReceipts(): Promise<Receipt[]> {

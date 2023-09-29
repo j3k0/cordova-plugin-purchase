@@ -342,6 +342,8 @@ namespace CdvPurchase {
                 });
             }
 
+            supportsParallelLoading = true;
+
             loadReceipts(): Promise<Receipt[]> {
                 return new Promise((resolve) => {
                     setTimeout(() => {
