@@ -32,7 +32,7 @@ namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    export const PLUGIN_VERSION = '13.8.5';
+    export const PLUGIN_VERSION = '13.8.6';
 
     /**
      * Entry class of the plugin.

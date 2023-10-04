@@ -313,6 +313,12 @@ declare namespace CdvPurchase {
     }
 }
 declare namespace CdvPurchase {
+    namespace Utils {
+        /** Returns human format name for a given platform */
+        function platformName(platform: Platform): string;
+    }
+}
+declare namespace CdvPurchase {
     /**
      * @internal
      */
@@ -657,8 +663,14 @@ declare namespace CdvPurchase {
             onVerifiedPurchaseExpired(verifiedPurchase: VerifiedPurchase, receipt: VerifiedReceipt): void;
         }
         class ExpiryMonitor {
-            /** Time between  */
+            /** Time between checks for newly expired subscriptions */
             static INTERVAL_MS: number;
+            /**
+             * Extra time until re-validating an expired subscription.
+             *
+             * The platform will take unspecified amount of time to report the renewal via their APIs.
+             * Values below have been selected via trial-and-error, might require tweaking.
+             */
             static GRACE_PERIOD_MS: {
                 [platform: string]: number;
             };
@@ -700,7 +712,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.8.5";
+    const PLUGIN_VERSION = "13.8.6";
     /**
      * Entry class of the plugin.
      */

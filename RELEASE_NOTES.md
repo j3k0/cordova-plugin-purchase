@@ -2,6 +2,26 @@
 
 ## 13.8
 
+### 13.8.6
+
+#### Add CdvPurchase.Utils.platformName()
+
+Convert `CdvPurchase.Platform` enum values to a more user friendly version.
+
+Usage:
+
+```ts
+console.log(CdvPurchase.Utils.platformName(myTransaction.platform));
+
+// returns "App Store" or "Google Play" or "Braintree", ....
+```
+
+#### Increase expiry monitor's grace period on Google Play
+
+The 10 seconds wait before refreshing an expired subscription on Google Play wasn't enough: increased to 30 seconds.
+
+Ref #1468
+
 ### 13.8.5
 
 Fixes for Apple AppStore's introductory periods and

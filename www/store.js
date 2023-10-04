@@ -455,6 +455,29 @@ var CdvPurchase;
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
 (function (CdvPurchase) {
+    let Utils;
+    (function (Utils) {
+        /** Returns human format name for a given platform */
+        function platformName(platform) {
+            switch (platform) {
+                case CdvPurchase.Platform.APPLE_APPSTORE:
+                    return "App Store";
+                case CdvPurchase.Platform.GOOGLE_PLAY:
+                    return "Google Play";
+                case CdvPurchase.Platform.WINDOWS_STORE:
+                    return "Windows Store";
+                case CdvPurchase.Platform.BRAINTREE:
+                    return "Braintree";
+                case CdvPurchase.Platform.TEST:
+                    return "Test";
+                default: return platform;
+            }
+        }
+        Utils.platformName = platformName;
+    })(Utils = CdvPurchase.Utils || (CdvPurchase.Utils = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
     /**
      * @internal
      */
@@ -1238,17 +1261,25 @@ var CdvPurchase;
                 }, ExpiryMonitor.INTERVAL_MS);
             }
         }
-        /** Time between  */
+        /** Time between checks for newly expired subscriptions */
         ExpiryMonitor.INTERVAL_MS = 10000;
+        /**
+         * Extra time until re-validating an expired subscription.
+         *
+         * The platform will take unspecified amount of time to report the renewal via their APIs.
+         * Values below have been selected via trial-and-error, might require tweaking.
+         */
         ExpiryMonitor.GRACE_PERIOD_MS = {
-            DEFAULT: 10000,
-            "ios-appstore": 60000, // Apple takes longer to propagate renewals
+            DEFAULT: 60000,
+            "ios-appstore": 60000,
+            "android-playstore": 30000,
         };
         Internal.ExpiryMonitor = ExpiryMonitor;
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 /// <reference path="types.ts" />
 /// <reference path="utils/compatibility.ts" />
+/// <reference path="utils/platform-name.ts" />
 /// <reference path="validator/validator.ts" />
 /// <reference path="log.ts" />
 /// <reference path="internal/adapters.ts" />
@@ -1279,7 +1310,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.8.5';
+    CdvPurchase.PLUGIN_VERSION = '13.8.6';
     /**
      * Entry class of the plugin.
      */
