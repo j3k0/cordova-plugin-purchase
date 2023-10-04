@@ -1,5 +1,6 @@
 /// <reference path="types.ts" />
 /// <reference path="utils/compatibility.ts" />
+/// <reference path="utils/platform-name.ts" />
 /// <reference path="validator/validator.ts" />
 /// <reference path="log.ts" />
 /// <reference path="internal/adapters.ts" />
