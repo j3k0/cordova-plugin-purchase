@@ -22,11 +22,19 @@ namespace CdvPurchase {
 
     export class ExpiryMonitor {
 
-      /** Time between  */
+      /** Time between checks for newly expired subscriptions */
       static INTERVAL_MS = 10000;
+
+      /**
+       * Extra time until re-validating an expired subscription.
+       *
+       * The platform will take unspecified amount of time to report the renewal via their APIs.
+       * Values below have been selected via trial-and-error, might require tweaking.
+       */
       static GRACE_PERIOD_MS: { [platform: string]: number } = {
-        DEFAULT: 10000,
+        DEFAULT: 60000,
         "ios-appstore": 60000, // Apple takes longer to propagate renewals
+        "android-playstore": 30000,
       }
 
       /** controller */
