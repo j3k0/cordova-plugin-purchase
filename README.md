@@ -77,7 +77,7 @@ When making receipt validation requests, the purchase plugin uses, by default, t
 
 ### Note for Capacitor users
 
-Capacitor users can install this new version of the plugin without the help of the awesome-cordova-plugins wrapper. Just install the `cordova-plugin-purchase` module and `import "cordova-plugin-purchase"` in files where it's needed. (some user reported using `import "cordova-plugin-purchase/www/store.d"` to get it working).
+Capacitor users can install the latest version of the plugin without the help of the awesome-cordova-plugins wrapper. Just install the `cordova-plugin-purchase` module and `import "cordova-plugin-purchase"` in files where it's needed. (some user reported using `import "cordova-plugin-purchase/www/store.d"` to get it working).
 
 As with other plugins, you should wait for Capacitor `this.platform.ready()` before using the plugin.
 
@@ -139,6 +139,11 @@ There's been some changes to the API with version 13 of the plugin. This documen
 
 For proper subscription support, you need a receipt validation server. You can
 implement your own or use [Iaptic's receipt validation service](https://www.iaptic.com).
+
+Here is a full example of a cordova application implementing subscriptions, with and without a backend server:
+
+- Client: https://github.com/j3k0/cordova-subscription-example
+- Server: https://github.com/iaptic/iaptic-example-nodejs-backend
 
 # Contribute
 
