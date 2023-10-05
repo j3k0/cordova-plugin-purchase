@@ -426,11 +426,12 @@ namespace CdvPurchase {
             private async loadAppStoreReceipt(): Promise<undefined | ApplicationReceipt> {
                 let resolved = false;
                 return new Promise<undefined | ApplicationReceipt>(resolve => {
-                    if (this.bridge.appStoreReceipt?.appStoreReceipt) {
+                    if (this.bridge.appStoreReceipt?.appStoreReceipt && !this.forceReceiptReload) {
                         this.log.debug('using cached appstore receipt');
                         return resolve(this.bridge.appStoreReceipt);
                     }
                     this.log.debug('loading appstore receipt...');
+                    this.forceReceiptReload = false;
                     this.bridge.loadReceipts(receipt => {
                         this.log.debug('appstore receipt loaded');
                         if (!resolved) resolve(receipt);
@@ -650,8 +651,8 @@ namespace CdvPurchase {
                 const skReceipt = receipt as SKApplicationReceipt;
                 let applicationReceipt = skReceipt.nativeData;
                 if (this.forceReceiptReload) {
-                    this.forceReceiptReload = false;
                     const nativeData = await this.loadAppStoreReceipt();
+                    this.forceReceiptReload = false;
                     if (nativeData) {
                         applicationReceipt = nativeData;
                         this.prepareReceipt(nativeData);
