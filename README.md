@@ -81,7 +81,23 @@ Capacitor users can install the latest version of the plugin without the help of
 
 As with other plugins, you should wait for Capacitor `this.platform.ready()` before using the plugin.
 
-See [here](https://github.com/danielsogl/awesome-cordova-plugins/issues/4457) for some info.
+```ts
+import 'cordova-plugin-purchase';
+
+@Injectable()
+export class AppStoreService {
+
+  // DO NOT initialize to CdvPurchase.store here
+  store?: CdvPurchase.Store;
+
+  constructor() {
+    this.platform.ready().then(() => {
+      // MUST WAIT for Cordova to initialize before referencing CdvPurchase namespace
+      this.store = CdvPurchase.store
+    });
+  }
+}
+```
 
 ### Setup your Application
 
