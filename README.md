@@ -75,6 +75,16 @@ Install <strong>cordova-plugin-advanced-http</strong> (click for details).
 When making receipt validation requests, the purchase plugin uses, by default, the browser's ajax capabilities. This sometime causes issues with CORS restriction. CORS also imposes an extra back-and-forth with the server (the CORS preflight request) to ensure the server allows for such request to be made. By installing the [advanced-http plugin](https://github.com/silkimen/cordova-plugin-advanced-http), you get rid of those issue and benefit from the extra feature of the the plugin, like advanced authentication option. Read the [advanced-http](https://github.com/silkimen/cordova-plugin-advanced-http) plugin documentation for details.
 </details>
 
+### Note for ionic 3
+
+Since version 13 of the plugin, it should be used **without** `@ionic-native/in-app-purchase-2`.
+
+ionic 3 doesn't support recent typescript notations, but the plugin can be used without typings by just declaring it:
+
+```ts
+declare var CdvPurchase: any
+```
+
 ### Note for Capacitor users
 
 Capacitor users can install the latest version of the plugin without the help of the awesome-cordova-plugins wrapper. Just install the `cordova-plugin-purchase` module and `import "cordova-plugin-purchase"` in files where it's needed. (some user reported using `import "cordova-plugin-purchase/www/store.d"` to get it working).
