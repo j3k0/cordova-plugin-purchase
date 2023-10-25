@@ -495,9 +495,34 @@ declare namespace CdvPurchase {
             lastCallTimeForState: {
                 [transactionTokenWithState: string]: number;
             };
+            /**
+             * Set the list of supported platforms.
+             *
+             * Called by the store when it is initialized.
+             */
             setSupportedPlatforms(platforms: Platform[]): void;
+            /**
+             * Trigger the "receiptsReady" event when all platforms have reported that their receipts are ready.
+             *
+             * This function is used by adapters to report that their receipts are ready.
+             * Once all adapters have reported their receipts, the "receiptsReady" event is triggered.
+             *
+             * @param platform The platform that has its receipts ready.
+             */
             receiptsReady(platform: Platform): void;
+            /**
+             * Trigger the "updated" event for each product.
+             */
             productsUpdated(platform: Platform, products: Product[]): void;
+            /**
+             * Triggers the "approved", "pending" and "finished" events for transactions.
+             *
+             * - "approved" is triggered only if it hasn't been called for the same transaction in the last 5 seconds.
+             * - "finished" and "pending" are triggered only if the transaction state has changed.
+             *
+             * @param platform The platform that has its receipts updated.
+             * @param receipts The receipts that have been updated.
+             */
             receiptsUpdated(platform: Platform, receipts: Receipt[]): void;
         }
     }
@@ -994,7 +1019,7 @@ declare namespace CdvPurchase {
          *
          * This method exists to cover an Apple AppStore requirement.
          */
-        restorePurchases(): Promise<void>;
+        restorePurchases(): Promise<IError | undefined>;
         /**
          * Open the subscription management interface for the selected platform.
          *
@@ -1225,7 +1250,7 @@ declare namespace CdvPurchase {
          *
          * Might ask the user to login.
          */
-        restorePurchases(): Promise<void>;
+        restorePurchases(): Promise<IError | undefined>;
     }
     /**
      * Data to attach to a transaction.
@@ -2400,11 +2425,15 @@ declare namespace CdvPurchase {
             needAppReceipt: boolean;
             /** True to auto-finish all transactions */
             autoFinish: boolean;
+            /** Callback called when the restore process is completed */
+            onRestoreCompleted?: (code: IError | undefined) => void;
             constructor(context: CdvPurchase.Internal.AdapterContext, options: AdapterOptions);
             /** Returns true on iOS, the only platform supported by this adapter */
             get isSupported(): boolean;
             private upsertTransactionInProgress;
+            /** Remove a transaction from the pseudo receipt */
             private removeTransactionInProgress;
+            /** Insert or update a transaction in the pseudo receipt */
             private upsertTransaction;
             private removeTransaction;
             /** Debounced version of _receiptUpdated */
@@ -2441,7 +2470,7 @@ declare namespace CdvPurchase {
             manageSubscriptions(): Promise<IError | undefined>;
             manageBilling(): Promise<IError | undefined>;
             checkSupport(functionality: PlatformFunctionality): boolean;
-            restorePurchases(): Promise<void>;
+            restorePurchases(): Promise<IError | undefined>;
             presentCodeRedemptionSheet(): Promise<void>;
         }
     }
@@ -2610,6 +2639,15 @@ declare namespace CdvPurchase {
                 /** List of transaction updates to process */
                 private pendingUpdates;
                 constructor();
+                /**
+                 * Initialize the AppStore bridge.
+                 *
+                 * This calls the native "setup" method from the "InAppPurchase" Objective-C class.
+                 *
+                 * @param options Options for the bridge
+                 * @param success Called when the bridge is ready
+                 * @param error Called when the bridge failed to initialize
+                 */
                 init(options: Partial<BridgeOptions>, success: () => void, error: (code: ErrorCode, message: string) => void): void;
                 processPendingTransactions(): void;
                 /**
@@ -3221,7 +3259,7 @@ declare namespace CdvPurchase {
              */
             handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
             checkSupport(functionality: PlatformFunctionality): boolean;
-            restorePurchases(): Promise<void>;
+            restorePurchases(): Promise<IError | undefined>;
         }
         function braintreeError(code: ErrorCode, message: string): IError;
     }
@@ -4179,7 +4217,7 @@ declare namespace CdvPurchase {
             manageSubscriptions(): Promise<IError | undefined>;
             manageBilling(): Promise<IError | undefined>;
             checkSupport(functionality: PlatformFunctionality): boolean;
-            restorePurchases(): Promise<void>;
+            restorePurchases(): Promise<IError | undefined>;
         }
     }
 }
@@ -4981,7 +5019,7 @@ declare namespace CdvPurchase {
             private reportActiveSubscription;
             static verify(receipt: Receipt, callback: Callback<Internal.ReceiptResponse>): void;
             checkSupport(functionality: PlatformFunctionality): boolean;
-            restorePurchases(): Promise<void>;
+            restorePurchases(): Promise<IError | undefined>;
         }
     }
 }
@@ -5089,7 +5127,7 @@ declare namespace CdvPurchase {
             manageSubscriptions(): Promise<IError | undefined>;
             manageBilling(): Promise<IError | undefined>;
             checkSupport(functionality: PlatformFunctionality): boolean;
-            restorePurchases(): Promise<void>;
+            restorePurchases(): Promise<IError | undefined>;
         }
     }
 }

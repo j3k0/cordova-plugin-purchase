@@ -28,6 +28,7 @@ Adapter for Apple AppStore using StoreKit version 1
 - [log](CdvPurchase.AppleAppStore.Adapter.md#log)
 - [name](CdvPurchase.AppleAppStore.Adapter.md#name)
 - [needAppReceipt](CdvPurchase.AppleAppStore.Adapter.md#needappreceipt)
+- [onRestoreCompleted](CdvPurchase.AppleAppStore.Adapter.md#onrestorecompleted)
 - [pseudoReceipt](CdvPurchase.AppleAppStore.Adapter.md#pseudoreceipt)
 - [ready](CdvPurchase.AppleAppStore.Adapter.md#ready)
 - [supportsParallelLoading](CdvPurchase.AppleAppStore.Adapter.md#supportsparallelloading)
@@ -167,6 +168,28 @@ ___
 • **needAppReceipt**: `boolean`
 
 True when we need to validate the application receipt
+
+___
+
+### onRestoreCompleted
+
+• `Optional` **onRestoreCompleted**: (`code`: `undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)) => `void`
+
+#### Type declaration
+
+▸ (`code`): `void`
+
+Callback called when the restore process is completed
+
+##### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `code` | `undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md) |
+
+##### Returns
+
+`void`
 
 ___
 
@@ -539,7 +562,7 @@ ___
 
 ### restorePurchases
 
-▸ **restorePurchases**(): `Promise`<`void`\>
+▸ **restorePurchases**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Replay the queue of transactions.
 
@@ -547,7 +570,7 @@ Might ask the user to login.
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 #### Implementation of
 

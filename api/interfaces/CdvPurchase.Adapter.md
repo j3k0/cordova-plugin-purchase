@@ -287,7 +287,7 @@ ___
 
 ### restorePurchases
 
-▸ **restorePurchases**(): `Promise`<`void`\>
+▸ **restorePurchases**(): `Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 Replay the queue of transactions.
 
@@ -295,4 +295,4 @@ Might ask the user to login.
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>

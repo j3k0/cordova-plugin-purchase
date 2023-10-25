@@ -793,8 +793,9 @@ var CdvPurchase;
                             }
                             return this.list.push(new CdvPurchase.Braintree.Adapter(context, po.options));
                         case CdvPurchase.Platform.TEST:
-                        default:
                             return this.list.push(new CdvPurchase.Test.Adapter(context));
+                        default:
+                            return;
                     }
                 });
             }
@@ -895,29 +896,56 @@ var CdvPurchase;
             static makeTransactionToken(transaction) {
                 return transaction.platform + '|' + transaction.transactionId;
             }
+            /**
+             * Set the list of supported platforms.
+             *
+             * Called by the store when it is initialized.
+             */
             setSupportedPlatforms(platforms) {
-                this.log.debug('setSupportedPlatforms: ' + platforms.join(','));
+                this.log.debug(`setSupportedPlatforms: ${platforms.join(',')} (${this.platformWithReceiptsReady.length} have their receipts ready)`);
                 this.supportedPlatforms = platforms;
                 if (this.supportedPlatforms.length === this.platformWithReceiptsReady.length) {
+                    this.log.debug('triggering receiptsReady()');
                     this.delegate.receiptsReadyCallbacks.trigger();
                 }
             }
+            /**
+             * Trigger the "receiptsReady" event when all platforms have reported that their receipts are ready.
+             *
+             * This function is used by adapters to report that their receipts are ready.
+             * Once all adapters have reported their receipts, the "receiptsReady" event is triggered.
+             *
+             * @param platform The platform that has its receipts ready.
+             */
             receiptsReady(platform) {
                 if (this.supportedPlatforms.length > 0 && this.platformWithReceiptsReady.length === this.supportedPlatforms.length) {
+                    this.log.debug('receiptsReady: ' + platform + '(skipping)');
                     return;
                 }
                 if (this.platformWithReceiptsReady.indexOf(platform) < 0) {
-                    this.log.debug('receiptsReady: ' + platform);
                     this.platformWithReceiptsReady.push(platform);
+                    this.log.debug(`receiptsReady: ${platform} (${this.platformWithReceiptsReady.length}/${this.supportedPlatforms.length})`);
                     if (this.platformWithReceiptsReady.length === this.supportedPlatforms.length) {
-                        this.log.debug('calling receiptsReady()');
+                        this.log.debug('triggering receiptsReady()');
                         this.delegate.receiptsReadyCallbacks.trigger();
                     }
                 }
             }
+            /**
+             * Trigger the "updated" event for each product.
+             */
             productsUpdated(platform, products) {
                 products.forEach(product => this.delegate.updatedCallbacks.trigger(product));
             }
+            /**
+             * Triggers the "approved", "pending" and "finished" events for transactions.
+             *
+             * - "approved" is triggered only if it hasn't been called for the same transaction in the last 5 seconds.
+             * - "finished" and "pending" are triggered only if the transaction state has changed.
+             *
+             * @param platform The platform that has its receipts updated.
+             * @param receipts The receipts that have been updated.
+             */
             receiptsUpdated(platform, receipts) {
                 const now = +new Date();
                 receipts.forEach(receipt => {
@@ -1810,11 +1838,13 @@ var CdvPurchase;
          */
         restorePurchases() {
             return __awaiter(this, void 0, void 0, function* () {
+                let error;
                 for (const adapter of this.adapters.list) {
-                    if (adapter.ready)
-                        yield adapter.restorePurchases();
+                    if (adapter.ready) {
+                        error = error !== null && error !== void 0 ? error : yield adapter.restorePurchases();
+                    }
                 }
-                // store.triggerError(storeError(ErrorCode.UNKNOWN, 'restorePurchases() is not implemented yet'));
+                return error;
             });
         }
         /**
@@ -2673,10 +2703,12 @@ var CdvPurchase;
                     }
                 });
             }
+            /** Remove a transaction from the pseudo receipt */
             removeTransactionInProgress(productId) {
                 const transactionId = virtualTransactionId(productId);
                 this.pseudoReceipt.transactions = this.pseudoReceipt.transactions.filter(t => t.transactionId !== transactionId);
             }
+            /** Insert or update a transaction in the pseudo receipt */
             upsertTransaction(productId, transactionId, state) {
                 return __awaiter(this, void 0, void 0, function* () {
                     return new Promise(resolve => {
@@ -2807,9 +2839,17 @@ var CdvPurchase;
                         },
                         restoreFailed: (errorCode) => {
                             this.log.info('restoreFailed: ' + errorCode);
+                            if (this.onRestoreCompleted) {
+                                this.onRestoreCompleted(appStoreError(errorCode, 'Restore purchases failed', null));
+                                this.onRestoreCompleted = undefined;
+                            }
                         },
                         restoreCompleted: () => {
                             this.log.info('restoreCompleted');
+                            if (this.onRestoreCompleted) {
+                                this.onRestoreCompleted(undefined);
+                                this.onRestoreCompleted = undefined;
+                            }
                         },
                     }, () => __awaiter(this, void 0, void 0, function* () {
                         this.log.info('bridge.init done');
@@ -2899,11 +2939,12 @@ var CdvPurchase;
                     let resolved = false;
                     return new Promise(resolve => {
                         var _a;
-                        if ((_a = this.bridge.appStoreReceipt) === null || _a === void 0 ? void 0 : _a.appStoreReceipt) {
+                        if (((_a = this.bridge.appStoreReceipt) === null || _a === void 0 ? void 0 : _a.appStoreReceipt) && !this.forceReceiptReload) {
                             this.log.debug('using cached appstore receipt');
                             return resolve(this.bridge.appStoreReceipt);
                         }
                         this.log.debug('loading appstore receipt...');
+                        this.forceReceiptReload = false;
                         this.bridge.loadReceipts(receipt => {
                             this.log.debug('appstore receipt loaded');
                             if (!resolved)
@@ -3127,8 +3168,8 @@ var CdvPurchase;
                     const skReceipt = receipt;
                     let applicationReceipt = skReceipt.nativeData;
                     if (this.forceReceiptReload) {
-                        this.forceReceiptReload = false;
                         const nativeData = yield this.loadAppStoreReceipt();
+                        this.forceReceiptReload = false;
                         if (nativeData) {
                             applicationReceipt = nativeData;
                             this.prepareReceipt(nativeData);
@@ -3209,13 +3250,16 @@ var CdvPurchase;
             }
             restorePurchases() {
                 return new Promise(resolve => {
+                    this.onRestoreCompleted = (error) => {
+                        this.onRestoreCompleted = undefined;
+                        this.bridge.refreshReceipts(obj => {
+                            resolve(error);
+                        }, (code, message) => {
+                            resolve(error || appStoreError(code, message, null));
+                        });
+                    };
                     this.forceReceiptReload = true;
                     this.bridge.restore();
-                    this.bridge.refreshReceipts(obj => {
-                        resolve();
-                    }, (code, message) => {
-                        resolve();
-                    });
                 });
             }
             presentCodeRedemptionSheet() {
@@ -3315,6 +3359,15 @@ var CdvPurchase;
                     // if (window.localStorage.sk_receiptForTransaction)
                     // delete window.localStorage.sk_receiptForTransaction;
                 }
+                /**
+                 * Initialize the AppStore bridge.
+                 *
+                 * This calls the native "setup" method from the "InAppPurchase" Objective-C class.
+                 *
+                 * @param options Options for the bridge
+                 * @param success Called when the bridge is ready
+                 * @param error Called when the bridge failed to initialize
+                 */
                 init(options, success, error) {
                     this.options = {
                         error: options.error || noop,
@@ -4100,6 +4153,7 @@ var CdvPurchase;
             }
             restorePurchases() {
                 return __awaiter(this, void 0, void 0, function* () {
+                    return undefined;
                 });
             }
         }
@@ -5053,9 +5107,9 @@ var CdvPurchase;
             }
             restorePurchases() {
                 return new Promise(resolve => {
-                    this.bridge.getPurchases(resolve, (message, code) => {
+                    this.bridge.getPurchases(() => resolve(undefined), (message, code) => {
                         this.log.warn('getPurchases() failed: ' + (code !== null && code !== void 0 ? code : 'ERROR') + ': ' + message);
-                        resolve();
+                        resolve(playStoreError(code !== null && code !== void 0 ? code : CdvPurchase.ErrorCode.UNKNOWN, message, null));
                     });
                 });
             }
@@ -5941,6 +5995,7 @@ var CdvPurchase;
             }
             restorePurchases() {
                 return __awaiter(this, void 0, void 0, function* () {
+                    return undefined;
                 });
             }
         }
@@ -6203,6 +6258,7 @@ var CdvPurchase;
             }
             restorePurchases() {
                 return __awaiter(this, void 0, void 0, function* () {
+                    return undefined;
                 });
             }
         }
@@ -6659,13 +6715,15 @@ var CdvPurchase;
          * @param value - Value passed to the callback.
          */
         function safeCall(logger, className, callback, value) {
+            const callbackName = callback.name || ('#' + Utils.md5(callback.toString()));
             setTimeout(() => {
                 try {
-                    logger.debug(`Calling callback: type=${className} name=${callback.name}`);
+                    logger.debug(`Calling callback: type=${className} name=${callbackName}`);
                     callback(value);
                 }
                 catch (error) {
-                    logger.error(`Error in callback: type=${className} name=${callback.name}`);
+                    logger.error(`Error in callback: type=${className} name=${callbackName}`);
+                    logger.debug(callback.toString());
                     const errorAsError = error;
                     if ('message' in errorAsError)
                         logger.error(errorAsError.message);
