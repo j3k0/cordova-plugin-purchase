@@ -621,10 +621,13 @@ namespace CdvPurchase {
          * This method exists to cover an Apple AppStore requirement.
          */
         async restorePurchases() {
+            let error: IError | undefined;
             for (const adapter of this.adapters.list) {
-                if (adapter.ready) await adapter.restorePurchases();
+                if (adapter.ready) {
+                    error = error ?? await adapter.restorePurchases();
+                }
             }
-            // store.triggerError(storeError(ErrorCode.UNKNOWN, 'restorePurchases() is not implemented yet'));
+            return error;
         }
 
         /**

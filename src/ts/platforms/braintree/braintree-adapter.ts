@@ -425,7 +425,8 @@ namespace CdvPurchase {
                 return functionality === 'requestPayment';
             }
 
-            async restorePurchases(): Promise<void> {
+            async restorePurchases(): Promise<IError | undefined> {
+                return undefined;
             }
         }
 

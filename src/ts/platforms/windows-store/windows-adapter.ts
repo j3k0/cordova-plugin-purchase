@@ -41,7 +41,8 @@ namespace CdvPurchase {
             checkSupport(functionality: PlatformFunctionality): boolean {
                 return false;
             }
-            async restorePurchases(): Promise<void> {
+            async restorePurchases(): Promise<IError | undefined> {
+                return undefined;
             }
         }
 

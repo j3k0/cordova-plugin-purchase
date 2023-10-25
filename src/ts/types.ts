@@ -203,7 +203,7 @@ namespace CdvPurchase {
          *
          * Might ask the user to login.
          */
-        restorePurchases(): Promise<void>;
+        restorePurchases(): Promise<IError | undefined>;
     }
 
 

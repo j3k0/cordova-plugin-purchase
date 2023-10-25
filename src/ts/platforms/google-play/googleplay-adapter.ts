@@ -432,11 +432,11 @@ namespace CdvPurchase {
                 return supported.indexOf(functionality) >= 0;
             }
 
-            restorePurchases(): Promise<void> {
+            restorePurchases(): Promise<IError | undefined> {
                 return new Promise(resolve => {
-                    this.bridge.getPurchases(resolve, (message, code) => {
+                    this.bridge.getPurchases(() => resolve(undefined), (message, code) => {
                         this.log.warn('getPurchases() failed: ' + (code ?? 'ERROR') + ': ' + message);
-                        resolve();
+                        resolve(playStoreError(code ?? ErrorCode.UNKNOWN, message, null));
                     });
                 });
             }

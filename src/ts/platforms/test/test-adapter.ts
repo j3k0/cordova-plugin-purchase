@@ -276,7 +276,8 @@ namespace CdvPurchase {
                 return true;
             }
 
-            async restorePurchases(): Promise<void> {
+            async restorePurchases(): Promise<IError | undefined> {
+                return undefined;
             }
         }
 

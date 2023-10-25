@@ -138,6 +138,9 @@ namespace CdvPurchase {
             /** True to auto-finish all transactions */
             autoFinish: boolean;
 
+            /** Callback called when the restore process is completed */
+            onRestoreCompleted?: (code: IError | undefined) => void;
+
             constructor(context: CdvPurchase.Internal.AdapterContext, options: AdapterOptions) {
                 this.context = context;
                 this.bridge = new Bridge.Bridge();
@@ -328,10 +331,18 @@ namespace CdvPurchase {
 
                         restoreFailed: (errorCode: ErrorCode) => {
                             this.log.info('restoreFailed: ' + errorCode);
+                            if (this.onRestoreCompleted) {
+                                this.onRestoreCompleted(appStoreError(errorCode, 'Restore purchases failed', null));
+                                this.onRestoreCompleted = undefined;
+                            }
                         },
 
                         restoreCompleted: () => {
                             this.log.info('restoreCompleted');
+                            if (this.onRestoreCompleted) {
+                                this.onRestoreCompleted(undefined);
+                                this.onRestoreCompleted = undefined;
+                            }
                         },
                     }, async () => {
                         this.log.info('bridge.init done');
@@ -726,15 +737,18 @@ namespace CdvPurchase {
                 return supported.indexOf(functionality) >= 0;
             }
 
-            restorePurchases(): Promise<void> {
-                return new Promise(resolve => {
+            restorePurchases(): Promise<IError | undefined> {
+                return new Promise<IError | undefined>(resolve => {
+                    this.onRestoreCompleted = (error) => {
+                        this.onRestoreCompleted = undefined;
+                        this.bridge.refreshReceipts(obj => {
+                            resolve(error)
+                        }, (code, message) => {
+                            resolve(error || appStoreError(code, message, null));
+                        });
+                    }
                     this.forceReceiptReload = true;
                     this.bridge.restore();
-                    this.bridge.refreshReceipts(obj => {
-                        resolve();
-                    }, (code, message) => {
-                        resolve();
-                    });
                 });
             }
 
