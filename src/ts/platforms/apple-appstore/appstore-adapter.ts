@@ -176,11 +176,13 @@ namespace CdvPurchase {
                 });
             }
 
+            /** Remove a transaction from the pseudo receipt */
             private removeTransactionInProgress(productId: string) {
                 const transactionId = virtualTransactionId(productId);
                 this.pseudoReceipt.transactions = this.pseudoReceipt.transactions.filter(t => t.transactionId !== transactionId);
             }
 
+            /** Insert or update a transaction in the pseudo receipt */
             private async upsertTransaction(productId: string, transactionId: string, state: TransactionState): Promise<SKTransaction> {
                 return new Promise(resolve => {
                     this.initializeAppReceipt(() => {

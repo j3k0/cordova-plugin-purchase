@@ -23,13 +23,15 @@ namespace CdvPurchase {
      * @param value - Value passed to the callback.
      */
     export function safeCall<T>(logger: Logger, className: string, callback: Callback<T>, value: T): void {
+      const callbackName = callback.name || ('#' + md5(callback.toString()));
       setTimeout(() => {
         try {
-          logger.debug(`Calling callback: type=${className} name=${callback.name}`);
+          logger.debug(`Calling callback: type=${className} name=${callbackName}`);
           callback(value);
         }
         catch (error) {
-          logger.error(`Error in callback: type=${className} name=${callback.name}`);
+          logger.error(`Error in callback: type=${className} name=${callbackName}`);
+          logger.debug(callback.toString());
           const errorAsError = error as Error;
           if ('message' in errorAsError)
             logger.error(errorAsError.message);
