@@ -1,5 +1,19 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.9
+
+### 13.9.0
+
+#### (appstore) store.restorePurchases() return potential errors
+
+The return value for `store.restorePurchases()` has been changed from `Promise<void>` to `Promise<IError|undefined>`.
+
+You can now inspect the value returned to figure out if processing complete with or without errors.
+
+#### (appstore) Fix forceReceiptReload
+
+In certain conditions (calls to `order` and `restorePurchases`), the AppStore adapter wants to force a refresh of the application receipt. This fix prevents it from returning the version cached in memory.
+
 ## 13.8
 
 ### 13.8.6

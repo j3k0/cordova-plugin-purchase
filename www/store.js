@@ -1338,7 +1338,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.8.6';
+    CdvPurchase.PLUGIN_VERSION = '13.9.0';
     /**
      * Entry class of the plugin.
      */
@@ -3399,10 +3399,10 @@ var CdvPurchase;
                         this.initialized = true;
                         setTimeout(() => this.processPendingTransactions(), 50);
                     };
-                    const setupFailed = () => {
+                    const setupFailed = (err) => {
                         log('setup failed');
                         // protectCall(this.options.error, 'options.error', ErrorCode.SETUP, 'Setup failed');
-                        protectCall(error, 'init.error', CdvPurchase.ErrorCode.SETUP, 'Setup failed');
+                        protectCall(error, 'init.error', CdvPurchase.ErrorCode.SETUP, 'Setup failed: ' + err);
                     };
                     exec('setup', [], setupOk, setupFailed);
                 }
