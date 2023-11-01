@@ -345,10 +345,10 @@ namespace CdvPurchase {
                         setTimeout(() => this.processPendingTransactions(), 50);
                     };
 
-                    const setupFailed = () => {
+                    const setupFailed = (err: string) => {
                         log('setup failed');
                         // protectCall(this.options.error, 'options.error', ErrorCode.SETUP, 'Setup failed');
-                        protectCall(error, 'init.error', ErrorCode.SETUP, 'Setup failed');
+                        protectCall(error, 'init.error', ErrorCode.SETUP, 'Setup failed: ' + err);
                     };
 
                     exec('setup', [], setupOk, setupFailed);
