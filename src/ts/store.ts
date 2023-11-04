@@ -733,21 +733,14 @@ else {
 }
 function initCDVPurchase() {
     console.log('Create CdvPurchase...');
-    /*
-    if (window.CdvPurchase) {
-        Object.assign(window.CdvPurchase, CdvPurchase, { store: window.CdvPurchase.store });
+    const oldStore = window.CdvPurchase?.store;
+    window.CdvPurchase = CdvPurchase;
+    if (oldStore) {
+        window.CdvPurchase.store = oldStore;
     }
     else {
-        window.CdvPurchase = CdvPurchase;
-    }
-    if (!window.CdvPurchase.store) {
         window.CdvPurchase.store = new CdvPurchase.Store();
-        // Let's maximize backward compatibility
-        Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode, CdvPurchase.Platform);
     }
-    */
-    window.CdvPurchase = CdvPurchase;
-    window.CdvPurchase.store = new CdvPurchase.Store();
     // Let's maximize backward compatibility
     Object.assign(window.CdvPurchase.store, CdvPurchase.LogLevel, CdvPurchase.ProductType, CdvPurchase.ErrorCode, CdvPurchase.Platform);
 }
