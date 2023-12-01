@@ -15,15 +15,17 @@ namespace CdvPurchase {
                 this.refresh(purchase);
             }
 
-            static toState(state: Bridge.PurchaseState, isAcknowledged: boolean): TransactionState {
+            static toState(state: Bridge.PurchaseState, isAcknowledged: boolean, isConsumed: boolean): TransactionState {
                 switch(state) {
                     case Bridge.PurchaseState.PENDING:
                         return TransactionState.INITIATED;
                     case Bridge.PurchaseState.PURCHASED:
-                        // if (isAcknowledged)
-                        // return TransactionState.FINISHED; (this prevents receipt validation...)
-                        // else
-                        return TransactionState.APPROVED;
+                        // Note: we still want to validate acknowledged non-consumables and subscriptions,
+                        //       so we don't return APPROVED
+                        if (isConsumed)
+                            return TransactionState.FINISHED;
+                        else
+                            return TransactionState.APPROVED;
                     case Bridge.PurchaseState.UNSPECIFIED_STATE:
                         return TransactionState.UNKNOWN_STATE;
                 }
@@ -38,10 +40,11 @@ namespace CdvPurchase {
                 this.purchaseId = `${purchase.purchaseToken}`;
                 this.products = purchase.productIds.map(productId => ({ id: productId }));
                 if (purchase.purchaseTime) this.purchaseDate = new Date(purchase.purchaseTime);
-                this.isPending = (purchase.getPurchaseState === Bridge.PurchaseState.PENDING);
+                this.isPending = (purchase.getPurchaseState === Bridge.PurchaseState.PENDING)
                 if (typeof purchase.acknowledged !== 'undefined') this.isAcknowledged = purchase.acknowledged;
+                if (typeof purchase.consumed !== 'undefined') this.isConsumed = purchase.consumed;
                 if (typeof purchase.autoRenewing !== 'undefined') this.renewalIntent = purchase.autoRenewing ? RenewalIntent.RENEW : RenewalIntent.LAPSE;
-                this.state = Transaction.toState(purchase.getPurchaseState, purchase.acknowledged);
+                this.state = Transaction.toState(purchase.getPurchaseState, this.isAcknowledged ?? false, this.isConsumed ?? false);
             }
         }
 
@@ -267,6 +270,7 @@ namespace CdvPurchase {
             onPurchaseConsumed(purchase: Bridge.Purchase): void {
                 this.log.debug("onPurchaseConsumed: " + purchase.orderId);
                 purchase.acknowledged = true; // consumed is the equivalent of acknowledged for consumables
+                purchase.consumed = true;
                 this.onPurchasesUpdated([purchase]);
             }
 

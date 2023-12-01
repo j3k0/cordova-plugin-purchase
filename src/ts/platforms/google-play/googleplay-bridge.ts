@@ -107,6 +107,9 @@ namespace CdvPurchase {
                 /** Whether the purchase has been acknowledged. */
                 acknowledged: boolean;
 
+                /** Whether the purchase has been consumed */
+                consumed?: boolean;
+
                 /** One of BridgePurchaseState indicating the state of the purchase. */
                 getPurchaseState: PurchaseState;
 
