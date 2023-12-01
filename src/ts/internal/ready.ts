@@ -27,9 +27,9 @@ namespace CdvPurchase {
             }
 
             /** Calls the ready callbacks */
-            trigger(): void {
+            trigger(reason: string): void {
                 this.isReady = true;
-                this.readyCallbacks.forEach(cb => Utils.safeCall(this.logger, 'ready()', cb, undefined));
+                this.readyCallbacks.forEach(cb => Utils.safeCall(this.logger, 'ready()', cb, undefined, undefined, reason));
                 this.readyCallbacks = [];
             }
 

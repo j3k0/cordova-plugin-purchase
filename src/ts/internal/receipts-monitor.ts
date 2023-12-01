@@ -35,7 +35,7 @@ namespace CdvPurchase
                     setTimeout(() => {
                         this.controller.receiptsVerified();
                     }, 0);
-                });
+                }, 'receiptsMonitor_callReceiptsVerified');
             }
 
             launch() {
@@ -51,8 +51,8 @@ namespace CdvPurchase
                     }
                 }
                 this.controller.when()
-                .verified(check)
-                .unverified(check)
+                .verified(check, 'receiptsMonitor_check')
+                .unverified(check, 'receiptsMonitor_check')
                 .receiptsReady(() => {
                     this.log.debug('receiptsReady...');
                     if (!this.controller.hasLocalReceipts() || !this.controller.hasValidator()) {
@@ -65,7 +65,7 @@ namespace CdvPurchase
                         this.log.debug('keep checking every 10s...');
                         check();
                     }, 10000);
-                });
+                }, 'receiptsMonitor_setup');
             }
         }
     }

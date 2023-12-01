@@ -37,8 +37,8 @@ namespace CdvPurchase {
 
       constructor(when: When) {
         when
-          .approved(transaction => this.callOnChange(transaction))
-          .finished(transaction => this.callOnChange(transaction));
+          .approved(transaction => this.callOnChange(transaction), 'transactionStateMonitors_callOnChange')
+          .finished(transaction => this.callOnChange(transaction), 'transactionStateMonitors_callOnChange');
       }
 
       private callOnChange(transaction: Transaction) {

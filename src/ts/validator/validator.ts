@@ -121,7 +121,7 @@ namespace CdvPurchase {
                         await adapter?.handleReceiptValidationResponse(receipt, payload);
                         if (payload.ok) {
                             const vr = this.addVerifiedReceipt(receipt, payload.data);
-                            this.controller.verifiedCallbacks.trigger(vr);
+                            this.controller.verifiedCallbacks.trigger(vr, 'payload_ok');
                             // this.verifiedCallbacks.trigger(data.receipt);
                         }
                         else if (payload.code === ErrorCode.VALIDATOR_SUBSCRIPTION_EXPIRED) {
@@ -133,14 +133,14 @@ namespace CdvPurchase {
                                     if (col.transactionId === transactionId)
                                         col.isExpired = true;
                                 });
-                                this.controller.verifiedCallbacks.trigger(vr);
+                                this.controller.verifiedCallbacks.trigger(vr, 'payload_expired');
                             }
                             else {
-                                this.controller.unverifiedCallbacks.trigger({receipt, payload});
+                                this.controller.unverifiedCallbacks.trigger({receipt, payload}, 'no_verified_receipt');
                             }
                         }
                         else {
-                            this.controller.unverifiedCallbacks.trigger({receipt, payload});
+                            this.controller.unverifiedCallbacks.trigger({receipt, payload}, 'validator_error');
                         }
                     }
                     catch (err) {
@@ -149,7 +149,7 @@ namespace CdvPurchase {
                             ok: false,
                             code: ErrorCode.VERIFICATION_FAILED,
                             message: (err as Error).message,
-                        }});
+                        }}, 'validator_exception');
                     }
                 };
                 receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));

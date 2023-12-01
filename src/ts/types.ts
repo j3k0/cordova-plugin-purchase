@@ -282,31 +282,31 @@ namespace CdvPurchase {
          *
          * @deprecated - Use `productUpdated` or `receiptUpdated`.
          */
-        updated(cb: Callback<Product | Receipt>): When;
+        updated(cb: Callback<Product | Receipt>, callbackName?: string): When;
 
         /** Register a function called when a receipt is updated. */
-        receiptUpdated(cb: Callback<Receipt>): When;
+        receiptUpdated(cb: Callback<Receipt>, callbackName?: string): When;
 
         /** Register a function called when a product is updated. */
-        productUpdated(cb: Callback<Product>): When;
+        productUpdated(cb: Callback<Product>, callbackName?: string): When;
 
         // /** Register a function called when a product is owned. */
         // owned(cb: Callback<Product>): When;
 
         /** Register a function called when transaction is approved. */
-        approved(cb: Callback<Transaction>): When;
+        approved(cb: Callback<Transaction>, callbackName?: string): When;
 
         /** Register a function called when transaction is pending. */
-        pending(cb: Callback<Transaction>): When;
+        pending(cb: Callback<Transaction>, callbackName?: string): When;
 
         /** Register a function called when a transaction is finished. */
-        finished(cb: Callback<Transaction>): When;
+        finished(cb: Callback<Transaction>, callbackName?: string): When;
 
         /** Register a function called when a receipt is verified. */
-        verified(cb: Callback<VerifiedReceipt>): When;
+        verified(cb: Callback<VerifiedReceipt>, callbackName?: string): When;
 
         /** Register a function called when a receipt failed validation. */
-        unverified(cb: Callback<UnverifiedReceipt>): When;
+        unverified(cb: Callback<UnverifiedReceipt>, callbackName?: string): When;
 
         /**
          * Register a function called when all receipts have been loaded.
@@ -318,14 +318,14 @@ namespace CdvPurchase {
          *
          * If no platforms have any receipts (the user made no purchase), this will also get called.
          */
-        receiptsReady(cb: Callback<void>): When;
+        receiptsReady(cb: Callback<void>, callbackName?: string): When;
 
         /**
          * Register a function called when all receipts have been verified.
          *
          * If no platforms have any receipts (user made no purchase), this will also get called.
          */
-        receiptsVerified(cb: Callback<void>): When;
+        receiptsVerified(cb: Callback<void>, callbackName?: string): When;
     }
 
     /** Whether or not the user intends to let the subscription auto-renew. */

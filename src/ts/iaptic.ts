@@ -92,7 +92,7 @@ namespace CdvPurchase {
           this.log.debug("Got a verified AppStore receipt.");
           latestReceipt = receipt;
         }
-      });
+      }, 'appStoreDiscountEligibilityDeterminer_listening');
 
       const determiner = (_appStoreReceipt: AppleAppStore.ApplicationReceipt, requests: AppleAppStore.DiscountEligibilityRequest[], callback: (response: boolean[]) => void) => {
         this.log.debug("AppStore eligibility determiner");
@@ -108,7 +108,7 @@ namespace CdvPurchase {
           }
         }
         this.log.debug("Waiting for receipt");
-        this.store.when().verified(onVerified);
+        this.store.when().verified(onVerified, 'appStoreDiscountEligibilityDeterminer_waiting');
       }
 
       determiner.cacheReceipt = function(receipt: VerifiedReceipt) {
