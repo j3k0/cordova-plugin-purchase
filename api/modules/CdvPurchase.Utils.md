@@ -230,7 +230,7 @@ ___
 
 ### safeCall
 
-▸ **safeCall**<`T`\>(`logger`, `className`, `callback`, `value`): `void`
+▸ **safeCall**<`T`\>(`logger`, `className`, `callback`, `value`, `callbackName`, `reason`): `void`
 
 Run a callback inside a try/catch block.
 
@@ -248,6 +248,8 @@ Run a callback inside a try/catch block.
 | `className` | `string` | Type of callback, helps debugging when a function failed. |
 | `callback` | [`Callback`](CdvPurchase.md#callback)<`T`\> | The callback function is turn into a safer version. |
 | `value` | `T` | Value passed to the callback. |
+| `callbackName` | `undefined` \| `string` | - |
+| `reason` | `string` | - |
 
 #### Returns
 
@@ -257,7 +259,7 @@ ___
 
 ### safeCallback
 
-▸ **safeCallback**<`T`\>(`logger`, `className`, `callback`): [`Callback`](CdvPurchase.md#callback)<`T`\>
+▸ **safeCallback**<`T`\>(`logger`, `className`, `callback`, `callbackName`, `reason`): [`Callback`](CdvPurchase.md#callback)<`T`\>
 
 Return a safer version of a callback that runs inside a try/catch block.
 
@@ -274,6 +276,8 @@ Return a safer version of a callback that runs inside a try/catch block.
 | `logger` | [`Logger`](../classes/CdvPurchase.Logger.md) | Used to log errors. |
 | `className` | `string` | Type of callback, helps debugging when a function failed. |
 | `callback` | [`Callback`](CdvPurchase.md#callback)<`T`\> | The callback function is turn into a safer version. |
+| `callbackName` | `undefined` \| `string` | - |
+| `reason` | `string` | - |
 
 #### Returns
 

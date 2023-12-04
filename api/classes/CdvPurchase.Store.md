@@ -480,7 +480,7 @@ ___
 
 ### monitor
 
-▸ **monitor**(`transaction`, `onChange`): [`TransactionMonitor`](../interfaces/CdvPurchase.TransactionMonitor.md)
+▸ **monitor**(`transaction`, `onChange`, `callbackName`): [`TransactionMonitor`](../interfaces/CdvPurchase.TransactionMonitor.md)
 
 Setup a function to be notified of changes to a transaction state.
 
@@ -500,6 +500,7 @@ const monitor = store.monitor(transaction, state => {
 | :------ | :------ | :------ |
 | `transaction` | [`Transaction`](CdvPurchase.Transaction.md) | The transaction to monitor. |
 | `onChange` | [`Callback`](../modules/CdvPurchase.md#callback)<[`TransactionState`](../enums/CdvPurchase.TransactionState.md)\> | Function to be called when the transaction status changes. |
+| `callbackName` | `string` | - |
 
 #### Returns
 

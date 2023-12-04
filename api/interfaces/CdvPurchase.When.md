@@ -23,7 +23,7 @@ Store events listener
 
 ### approved
 
-▸ **approved**(`cb`): [`When`](CdvPurchase.When.md)
+▸ **approved**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
 
 Register a function called when transaction is approved.
 
@@ -32,6 +32,7 @@ Register a function called when transaction is approved.
 | Name | Type |
 | :------ | :------ |
 | `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<[`Transaction`](../classes/CdvPurchase.Transaction.md)\> |
+| `callbackName?` | `string` |
 
 #### Returns
 
@@ -41,7 +42,7 @@ ___
 
 ### finished
 
-▸ **finished**(`cb`): [`When`](CdvPurchase.When.md)
+▸ **finished**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
 
 Register a function called when a transaction is finished.
 
@@ -50,6 +51,7 @@ Register a function called when a transaction is finished.
 | Name | Type |
 | :------ | :------ |
 | `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<[`Transaction`](../classes/CdvPurchase.Transaction.md)\> |
+| `callbackName?` | `string` |
 
 #### Returns
 
@@ -59,7 +61,7 @@ ___
 
 ### pending
 
-▸ **pending**(`cb`): [`When`](CdvPurchase.When.md)
+▸ **pending**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
 
 Register a function called when transaction is pending.
 
@@ -68,6 +70,7 @@ Register a function called when transaction is pending.
 | Name | Type |
 | :------ | :------ |
 | `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<[`Transaction`](../classes/CdvPurchase.Transaction.md)\> |
+| `callbackName?` | `string` |
 
 #### Returns
 
@@ -77,7 +80,7 @@ ___
 
 ### productUpdated
 
-▸ **productUpdated**(`cb`): [`When`](CdvPurchase.When.md)
+▸ **productUpdated**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
 
 Register a function called when a product is updated.
 
@@ -86,6 +89,7 @@ Register a function called when a product is updated.
 | Name | Type |
 | :------ | :------ |
 | `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<[`Product`](../classes/CdvPurchase.Product.md)\> |
+| `callbackName?` | `string` |
 
 #### Returns
 
@@ -95,7 +99,7 @@ ___
 
 ### receiptUpdated
 
-▸ **receiptUpdated**(`cb`): [`When`](CdvPurchase.When.md)
+▸ **receiptUpdated**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
 
 Register a function called when a receipt is updated.
 
@@ -104,6 +108,7 @@ Register a function called when a receipt is updated.
 | Name | Type |
 | :------ | :------ |
 | `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<[`Receipt`](../classes/CdvPurchase.Receipt.md)\> |
+| `callbackName?` | `string` |
 
 #### Returns
 
@@ -113,7 +118,7 @@ ___
 
 ### receiptsReady
 
-▸ **receiptsReady**(`cb`): [`When`](CdvPurchase.When.md)
+▸ **receiptsReady**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
 
 Register a function called when all receipts have been loaded.
 
@@ -129,6 +134,7 @@ If no platforms have any receipts (the user made no purchase), this will also ge
 | Name | Type |
 | :------ | :------ |
 | `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<`void`\> |
+| `callbackName?` | `string` |
 
 #### Returns
 
@@ -138,7 +144,7 @@ ___
 
 ### receiptsVerified
 
-▸ **receiptsVerified**(`cb`): [`When`](CdvPurchase.When.md)
+▸ **receiptsVerified**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
 
 Register a function called when all receipts have been verified.
 
@@ -149,6 +155,7 @@ If no platforms have any receipts (user made no purchase), this will also get ca
 | Name | Type |
 | :------ | :------ |
 | `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<`void`\> |
+| `callbackName?` | `string` |
 
 #### Returns
 
@@ -158,7 +165,7 @@ ___
 
 ### unverified
 
-▸ **unverified**(`cb`): [`When`](CdvPurchase.When.md)
+▸ **unverified**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
 
 Register a function called when a receipt failed validation.
 
@@ -167,6 +174,7 @@ Register a function called when a receipt failed validation.
 | Name | Type |
 | :------ | :------ |
 | `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<[`UnverifiedReceipt`](CdvPurchase.UnverifiedReceipt.md)\> |
+| `callbackName?` | `string` |
 
 #### Returns
 
@@ -176,7 +184,7 @@ ___
 
 ### updated
 
-▸ **updated**(`cb`): [`When`](CdvPurchase.When.md)
+▸ **updated**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
 
 Register a function called when a product or receipt is updated.
 
@@ -189,6 +197,7 @@ Register a function called when a product or receipt is updated.
 | Name | Type |
 | :------ | :------ |
 | `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<[`Product`](../classes/CdvPurchase.Product.md) \| [`Receipt`](../classes/CdvPurchase.Receipt.md)\> |
+| `callbackName?` | `string` |
 
 #### Returns
 
@@ -198,7 +207,7 @@ ___
 
 ### verified
 
-▸ **verified**(`cb`): [`When`](CdvPurchase.When.md)
+▸ **verified**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
 
 Register a function called when a receipt is verified.
 
@@ -207,6 +216,7 @@ Register a function called when a receipt is verified.
 | Name | Type |
 | :------ | :------ |
 | `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<[`VerifiedReceipt`](../classes/CdvPurchase.VerifiedReceipt.md)\> |
+| `callbackName?` | `string` |
 
 #### Returns
 

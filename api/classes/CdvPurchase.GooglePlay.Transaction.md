@@ -351,7 +351,7 @@ ___
 
 ### toState
 
-▸ `Static` **toState**(`state`, `isAcknowledged`): [`TransactionState`](../enums/CdvPurchase.TransactionState.md)
+▸ `Static` **toState**(`state`, `isAcknowledged`, `isConsumed`): [`TransactionState`](../enums/CdvPurchase.TransactionState.md)
 
 #### Parameters
 
@@ -359,6 +359,7 @@ ___
 | :------ | :------ |
 | `state` | [`PurchaseState`](../enums/CdvPurchase.GooglePlay.Bridge.PurchaseState.md) |
 | `isAcknowledged` | `boolean` |
+| `isConsumed` | `boolean` |
 
 #### Returns
 

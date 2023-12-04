@@ -1,8 +1,22 @@
 # Release Notes - Cordova Plugin Purchase
 
-## 13.9
+## 13.10.0
 
-### 13.9.0
+#### (googleplay) Add "isConsumed" to consumed transactions
+
+Local Google Play transaction now contain `isConsumed`, which is the same as `isAcknowledged`, but only set for consumable products.
+
+#### Make it easier to debug callback calls
+
+It's now possible to add a name to callbacks registered with "store.when()"
+
+When callbacks are triggered, the reason is logged to the console.
+
+#### Prevent instanciating CdvPurchase.store twice
+
+So when ionic packages the plugin with the app code, no double instanciations of the plugin is performed.
+
+## 13.9.0
 
 #### (appstore) store.restorePurchases() return potential errors
 

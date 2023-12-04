@@ -9,6 +9,7 @@
 - [accountId](CdvPurchase.GooglePlay.Bridge.Purchase.md#accountid)
 - [acknowledged](CdvPurchase.GooglePlay.Bridge.Purchase.md#acknowledged)
 - [autoRenewing](CdvPurchase.GooglePlay.Bridge.Purchase.md#autorenewing)
+- [consumed](CdvPurchase.GooglePlay.Bridge.Purchase.md#consumed)
 - [developerPayload](CdvPurchase.GooglePlay.Bridge.Purchase.md#developerpayload)
 - [getPurchaseState](CdvPurchase.GooglePlay.Bridge.Purchase.md#getpurchasestate)
 - [orderId](CdvPurchase.GooglePlay.Bridge.Purchase.md#orderid)
@@ -46,6 +47,14 @@ ___
 • **autoRenewing**: ``false``
 
 Whether the subscription renews automatically.
+
+___
+
+### consumed
+
+• `Optional` **consumed**: `boolean`
+
+Whether the purchase has been consumed
 
 ___
 
