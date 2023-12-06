@@ -1,6 +1,6 @@
 ### Observed behavior
 
-_Include logs with `store.verbosity = store.DEBUG`_
+_Include logs with `CdvPurchase.store.verbosity = CdvPurchase.LogLevel.DEBUG`_
 
 ### Expected behavior
 
