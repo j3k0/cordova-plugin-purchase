@@ -264,7 +264,7 @@ namespace CdvPurchase {
                 this.log.warn('store.initialized() has been called already.');
                 return [];
             }
-            this.log.info('initialize()');
+            this.log.info('initialize(' + JSON.stringify(platforms) + ') v' + PLUGIN_VERSION);
             this.initializedHasBeenCalled = true;
             this.lastUpdate = +new Date();
             const store = this;
