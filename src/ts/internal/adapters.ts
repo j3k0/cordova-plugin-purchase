@@ -104,6 +104,9 @@ namespace CdvPurchase
              * Initialize some platform adapters.
              */
             async initialize(platforms: (Platform | PlatformWithOptions)[], context: AdapterContext): Promise<IError[]> {
+                if (typeof platforms === 'string') {
+                    platforms = [platforms];
+                }
                 const newPlatforms = platforms.map(p => typeof p === 'string' ? { platform: p } : p).filter(p => !this.find(p.platform)) as PlatformWithOptions[];
                 const log = context.log.child('Adapters');
                 log.info("Adding platforms: " + JSON.stringify(newPlatforms));
