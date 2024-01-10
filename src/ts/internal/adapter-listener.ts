@@ -3,6 +3,7 @@ namespace CdvPurchase
     export namespace Internal {
 
         export interface StoreAdapterDelegate {
+            initiatedCallbacks: Callbacks<Transaction>;
             approvedCallbacks: Callbacks<Transaction>;
             pendingCallbacks: Callbacks<Transaction>;
             finishedCallbacks: Callbacks<Transaction>;
@@ -112,7 +113,11 @@ namespace CdvPurchase
                             }
                         }
                         else if (lastState !== transaction.state) {
-                            if (transaction.state === TransactionState.FINISHED) {
+                            if (transaction.state === TransactionState.INITIATED) {
+                                this.delegate.initiatedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_initiated');
+                                this.lastCallTimeForState[tokenWithState] = now;
+                            }
+                            else if (transaction.state === TransactionState.FINISHED) {
                                 this.delegate.finishedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_finished');
                                 this.lastCallTimeForState[tokenWithState] = now;
                             }

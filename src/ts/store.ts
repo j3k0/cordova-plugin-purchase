@@ -149,6 +149,9 @@ namespace CdvPurchase {
         /** Callbacks when a product is owned */
         // private ownedCallbacks = new Callbacks<Product>();
 
+        /** Callbacks when a transaction is initiated */
+        private initiatedCallbacks = new Internal.Callbacks<Transaction>(this.log, 'initiated()');
+
         /** Callbacks when a transaction has been approved */
         private approvedCallbacks = new Internal.Callbacks<Transaction>(this.log, 'approved()');
 
@@ -187,6 +190,7 @@ namespace CdvPurchase {
             this.listener = new Internal.StoreAdapterListener({
                 updatedCallbacks: this.updatedCallbacks,
                 updatedReceiptCallbacks: this.updatedReceiptsCallbacks,
+                initiatedCallbacks: this.initiatedCallbacks,
                 approvedCallbacks: this.approvedCallbacks,
                 finishedCallbacks: this.finishedCallbacks,
                 pendingCallbacks: this.pendingCallbacks,
@@ -355,6 +359,7 @@ namespace CdvPurchase {
                 updated: (cb: Callback<Product | Receipt>, callbackName?: string) => (this.updatedCallbacks.push(cb, callbackName), this.updatedReceiptsCallbacks.push(cb, callbackName), ret),
                 // owned: (cb: Callback<Product>) => (this.ownedCallbacks.push(cb), ret),
                 approved: (cb: Callback<Transaction>, callbackName?: string) => (this.approvedCallbacks.push(cb, callbackName), ret),
+                initiated: (cb: Callback<Transaction>, callbackName?: string) => (this.initiatedCallbacks.push(cb, callbackName), ret),
                 pending: (cb: Callback<Transaction>, callbackName?: string) => (this.pendingCallbacks.push(cb, callbackName), ret),
                 finished: (cb: Callback<Transaction>, callbackName?: string) => (this.finishedCallbacks.push(cb, callbackName), ret),
                 verified: (cb: Callback<VerifiedReceipt>, callbackName?: string) => (this.verifiedCallbacks.push(cb, callbackName), ret),
