@@ -259,7 +259,13 @@ namespace CdvPurchase {
      */
     export type PlatformFunctionality = 'requestPayment' | 'order' | 'manageSubscriptions' | 'manageBilling';
 
-    /** Possible states of a product */
+    /**
+     * Possible states of a transaction.
+     *
+     * ```
+     * INITIATED → PENDING (optional) → APPROVED → FINISHED
+     * ```
+     */
     export enum TransactionState {
         // REQUESTED = 'requested',
         INITIATED = 'initiated',

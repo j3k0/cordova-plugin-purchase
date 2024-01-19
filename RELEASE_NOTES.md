@@ -1,6 +1,24 @@
 # Release Notes - Cordova Plugin Purchase
 
-## 13.10.0
+## 13.10
+
+### 13.10.1
+
+#### Fix store.initialize() when passed a single value
+
+`store.initialize()` was supposed to work when passed a single value instead of an array. It turns out there was a regression, fixed with this release.
+
+#### Add store.when().initiated(transaction)
+
+Allows monitoring `INITIATED` (new) transactions.
+
+```ts
+store.when().initiated(transaction => {
+  // a new transaction has been initiated.
+});
+```
+
+### 13.10.0
 
 #### (googleplay) Add "isConsumed" to consumed transactions
 

@@ -804,6 +804,9 @@ var CdvPurchase;
              */
             initialize(platforms, context) {
                 return __awaiter(this, void 0, void 0, function* () {
+                    if (typeof platforms === 'string') {
+                        platforms = [platforms];
+                    }
                     const newPlatforms = platforms.map(p => typeof p === 'string' ? { platform: p } : p).filter(p => !this.find(p.platform));
                     const log = context.log.child('Adapters');
                     log.info("Adding platforms: " + JSON.stringify(newPlatforms));
@@ -964,7 +967,11 @@ var CdvPurchase;
                             }
                         }
                         else if (lastState !== transaction.state) {
-                            if (transaction.state === CdvPurchase.TransactionState.FINISHED) {
+                            if (transaction.state === CdvPurchase.TransactionState.INITIATED) {
+                                this.delegate.initiatedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_initiated');
+                                this.lastCallTimeForState[tokenWithState] = now;
+                            }
+                            else if (transaction.state === CdvPurchase.TransactionState.FINISHED) {
                                 this.delegate.finishedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_finished');
                                 this.lastCallTimeForState[tokenWithState] = now;
                             }
@@ -1339,7 +1346,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.10.0';
+    CdvPurchase.PLUGIN_VERSION = '13.10.1';
     /**
      * Entry class of the plugin.
      */
@@ -1379,6 +1386,8 @@ var CdvPurchase;
             this.updatedReceiptsCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'receiptUpdated()');
             /** Callbacks when a product is owned */
             // private ownedCallbacks = new Callbacks<Product>();
+            /** Callbacks when a transaction is initiated */
+            this.initiatedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'initiated()');
             /** Callbacks when a transaction has been approved */
             this.approvedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'approved()');
             /** Callbacks when a transaction has been finished */
@@ -1410,6 +1419,7 @@ var CdvPurchase;
             this.listener = new CdvPurchase.Internal.StoreAdapterListener({
                 updatedCallbacks: this.updatedCallbacks,
                 updatedReceiptCallbacks: this.updatedReceiptsCallbacks,
+                initiatedCallbacks: this.initiatedCallbacks,
                 approvedCallbacks: this.approvedCallbacks,
                 finishedCallbacks: this.finishedCallbacks,
                 pendingCallbacks: this.pendingCallbacks,
@@ -1502,7 +1512,7 @@ var CdvPurchase;
                     this.log.warn('store.initialized() has been called already.');
                     return [];
                 }
-                this.log.info('initialize()');
+                this.log.info('initialize(' + JSON.stringify(platforms) + ') v' + CdvPurchase.PLUGIN_VERSION);
                 this.initializedHasBeenCalled = true;
                 this.lastUpdate = +new Date();
                 const store = this;
@@ -1585,6 +1595,7 @@ var CdvPurchase;
                 updated: (cb, callbackName) => (this.updatedCallbacks.push(cb, callbackName), this.updatedReceiptsCallbacks.push(cb, callbackName), ret),
                 // owned: (cb: Callback<Product>) => (this.ownedCallbacks.push(cb), ret),
                 approved: (cb, callbackName) => (this.approvedCallbacks.push(cb, callbackName), ret),
+                initiated: (cb, callbackName) => (this.initiatedCallbacks.push(cb, callbackName), ret),
                 pending: (cb, callbackName) => (this.pendingCallbacks.push(cb, callbackName), ret),
                 finished: (cb, callbackName) => (this.finishedCallbacks.push(cb, callbackName), ret),
                 verified: (cb, callbackName) => (this.verifiedCallbacks.push(cb, callbackName), ret),
@@ -2006,7 +2017,13 @@ var CdvPurchase;
         /** Test platform */
         Platform["TEST"] = "test";
     })(Platform = CdvPurchase.Platform || (CdvPurchase.Platform = {}));
-    /** Possible states of a product */
+    /**
+     * Possible states of a transaction.
+     *
+     * ```
+     * INITIATED → PENDING (optional) → APPROVED → FINISHED
+     * ```
+     */
     let TransactionState;
     (function (TransactionState) {
         // REQUESTED = 'requested',
@@ -4723,9 +4740,9 @@ var CdvPurchase;
             constructor(purchase, parentReceipt, decorator) {
                 super(CdvPurchase.Platform.GOOGLE_PLAY, parentReceipt, decorator);
                 this.nativePurchase = purchase;
-                this.refresh(purchase);
+                this.refresh(purchase, true);
             }
-            static toState(state, isAcknowledged, isConsumed) {
+            static toState(fromConstructor, state, isAcknowledged, isConsumed) {
                 switch (state) {
                     case GooglePlay.Bridge.PurchaseState.PENDING:
                         return CdvPurchase.TransactionState.INITIATED;
@@ -4734,6 +4751,10 @@ var CdvPurchase;
                         //       so we don't return APPROVED
                         if (isConsumed)
                             return CdvPurchase.TransactionState.FINISHED;
+                        else if (isAcknowledged)
+                            return CdvPurchase.TransactionState.APPROVED;
+                        else if (fromConstructor)
+                            return CdvPurchase.TransactionState.INITIATED;
                         else
                             return CdvPurchase.TransactionState.APPROVED;
                     case GooglePlay.Bridge.PurchaseState.UNSPECIFIED_STATE:
@@ -4743,7 +4764,7 @@ var CdvPurchase;
             /**
              * Refresh the value in the transaction based on the native purchase update
              */
-            refresh(purchase) {
+            refresh(purchase, fromConstructor) {
                 var _a, _b;
                 this.nativePurchase = purchase;
                 this.transactionId = `${purchase.orderId || purchase.purchaseToken}`;
@@ -4758,7 +4779,7 @@ var CdvPurchase;
                     this.isConsumed = purchase.consumed;
                 if (typeof purchase.autoRenewing !== 'undefined')
                     this.renewalIntent = purchase.autoRenewing ? CdvPurchase.RenewalIntent.RENEW : CdvPurchase.RenewalIntent.LAPSE;
-                this.state = Transaction.toState(purchase.getPurchaseState, (_a = this.isAcknowledged) !== null && _a !== void 0 ? _a : false, (_b = this.isConsumed) !== null && _b !== void 0 ? _b : false);
+                this.state = Transaction.toState(fromConstructor !== null && fromConstructor !== void 0 ? fromConstructor : false, purchase.getPurchaseState, (_a = this.isAcknowledged) !== null && _a !== void 0 ? _a : false, (_b = this.isConsumed) !== null && _b !== void 0 ? _b : false);
             }
         }
         GooglePlay.Transaction = Transaction;
@@ -4949,6 +4970,13 @@ var CdvPurchase;
                         const newReceipt = new Receipt(purchase, this.context.apiDecorators);
                         this.receipts.push(newReceipt);
                         this.context.listener.receiptsUpdated(CdvPurchase.Platform.GOOGLE_PLAY, [newReceipt]);
+                        if (newReceipt.transactions[0].state === CdvPurchase.TransactionState.INITIATED && !newReceipt.transactions[0].isPending) {
+                            // For compatibility, we set the state of "new" purchases to initiated from the constructor,
+                            // they'll got to "approved" when refreshed.
+                            // this way, users receive the "initiated" event, then "approved"
+                            newReceipt.refreshPurchase(purchase);
+                            this.context.listener.receiptsUpdated(CdvPurchase.Platform.GOOGLE_PLAY, [newReceipt]);
+                        }
                     }
                 });
             }

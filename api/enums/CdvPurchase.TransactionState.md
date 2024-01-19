@@ -2,7 +2,11 @@
 
 [CdvPurchase](../modules/CdvPurchase.md).TransactionState
 
-Possible states of a product
+Possible states of a transaction.
+
+```
+INITIATED → PENDING (optional) → APPROVED → FINISHED
+```
 
 ## Table of contents
 

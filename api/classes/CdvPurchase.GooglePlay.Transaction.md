@@ -306,7 +306,7 @@ ___
 
 ### refresh
 
-▸ **refresh**(`purchase`): `void`
+▸ **refresh**(`purchase`, `fromConstructor?`): `void`
 
 Refresh the value in the transaction based on the native purchase update
 
@@ -315,6 +315,7 @@ Refresh the value in the transaction based on the native purchase update
 | Name | Type |
 | :------ | :------ |
 | `purchase` | [`Purchase`](../interfaces/CdvPurchase.GooglePlay.Bridge.Purchase.md) |
+| `fromConstructor?` | `boolean` |
 
 #### Returns
 
@@ -351,12 +352,13 @@ ___
 
 ### toState
 
-▸ `Static` **toState**(`state`, `isAcknowledged`, `isConsumed`): [`TransactionState`](../enums/CdvPurchase.TransactionState.md)
+▸ `Static` **toState**(`fromConstructor`, `state`, `isAcknowledged`, `isConsumed`): [`TransactionState`](../enums/CdvPurchase.TransactionState.md)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
+| `fromConstructor` | `boolean` |
 | `state` | [`PurchaseState`](../enums/CdvPurchase.GooglePlay.Bridge.PurchaseState.md) |
 | `isAcknowledged` | `boolean` |
 | `isConsumed` | `boolean` |

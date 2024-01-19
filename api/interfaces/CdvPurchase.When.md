@@ -10,6 +10,7 @@ Store events listener
 
 - [approved](CdvPurchase.When.md#approved)
 - [finished](CdvPurchase.When.md#finished)
+- [initiated](CdvPurchase.When.md#initiated)
 - [pending](CdvPurchase.When.md#pending)
 - [productUpdated](CdvPurchase.When.md#productupdated)
 - [receiptUpdated](CdvPurchase.When.md#receiptupdated)
@@ -25,7 +26,7 @@ Store events listener
 
 ▸ **approved**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
 
-Register a function called when transaction is approved.
+Register a function called when a transaction is approved.
 
 #### Parameters
 
@@ -59,11 +60,30 @@ Register a function called when a transaction is finished.
 
 ___
 
+### initiated
+
+▸ **initiated**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
+
+Register a function called when a transaction is initiated.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<[`Transaction`](../classes/CdvPurchase.Transaction.md)\> |
+| `callbackName?` | `string` |
+
+#### Returns
+
+[`When`](CdvPurchase.When.md)
+
+___
+
 ### pending
 
 ▸ **pending**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
 
-Register a function called when transaction is pending.
+Register a function called when a transaction is pending.
 
 #### Parameters
 
