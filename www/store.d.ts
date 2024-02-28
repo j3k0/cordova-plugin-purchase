@@ -189,12 +189,12 @@ declare namespace CdvPurchase {
          */
         debug(o: any): void;
         /**
-         * Add warning logs on a console describing an exceptions.
+         * Add warning logs on a console describing an exception.
          *
          * This method is mostly used when executing user registered callbacks.
          *
          * @param context - a string describing why the method was called
-         * @param error - a javascript Error object thrown by a exception
+         * @param error - a javascript Error object thrown by an exception
          */
         logCallbackException(context: string, err: Error | string): void;
         /**
