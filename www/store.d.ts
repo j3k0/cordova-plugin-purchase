@@ -1708,9 +1708,9 @@ declare namespace CdvPurchase {
         /**
          * Finish a transaction.
          *
-         * When the application has delivered the product, it should finalizes the order.
+         * When the application has delivered the product, it should finalize the order.
          * Only after that, money will be transferred to your account.
-         * This method ensures that no customers is charged for a product that couldn't be delivered.
+         * This method ensures that no customers are charged for a product that couldn't be delivered.
          *
          * @example
          * store.when()
