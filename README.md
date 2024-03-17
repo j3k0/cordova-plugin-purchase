@@ -143,7 +143,7 @@ You'll have two main tasks to accomplish:
 
 For platform setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/wiki/Home) is a good starting point.
 
-There's a specific page for the [version 13](./wiki/Version-13).
+There's a specific page for the [version 13](https://github.com/j3k0/cordova-plugin-purchase/wiki/Version-13).
 
 ### Upgrading to Version 13
 
