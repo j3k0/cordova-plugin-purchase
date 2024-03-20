@@ -204,8 +204,8 @@ declare namespace CdvPurchase {
          *
          * @example
          * Logger.console = {
-         *   log: (message) => { remoteLog('LOG', message); }
-         *   warn: (message) => { remoteLog('WARN', message); }
+         *   log: (message) => { remoteLog('LOG', message); },
+         *   warn: (message) => { remoteLog('WARN', message); },
          *   error: (message) => { remoteLog('ERROR', message); }
          * }
          */
