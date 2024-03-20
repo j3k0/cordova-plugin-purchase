@@ -5,6 +5,7 @@
 //
 
 #import "InAppPurchase.h"
+#import "RMAppReceipt.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -191,6 +192,10 @@ static NSString *toTimestamp(NSDate *date) {
     return [NSString stringWithFormat:@"%f", [date timeIntervalSince1970] * 1000];
 }
 
+static NSString *dateToString(NSDate* date) {
+    return [NSISO8601DateFormatter stringFromDate:date timeZone:[NSTimeZone systemTimeZone] formatOptions:NSISO8601DateFormatWithInternetDateTime];
+}
+
 @implementation NSArray (JSONSerialize)
 - (NSString *)JSONSerialize {
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:self options:0 error:nil];
@@ -245,6 +250,7 @@ static NSString *toTimestamp(NSDate *date) {
 @synthesize retainer;
 @synthesize unfinishedTransactions;
 @synthesize pendingTransactionUpdates;
+@synthesize verifier;
 
 // Initialize the plugin state
 -(void) pluginInitialize {
@@ -252,6 +258,11 @@ static NSString *toTimestamp(NSDate *date) {
     self.products = [[NSMutableDictionary alloc] init];
     self.pendingTransactionUpdates = [[NSMutableArray alloc] init];
     self.unfinishedTransactions = [[NSMutableDictionary alloc] init];
+    self.verifier = [[RMStoreAppReceiptVerifier alloc] init];
+    
+    [self.verifier setBundleIdentifier:[[NSBundle mainBundle].infoDictionary objectForKey:@"CFBundleIdentifier"]];
+    [self.verifier setBundleVersion:[[NSBundle mainBundle].infoDictionary objectForKey:@"CFBundleShortVersionString"]];
+    
     if ([SKPaymentQueue canMakePayments]) {
         [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
         NSLog(@"[CdvPurchase.AppleAppStore.objc] Initialized.");
@@ -691,19 +702,7 @@ static NSString *toTimestamp(NSDate *date) {
 - (void) appStoreReceipt: (CDVInvokedUrlCommand*)command {
 
     DLog(@"appStoreReceipt:");
-    NSString *base64 = nil;
-    NSData *receiptData = [self appStoreReceipt];
-    if (receiptData != nil) {
-        base64 = [receiptData convertToBase64];
-    }
-    NSBundle *bundle = [NSBundle mainBundle];
-    NSArray *callbackArgs = [NSArray arrayWithObjects:
-        NILABLE(base64),
-        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleIdentifier"]),
-        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleShortVersionString"]),
-        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleNumericVersion"]),
-        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleSignature"]),
-        nil];
+    NSArray *callbackArgs = [self parseAppReceipt];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
                                                       messageAsArray:callbackArgs];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -730,6 +729,72 @@ static NSString *toTimestamp(NSDate *date) {
     DLog(@"appStoreRefreshReceipt: Receipt refresh request started");
 }
 
+- (void) setBundleDetails: (CDVInvokedUrlCommand*)command {
+    DLog(@"setBundleDetails: Setting bundle details for local app store receipt verification");
+    
+    NSString *bundleIdentifier = [command.arguments objectAtIndex:0];
+    NSString *bundleVersion = [command.arguments objectAtIndex:1];
+    
+    if (![bundleIdentifier isKindOfClass:[NSString class]] || bundleIdentifier == nil || [bundleIdentifier isEqualToString:@""]
+        || ![bundleVersion isKindOfClass:[NSString class]] || bundleVersion == nil || [bundleVersion isEqualToString:@""]
+    ) {
+        DLog(@"setBundleDetails: Not an non-empty NSString");
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid arguments"];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        return;
+    }
+    
+    [self.verifier setBundleIdentifier:bundleIdentifier];
+    [self.verifier setBundleVersion:bundleVersion];
+    
+    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+}
+
+- (NSArray*) parseAppReceipt {
+    NSString *base64 = nil;
+    NSData *receiptData = [self appStoreReceipt];
+    NSDictionary* receiptPayload = nil;
+    if (receiptData != nil) {
+        base64 = [receiptData convertToBase64];
+        RMAppReceipt* receipt = [RMAppReceipt bundleReceipt];
+        if(receipt != nil){
+            NSArray* _inAppPurchases = [receipt valueForKey:@"inAppPurchases"];
+            NSMutableArray* inAppPurchases = [NSMutableArray new];
+            for (RMAppReceiptIAP* _iap in _inAppPurchases) {
+                [inAppPurchases addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+                   NILABLE([NSNumber numberWithInteger:_iap.quantity]), @"quantity",
+                   NILABLE(_iap.productIdentifier), @"productIdentifier",
+                   NILABLE(_iap.transactionIdentifier), @"transactionIdentifier",
+                   NILABLE(_iap.originalTransactionIdentifier), @"originalTransactionIdentifier",
+                   NILABLE(dateToString(_iap.purchaseDate)), @"purchaseDate",
+                   NILABLE(dateToString(_iap.originalPurchaseDate)), @"originalPurchaseDate",
+                   NILABLE(dateToString(_iap.subscriptionExpirationDate)), @"subscriptionExpirationDate",
+                   NILABLE(dateToString(_iap.cancellationDate)), @"cancellationDate",
+                   NILABLE([NSNumber numberWithInteger:_iap.webOrderLineItemID]), @"webOrderLineItemID",
+                nil]];
+            }
+            
+            receiptPayload = [NSDictionary dictionaryWithObjectsAndKeys:
+              NILABLE(receipt.bundleIdentifier), @"bundleIdentifier",
+              NILABLE(receipt.appVersion), @"appVersion",
+              NILABLE(receipt.originalAppVersion), @"originalAppVersion",
+              NILABLE(dateToString(receipt.expirationDate)), @"expirationDate",
+              NILABLE(inAppPurchases), @"inAppPurchases",
+              @([self.verifier verifyAppReceipt]), @"verified",
+            nil];
+        }
+    }
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSArray *callbackArgs = [NSArray arrayWithObjects:
+        NILABLE(base64),
+        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleIdentifier"]),
+        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleShortVersionString"]),
+        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleNumericVersion"]),
+        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleSignature"]),
+        NILABLE(receiptPayload),
+        nil];
+    return callbackArgs;
+}
 - (void) dispose {
     g_initialized = NO;
     g_debugEnabled = NO;
@@ -795,20 +860,7 @@ static NSString *toTimestamp(NSDate *date) {
 - (void) requestDidFinish:(SKRequest *)request {
 
     DLog(@"RefreshReceiptDelegate.requestDidFinish: Got refreshed receipt");
-    NSString *base64 = nil;
-    NSData *receiptData = [self.plugin appStoreReceipt];
-    if (receiptData != nil) {
-        base64 = [receiptData convertToBase64];
-        // DLog(@"base64 receipt: %@", base64);
-    }
-    NSBundle *bundle = [NSBundle mainBundle];
-    NSArray *callbackArgs = [NSArray arrayWithObjects:
-        NILABLE(base64),
-        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleIdentifier"]),
-        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleShortVersionString"]),
-        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleNumericVersion"]),
-        NILABLE([bundle.infoDictionary objectForKey:@"CFBundleSignature"]),
-        nil];
+    NSArray *callbackArgs = [self.plugin parseAppReceipt];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
                                                       messageAsArray:callbackArgs];
     DLog(@"RefreshReceiptDelegate.requestDidFinish: Send new receipt data");

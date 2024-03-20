@@ -69,7 +69,37 @@ SOFTWARE.
         <source-file src="src/ios/FileUtility.m" />
 
         <framework src="StoreKit.framework" />
-    </platform>
+
+        <preference name="LOCAL_RECEIPT_VALIDATION" default="false" />
+
+        <!--BEGIN_MODULE LOCAL_RECEIPT_VALIDATION--><!--
+        <header-file src="src/ios/local-receipt-validation/RMAppReceipt.h" />
+        <source-file src="src/ios/local-receipt-validation/RMAppReceipt.m" />
+        <header-file src="src/ios/local-receipt-validation/RMStoreAppReceiptVerifier.h" />
+        <source-file src="src/ios/local-receipt-validation/RMStoreAppReceiptVerifier.m" />
+        <header-file src="src/ios/local-receipt-validation/RMStore.h" />
+        <source-file src="src/ios/local-receipt-validation/RMStore.m" />
+
+        <resource-file src="src/ios/local-receipt-validation/AppleIncRootCertificate.cer" />
+
+        <podspec>
+            <config>
+                <source url="https://cdn.cocoapods.org/"/>
+            </config>
+            <pods>
+                <pod name="OpenSSL-Universal" spec="1.1.1100"/>
+            </pods>
+        </podspec>
+        --><!--END_MODULE LOCAL_RECEIPT_VALIDATION-->
+
+        <!--BEGIN_MODULE_STUB LOCAL_RECEIPT_VALIDATION-->
+        <header-file src="src/ios/local-receipt-validation/stub/RMAppReceipt.h" />
+        <source-file src="src/ios/local-receipt-validation/stub/RMAppReceipt.m" />
+        <header-file src="src/ios/local-receipt-validation/stub/RMStoreAppReceiptVerifier.h" />
+        <source-file src="src/ios/local-receipt-validation/stub/RMStoreAppReceiptVerifier.m" />
+        <!--END_MODULE_STUB LOCAL_RECEIPT_VALIDATION-->
+
+</platform>
 
     <!-- osx -->
     <platform name="osx">
