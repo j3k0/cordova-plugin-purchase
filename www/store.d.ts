@@ -189,12 +189,12 @@ declare namespace CdvPurchase {
          */
         debug(o: any): void;
         /**
-         * Add warning logs on a console describing an exceptions.
+         * Add warning logs on a console describing an exception.
          *
          * This method is mostly used when executing user registered callbacks.
          *
          * @param context - a string describing why the method was called
-         * @param error - a javascript Error object thrown by a exception
+         * @param error - a javascript Error object thrown by an exception
          */
         logCallbackException(context: string, err: Error | string): void;
         /**
@@ -204,8 +204,8 @@ declare namespace CdvPurchase {
          *
          * @example
          * Logger.console = {
-         *   log: (message) => { remoteLog('LOG', message); }
-         *   warn: (message) => { remoteLog('WARN', message); }
+         *   log: (message) => { remoteLog('LOG', message); },
+         *   warn: (message) => { remoteLog('WARN', message); },
          *   error: (message) => { remoteLog('ERROR', message); }
          * }
          */
@@ -1708,9 +1708,9 @@ declare namespace CdvPurchase {
         /**
          * Finish a transaction.
          *
-         * When the application has delivered the product, it should finalizes the order.
+         * When the application has delivered the product, it should finalize the order.
          * Only after that, money will be transferred to your account.
-         * This method ensures that no customers is charged for a product that couldn't be delivered.
+         * This method ensures that no customers are charged for a product that couldn't be delivered.
          *
          * @example
          * store.when()
