@@ -1206,26 +1206,40 @@ public final class PurchasePlugin
     callbackContext.error(code + "|" + msg);
   }
 
-  /** Connect to the Billing server.
+  /**
+   * Connects to the Billing server.
+   *
+   * Once connected, {@code executeOnSuccess} will be executed.
    *
    * @param executeOnSuccess Some code to run once connected. */
-  public void startServiceConnection(final Runnable executeOnSuccess) {
+  public void startServiceConnection(final Runnable executeOnSuccess, final Runnable executeOnFailure) {
     Log.d(mTag, "startServiceConnection()");
     mBillingClient.startConnection(new BillingClientStateListener() {
       @Override
       public void onBillingSetupFinished(final BillingResult result) {
         mBillingClientResult = result;
         if (result.getResponseCode() == BillingResponseCode.OK) {
-          Log.d(mTag, "startServiceConnection() -> Success");
-          mIsServiceConnected = true;
+          onBillingConnectionSuccess();
+          if (executeOnSuccess != null) {
+            executeOnSuccess.run();
+          }
         }
         else {
-          Log.d(mTag, "startServiceConnection() -> Failed: "
-              + format(getLastResult()));
+          onBillingConnectionFailed();
+          if (executeOnSuccess != null) {
+            executeOnSuccess.run();
+          }
         }
-        if (executeOnSuccess != null) {
-          executeOnSuccess.run();
-        }
+      }
+
+      private void onBillingConnectionSuccess() {
+        Log.d(mTag, "startServiceConnection() -> Success");
+        mIsServiceConnected = true;
+      }
+
+      private void onBillingConnectionFailed() {
+        Log.d(mTag, "startServiceConnection() -> Failed: " + format(getLastResult()));
+        mIsServiceConnected = false;
       }
 
       @Override
@@ -1245,7 +1259,9 @@ public final class PurchasePlugin
       // If billing service was disconnected, we try to reconnect 1 time.
       // (feel free to introduce your retry policy here).
       Log.d(mTag, "executeServiceRequest() -> Failed (try again).");
-      startServiceConnection(runnable);
+      startServiceConnection(runnable, () -> {
+        Log.d(mTag, "executeServiceRequest() -> Failed to reconnect to billing server...");
+      });
     }
   }
 
