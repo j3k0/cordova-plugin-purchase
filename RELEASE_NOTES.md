@@ -2,6 +2,12 @@
 
 ## 13.10
 
+### 13.10.2
+
+#### Add `validationDate` to verified receipts
+
+`validationDate` can be set server side (the validation request response), to provide a more reliable clock time than the device's when needed.
+
 ### 13.10.1
 
 #### Fix store.initialize() when passed a single value
@@ -32,7 +38,7 @@ When callbacks are triggered, the reason is logged to the console.
 
 #### Prevent instanciating CdvPurchase.store twice
 
-So when ionic packages the plugin with the app code, no double instanciations of the plugin is performed.
+So when ionic packages the plugin with the app code, no double instantiations of the plugin is performed.
 
 ## 13.9.0
 

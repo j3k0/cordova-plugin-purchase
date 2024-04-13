@@ -7,6 +7,7 @@ describe('CDVPurchase', () => {
     describe('appStoreDiscountEligibilityDeterminer', () => {
       const testReceipt: CdvPurchase.VerifiedReceipt = {
         className: 'VerifiedReceipt',
+        validationDate: new Date(),
         set: (receipt, response) => { },
         platform: CdvPurchase.Platform.APPLE_APPSTORE,
         id: 'my-receipt',

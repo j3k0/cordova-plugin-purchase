@@ -13,6 +13,7 @@ Receipt data as validated by the receipt validation server
 - [latestReceipt](CdvPurchase.VerifiedReceipt.md#latestreceipt)
 - [nativeTransactions](CdvPurchase.VerifiedReceipt.md#nativetransactions)
 - [sourceReceipt](CdvPurchase.VerifiedReceipt.md#sourcereceipt)
+- [validationDate](CdvPurchase.VerifiedReceipt.md#validationdate)
 - [warning](CdvPurchase.VerifiedReceipt.md#warning)
 
 ### Accessors
@@ -66,6 +67,14 @@ Source local receipt used for this validation
 
 ___
 
+### validationDate
+
+• **validationDate**: `Date`
+
+Date and time the receipt was verified
+
+___
+
 ### warning
 
 • `Optional` **warning**: `string`
@@ -104,6 +113,7 @@ Get raw response data from the receipt validation request
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `collection?` | [`VerifiedPurchase`](../interfaces/CdvPurchase.VerifiedPurchase.md)[] | The collection of purchases in this receipt.  An array of ValidatorPurchase |
+| `date?` | `string` | Date and time the receipt was validated.  It will provide the client with a more reliable clock time than the user's device when needed. |
 | `id` | `string` | Id of the product that have been validated |
 | `ineligible_for_intro_price?` | `string`[] | List of product ids for which intro price isn't available anymore |
 | `latest_receipt` | `boolean` | Tell the plugin that we've used the latest receipt |
