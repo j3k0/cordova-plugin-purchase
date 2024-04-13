@@ -29,6 +29,11 @@ namespace CdvPurchase {
                      *
                      * It might be present when the server had to fallback to a backup validation solution. */
                     warning?: string;
+                    /** Date and time the receipt was validated.
+                     *
+                     * It will provide the client with a more reliable clock time
+                     * than the user's device when needed. */
+                    date?: ISODate;
                 }
             }
 
