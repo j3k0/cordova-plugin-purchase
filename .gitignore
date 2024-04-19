@@ -20,3 +20,4 @@ npm-debug.log
 /src/ios/CDVPurchase.m
 /src/ios/CDVPurchase.swift
 /src/example/_*
+/api-html

@@ -33,6 +33,7 @@
   "scripts": {
     "test": "cd tests && jest",
     "typedoc": "typedoc --hideGenerator --excludePrivate --excludeProtected --excludeInternal --disableSources --readme src/ts/README.md --hideBreadcrumbs true --hideInPageTOC false --out api --pretty --plugin typedoc-plugin-markdown --theme markdown --basePath src/ts src/ts/store.ts",
+    "typedoc-html": "typedoc --plugin typedoc-theme-hierarchy --theme hierarchy --hideGenerator --excludePrivate --excludeProtected --excludeInternal --disableSources --readme src/ts/README.md --out api-html --pretty --basePath src/ts src/ts/store.ts",
     "typedoc-dev": "typedoc --hideGenerator --readme src/ts/README.md --out api-dev --pretty --plugin typedoc-plugin-markdown --theme markdown --basePath src/ts src/ts/store.ts"
   },
   "author": "Jean-Christophe Hoelt <hoelt@fovea.cc>",
@@ -46,9 +47,10 @@
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "ts-jest": "^29.1.1",
-    "typedoc": "^0.23.15",
-    "typedoc-github-wiki-theme": "^1.0.1",
-    "typedoc-plugin-markdown": "^3.13.6",
+    "typedoc": "^0.25.13",
+    "typedoc-github-wiki-theme": "^1.1.0",
+    "typedoc-plugin-markdown": "^3.17.1",
+    "typedoc-theme-hierarchy": "^4.1.2",
     "typescript": "^4.7.4"
   },
   "main": "./www/store.js",

@@ -736,6 +736,8 @@ if (window.cordova) {
 else {
     initCDVPurchase();
 }
+
+/** @private */
 function initCDVPurchase() {
     console.log('Create CdvPurchase...');
     const oldStore = window.CdvPurchase?.store;

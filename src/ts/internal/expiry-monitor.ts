@@ -1,8 +1,3 @@
-/**
- * The platform doesn't send notifications when a subscription expires.
- *
- * However this is useful, so let's do just that.
- */
 namespace CdvPurchase {
 
   export namespace Internal {
@@ -20,6 +15,13 @@ namespace CdvPurchase {
       // onTransactionExpired(transaction: Transaction): void;
     }
 
+    /**
+     * Send a notification when a subscription expires.
+     *
+     * The platform doesn't send notifications when a subscription expires.
+     *
+     * However this is useful, so let's do just that.
+     */
     export class ExpiryMonitor {
 
       /** Time between checks for newly expired subscriptions */
