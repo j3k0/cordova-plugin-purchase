@@ -145,6 +145,8 @@ For platform setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/w
 
 There's a specific page for the [version 13](https://github.com/j3k0/cordova-plugin-purchase/wiki/Version-13).
 
+API documentation can be found here: [cordova-plugin-purchase API](https://www.iaptic.com/documentation/cordova-plugin-api/)
+
 ### Upgrading to Version 13
 
 There's been some changes to the API with version 13 of the plugin. This document should help existing apps with the migration: [Migrate to version 13](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO:-Migrate-to-v13).
