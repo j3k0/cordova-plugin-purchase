@@ -78,12 +78,12 @@ namespace CdvPurchase
         debug(o: any) { log(this.store.verbosity, LogLevel.DEBUG, this.prefix, o); }
 
         /**
-         * Add warning logs on a console describing an exceptions.
+         * Add warning logs on a console describing an exception.
          *
          * This method is mostly used when executing user registered callbacks.
          *
          * @param context - a string describing why the method was called
-         * @param error - a javascript Error object thrown by a exception
+         * @param error - a javascript Error object thrown by an exception
          */
         logCallbackException(context: string, err: Error | string) {
             this.warn("A callback in \'" + context + "\' failed with an exception.");
@@ -107,8 +107,8 @@ namespace CdvPurchase
          *
          * @example
          * Logger.console = {
-         *   log: (message) => { remoteLog('LOG', message); }
-         *   warn: (message) => { remoteLog('WARN', message); }
+         *   log: (message) => { remoteLog('LOG', message); },
+         *   warn: (message) => { remoteLog('WARN', message); },
          *   error: (message) => { remoteLog('ERROR', message); }
          * }
          */
