@@ -23,6 +23,9 @@ namespace CdvPurchase {
      * @param value - Value passed to the callback.
      */
     export function safeCall<T>(logger: Logger, className: string, callback: Callback<T>, value: T, callbackName: string | undefined, reason: string): void {
+      if (!callback) {
+        return; // cannot call an undefined callback.
+      }
       if (!callbackName) {
         callbackName = callback.name || ('#' + md5(callback.toString()));
       }
