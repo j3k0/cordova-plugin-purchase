@@ -2,6 +2,12 @@
 
 ## 13.10
 
+### 13.10.3
+
+#### Fix issue when a callback is null or undefined
+
+Ref issue #1557
+
 ### 13.10.2
 
 #### Add `validationDate` to verified receipts
