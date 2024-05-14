@@ -1,4 +1,4 @@
-# Interface: Options<T\>
+# Interface: Options\<T\>
 
 [Utils](../modules/CdvPurchase.Utils.md).[Ajax](../modules/CdvPurchase.Utils.Ajax.md).Options
 
@@ -62,7 +62,7 @@ ___
 
 ### success
 
-• `Optional` **success**: [`SuccessCallback`](../modules/CdvPurchase.Utils.Ajax.md#successcallback)<`T`\>
+• `Optional` **success**: [`SuccessCallback`](../modules/CdvPurchase.Utils.Ajax.md#successcallback)\<`T`\>
 
 A success callback taking the body as an argument
 

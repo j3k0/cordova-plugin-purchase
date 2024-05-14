@@ -2,11 +2,11 @@
 
 The most important classes in plugin are:
 
- - The [Store](./classes/CdvPurchase.Store.md) class - Entry point to the features of the plugin.
- - The [Product](./classes/CdvPurchase.Product.md) class - Contains the definition of a product on the store.
- - The [Receipt](./classes/CdvPurchase.Receipt.md) class - Contains the information of the users purchases.
+ - The [Store](classes/CdvPurchase.Store.md) class - Entry point to the features of the plugin.
+ - The [Product](classes/CdvPurchase.Product.md) class - Contains the definition of a product on the store.
+ - The [Receipt](classes/CdvPurchase.Receipt.md) class - Contains the information of the users purchases.
 
-In general, you will only interact with direct members of the [CdvPurchase](./modules/CdvPurchase.md) namespace.
+In general, you will only interact with direct members of the [CdvPurchase](modules/CdvPurchase.md) namespace.
 
 # Contributing to the API documentation
 

@@ -40,7 +40,7 @@ Additional data about the purchase
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `applicationUsername?` | `string` \| `number` | Attach the purchases to the given application user. Should be a string.  See [/documentation/application-username](/documentation/application-username) for more information.  **`Optional`** |
+| `applicationUsername?` | `string` \| `number` | Attach the purchases to the given application user. Should be a string. See [/documentation/application-username](/documentation/application-username) for more information. **`Optional`** |
 
 ___
 
@@ -136,14 +136,14 @@ Microsoft license information
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `storeIdKey_collections?` | `string` | Microsoft b2bKey for collections.  **`Optional`** |
-| `storeIdKey_purchases?` | `string` | Microsoft b2bKey for purchases.  **`Optional`** |
+| `storeIdKey_collections?` | `string` | Microsoft b2bKey for collections. **`Optional`** |
+| `storeIdKey_purchases?` | `string` | Microsoft b2bKey for purchases. **`Optional`** |
 
 ___
 
 ### offers
 
-• `Optional` **offers**: { `id`: `string` ; `pricingPhases`: [`PricingPhase`](CdvPurchase.PricingPhase.md)[]  }[]
+• `Optional` **offers**: \{ `id`: `string` ; `pricingPhases`: [`PricingPhase`](CdvPurchase.PricingPhase.md)[]  }[]
 
 ___
 
@@ -157,7 +157,7 @@ ___
 
 ### products
 
-• **products**: { `id`: `string` ; `offers`: { `id`: `string` ; `pricingPhases`: [`PricingPhase`](CdvPurchase.PricingPhase.md)[]  }[] ; `type`: [`ProductType`](../enums/CdvPurchase.ProductType.md)  }[]
+• **products**: \{ `id`: `string` ; `offers`: \{ `id`: `string` ; `pricingPhases`: [`PricingPhase`](CdvPurchase.PricingPhase.md)[]  }[] ; `type`: [`ProductType`](../enums/CdvPurchase.ProductType.md)  }[]
 
 List of products available in the store
 

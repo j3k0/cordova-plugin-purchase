@@ -7,7 +7,7 @@ Transaction as reported by the device
 **`See`**
 
  - [Receipt](CdvPurchase.Receipt.md)
- - store.localTransactions
+ - [store.localTransactions](CdvPurchase.Store.md#localtransactions)
 
 ## Hierarchy
 
@@ -114,7 +114,7 @@ ___
 
 ### products
 
-• **products**: { `id`: `string` ; `offerId?`: `string`  }[] = `[]`
+• **products**: \{ `id`: `string` ; `offerId?`: `string`  }[] = `[]`
 
 Purchased products
 
@@ -185,7 +185,7 @@ Return the receipt this transaction is part of.
 
 ### finish
 
-▸ **finish**(): `Promise`<`void`\>
+▸ **finish**(): `Promise`\<`void`\>
 
 Finish a transaction.
 
@@ -193,6 +193,10 @@ When the application has delivered the product, it should finalizes the order.
 Only after that, money will be transferred to your account.
 This method ensures that no customers is charged for a product that couldn't be delivered.
 
+#### Returns
+
+`Promise`\<`void`\>
+
 **`Example`**
 
 ```ts
@@ -201,21 +205,21 @@ store.when()
   .verified(receipt => receipt.finish())
 ```
 
-#### Returns
-
-`Promise`<`void`\>
-
 ___
 
 ### verify
 
-▸ **verify**(): `Promise`<`void`\>
+▸ **verify**(): `Promise`\<`void`\>
 
 Verify a transaction.
 
 This will trigger a call to the receipt validation service for the attached receipt.
 Once the receipt has been verified, you can finish the transaction.
 
+#### Returns
+
+`Promise`\<`void`\>
+
 **`Example`**
 
 ```ts
@@ -223,7 +227,3 @@ store.when()
   .approved(transaction => transaction.verify())
   .verified(receipt => receipt.finish())
 ```
-
-#### Returns
-
-`Promise`<`void`\>

@@ -6,8 +6,8 @@ Transaction as reported by the device
 
 **`See`**
 
- - [Receipt](CdvPurchase.GooglePlay.Receipt.md)
- - store.localTransactions
+ - [Receipt](CdvPurchase.Receipt.md)
+ - [store.localTransactions](CdvPurchase.Store.md#localtransactions)
 
 ## Hierarchy
 
@@ -55,7 +55,7 @@ Transaction as reported by the device
 
 ### constructor
 
-• **new Transaction**(`purchase`, `parentReceipt`, `decorator`)
+• **new Transaction**(`purchase`, `parentReceipt`, `decorator`): [`Transaction`](CdvPurchase.GooglePlay.Transaction.md)
 
 #### Parameters
 
@@ -64,6 +64,10 @@ Transaction as reported by the device
 | `purchase` | [`Purchase`](../interfaces/CdvPurchase.GooglePlay.Bridge.Purchase.md) |
 | `parentReceipt` | [`Receipt`](CdvPurchase.GooglePlay.Receipt.md) |
 | `decorator` | `TransactionDecorator` |
+
+#### Returns
+
+[`Transaction`](CdvPurchase.GooglePlay.Transaction.md)
 
 #### Overrides
 
@@ -175,7 +179,7 @@ ___
 
 ### products
 
-• **products**: { `id`: `string` ; `offerId?`: `string`  }[] = `[]`
+• **products**: \{ `id`: `string` ; `offerId?`: `string`  }[] = `[]`
 
 Purchased products
 
@@ -278,13 +282,17 @@ CdvPurchase.Transaction.parentReceipt
 
 ### finish
 
-▸ **finish**(): `Promise`<`void`\>
+▸ **finish**(): `Promise`\<`void`\>
 
 Finish a transaction.
 
 When the application has delivered the product, it should finalizes the order.
 Only after that, money will be transferred to your account.
 This method ensures that no customers is charged for a product that couldn't be delivered.
+
+#### Returns
+
+`Promise`\<`void`\>
 
 **`Example`**
 
@@ -293,10 +301,6 @@ store.when()
   .approved(transaction => transaction.verify())
   .verified(receipt => receipt.finish())
 ```
-
-#### Returns
-
-`Promise`<`void`\>
 
 #### Inherited from
 
@@ -325,12 +329,16 @@ ___
 
 ### verify
 
-▸ **verify**(): `Promise`<`void`\>
+▸ **verify**(): `Promise`\<`void`\>
 
 Verify a transaction.
 
 This will trigger a call to the receipt validation service for the attached receipt.
 Once the receipt has been verified, you can finish the transaction.
+
+#### Returns
+
+`Promise`\<`void`\>
 
 **`Example`**
 
@@ -340,10 +348,6 @@ store.when()
   .verified(receipt => receipt.finish())
 ```
 
-#### Returns
-
-`Promise`<`void`\>
-
 #### Inherited from
 
 [Transaction](CdvPurchase.Transaction.md).[verify](CdvPurchase.Transaction.md#verify)
@@ -352,7 +356,7 @@ ___
 
 ### toState
 
-▸ `Static` **toState**(`fromConstructor`, `state`, `isAcknowledged`, `isConsumed`): [`TransactionState`](../enums/CdvPurchase.TransactionState.md)
+▸ **toState**(`fromConstructor`, `state`, `isAcknowledged`, `isConsumed`): [`TransactionState`](../enums/CdvPurchase.TransactionState.md)
 
 #### Parameters
 

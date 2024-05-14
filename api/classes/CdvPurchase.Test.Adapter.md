@@ -55,13 +55,17 @@ Test.TEST_PRODUCTS
 
 ### constructor
 
-• **new Adapter**(`context`)
+• **new Adapter**(`context`): [`Adapter`](CdvPurchase.Test.Adapter.md)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `context` | `AdapterContext` |
+
+#### Returns
+
+[`Adapter`](CdvPurchase.Test.Adapter.md)
 
 ## Properties
 
@@ -179,7 +183,7 @@ ___
 
 ### finish
 
-▸ **finish**(`transaction`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **finish**(`transaction`): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Finish a transaction.
 
@@ -194,7 +198,7 @@ For consumable, this will acknowledge and consume the purchase.
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 #### Implementation of
 
@@ -204,7 +208,7 @@ ___
 
 ### handleReceiptValidationResponse
 
-▸ **handleReceiptValidationResponse**(`receipt`, `response`): `Promise`<`void`\>
+▸ **handleReceiptValidationResponse**(`receipt`, `response`): `Promise`\<`void`\>
 
 Handle platform specific fields from receipt validation response.
 
@@ -217,7 +221,7 @@ Handle platform specific fields from receipt validation response.
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>
 
 #### Implementation of
 
@@ -227,7 +231,7 @@ ___
 
 ### initialize
 
-▸ **initialize**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **initialize**(): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Initializes a platform adapter.
 
@@ -239,7 +243,7 @@ In other case of a potentially recoverable error, the adapter will keep retrying
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 #### Implementation of
 
@@ -249,7 +253,7 @@ ___
 
 ### loadProducts
 
-▸ **loadProducts**(`products`): `Promise`<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`Product`](CdvPurchase.Product.md))[]\>
+▸ **loadProducts**(`products`): `Promise`\<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`Product`](CdvPurchase.Product.md))[]\>
 
 Load product definitions from the platform.
 
@@ -261,7 +265,7 @@ Load product definitions from the platform.
 
 #### Returns
 
-`Promise`<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`Product`](CdvPurchase.Product.md))[]\>
+`Promise`\<([`IError`](../interfaces/CdvPurchase.IError.md) \| [`Product`](CdvPurchase.Product.md))[]\>
 
 #### Implementation of
 
@@ -271,13 +275,13 @@ ___
 
 ### loadReceipts
 
-▸ **loadReceipts**(): `Promise`<[`Receipt`](CdvPurchase.Receipt.md)[]\>
+▸ **loadReceipts**(): `Promise`\<[`Receipt`](CdvPurchase.Receipt.md)[]\>
 
 Load the receipts
 
 #### Returns
 
-`Promise`<[`Receipt`](CdvPurchase.Receipt.md)[]\>
+`Promise`\<[`Receipt`](CdvPurchase.Receipt.md)[]\>
 
 #### Implementation of
 
@@ -287,13 +291,13 @@ ___
 
 ### manageBilling
 
-▸ **manageBilling**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **manageBilling**(): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Open the platforms' billing management interface.
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 #### Implementation of
 
@@ -303,13 +307,13 @@ ___
 
 ### manageSubscriptions
 
-▸ **manageSubscriptions**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **manageSubscriptions**(): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Open the platforms' subscription management interface.
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 #### Implementation of
 
@@ -319,7 +323,7 @@ ___
 
 ### order
 
-▸ **order**(`offer`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **order**(`offer`): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Initializes an order.
 
@@ -331,7 +335,7 @@ Initializes an order.
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 #### Implementation of
 
@@ -341,7 +345,7 @@ ___
 
 ### receiptValidationBody
 
-▸ **receiptValidationBody**(`receipt`): `Promise`<`undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)\>
+▸ **receiptValidationBody**(`receipt`): `Promise`\<`undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)\>
 
 Prepare for receipt validation
 
@@ -353,7 +357,7 @@ Prepare for receipt validation
 
 #### Returns
 
-`Promise`<`undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)\>
+`Promise`\<`undefined` \| [`Body`](../interfaces/CdvPurchase.Validator.Request.Body.md)\>
 
 #### Implementation of
 
@@ -363,14 +367,29 @@ ___
 
 ### requestPayment
 
-▸ **requestPayment**(`paymentRequest`, `additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md) \| [`Transaction`](CdvPurchase.Transaction.md)\>
+▸ **requestPayment**(`paymentRequest`, `additionalData?`): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md) \| [`Transaction`](CdvPurchase.Transaction.md)\>
 
 This function simulates a payment process by prompting the user to confirm the payment.
 
 It creates a `Receipt` and `Transaction` object and returns the `Transaction` object if the user enters "Y" in the prompt.
 
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `paymentRequest` | [`PaymentRequest`](../interfaces/CdvPurchase.PaymentRequest.md) | An object containing information about the payment, such as the amount and currency. |
+| `additionalData?` | [`AdditionalData`](../interfaces/CdvPurchase.AdditionalData.md) | Additional data to be included in the receipt. |
+
+#### Returns
+
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md) \| [`Transaction`](CdvPurchase.Transaction.md)\>
+
+A promise that resolves to either an error object (if the user enters "E" in the prompt),
+a `Transaction` object (if the user confirms the payment), or `undefined` (if the user does not confirm the payment).
+
 **`Example`**
 
+```ts
 const paymentRequest = {
   amountMicros: 1000000,
   currency: "USD",
@@ -384,20 +403,7 @@ if (result?.isError) {
 } else {
   console.log("Payment cancelled by user");
 }
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `paymentRequest` | [`PaymentRequest`](../interfaces/CdvPurchase.PaymentRequest.md) | An object containing information about the payment, such as the amount and currency. |
-| `additionalData?` | [`AdditionalData`](../interfaces/CdvPurchase.AdditionalData.md) | Additional data to be included in the receipt. |
-
-#### Returns
-
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md) \| [`Transaction`](CdvPurchase.Transaction.md)\>
-
-A promise that resolves to either an error object (if the user enters "E" in the prompt),
-a `Transaction` object (if the user confirms the payment), or `undefined` (if the user does not confirm the payment).
+```
 
 #### Implementation of
 
@@ -407,7 +413,7 @@ ___
 
 ### restorePurchases
 
-▸ **restorePurchases**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **restorePurchases**(): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Replay the queue of transactions.
 
@@ -415,7 +421,7 @@ Might ask the user to login.
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 #### Implementation of
 
@@ -425,14 +431,14 @@ ___
 
 ### verify
 
-▸ `Static` **verify**(`receipt`, `callback`): `void`
+▸ **verify**(`receipt`, `callback`): `void`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `receipt` | [`Receipt`](CdvPurchase.Receipt.md) |
-| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<`ReceiptResponse`\> |
+| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)\<`ReceiptResponse`\> |
 
 #### Returns
 

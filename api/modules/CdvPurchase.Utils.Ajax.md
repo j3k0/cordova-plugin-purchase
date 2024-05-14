@@ -23,11 +23,11 @@
 
 Ƭ **ErrorCallback**: (`statusCode`: `number`, `statusText`: `string`, `data`: ``null`` \| `object`) => `void`
 
+Error callback for an ajax call
+
 #### Type declaration
 
 ▸ (`statusCode`, `statusText`, `data`): `void`
-
-Error callback for an ajax call
 
 ##### Parameters
 
@@ -45,7 +45,9 @@ ___
 
 ### SuccessCallback
 
-Ƭ **SuccessCallback**<`T`\>: (`body`: `T`) => `void`
+Ƭ **SuccessCallback**\<`T`\>: (`body`: `T`) => `void`
+
+Success callback for an ajax call
 
 #### Type parameters
 
@@ -56,8 +58,6 @@ ___
 #### Type declaration
 
 ▸ (`body`): `void`
-
-Success callback for an ajax call
 
 ##### Parameters
 

@@ -38,7 +38,7 @@ One of the available offers to purchase a given product
 
 ### constructor
 
-• **new SKOffer**(`options`, `decorator`)
+• **new SKOffer**(`options`, `decorator`): [`SKOffer`](CdvPurchase.AppleAppStore.SKOffer.md)
 
 #### Parameters
 
@@ -50,6 +50,10 @@ One of the available offers to purchase a given product
 | `options.pricingPhases` | [`PricingPhase`](../interfaces/CdvPurchase.PricingPhase.md)[] |
 | `options.product` | [`Product`](CdvPurchase.Product.md) |
 | `decorator` | `OfferDecorator` |
+
+#### Returns
+
+[`SKOffer`](CdvPurchase.AppleAppStore.SKOffer.md)
 
 #### Overrides
 
@@ -169,15 +173,9 @@ Offer.productType
 
 ### order
 
-▸ **order**(`additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **order**(`additionalData?`): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Initiate a purchase of this offer.
-
-**`Example`**
-
-```ts
-store.get("my-product").getOffer().order();
-```
 
 #### Parameters
 
@@ -187,7 +185,13 @@ store.get("my-product").getOffer().order();
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+**`Example`**
+
+```ts
+store.get("my-product").getOffer().order();
+```
 
 #### Inherited from
 

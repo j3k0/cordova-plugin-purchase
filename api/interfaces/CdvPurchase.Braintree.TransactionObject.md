@@ -26,4 +26,4 @@ ___
 
 ### transaction
 
-• `Optional` **transaction**: `Object`
+• `Optional` **transaction**: (\{ status: "failed" \| "authorization\_expired" \| "authorized" \| "authorizing" \| "settlement\_confirmed" \| "settlement\_pending" \| "settled" \| "settling" \| "submitted\_for\_settlement" \| "voided"; } \| \{ ...; } \| \{ ...; } \| \{ ...; }) & \{ ...; }

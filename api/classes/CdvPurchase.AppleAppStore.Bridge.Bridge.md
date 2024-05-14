@@ -42,7 +42,11 @@
 
 ### constructor
 
-• **new Bridge**()
+• **new Bridge**(): [`Bridge`](CdvPurchase.AppleAppStore.Bridge.Bridge.md)
+
+#### Returns
+
+[`Bridge`](CdvPurchase.AppleAppStore.Bridge.Bridge.md)
 
 ## Properties
 
@@ -157,7 +161,7 @@ This calls the native "setup" method from the "InAppPurchase" Objective-C class.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `options` | `Partial`<[`BridgeOptions`](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeOptions.md)\> | Options for the bridge |
+| `options` | `Partial`\<[`BridgeOptions`](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeOptions.md)\> | Options for the bridge |
 | `success` | () => `void` | Called when the bridge is ready |
 | `error` | (`code`: [`ErrorCode`](../enums/CdvPurchase.ErrorCode.md), `message`: `string`) => `void` | Called when the bridge failed to initialize |
 
@@ -223,7 +227,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `callback?` | [`Callback`](../modules/CdvPurchase.md#callback)<`any`\> |
+| `callback?` | [`Callback`](../modules/CdvPurchase.md#callback)\<`any`\> |
 
 #### Returns
 
@@ -239,7 +243,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `callback?` | [`Callback`](../modules/CdvPurchase.md#callback)<`any`\> |
+| `callback?` | [`Callback`](../modules/CdvPurchase.md#callback)\<`any`\> |
 
 #### Returns
 
@@ -271,7 +275,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `callback?` | [`Callback`](../modules/CdvPurchase.md#callback)<`any`\> |
+| `callback?` | [`Callback`](../modules/CdvPurchase.md#callback)\<`any`\> |
 
 #### Returns
 
@@ -341,7 +345,7 @@ The restored transactions are passed to the onRestored callback, so make sure yo
 
 | Name | Type |
 | :------ | :------ |
-| `callback?` | [`Callback`](../modules/CdvPurchase.md#callback)<`any`\> |
+| `callback?` | [`Callback`](../modules/CdvPurchase.md#callback)\<`any`\> |
 
 #### Returns
 

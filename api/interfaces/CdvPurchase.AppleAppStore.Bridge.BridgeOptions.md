@@ -50,11 +50,11 @@ ___
 
 • **deferred**: (`productId`: `string`) => `void`
 
+Called when a transaction is deferred (waiting for approval)
+
 #### Type declaration
 
 ▸ (`productId`): `void`
-
-Called when a transaction is deferred (waiting for approval)
 
 ##### Parameters
 
@@ -74,7 +74,7 @@ ___
 
 ### error
 
-• **error**: (`code`: [`ErrorCode`](../enums/CdvPurchase.ErrorCode.md), `message`: `string`, `options?`: { `productId`: `string` ; `quantity?`: `number`  }) => `void`
+• **error**: (`code`: [`ErrorCode`](../enums/CdvPurchase.ErrorCode.md), `message`: `string`, `options?`: \{ `productId`: `string` ; `quantity?`: `number`  }) => `void`
 
 #### Type declaration
 
@@ -104,11 +104,11 @@ ___
 
 • **finished**: (`transactionIdentifier`: `string`, `productId`: `string`) => `void`
 
+Called when a transaction is in "finished" state
+
 #### Type declaration
 
 ▸ (`transactionIdentifier`, `productId`): `void`
-
-Called when a transaction is in "finished" state
 
 ##### Parameters
 
@@ -131,11 +131,11 @@ ___
 
 • **log**: (`message`: `string`) => `void`
 
+Custom logger for the bridge
+
 #### Type declaration
 
 ▸ (`message`): `void`
-
-Custom logger for the bridge
 
 ##### Parameters
 
@@ -153,11 +153,11 @@ ___
 
 • **purchaseEnqueued**: (`productId`: `string`, `quantity`: `number`) => `void`
 
+Called when a transaction has been enqueued
+
 #### Type declaration
 
 ▸ (`productId`, `quantity`): `void`
-
-Called when a transaction has been enqueued
 
 ##### Parameters
 
@@ -180,13 +180,13 @@ ___
 
 • **purchaseFailed**: (`productId`: `string`, `code`: [`ErrorCode`](../enums/CdvPurchase.ErrorCode.md), `message`: `string`) => `void`
 
-#### Type declaration
-
-▸ (`productId`, `code`, `message`): `void`
-
 Called when a transaction failed.
 
 Watch out for ErrorCode.PAYMENT_CANCELLED (means user closed the dialog)
+
+#### Type declaration
+
+▸ (`productId`, `code`, `message`): `void`
 
 ##### Parameters
 
@@ -210,11 +210,11 @@ ___
 
 • **purchased**: (`transactionIdentifier`: `string`, `productId`: `string`, `originalTransactionIdentifier?`: `string`, `transactionDate?`: `string`, `discountId?`: `string`) => `void`
 
+Called when a transaction is in "Purchased" state
+
 #### Type declaration
 
 ▸ (`transactionIdentifier`, `productId`, `originalTransactionIdentifier?`, `transactionDate?`, `discountId?`): `void`
-
-Called when a transaction is in "Purchased" state
 
 ##### Parameters
 
@@ -240,11 +240,11 @@ ___
 
 • **purchasing**: (`productId`: `string`) => `void`
 
+Called when a transaction is in "purchasing" state
+
 #### Type declaration
 
 ▸ (`productId`): `void`
-
-Called when a transaction is in "purchasing" state
 
 ##### Parameters
 
@@ -266,11 +266,11 @@ ___
 
 • **ready**: () => `void`
 
+Called when the bridge is ready (after setup)
+
 #### Type declaration
 
 ▸ (): `void`
-
-Called when the bridge is ready (after setup)
 
 ##### Returns
 
@@ -286,11 +286,11 @@ ___
 
 • **receiptsRefreshed**: (`receipt`: [`ApplicationReceipt`](CdvPurchase.AppleAppStore.ApplicationReceipt.md)) => `void`
 
+Called when the application receipt is refreshed
+
 #### Type declaration
 
 ▸ (`receipt`): `void`
-
-Called when the application receipt is refreshed
 
 ##### Parameters
 
@@ -312,11 +312,11 @@ ___
 
 • **restoreCompleted**: () => `void`
 
+Called when a call to "restore" is complete
+
 #### Type declaration
 
 ▸ (): `void`
-
-Called when a call to "restore" is complete
 
 ##### Returns
 
@@ -332,11 +332,11 @@ ___
 
 • **restoreFailed**: (`errorCode`: [`ErrorCode`](../enums/CdvPurchase.ErrorCode.md)) => `void`
 
+Called when a call to "restore" failed
+
 #### Type declaration
 
 ▸ (`errorCode`): `void`
-
-Called when a call to "restore" failed
 
 ##### Parameters
 
@@ -358,11 +358,11 @@ ___
 
 • **restored**: (`transactionIdentifier`: `string`, `productId`: `string`) => `void`
 
+Called when a transaction is in "restored" state
+
 #### Type declaration
 
 ▸ (`transactionIdentifier`, `productId`): `void`
-
-Called when a transaction is in "restored" state
 
 ##### Parameters
 

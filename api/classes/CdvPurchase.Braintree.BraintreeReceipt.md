@@ -33,7 +33,7 @@
 
 ### constructor
 
-• **new BraintreeReceipt**(`paymentRequest`, `dropInResult`, `decorator`)
+• **new BraintreeReceipt**(`paymentRequest`, `dropInResult`, `decorator`): [`BraintreeReceipt`](CdvPurchase.Braintree.BraintreeReceipt.md)
 
 #### Parameters
 
@@ -42,6 +42,10 @@
 | `paymentRequest` | [`PaymentRequest`](../interfaces/CdvPurchase.PaymentRequest.md) |
 | `dropInResult` | [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md) |
 | `decorator` | `TransactionDecorator` & `ReceiptDecorator` |
+
+#### Returns
+
+[`BraintreeReceipt`](CdvPurchase.Braintree.BraintreeReceipt.md)
 
 #### Overrides
 
@@ -87,13 +91,13 @@ List of transactions contained in the receipt, ordered by date ascending.
 
 ### finish
 
-▸ **finish**(): `Promise`<`void`\>
+▸ **finish**(): `Promise`\<`void`\>
 
 Finish all transactions in a receipt
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>
 
 #### Inherited from
 
@@ -159,13 +163,13 @@ ___
 
 ### verify
 
-▸ **verify**(): `Promise`<`void`\>
+▸ **verify**(): `Promise`\<`void`\>
 
 Verify a receipt
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>
 
 #### Inherited from
 

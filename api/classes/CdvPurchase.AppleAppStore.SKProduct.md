@@ -44,7 +44,7 @@ Product definition from a store
 
 ### constructor
 
-• **new SKProduct**(`validProduct`, `p`, `decorator`, `eligibilities`)
+• **new SKProduct**(`validProduct`, `p`, `decorator`, `eligibilities`): [`SKProduct`](CdvPurchase.AppleAppStore.SKProduct.md)
 
 #### Parameters
 
@@ -54,6 +54,10 @@ Product definition from a store
 | `p` | [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md) |
 | `decorator` | `ProductDecorator` & `OfferDecorator` |
 | `eligibilities` | `IDiscountEligibilities` |
+
+#### Returns
+
+[`SKProduct`](CdvPurchase.AppleAppStore.SKProduct.md)
 
 #### Overrides
 

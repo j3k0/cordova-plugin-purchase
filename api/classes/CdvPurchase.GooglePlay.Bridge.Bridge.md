@@ -31,7 +31,11 @@
 
 ### constructor
 
-• **new Bridge**()
+• **new Bridge**(): [`Bridge`](CdvPurchase.GooglePlay.Bridge.Bridge.md)
+
+#### Returns
+
+[`Bridge`](CdvPurchase.GooglePlay.Bridge.Bridge.md)
 
 ## Properties
 

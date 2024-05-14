@@ -18,7 +18,7 @@
 
 ### NativeTransaction
 
-Ƭ **NativeTransaction**: { `data`: [`TransactionObject`](../interfaces/CdvPurchase.Braintree.TransactionObject.md) ; `type`: ``"braintree"``  } \| { `type`: ``"windows-store-transaction"``  } & [`WindowsSubscription`](../interfaces/CdvPurchase.WindowsStore.WindowsSubscription.md) \| { `type`: ``"ios-appstore"``  } & [`AppleTransaction`](../interfaces/CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md) \| [`AppleVerifyReceiptResponseReceipt`](../interfaces/CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md) \| { `type`: ``"android-playstore"``  } & [`GooglePurchase`](CdvPurchase.GooglePlay.PublisherAPI.md#googlepurchase) \| { `type`: ``"test"``  }
+Ƭ **NativeTransaction**: \{ `data`: [`TransactionObject`](../interfaces/CdvPurchase.Braintree.TransactionObject.md) ; `type`: ``"braintree"``  } \| \{ `type`: ``"windows-store-transaction"``  } & [`WindowsSubscription`](../interfaces/CdvPurchase.WindowsStore.WindowsSubscription.md) \| \{ `type`: ``"ios-appstore"``  } & [`AppleTransaction`](../interfaces/CdvPurchase.AppleAppStore.VerifyReceipt.AppleTransaction.md) \| [`AppleVerifyReceiptResponseReceipt`](../interfaces/CdvPurchase.AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt.md) \| \{ `type`: ``"android-playstore"``  } & [`GooglePurchase`](CdvPurchase.GooglePlay.PublisherAPI.md#googlepurchase) \| \{ `type`: ``"test"``  }
 
 ___
 

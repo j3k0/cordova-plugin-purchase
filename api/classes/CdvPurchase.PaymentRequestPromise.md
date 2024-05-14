@@ -20,7 +20,11 @@
 
 ### constructor
 
-• **new PaymentRequestPromise**()
+• **new PaymentRequestPromise**(): [`PaymentRequestPromise`](CdvPurchase.PaymentRequestPromise.md)
+
+#### Returns
+
+[`PaymentRequestPromise`](CdvPurchase.PaymentRequestPromise.md)
 
 ## Methods
 
@@ -32,7 +36,7 @@
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<[`Transaction`](CdvPurchase.Transaction.md)\> |
+| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)\<[`Transaction`](CdvPurchase.Transaction.md)\> |
 
 #### Returns
 
@@ -48,7 +52,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<`void`\> |
+| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)\<`void`\> |
 
 #### Returns
 
@@ -64,7 +68,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<[`IError`](../interfaces/CdvPurchase.IError.md)\> |
+| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)\<[`IError`](../interfaces/CdvPurchase.IError.md)\> |
 
 #### Returns
 
@@ -80,7 +84,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<[`Transaction`](CdvPurchase.Transaction.md)\> |
+| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)\<[`Transaction`](CdvPurchase.Transaction.md)\> |
 
 #### Returns
 
@@ -96,7 +100,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<[`Transaction`](CdvPurchase.Transaction.md)\> |
+| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)\<[`Transaction`](CdvPurchase.Transaction.md)\> |
 
 #### Returns
 

@@ -17,7 +17,7 @@
 
 ### ClientTokenProvider
 
-Ƭ **ClientTokenProvider**: (`callback`: [`Callback`](CdvPurchase.md#callback)<`string` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>) => `void`
+Ƭ **ClientTokenProvider**: (`callback`: [`Callback`](CdvPurchase.md#callback)\<`string` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>) => `void`
 
 #### Type declaration
 
@@ -27,7 +27,7 @@
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | [`Callback`](CdvPurchase.md#callback)<`string` \| [`IError`](../interfaces/CdvPurchase.IError.md)\> |
+| `callback` | [`Callback`](CdvPurchase.md#callback)\<`string` \| [`IError`](../interfaces/CdvPurchase.IError.md)\> |
 
 ##### Returns
 
@@ -37,6 +37,6 @@ ___
 
 ### Message
 
-Ƭ **Message**: { `type`: ``"ready"``  } \| { `type`: ``"getClientToken"``  }
+Ƭ **Message**: \{ `type`: ``"ready"``  } \| \{ `type`: ``"getClientToken"``  }
 
 Message received by the native plugin.

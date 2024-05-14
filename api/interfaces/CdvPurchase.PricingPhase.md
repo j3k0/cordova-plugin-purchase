@@ -6,7 +6,7 @@ Description of a phase for the pricing of a purchase.
 
 **`See`**
 
-[pricingPhases](../classes/CdvPurchase.Offer.md#pricingphases)
+[Offer.pricingPhases](../classes/CdvPurchase.Offer.md#pricingphases)
 
 ## Table of contents
 

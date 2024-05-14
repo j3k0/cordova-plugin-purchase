@@ -6,8 +6,8 @@ Data to attach to a transaction.
 
 **`See`**
 
- - [order](../classes/CdvPurchase.Offer.md#order)
- - [requestPayment](../classes/CdvPurchase.Store.md#requestpayment)
+ - [Offer.order](../classes/CdvPurchase.Offer.md#order)
+ - [Store.requestPayment](../classes/CdvPurchase.Store.md#requestpayment)
 
 ## Table of contents
 

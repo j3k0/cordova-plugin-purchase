@@ -23,13 +23,17 @@
 
 ### constructor
 
-• **new Products**(`decorator`)
+• **new Products**(`decorator`): [`Products`](CdvPurchase.GooglePlay.Products.md)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `decorator` | `ProductDecorator` & `OfferDecorator` |
+
+#### Returns
+
+[`Products`](CdvPurchase.GooglePlay.Products.md)
 
 ## Properties
 

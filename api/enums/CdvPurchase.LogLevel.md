@@ -6,7 +6,7 @@ Desired logging level for the [Logger](../classes/CdvPurchase.Logger.md)
 
 **`See`**
 
-[verbosity](../classes/CdvPurchase.Store.md#verbosity)
+[Store.verbosity](../classes/CdvPurchase.Store.md#verbosity)
 
 ## Table of contents
 

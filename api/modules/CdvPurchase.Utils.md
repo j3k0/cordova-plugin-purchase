@@ -26,7 +26,7 @@
 
 ### ajax
 
-▸ **ajax**<`T`\>(`log`, `options`): `Object`
+▸ **ajax**\<`T`\>(`log`, `options`): `Object`
 
 Simplified version of jQuery's ajax method based on XMLHttpRequest.
 
@@ -45,7 +45,7 @@ Only supports JSON requests.
 | Name | Type |
 | :------ | :------ |
 | `log` | [`Logger`](../classes/CdvPurchase.Logger.md) |
-| `options` | [`Options`](../interfaces/CdvPurchase.Utils.Ajax.Options.md)<`T`\> |
+| `options` | [`Options`](../interfaces/CdvPurchase.Utils.Ajax.Options.md)\<`T`\> |
 
 #### Returns
 
@@ -59,7 +59,7 @@ ___
 
 ### asyncDelay
 
-▸ **asyncDelay**(`milliseconds`): `Promise`<`void`\>
+▸ **asyncDelay**(`milliseconds`): `Promise`\<`void`\>
 
 #### Parameters
 
@@ -69,7 +69,7 @@ ___
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>
 
 ___
 
@@ -85,12 +85,6 @@ Example outputs:
 - "for 1 year": for `NON_RECURRING`, period "P1Y"
 - "every week": for `INFINITE_RECURRING, period "P1W"
 
-**`Example`**
-
-```ts
-Utils.formatBillingCycleEN(offer.pricingPhases[0])
-```
-
 #### Parameters
 
 | Name | Type |
@@ -100,6 +94,12 @@ Utils.formatBillingCycleEN(offer.pricingPhases[0])
 #### Returns
 
 `string`
+
+**`Example`**
+
+```ts
+Utils.formatBillingCycleEN(offer.pricingPhases[0])
+```
 
 ___
 
@@ -188,7 +188,7 @@ ___
 
 ### objectValues
 
-▸ **objectValues**<`T`\>(`obj`): `T`[]
+▸ **objectValues**\<`T`\>(`obj`): `T`[]
 
 Object.values() for ES6
 
@@ -230,7 +230,7 @@ ___
 
 ### safeCall
 
-▸ **safeCall**<`T`\>(`logger`, `className`, `callback`, `value`, `callbackName`, `reason`): `void`
+▸ **safeCall**\<`T`\>(`logger`, `className`, `callback`, `value`, `callbackName`, `reason`): `void`
 
 Run a callback inside a try/catch block.
 
@@ -246,7 +246,7 @@ Run a callback inside a try/catch block.
 | :------ | :------ | :------ |
 | `logger` | [`Logger`](../classes/CdvPurchase.Logger.md) | Used to log errors. |
 | `className` | `string` | Type of callback, helps debugging when a function failed. |
-| `callback` | [`Callback`](CdvPurchase.md#callback)<`T`\> | The callback function is turn into a safer version. |
+| `callback` | [`Callback`](CdvPurchase.md#callback)\<`T`\> | The callback function is turn into a safer version. |
 | `value` | `T` | Value passed to the callback. |
 | `callbackName` | `undefined` \| `string` | - |
 | `reason` | `string` | - |
@@ -259,7 +259,7 @@ ___
 
 ### safeCallback
 
-▸ **safeCallback**<`T`\>(`logger`, `className`, `callback`, `callbackName`, `reason`): [`Callback`](CdvPurchase.md#callback)<`T`\>
+▸ **safeCallback**\<`T`\>(`logger`, `className`, `callback`, `callbackName`, `reason`): [`Callback`](CdvPurchase.md#callback)\<`T`\>
 
 Return a safer version of a callback that runs inside a try/catch block.
 
@@ -275,13 +275,13 @@ Return a safer version of a callback that runs inside a try/catch block.
 | :------ | :------ | :------ |
 | `logger` | [`Logger`](../classes/CdvPurchase.Logger.md) | Used to log errors. |
 | `className` | `string` | Type of callback, helps debugging when a function failed. |
-| `callback` | [`Callback`](CdvPurchase.md#callback)<`T`\> | The callback function is turn into a safer version. |
+| `callback` | [`Callback`](CdvPurchase.md#callback)\<`T`\> | The callback function is turn into a safer version. |
 | `callbackName` | `undefined` \| `string` | - |
 | `reason` | `string` | - |
 
 #### Returns
 
-[`Callback`](CdvPurchase.md#callback)<`T`\>
+[`Callback`](CdvPurchase.md#callback)\<`T`\>
 
 ___
 

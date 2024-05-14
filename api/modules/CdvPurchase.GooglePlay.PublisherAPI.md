@@ -62,7 +62,7 @@ ___
 
 ### CanceledStateContext
 
-Ƭ **CanceledStateContext**: { `userInitiatedCancellation`: [`UserInitiatedCancellation`](../interfaces/CdvPurchase.GooglePlay.PublisherAPI.UserInitiatedCancellation.md)  } \| { `systemInitiatedCancellation`: [`SystemInitiatedCancellation`](CdvPurchase.GooglePlay.PublisherAPI.md#systeminitiatedcancellation)  } \| { `developerInitiatedCancellation`: [`DeveloperInitiatedCancellation`](CdvPurchase.GooglePlay.PublisherAPI.md#developerinitiatedcancellation)  } \| { `replacementCancellation`: [`ReplacementCancellation`](CdvPurchase.GooglePlay.PublisherAPI.md#replacementcancellation)  }
+Ƭ **CanceledStateContext**: \{ `userInitiatedCancellation`: [`UserInitiatedCancellation`](../interfaces/CdvPurchase.GooglePlay.PublisherAPI.UserInitiatedCancellation.md)  } \| \{ `systemInitiatedCancellation`: [`SystemInitiatedCancellation`](CdvPurchase.GooglePlay.PublisherAPI.md#systeminitiatedcancellation)  } \| \{ `developerInitiatedCancellation`: [`DeveloperInitiatedCancellation`](CdvPurchase.GooglePlay.PublisherAPI.md#developerinitiatedcancellation)  } \| \{ `replacementCancellation`: [`ReplacementCancellation`](CdvPurchase.GooglePlay.PublisherAPI.md#replacementcancellation)  }
 
 Information specific to a subscription in canceled state.
 
@@ -92,7 +92,7 @@ ___
 
 ### SubscriptionPurchaseLineItem
 
-Ƭ **SubscriptionPurchaseLineItem**: { `expiryTime?`: `string` \| ``null`` ; `productId?`: `string` \| ``null``  } & { `autoRenewingPlan?`: [`AutoRenewingPlan`](../interfaces/CdvPurchase.GooglePlay.PublisherAPI.AutoRenewingPlan.md) \| ``null``  } \| { `prepaidPlan?`: [`PrepaidPlan`](../interfaces/CdvPurchase.GooglePlay.PublisherAPI.PrepaidPlan.md) \| ``null``  }
+Ƭ **SubscriptionPurchaseLineItem**: \{ `expiryTime?`: `string` \| ``null`` ; `productId?`: `string` \| ``null``  } & \{ `autoRenewingPlan?`: [`AutoRenewingPlan`](../interfaces/CdvPurchase.GooglePlay.PublisherAPI.AutoRenewingPlan.md) \| ``null``  } \| \{ `prepaidPlan?`: [`PrepaidPlan`](../interfaces/CdvPurchase.GooglePlay.PublisherAPI.PrepaidPlan.md) \| ``null``  }
 
 Item-level info for a subscription purchase.
 

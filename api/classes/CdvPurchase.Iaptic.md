@@ -36,7 +36,7 @@ store.validator = iaptic.validator;
 
 ### constructor
 
-• **new Iaptic**(`config`, `store?`)
+• **new Iaptic**(`config`, `store?`): [`Iaptic`](CdvPurchase.Iaptic.md)
 
 #### Parameters
 
@@ -44,6 +44,10 @@ store.validator = iaptic.validator;
 | :------ | :------ |
 | `config` | [`IapticConfig`](../interfaces/CdvPurchase.IapticConfig.md) |
 | `store?` | [`Store`](CdvPurchase.Store.md) |
+
+#### Returns
+
+[`Iaptic`](CdvPurchase.Iaptic.md)
 
 ## Properties
 
@@ -85,6 +89,10 @@ Provides a client token generated on iaptic's servers
 
 Can be passed to the Braintree Adapter at initialization.
 
+#### Returns
+
+[`ClientTokenProvider`](../modules/CdvPurchase.Braintree.md#clienttokenprovider)
+
 **`Example`**
 
 ```ts
@@ -97,10 +105,6 @@ store.initialize([
   }
 ]);
 ```
-
-#### Returns
-
-[`ClientTokenProvider`](../modules/CdvPurchase.Braintree.md#clienttokenprovider)
 
 ___
 

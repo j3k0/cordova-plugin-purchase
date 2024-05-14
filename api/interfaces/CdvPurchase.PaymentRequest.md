@@ -4,7 +4,7 @@
 
 Request for payment.
 
-Use with [requestPayment](../classes/CdvPurchase.Store.md#requestpayment) to initiate a payment for a given amount.
+Use with [Store.requestPayment](../classes/CdvPurchase.Store.md#requestpayment) to initiate a payment for a given amount.
 
 **`Example`**
 

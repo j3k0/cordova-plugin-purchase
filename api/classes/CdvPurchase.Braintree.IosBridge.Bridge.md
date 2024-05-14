@@ -25,7 +25,7 @@
 
 ### constructor
 
-• **new Bridge**(`log`, `clientTokenProvider`, `applePayOptions?`)
+• **new Bridge**(`log`, `clientTokenProvider`, `applePayOptions?`): [`Bridge`](CdvPurchase.Braintree.IosBridge.Bridge.md)
 
 #### Parameters
 
@@ -34,6 +34,10 @@
 | `log` | [`Logger`](CdvPurchase.Logger.md) |
 | `clientTokenProvider` | [`ClientTokenProvider`](../modules/CdvPurchase.Braintree.md#clienttokenprovider) |
 | `applePayOptions?` | [`ApplePayOptions`](../interfaces/CdvPurchase.Braintree.IosBridge.ApplePayOptions.md) |
+
+#### Returns
+
+[`Bridge`](CdvPurchase.Braintree.IosBridge.Bridge.md)
 
 ## Properties
 
@@ -57,7 +61,7 @@ ___
 
 ### continueDropInForApplePay
 
-▸ **continueDropInForApplePay**(`paymentRequest`, `DropInRequest`, `dropInResult`): `Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
+▸ **continueDropInForApplePay**(`paymentRequest`, `DropInRequest`, `dropInResult`): `Promise`\<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
 
 #### Parameters
 
@@ -69,7 +73,7 @@ ___
 
 #### Returns
 
-`Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
+`Promise`\<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
 
 ___
 
@@ -82,7 +86,7 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `verbosity` | `VerbosityProvider` |
-| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\> |
+| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\> |
 
 #### Returns
 
@@ -92,7 +96,7 @@ ___
 
 ### launchDropIn
 
-▸ **launchDropIn**(`paymentRequest`, `dropInRequest`): `Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
+▸ **launchDropIn**(`paymentRequest`, `dropInRequest`): `Promise`\<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
 
 #### Parameters
 
@@ -103,13 +107,13 @@ ___
 
 #### Returns
 
-`Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
+`Promise`\<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
 
 ___
 
 ### isSupported
 
-▸ `Static` **isSupported**(): `boolean`
+▸ **isSupported**(): `boolean`
 
 #### Returns
 

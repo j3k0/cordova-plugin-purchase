@@ -283,12 +283,12 @@ var CdvPurchase;
          */
         debug(o) { log(this.store.verbosity, LogLevel.DEBUG, this.prefix, o); }
         /**
-         * Add warning logs on a console describing an exceptions.
+         * Add warning logs on a console describing an exception.
          *
          * This method is mostly used when executing user registered callbacks.
          *
          * @param context - a string describing why the method was called
-         * @param error - a javascript Error object thrown by a exception
+         * @param error - a javascript Error object thrown by an exception
          */
         logCallbackException(context, err) {
             this.warn("A callback in \'" + context + "\' failed with an exception.");
@@ -312,8 +312,8 @@ var CdvPurchase;
      *
      * @example
      * Logger.console = {
-     *   log: (message) => { remoteLog('LOG', message); }
-     *   warn: (message) => { remoteLog('WARN', message); }
+     *   log: (message) => { remoteLog('LOG', message); },
+     *   warn: (message) => { remoteLog('WARN', message); },
      *   error: (message) => { remoteLog('ERROR', message); }
      * }
      */
@@ -1232,15 +1232,17 @@ var CdvPurchase;
         Internal.ReceiptsMonitor = ReceiptsMonitor;
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
-/**
- * The platform doesn't send notifications when a subscription expires.
- *
- * However this is useful, so let's do just that.
- */
 var CdvPurchase;
 (function (CdvPurchase) {
     let Internal;
     (function (Internal) {
+        /**
+         * Send a notification when a subscription expires.
+         *
+         * The platform doesn't send notifications when a subscription expires.
+         *
+         * However this is useful, so let's do just that.
+         */
         class ExpiryMonitor {
             /** Track active local transactions */
             // activeTransactions: {
@@ -1346,7 +1348,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.10.1';
+    CdvPurchase.PLUGIN_VERSION = '13.10.3';
     /**
      * Entry class of the plugin.
      */
@@ -1941,6 +1943,7 @@ if (window.cordova) {
 else {
     initCDVPurchase();
 }
+/** @private */
 function initCDVPurchase() {
     var _a;
     console.log('Create CdvPurchase...');
@@ -2450,6 +2453,8 @@ var CdvPurchase;
                 this.minTimeout = minTimeout;
                 this.maxTimeout = maxTimeout;
                 this.retryTimeout = minTimeout;
+                // From https://github.com/apache/cordova-plugin-network-information
+                // This event fires when an application goes online, and the device becomes connected to the Internet.
                 document.addEventListener("online", () => {
                     const a = this.retries;
                     this.retries = [];
@@ -6744,6 +6749,9 @@ var CdvPurchase;
          * @param value - Value passed to the callback.
          */
         function safeCall(logger, className, callback, value, callbackName, reason) {
+            if (!callback) {
+                return; // cannot call an undefined callback.
+            }
             if (!callbackName) {
                 callbackName = callback.name || ('#' + Utils.md5(callback.toString()));
             }

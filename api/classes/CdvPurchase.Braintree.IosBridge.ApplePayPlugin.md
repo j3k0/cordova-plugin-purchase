@@ -20,13 +20,17 @@ Bridge to the cordova-plugin-purchase-braintree-applepay plugin
 
 ### constructor
 
-• **new ApplePayPlugin**()
+• **new ApplePayPlugin**(): [`ApplePayPlugin`](CdvPurchase.Braintree.IosBridge.ApplePayPlugin.md)
+
+#### Returns
+
+[`ApplePayPlugin`](CdvPurchase.Braintree.IosBridge.ApplePayPlugin.md)
 
 ## Methods
 
 ### get
 
-▸ `Static` **get**(): `undefined` \| [`CdvPurchaseBraintreeApplePay`](../interfaces/CdvPurchase.Braintree.IosBridge.CdvPurchaseBraintreeApplePay.md)
+▸ **get**(): `undefined` \| [`CdvPurchaseBraintreeApplePay`](../interfaces/CdvPurchase.Braintree.IosBridge.CdvPurchaseBraintreeApplePay.md)
 
 Retrieve the plugin definition.
 
@@ -40,7 +44,7 @@ ___
 
 ### isSupported
 
-▸ `Static` **isSupported**(`log`): `Promise`<`boolean`\>
+▸ **isSupported**(`log`): `Promise`\<`boolean`\>
 
 Returns true if the device supports Apple Pay.
 
@@ -54,13 +58,13 @@ This does not necessarily mean the user has a card setup already.
 
 #### Returns
 
-`Promise`<`boolean`\>
+`Promise`\<`boolean`\>
 
 ___
 
 ### requestPayment
 
-▸ `Static` **requestPayment**(`request`): `Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`ApplePayPaymentResult`](../interfaces/CdvPurchase.Braintree.IosBridge.ApplePayPaymentResult.md)\>
+▸ **requestPayment**(`request`): `Promise`\<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`ApplePayPaymentResult`](../interfaces/CdvPurchase.Braintree.IosBridge.ApplePayPaymentResult.md)\>
 
 Initiate a payment with Apple Pay.
 
@@ -72,4 +76,4 @@ Initiate a payment with Apple Pay.
 
 #### Returns
 
-`Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`ApplePayPaymentResult`](../interfaces/CdvPurchase.Braintree.IosBridge.ApplePayPaymentResult.md)\>
+`Promise`\<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`ApplePayPaymentResult`](../interfaces/CdvPurchase.Braintree.IosBridge.ApplePayPaymentResult.md)\>

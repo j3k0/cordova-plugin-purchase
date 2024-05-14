@@ -23,13 +23,17 @@ This tries to export pretty raw functions from the underlying native SDKs.
 
 ### constructor
 
-• **new Bridge**(`log`)
+• **new Bridge**(`log`): [`Bridge`](CdvPurchase.Braintree.AndroidBridge.Bridge.md)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `log` | [`Logger`](CdvPurchase.Logger.md) |
+
+#### Returns
+
+[`Bridge`](CdvPurchase.Braintree.AndroidBridge.Bridge.md)
 
 ## Methods
 
@@ -42,7 +46,7 @@ This tries to export pretty raw functions from the underlying native SDKs.
 | Name | Type |
 | :------ | :------ |
 | `clientTokenProvider` | `string` \| [`ClientTokenProvider`](../modules/CdvPurchase.Braintree.AndroidBridge.md#clienttokenprovider) |
-| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\> |
+| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\> |
 
 #### Returns
 
@@ -52,17 +56,17 @@ ___
 
 ### isApplePaySupported
 
-▸ **isApplePaySupported**(): `Promise`<`boolean`\>
+▸ **isApplePaySupported**(): `Promise`\<`boolean`\>
 
 #### Returns
 
-`Promise`<`boolean`\>
+`Promise`\<`boolean`\>
 
 ___
 
 ### launchDropIn
 
-▸ **launchDropIn**(`dropInRequest`): `Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
+▸ **launchDropIn**(`dropInRequest`): `Promise`\<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
 
 #### Parameters
 
@@ -72,13 +76,13 @@ ___
 
 #### Returns
 
-`Promise`<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
+`Promise`\<[`IError`](../interfaces/CdvPurchase.IError.md) \| [`Result`](../interfaces/CdvPurchase.Braintree.DropIn.Result.md)\>
 
 ___
 
 ### isSupported
 
-▸ `Static` **isSupported**(): `boolean`
+▸ **isSupported**(): `boolean`
 
 Returns true on Android, the only platform supported by this Braintree bridge
 

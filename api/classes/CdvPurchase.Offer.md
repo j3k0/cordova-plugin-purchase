@@ -113,15 +113,9 @@ Type of the product related to this offer
 
 ### order
 
-▸ **order**(`additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **order**(`additionalData?`): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Initiate a purchase of this offer.
-
-**`Example`**
-
-```ts
-store.get("my-product").getOffer().order();
-```
 
 #### Parameters
 
@@ -131,4 +125,10 @@ store.get("my-product").getOffer().order();
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+**`Example`**
+
+```ts
+store.get("my-product").getOffer().order();
+```

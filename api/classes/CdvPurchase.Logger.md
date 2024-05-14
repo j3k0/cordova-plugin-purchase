@@ -31,8 +31,8 @@ It can be replaced by your implementation if you want to, for example, send logs
 
 ```ts
 Logger.console = {
-  log: (message) => { remoteLog('LOG', message); }
-  warn: (message) => { remoteLog('WARN', message); }
+  log: (message) => { remoteLog('LOG', message); },
+  warn: (message) => { remoteLog('WARN', message); },
   error: (message) => { remoteLog('ERROR', message); }
 }
 ```
@@ -45,12 +45,6 @@ Logger.console = {
 
 Create a child logger, whose prefix will be this one's + the given string.
 
-**`Example`**
-
-```ts
-const log = store.log.child('AppStore')
-```
-
 #### Parameters
 
 | Name | Type |
@@ -60,6 +54,12 @@ const log = store.log.child('AppStore')
 #### Returns
 
 [`Logger`](CdvPurchase.Logger.md)
+
+**`Example`**
+
+```ts
+const log = store.log.child('AppStore')
+```
 
 ___
 
@@ -121,7 +121,7 @@ ___
 
 ▸ **logCallbackException**(`context`, `err`): `void`
 
-Add warning logs on a console describing an exceptions.
+Add warning logs on a console describing an exception.
 
 This method is mostly used when executing user registered callbacks.
 

@@ -21,13 +21,13 @@ Response from a validator endpoint
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `collection?` | [`VerifiedPurchase`](CdvPurchase.VerifiedPurchase.md)[] | The collection of purchases in this receipt.  An array of ValidatorPurchase |
-| `date?` | `string` | Date and time the receipt was validated.  It will provide the client with a more reliable clock time than the user's device when needed. |
+| `collection?` | [`VerifiedPurchase`](CdvPurchase.VerifiedPurchase.md)[] | The collection of purchases in this receipt. An array of ValidatorPurchase |
+| `date?` | `string` | Date and time the receipt was validated. It will provide the client with a more reliable clock time than the user's device when needed. |
 | `id` | `string` | Id of the product that have been validated |
 | `ineligible_for_intro_price?` | `string`[] | List of product ids for which intro price isn't available anymore |
 | `latest_receipt` | `boolean` | Tell the plugin that we've used the latest receipt |
 | `transaction` | [`NativeTransaction`](../modules/CdvPurchase.Validator.Response.md#nativetransaction) | Native transaction detail |
-| `warning?` | `string` | A warning message about this validation.  It might be present when the server had to fallback to a backup validation solution. |
+| `warning?` | `string` | A warning message about this validation. It might be present when the server had to fallback to a backup validation solution. |
 
 ___
 

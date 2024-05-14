@@ -46,7 +46,7 @@
 
 ### ClientTokenProvider
 
-Ƭ **ClientTokenProvider**: (`callback`: [`Callback`](CdvPurchase.md#callback)<`string` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>) => `void`
+Ƭ **ClientTokenProvider**: (`callback`: [`Callback`](CdvPurchase.md#callback)\<`string` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>) => `void`
 
 #### Type declaration
 
@@ -56,7 +56,7 @@
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | [`Callback`](CdvPurchase.md#callback)<`string` \| [`IError`](../interfaces/CdvPurchase.IError.md)\> |
+| `callback` | [`Callback`](CdvPurchase.md#callback)\<`string` \| [`IError`](../interfaces/CdvPurchase.IError.md)\> |
 
 ##### Returns
 

@@ -55,6 +55,6 @@ ___
 • `Optional` **paymentMethodType**: [`PaymentMethod`](../enums/CdvPurchase.Braintree.DropIn.PaymentMethod.md)
 
 The previously used [PaymentMethod](../enums/CdvPurchase.Braintree.DropIn.PaymentMethod.md) or `undefined` if there was no
-previous payment method. If the type is [GOOGLE_PAY](../enums/CdvPurchase.Braintree.DropIn.PaymentMethod.md#google_pay) the Google
+previous payment method. If the type is [PaymentMethod#GOOGLE_PAY](../enums/CdvPurchase.Braintree.DropIn.PaymentMethod.md#google_pay) the Google
 Pay flow will need to be performed by the user again at the time of checkout,
-[#paymentMethodNonce()](../modules/CdvPurchase.Braintree.DropIn.md) will be `undefined` in this case.
+#paymentMethodNonce() will be `undefined` in this case.

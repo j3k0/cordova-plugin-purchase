@@ -58,7 +58,11 @@ Entry class of the plugin.
 
 ### constructor
 
-• **new Store**()
+• **new Store**(): [`Store`](CdvPurchase.Store.md)
+
+#### Returns
+
+[`Store`](CdvPurchase.Store.md)
 
 ## Properties
 
@@ -115,7 +119,7 @@ CdvPurchase.store.validator = (receipt, callback) => {
 
 **`See`**
 
-[Payload](../modules/CdvPurchase.Validator.Response.md#payload)
+[CdvPurchase.Validator.Response.Payload](../modules/CdvPurchase.Validator.Response.md#payload)
 
 ___
 
@@ -252,13 +256,6 @@ Those receipt contains more information and are generally more up-to-date than t
 
 Returns true if a platform supports the requested functionality.
 
-**`Example`**
-
-```ts
-store.checkSupport(Platform.APPLE_APPSTORE, 'requestPayment');
-// => false
-```
-
 #### Parameters
 
 | Name | Type |
@@ -269,6 +266,13 @@ store.checkSupport(Platform.APPLE_APPSTORE, 'requestPayment');
 #### Returns
 
 `boolean`
+
+**`Example`**
+
+```ts
+store.checkSupport(Platform.APPLE_APPSTORE, 'requestPayment');
+// => false
+```
 
 ___
 
@@ -293,6 +297,16 @@ ___
 
 Register an error handler.
 
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `error` | [`Callback`](../modules/CdvPurchase.md#callback)\<[`IError`](../interfaces/CdvPurchase.IError.md)\> | An error callback that takes the error as an argument |
+
+#### Returns
+
+`void`
+
 **`Example`**
 
 ```ts
@@ -300,16 +314,6 @@ store.error(function(error) {
   console.error('CdvPurchase ERROR: ' + error.message);
 });
 ```
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `error` | [`Callback`](../modules/CdvPurchase.md#callback)<[`IError`](../interfaces/CdvPurchase.IError.md)\> | An error callback that takes the error as an argument |
-
-#### Returns
-
-`void`
 
 ___
 
@@ -376,10 +380,6 @@ Retrieve a platform adapter.
 
 The platform adapter has to have been initialized before.
 
-**`See`**
-
-[initialize](CdvPurchase.Store.md#initialize)
-
 #### Parameters
 
 | Name | Type |
@@ -390,13 +390,17 @@ The platform adapter has to have been initialized before.
 
 `undefined` \| [`Adapter`](../interfaces/CdvPurchase.Adapter.md)
 
+**`See`**
+
+[initialize](CdvPurchase.Store.md#initialize)
+
 ___
 
 ### getApplicationUsername
 
 ▸ **getApplicationUsername**(): `undefined` \| `string`
 
-Get the application username as a string by either calling or returning [applicationUsername](CdvPurchase.Store.md#applicationusername)
+Get the application username as a string by either calling or returning [Store.applicationUsername](CdvPurchase.Store.md#applicationusername)
 
 #### Returns
 
@@ -406,7 +410,7 @@ ___
 
 ### initialize
 
-▸ **initialize**(`platforms?`): `Promise`<[`IError`](../interfaces/CdvPurchase.IError.md)[]\>
+▸ **initialize**(`platforms?`): `Promise`\<[`IError`](../interfaces/CdvPurchase.IError.md)[]\>
 
 Call to initialize the in-app purchase plugin.
 
@@ -418,19 +422,29 @@ Call to initialize the in-app purchase plugin.
 
 #### Returns
 
-`Promise`<[`IError`](../interfaces/CdvPurchase.IError.md)[]\>
+`Promise`\<[`IError`](../interfaces/CdvPurchase.IError.md)[]\>
 
 ___
 
 ### manageBilling
 
-▸ **manageBilling**(`platform?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **manageBilling**(`platform?`): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Opens the billing methods page on AppStore, Play, Microsoft, ...
 
 From this page, the user can update their payment methods.
 
 If platform is not specified, the first available platform will be used.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `platform?` | [`Platform`](../enums/CdvPurchase.Platform.md) |
+
+#### Returns
+
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 **`Example`**
 
@@ -439,6 +453,16 @@ if (purchase.isBillingRetryPeriod)
     store.manageBilling(purchase.platform);
 ```
 
+___
+
+### manageSubscriptions
+
+▸ **manageSubscriptions**(`platform?`): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+Open the subscription management interface for the selected platform.
+
+If platform is not specified, the first available platform will be used.
+
 #### Parameters
 
 | Name | Type |
@@ -447,17 +471,7 @@ if (purchase.isBillingRetryPeriod)
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
-
-___
-
-### manageSubscriptions
-
-▸ **manageSubscriptions**(`platform?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
-
-Open the subscription management interface for the selected platform.
-
-If platform is not specified, the first available platform will be used.
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 **`Example`**
 
@@ -466,16 +480,6 @@ const activeSubscription: Purchase = // ...
 store.manageSubscriptions(activeSubscription.platform);
 ```
 
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `platform?` | [`Platform`](../enums/CdvPurchase.Platform.md) |
-
-#### Returns
-
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
-
 ___
 
 ### monitor
@@ -483,6 +487,20 @@ ___
 ▸ **monitor**(`transaction`, `onChange`, `callbackName`): [`TransactionMonitor`](../interfaces/CdvPurchase.TransactionMonitor.md)
 
 Setup a function to be notified of changes to a transaction state.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `transaction` | [`Transaction`](CdvPurchase.Transaction.md) | The transaction to monitor. |
+| `onChange` | [`Callback`](../modules/CdvPurchase.md#callback)\<[`TransactionState`](../enums/CdvPurchase.TransactionState.md)\> | Function to be called when the transaction status changes. |
+| `callbackName` | `string` | - |
+
+#### Returns
+
+[`TransactionMonitor`](../interfaces/CdvPurchase.TransactionMonitor.md)
+
+A monitor which can be stopped with `monitor.stop()`
 
 **`Example`**
 
@@ -494,25 +512,11 @@ const monitor = store.monitor(transaction, state => {
 });
 ```
 
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `transaction` | [`Transaction`](CdvPurchase.Transaction.md) | The transaction to monitor. |
-| `onChange` | [`Callback`](../modules/CdvPurchase.md#callback)<[`TransactionState`](../enums/CdvPurchase.TransactionState.md)\> | Function to be called when the transaction status changes. |
-| `callbackName` | `string` | - |
-
-#### Returns
-
-[`TransactionMonitor`](../interfaces/CdvPurchase.TransactionMonitor.md)
-
-A monitor which can be stopped with `monitor.stop()`
-
 ___
 
 ### off
 
-▸ **off**<`T`\>(`callback`): `void`
+▸ **off**\<`T`\>(`callback`): `void`
 
 Remove a callback from any listener it might have been added to.
 
@@ -526,7 +530,7 @@ Remove a callback from any listener it might have been added to.
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)<`T`\> |
+| `callback` | [`Callback`](../modules/CdvPurchase.md#callback)\<`T`\> |
 
 #### Returns
 
@@ -536,7 +540,7 @@ ___
 
 ### order
 
-▸ **order**(`offer`, `additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **order**(`offer`, `additionalData?`): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Place an order for a given offer.
 
@@ -549,7 +553,7 @@ Place an order for a given offer.
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 ___
 
@@ -563,7 +567,7 @@ Return true if a product is owned
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `product` | `string` \| { `id`: `string` ; `platform?`: [`Platform`](../enums/CdvPurchase.Platform.md)  } | The product object or identifier of the product. |
+| `product` | `string` \| \{ `id`: `string` ; `platform?`: [`Platform`](../enums/CdvPurchase.Platform.md)  } | The product object or identifier of the product. |
 
 #### Returns
 
@@ -583,7 +587,7 @@ This happens when all the platforms are initialized and their products loaded.
 
 | Name | Type |
 | :------ | :------ |
-| `cb` | [`Callback`](../modules/CdvPurchase.md#callback)<`void`\> |
+| `cb` | [`Callback`](../modules/CdvPurchase.md#callback)\<`void`\> |
 
 #### Returns
 
@@ -595,13 +599,13 @@ ___
 
 ▸ **refresh**(): `void`
 
-**`Deprecated`**
-
-- use store.initialize(), store.update() or store.restorePurchases()
-
 #### Returns
 
 `void`
+
+**`Deprecated`**
+
+- use store.initialize(), store.update() or store.restorePurchases()
 
 ___
 
@@ -610,6 +614,16 @@ ___
 ▸ **register**(`product`): `void`
 
 Register a product.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `product` | [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md) \| [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md)[] |
+
+#### Returns
+
+`void`
 
 **`Example`**
 
@@ -628,16 +642,6 @@ store.register([{
       platform: Platform.BRAINTREE,
   }]);
 ```
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `product` | [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md) \| [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md)[] |
-
-#### Returns
-
-`void`
 
 ___
 
@@ -665,7 +669,7 @@ ___
 
 ### restorePurchases
 
-▸ **restorePurchases**(): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **restorePurchases**(): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Replay the users transactions.
 
@@ -673,19 +677,19 @@ This method exists to cover an Apple AppStore requirement.
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 ___
 
 ### update
 
-▸ **update**(): `Promise`<`void`\>
+▸ **update**(): `Promise`\<`void`\>
 
 Call to refresh the price of products and status of purchases.
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>
 
 ___
 
@@ -695,6 +699,10 @@ ___
 
 Setup events listener.
 
+#### Returns
+
+[`When`](../interfaces/CdvPurchase.When.md)
+
 **`Example`**
 
 ```ts
@@ -703,7 +711,3 @@ store.when()
      .approved(transaction => transaction.verify())
      .verified(receipt => receipt.finish());
 ```
-
-#### Returns
-
-[`When`](../interfaces/CdvPurchase.When.md)

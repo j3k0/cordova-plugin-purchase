@@ -119,7 +119,7 @@ ___
 
 ### finish
 
-▸ **finish**(`transaction`): `Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+▸ **finish**(`transaction`): `Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 Finish a transaction.
 
@@ -134,13 +134,13 @@ For consumable, this will acknowledge and consume the purchase.
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 ___
 
 ### handleReceiptValidationResponse
 
-▸ **handleReceiptValidationResponse**(`receipt`, `response`): `Promise`<`void`\>
+▸ **handleReceiptValidationResponse**(`receipt`, `response`): `Promise`\<`void`\>
 
 Handle platform specific fields from receipt validation response.
 
@@ -153,13 +153,13 @@ Handle platform specific fields from receipt validation response.
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>
 
 ___
 
 ### initialize
 
-▸ **initialize**(): `Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+▸ **initialize**(): `Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 Initializes a platform adapter.
 
@@ -171,13 +171,13 @@ In other case of a potentially recoverable error, the adapter will keep retrying
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 ___
 
 ### loadProducts
 
-▸ **loadProducts**(`products`): `Promise`<([`IError`](CdvPurchase.IError.md) \| [`Product`](../classes/CdvPurchase.Product.md))[]\>
+▸ **loadProducts**(`products`): `Promise`\<([`IError`](CdvPurchase.IError.md) \| [`Product`](../classes/CdvPurchase.Product.md))[]\>
 
 Load product definitions from the platform.
 
@@ -189,49 +189,49 @@ Load product definitions from the platform.
 
 #### Returns
 
-`Promise`<([`IError`](CdvPurchase.IError.md) \| [`Product`](../classes/CdvPurchase.Product.md))[]\>
+`Promise`\<([`IError`](CdvPurchase.IError.md) \| [`Product`](../classes/CdvPurchase.Product.md))[]\>
 
 ___
 
 ### loadReceipts
 
-▸ **loadReceipts**(): `Promise`<[`Receipt`](../classes/CdvPurchase.Receipt.md)[]\>
+▸ **loadReceipts**(): `Promise`\<[`Receipt`](../classes/CdvPurchase.Receipt.md)[]\>
 
 Load the receipts
 
 #### Returns
 
-`Promise`<[`Receipt`](../classes/CdvPurchase.Receipt.md)[]\>
+`Promise`\<[`Receipt`](../classes/CdvPurchase.Receipt.md)[]\>
 
 ___
 
 ### manageBilling
 
-▸ **manageBilling**(): `Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+▸ **manageBilling**(): `Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 Open the platforms' billing management interface.
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 ___
 
 ### manageSubscriptions
 
-▸ **manageSubscriptions**(): `Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+▸ **manageSubscriptions**(): `Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 Open the platforms' subscription management interface.
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 ___
 
 ### order
 
-▸ **order**(`offer`, `additionalData`): `Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+▸ **order**(`offer`, `additionalData`): `Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 Initializes an order.
 
@@ -244,13 +244,13 @@ Initializes an order.
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 ___
 
 ### receiptValidationBody
 
-▸ **receiptValidationBody**(`receipt`): `Promise`<`undefined` \| [`Body`](CdvPurchase.Validator.Request.Body.md)\>
+▸ **receiptValidationBody**(`receipt`): `Promise`\<`undefined` \| [`Body`](CdvPurchase.Validator.Request.Body.md)\>
 
 Prepare for receipt validation
 
@@ -262,13 +262,13 @@ Prepare for receipt validation
 
 #### Returns
 
-`Promise`<`undefined` \| [`Body`](CdvPurchase.Validator.Request.Body.md)\>
+`Promise`\<`undefined` \| [`Body`](CdvPurchase.Validator.Request.Body.md)\>
 
 ___
 
 ### requestPayment
 
-▸ **requestPayment**(`payment`, `additionalData?`): `Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md) \| [`Transaction`](../classes/CdvPurchase.Transaction.md)\>
+▸ **requestPayment**(`payment`, `additionalData?`): `Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md) \| [`Transaction`](../classes/CdvPurchase.Transaction.md)\>
 
 Request a payment from the user
 
@@ -281,13 +281,13 @@ Request a payment from the user
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md) \| [`Transaction`](../classes/CdvPurchase.Transaction.md)\>
+`Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md) \| [`Transaction`](../classes/CdvPurchase.Transaction.md)\>
 
 ___
 
 ### restorePurchases
 
-▸ **restorePurchases**(): `Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+▸ **restorePurchases**(): `Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
 
 Replay the queue of transactions.
 
@@ -295,4 +295,4 @@ Might ask the user to login.
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](CdvPurchase.IError.md)\>

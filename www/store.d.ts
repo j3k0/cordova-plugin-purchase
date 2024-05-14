@@ -189,12 +189,12 @@ declare namespace CdvPurchase {
          */
         debug(o: any): void;
         /**
-         * Add warning logs on a console describing an exceptions.
+         * Add warning logs on a console describing an exception.
          *
          * This method is mostly used when executing user registered callbacks.
          *
          * @param context - a string describing why the method was called
-         * @param error - a javascript Error object thrown by a exception
+         * @param error - a javascript Error object thrown by an exception
          */
         logCallbackException(context: string, err: Error | string): void;
         /**
@@ -204,8 +204,8 @@ declare namespace CdvPurchase {
          *
          * @example
          * Logger.console = {
-         *   log: (message) => { remoteLog('LOG', message); }
-         *   warn: (message) => { remoteLog('WARN', message); }
+         *   log: (message) => { remoteLog('LOG', message); },
+         *   warn: (message) => { remoteLog('WARN', message); },
          *   error: (message) => { remoteLog('ERROR', message); }
          * }
          */
@@ -678,11 +678,6 @@ declare namespace CdvPurchase {
         }
     }
 }
-/**
- * The platform doesn't send notifications when a subscription expires.
- *
- * However this is useful, so let's do just that.
- */
 declare namespace CdvPurchase {
     namespace Internal {
         /** Data and callbacks to interface with the ExpiryMonitor */
@@ -691,6 +686,13 @@ declare namespace CdvPurchase {
             /** Called when a verified purchase expires */
             onVerifiedPurchaseExpired(verifiedPurchase: VerifiedPurchase, receipt: VerifiedReceipt): void;
         }
+        /**
+         * Send a notification when a subscription expires.
+         *
+         * The platform doesn't send notifications when a subscription expires.
+         *
+         * However this is useful, so let's do just that.
+         */
         class ExpiryMonitor {
             /** Time between checks for newly expired subscriptions */
             static INTERVAL_MS: number;
@@ -741,7 +743,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.10.1";
+    const PLUGIN_VERSION = "13.10.3";
     /**
      * Entry class of the plugin.
      */
@@ -1088,6 +1090,7 @@ declare namespace CdvPurchase {
      */
     namespace Internal { }
 }
+/** @private */
 declare function initCDVPurchase(): void;
 declare namespace CdvPurchase {
     /** Callback */

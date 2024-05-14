@@ -40,7 +40,7 @@ One of the available offers to purchase a given product
 
 ### constructor
 
-• **new SubscriptionOffer**(`options`, `decorator`)
+• **new SubscriptionOffer**(`options`, `decorator`): [`SubscriptionOffer`](CdvPurchase.GooglePlay.SubscriptionOffer.md)
 
 #### Parameters
 
@@ -53,6 +53,10 @@ One of the available offers to purchase a given product
 | `options.tags` | `string`[] |
 | `options.token` | `string` |
 | `decorator` | `OfferDecorator` |
+
+#### Returns
+
+[`SubscriptionOffer`](CdvPurchase.GooglePlay.SubscriptionOffer.md)
 
 #### Overrides
 
@@ -184,15 +188,9 @@ CdvPurchase.Offer.productType
 
 ### order
 
-▸ **order**(`additionalData?`): `Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+▸ **order**(`additionalData?`): `Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
 
 Initiate a purchase of this offer.
-
-**`Example`**
-
-```ts
-store.get("my-product").getOffer().order();
-```
 
 #### Parameters
 
@@ -202,7 +200,13 @@ store.get("my-product").getOffer().order();
 
 #### Returns
 
-`Promise`<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+`Promise`\<`undefined` \| [`IError`](../interfaces/CdvPurchase.IError.md)\>
+
+**`Example`**
+
+```ts
+store.get("my-product").getOffer().order();
+```
 
 #### Inherited from
 

@@ -1,8 +1,18 @@
 # Namespace: CdvPurchase
 
-The platform doesn't send notifications when a subscription expires.
+Namespace for the cordova-plugin-purchase plugin.
 
-However this is useful, so let's do just that.
+All classes, enumerations and variables defined by the plugin are in this namespace.
+
+Throughout the documentation, in order to keep examples readable, we omit the `CdvPurchase` prefix.
+
+When you see, for example `ProductType.PAID_SUBSCRIPTION`, it refers to `CdvPurchase.ProductType.PAID_SUBSCRIPTION`.
+
+In the files that interact with the plugin, I recommend creating those shortcuts (and more if needed):
+
+```ts
+const {store, ProductType, Platform, LogLevel} = CdvPurchase;
+```
 
 ## Table of contents
 
@@ -77,7 +87,9 @@ However this is useful, so let's do just that.
 
 ### Callback
 
-Ƭ **Callback**<`T`\>: (`t`: `T`) => `void`
+Ƭ **Callback**\<`T`\>: (`t`: `T`) => `void`
+
+Callback
 
 #### Type parameters
 
@@ -88,8 +100,6 @@ However this is useful, so let's do just that.
 #### Type declaration
 
 ▸ (`t`): `void`
-
-Callback
 
 ##### Parameters
 
@@ -119,7 +129,7 @@ Functionality optionality provided by a given platform.
 
 **`See`**
 
-[checkSupport](../classes/CdvPurchase.Store.md#checksupport)
+[Store.checkSupport](../classes/CdvPurchase.Store.md#checksupport)
 
 ___
 
@@ -131,7 +141,7 @@ Used to initialize a platform with some options
 
 **`See`**
 
-[initialize](../classes/CdvPurchase.Store.md#initialize)
+[Store.initialize](../classes/CdvPurchase.Store.md#initialize)
 
 ___
 
@@ -143,7 +153,7 @@ ___
 
 ### PLUGIN\_VERSION
 
-• `Const` **PLUGIN\_VERSION**: ``"13.10.1"``
+• `Const` **PLUGIN\_VERSION**: ``"13.10.3"``
 
 Current release number of the plugin.
 

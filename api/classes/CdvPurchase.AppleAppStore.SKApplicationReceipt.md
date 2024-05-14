@@ -34,7 +34,7 @@ StoreKit 1 exposes a single receipt that contains all transactions.
 
 ### constructor
 
-• **new SKApplicationReceipt**(`applicationReceipt`, `needApplicationReceipt`, `decorator`)
+• **new SKApplicationReceipt**(`applicationReceipt`, `needApplicationReceipt`, `decorator`): [`SKApplicationReceipt`](CdvPurchase.AppleAppStore.SKApplicationReceipt.md)
 
 #### Parameters
 
@@ -43,6 +43,10 @@ StoreKit 1 exposes a single receipt that contains all transactions.
 | `applicationReceipt` | [`ApplicationReceipt`](../interfaces/CdvPurchase.AppleAppStore.ApplicationReceipt.md) |
 | `needApplicationReceipt` | `boolean` |
 | `decorator` | `ReceiptDecorator` & `TransactionDecorator` |
+
+#### Returns
+
+[`SKApplicationReceipt`](CdvPurchase.AppleAppStore.SKApplicationReceipt.md)
 
 #### Overrides
 
@@ -82,13 +86,13 @@ List of transactions contained in the receipt, ordered by date ascending.
 
 ### finish
 
-▸ **finish**(): `Promise`<`void`\>
+▸ **finish**(): `Promise`\<`void`\>
 
 Finish all transactions in a receipt
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>
 
 #### Inherited from
 
@@ -154,13 +158,13 @@ ___
 
 ### verify
 
-▸ **verify**(): `Promise`<`void`\>
+▸ **verify**(): `Promise`\<`void`\>
 
 Verify a receipt
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>
 
 #### Inherited from
 

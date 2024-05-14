@@ -44,7 +44,7 @@ Apple AppStore adapter using StoreKit version 1
 
 ### DiscountEligibilityDeterminer
 
-Ƭ **DiscountEligibilityDeterminer**: (`applicationReceipt`: [`ApplicationReceipt`](../interfaces/CdvPurchase.AppleAppStore.ApplicationReceipt.md), `requests`: [`DiscountEligibilityRequest`](../interfaces/CdvPurchase.AppleAppStore.DiscountEligibilityRequest.md)[], `callback`: (`response`: `boolean`[]) => `void`) => `void` & { `cacheReceipt?`: (`receipt`: [`VerifiedReceipt`](../classes/CdvPurchase.VerifiedReceipt.md)) => `void`  }
+Ƭ **DiscountEligibilityDeterminer**: (`applicationReceipt`: [`ApplicationReceipt`](../interfaces/CdvPurchase.AppleAppStore.ApplicationReceipt.md), `requests`: [`DiscountEligibilityRequest`](../interfaces/CdvPurchase.AppleAppStore.DiscountEligibilityRequest.md)[], `callback`: (`response`: `boolean`[]) => `void`) => `void` & \{ `cacheReceipt?`: (`receipt`: [`VerifiedReceipt`](../classes/CdvPurchase.VerifiedReceipt.md)) => `void`  }
 
 Determine which discount the user is eligible to.
 
