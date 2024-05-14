@@ -24,6 +24,8 @@ namespace CdvPurchase {
                 this.maxTimeout = maxTimeout;
                 this.retryTimeout = minTimeout;
 
+                // From https://github.com/apache/cordova-plugin-network-information
+                // This event fires when an application goes online, and the device becomes connected to the Internet.
                 document.addEventListener("online", () => {
                     const a = this.retries;
                     this.retries = [];

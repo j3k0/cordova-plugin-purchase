@@ -6,25 +6,13 @@
 
 Need professional help and support? [Contact Me](mailto:hoelt@fovea.cc).
 
-I dedicate a considerable amount of my free time to developing and maintaining
-this Cordova plugin, along with my other Open Source software. To help ensure
-this plugin is kept updated, new features are added and bugfixes are
-implemented quickly, please donate a couple of dollars (or a little more if you
-can stretch) as this will help me to afford to dedicate time to its
-maintenance. Please consider donating if you're using this plugin in an app
-that makes you money, if you're being paid to make the app, if you're asking
-for new features or priority bug fixes. Thank you!
-
- * [Patreon](https://www.patreon.com/join/2219243?)
- * [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7A4826SH6RJSE&source=url)
-
 ## Summary
 
 This plugin allows **In-App Purchases** to be made from **Cordova, Ionic and Capacitor** applications.
 
 It lets you handle in-app purchases on many platforms with a single codebase.
 
-This is a plugin for the **Apache Cordova** framework that provides an easy and flexible way to integrate **in-app purchases** into Cordova-based mobile applications, including popular frameworks such as **Ionic and PhoneGap**.. With this plugin, you can easily add support for in-app purchases of digital content, such as subscriptions, consumables, and non-consumables, using the store-specific purchase APIs provided by the major mobile platforms. The plugin also supports requesting payments through popular payment providers such as **Braintree**, allowing you to easily accept payments from your users.
+This is a plugin for the **Apache Cordova** framework that provides an easy and flexible way to integrate **in-app purchases** into Cordova-based mobile applications, including popular frameworks such as **Ionic and PhoneGap**. With this plugin, you can easily add support for in-app purchases of digital content, such as subscriptions, consumables, and non-consumables, using the store-specific purchase APIs provided by the major mobile platforms. The plugin also supports requesting payments through popular payment providers such as **Braintree**, allowing you to easily accept payments from your users.
 
 The Cordova-Plugin-Purchase plugin is designed to be easy to use and integrate into your Cordova app, and it provides a consistent API across all supported platforms, so you can focus on building your app without worrying about platform-specific differences. Whether you are building a subscription-based app, a freemium app, or any other app that requires in-app purchases, the Cordova-Plugin-Purchase plugin can help you get started quickly and easily.
 
@@ -38,7 +26,6 @@ The Cordova-Plugin-Purchase plugin is designed to be easy to use and integrate i
 | restore purchases | ✅ | ✅ | ✅ |
 | payment requests |   |   | ✅ |
 | [receipt validation](https://www.iaptic.com) | ✅ | ✅ | ✅ |
-
 
 ## Installation
 
