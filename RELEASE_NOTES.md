@@ -2,6 +2,14 @@
 
 ## 13.10
 
+### 13.10.4
+
+#### Fix build issue on android
+
+Java compiler started complaining about an implicit parameter. This patch fixes it.
+
+Ref issue #1564
+
 ### 13.10.3
 
 #### Fix issue when a callback is null or undefined
