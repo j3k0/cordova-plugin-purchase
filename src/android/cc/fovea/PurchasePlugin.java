@@ -313,6 +313,9 @@ public final class PurchasePlugin
         callError(Constants.ERR_SETUP,
             "Setup failed. " + format(getLastResult()));
       }
+    }, () -> {
+        Log.d(mTag, "init() -> Failure: " + format(getLastResult()));
+        callError(Constants.ERR_SETUP, "Setup failure. " + format(getLastResult()));
     });
   }
 
@@ -1226,8 +1229,8 @@ public final class PurchasePlugin
         }
         else {
           onBillingConnectionFailed();
-          if (executeOnSuccess != null) {
-            executeOnSuccess.run();
+          if (executeOnFailure != null) {
+            executeOnFailure.run();
           }
         }
       }
