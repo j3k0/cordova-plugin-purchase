@@ -1,5 +1,13 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.11
+
+### 13.11.0
+
+#### Upgrade to Google Play Billing library 7.0.0
+
+It's a backward compatible update, main visible change is the ProrationMode being renamed ReplacementMode (but the plugin kept the old enum and fields for compatibility).
+
 ## 13.10
 
 ### 13.10.4

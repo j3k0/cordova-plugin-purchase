@@ -12,6 +12,7 @@
 ### Enumerations
 
 - [ProrationMode](../enums/CdvPurchase.GooglePlay.ProrationMode.md)
+- [ReplacementMode](../enums/CdvPurchase.GooglePlay.ReplacementMode.md)
 
 ### Classes
 

@@ -6,6 +6,10 @@ Replace SKU ProrationMode.
 
 See https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode
 
+**`Deprecated`**
+
+Use [ReplacementMode](CdvPurchase.GooglePlay.ReplacementMode.md)
+
 ## Table of contents
 
 ### Enumeration Members

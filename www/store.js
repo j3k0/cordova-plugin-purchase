@@ -1348,7 +1348,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.10.4';
+    CdvPurchase.PLUGIN_VERSION = '13.11.0';
     /**
      * Entry class of the plugin.
      */
@@ -5202,9 +5202,13 @@ var CdvPurchase;
 (function (CdvPurchase) {
     let GooglePlay;
     (function (GooglePlay) {
-        /** Replace SKU ProrationMode.
+        /**
+         * Replace SKU ProrationMode.
          *
-         * See https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode */
+         * See https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode
+         *
+         * @deprecated Use {@link ReplacementMode}
+         */
         let ProrationMode;
         (function (ProrationMode) {
             /** Replacement takes effect immediately, and the remaining time will be prorated and credited to the user. */
@@ -5218,6 +5222,24 @@ var CdvPurchase;
             /** Replacement takes effect immediately, and the user is charged full price of new plan and is given a full billing cycle of subscription, plus remaining prorated time from the old plan. */
             ProrationMode["IMMEDIATE_AND_CHARGE_FULL_PRICE"] = "IMMEDIATE_AND_CHARGE_FULL_PRICE";
         })(ProrationMode = GooglePlay.ProrationMode || (GooglePlay.ProrationMode = {}));
+        /**
+         * Supported replacement modes to replace an existing subscription with a new one.
+         *
+         * @see {@link https://developer.android.com/google/play/billing/subscriptions#replacement-modes}
+         */
+        let ReplacementMode;
+        (function (ReplacementMode) {
+            /** Replacement takes effect immediately, and the remaining time will be prorated and credited to the user. */
+            ReplacementMode["WITH_TIME_PRORATION"] = "IMMEDIATE_WITH_TIME_PRORATION";
+            /** Replacement takes effect immediately, and the billing cycle remains the same. */
+            ReplacementMode["CHARGE_PRORATED_PRICE"] = "IMMEDIATE_AND_CHARGE_PRORATED_PRICE";
+            /** Replacement takes effect immediately, and the new price will be charged on next recurrence time. */
+            ReplacementMode["WITHOUT_PRORATION"] = "IMMEDIATE_WITHOUT_PRORATION";
+            /** Replacement takes effect when the old plan expires, and the new price will be charged at the same time. */
+            ReplacementMode["DEFERRED"] = "DEFERRED";
+            /** Replacement takes effect immediately, and the user is charged full price of new plan and is given a full billing cycle of subscription, plus remaining prorated time from the old plan. */
+            ReplacementMode["CHARGE_FULL_PRICE"] = "IMMEDIATE_AND_CHARGE_FULL_PRICE";
+        })(ReplacementMode = GooglePlay.ReplacementMode || (GooglePlay.ReplacementMode = {}));
         let Bridge;
         (function (Bridge_2) {
             let log = function log(msg) {

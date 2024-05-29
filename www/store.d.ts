@@ -743,7 +743,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.10.4";
+    const PLUGIN_VERSION = "13.11.0";
     /**
      * Entry class of the plugin.
      */
@@ -4292,9 +4292,13 @@ declare namespace CdvPurchase {
 }
 declare namespace CdvPurchase {
     namespace GooglePlay {
-        /** Replace SKU ProrationMode.
+        /**
+         * Replace SKU ProrationMode.
          *
-         * See https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode */
+         * See https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode
+         *
+         * @deprecated Use {@link ReplacementMode}
+         */
         enum ProrationMode {
             /** Replacement takes effect immediately, and the remaining time will be prorated and credited to the user. */
             IMMEDIATE_WITH_TIME_PRORATION = "IMMEDIATE_WITH_TIME_PRORATION",
@@ -4306,6 +4310,23 @@ declare namespace CdvPurchase {
             DEFERRED = "DEFERRED",
             /** Replacement takes effect immediately, and the user is charged full price of new plan and is given a full billing cycle of subscription, plus remaining prorated time from the old plan. */
             IMMEDIATE_AND_CHARGE_FULL_PRICE = "IMMEDIATE_AND_CHARGE_FULL_PRICE"
+        }
+        /**
+         * Supported replacement modes to replace an existing subscription with a new one.
+         *
+         * @see {@link https://developer.android.com/google/play/billing/subscriptions#replacement-modes}
+         */
+        enum ReplacementMode {
+            /** Replacement takes effect immediately, and the remaining time will be prorated and credited to the user. */
+            WITH_TIME_PRORATION = "IMMEDIATE_WITH_TIME_PRORATION",
+            /** Replacement takes effect immediately, and the billing cycle remains the same. */
+            CHARGE_PRORATED_PRICE = "IMMEDIATE_AND_CHARGE_PRORATED_PRICE",
+            /** Replacement takes effect immediately, and the new price will be charged on next recurrence time. */
+            WITHOUT_PRORATION = "IMMEDIATE_WITHOUT_PRORATION",
+            /** Replacement takes effect when the old plan expires, and the new price will be charged at the same time. */
+            DEFERRED = "DEFERRED",
+            /** Replacement takes effect immediately, and the user is charged full price of new plan and is given a full billing cycle of subscription, plus remaining prorated time from the old plan. */
+            CHARGE_FULL_PRICE = "IMMEDIATE_AND_CHARGE_FULL_PRICE"
         }
         interface AdditionalData {
             /** The GooglePlay offer token */
@@ -4326,8 +4347,14 @@ declare namespace CdvPurchase {
              * Use this method to send the user's profile identifier to Google.
              */
             profileId?: string;
-            /** See https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#storeorderproduct-additionaldata for details */
+            /**
+             * Same as replacementMode, for backward compatibility
+             *
+             * @deprecated Use {@link replacementMode} instead
+             */
             prorationMode?: ProrationMode;
+            /** See https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#storeorderproduct-additionaldata for details */
+            replacementMode?: ReplacementMode;
         }
         namespace Bridge {
             interface Options {

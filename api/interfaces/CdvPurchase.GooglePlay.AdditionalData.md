@@ -11,6 +11,7 @@
 - [oldPurchaseToken](CdvPurchase.GooglePlay.AdditionalData.md#oldpurchasetoken)
 - [profileId](CdvPurchase.GooglePlay.AdditionalData.md#profileid)
 - [prorationMode](CdvPurchase.GooglePlay.AdditionalData.md#prorationmode)
+- [replacementMode](CdvPurchase.GooglePlay.AdditionalData.md#replacementmode)
 
 ## Properties
 
@@ -55,5 +56,17 @@ ___
 ### prorationMode
 
 • `Optional` **prorationMode**: [`ProrationMode`](../enums/CdvPurchase.GooglePlay.ProrationMode.md)
+
+Same as replacementMode, for backward compatibility
+
+**`Deprecated`**
+
+Use [replacementMode](CdvPurchase.GooglePlay.AdditionalData.md#replacementmode) instead
+
+___
+
+### replacementMode
+
+• `Optional` **replacementMode**: [`ReplacementMode`](../enums/CdvPurchase.GooglePlay.ReplacementMode.md)
 
 See https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#storeorderproduct-additionaldata for details
