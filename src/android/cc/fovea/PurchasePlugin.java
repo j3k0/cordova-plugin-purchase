@@ -812,7 +812,7 @@ public final class PurchasePlugin
 
     if (oldPurchaseToken != null) {
       Log.d(mTag, "buy() -> setOldSkuPurchaseToken");
-      subscriptionUpdateParams.setOldSkuPurchaseToken(oldPurchaseToken);
+      subscriptionUpdateParams.setOldPurchaseToken(oldPurchaseToken);
       hasSubscriptionUpdateParams = true;
     }
 
@@ -841,20 +841,24 @@ public final class PurchasePlugin
     // }
 
     // See https://developer.android.com/google/play/billing/subs#change
-    final String prorationMode = additionalData.has("prorationMode")
+    // Note that since Billing Library this is now a ReplacementMode
+    // https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.SubscriptionUpdateParams.ReplacementMode
+    final String replacementMode = additionalData.has("prorationMode")
       ? additionalData.getString("prorationMode")
+      : additionalData.has("replacementMode")
+      ? additionalData.getString("replacementMode")
       : null;
-    if (prorationMode != null) {
-      if ("IMMEDIATE_WITH_TIME_PRORATION".equals(prorationMode))
-        subscriptionUpdateParams.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITH_TIME_PRORATION);
-      else if ("IMMEDIATE_AND_CHARGE_PRORATED_PRICE".equals(prorationMode))
-        subscriptionUpdateParams.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_AND_CHARGE_PRORATED_PRICE);
-      else if ("IMMEDIATE_WITHOUT_PRORATION".equals(prorationMode))
-        subscriptionUpdateParams.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_WITHOUT_PRORATION);
-      else if ("DEFERRED".equals(prorationMode))
-        subscriptionUpdateParams.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.DEFERRED);
-      else if ("IMMEDIATE_AND_CHARGE_FULL_PRICE".equals(prorationMode))
-        subscriptionUpdateParams.setReplaceSkusProrationMode(BillingFlowParams.ProrationMode.IMMEDIATE_AND_CHARGE_FULL_PRICE);
+    if (replacementMode != null) {
+      if ("IMMEDIATE_WITH_TIME_PRORATION".equals(replacementMode))
+        subscriptionUpdateParams.setSubscriptionReplacementMode(BillingFlowParams.SubscriptionUpdateParams.ReplacementMode.WITH_TIME_PRORATION);
+      else if ("IMMEDIATE_AND_CHARGE_PRORATED_PRICE".equals(replacementMode))
+        subscriptionUpdateParams.setSubscriptionReplacementMode(BillingFlowParams.SubscriptionUpdateParams.ReplacementMode.CHARGE_PRORATED_PRICE);
+      else if ("IMMEDIATE_WITHOUT_PRORATION".equals(replacementMode))
+        subscriptionUpdateParams.setSubscriptionReplacementMode(BillingFlowParams.SubscriptionUpdateParams.ReplacementMode.WITHOUT_PRORATION);
+      else if ("DEFERRED".equals(replacementMode))
+        subscriptionUpdateParams.setSubscriptionReplacementMode(BillingFlowParams.SubscriptionUpdateParams.ReplacementMode.DEFERRED);
+      else if ("IMMEDIATE_AND_CHARGE_FULL_PRICE".equals(replacementMode))
+        subscriptionUpdateParams.setSubscriptionReplacementMode(BillingFlowParams.SubscriptionUpdateParams.ReplacementMode.CHARGE_FULL_PRICE);
     }
 
     if (hasSubscriptionUpdateParams) {
