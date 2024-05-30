@@ -743,7 +743,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.11.0";
+    const PLUGIN_VERSION = "13.11.1";
     /**
      * Entry class of the plugin.
      */
@@ -5381,6 +5381,13 @@ declare namespace CdvPurchase {
          * I cleaned up the all-including minified version of it.
          */
         function md5(str: string): string;
+    }
+}
+declare namespace CdvPurchase {
+    namespace Utils {
+        type PlatformID = 'ios' | 'android' | 'web';
+        /** Returns an UUID v4. Uses `window.crypto` internally to generate random values. */
+        function platformId(): PlatformID;
     }
 }
 declare namespace CdvPurchase {

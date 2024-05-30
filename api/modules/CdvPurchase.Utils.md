@@ -8,6 +8,10 @@
 
 - [Ajax](CdvPurchase.Utils.Ajax.md)
 
+### Type Aliases
+
+- [PlatformID](CdvPurchase.Utils.md#platformid)
+
 ### Functions
 
 - [ajax](CdvPurchase.Utils.md#ajax)
@@ -17,10 +21,17 @@
 - [md5](CdvPurchase.Utils.md#md5)
 - [nonEnumerable](CdvPurchase.Utils.md#nonenumerable)
 - [objectValues](CdvPurchase.Utils.md#objectvalues)
+- [platformId](CdvPurchase.Utils.md#platformid-1)
 - [platformName](CdvPurchase.Utils.md#platformname)
 - [safeCall](CdvPurchase.Utils.md#safecall)
 - [safeCallback](CdvPurchase.Utils.md#safecallback)
 - [uuidv4](CdvPurchase.Utils.md#uuidv4)
+
+## Type Aliases
+
+### PlatformID
+
+Ƭ **PlatformID**: ``"ios"`` \| ``"android"`` \| ``"web"``
 
 ## Functions
 
@@ -207,6 +218,18 @@ Object.values() for ES6
 #### Returns
 
 `T`[]
+
+___
+
+### platformId
+
+▸ **platformId**(): [`PlatformID`](CdvPurchase.Utils.md#platformid)
+
+Returns an UUID v4. Uses `window.crypto` internally to generate random values.
+
+#### Returns
+
+[`PlatformID`](CdvPurchase.Utils.md#platformid)
 
 ___
 

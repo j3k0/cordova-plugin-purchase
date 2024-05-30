@@ -2,6 +2,14 @@
 
 ## 13.11
 
+### 13.11.1
+
+#### Fix running from browser with Capacitor
+
+Add `Utils.platformId()` helper function to get rid of an error when running a Capacitor app in a browser.
+
+Ref issue #1566
+
 ### 13.11.0
 
 #### Upgrade to Google Play Billing library 7.0.0
