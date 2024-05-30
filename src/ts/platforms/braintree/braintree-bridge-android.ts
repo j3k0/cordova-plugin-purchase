@@ -107,7 +107,7 @@ namespace CdvPurchase {
 
                 /** Returns true on Android, the only platform supported by this Braintree bridge */
                 static isSupported() {
-                    return window.cordova.platformId === 'android';
+                    return Utils.platformId() === 'android';
                 }
 
                 async isApplePaySupported(): Promise<boolean> {
@@ -180,7 +180,7 @@ namespace CdvPurchase {
                  * @see https://developer.apple.com/documentation/passkit/pkpaymentauthorizationviewcontroller/1616192-canmakepayments
                  *
                 passKitCanMakePayments(callback: (value: boolean) => void, onFailure: Callback<string>) {
-                    switch (window.cordova.platformId) {
+                    switch (Utils.platformId()) {
                         case 'android':
                             return callback(true); // assuming we can always make payments on Android
                         case 'ios':

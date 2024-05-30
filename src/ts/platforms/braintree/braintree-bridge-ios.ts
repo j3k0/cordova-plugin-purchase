@@ -162,7 +162,7 @@ namespace CdvPurchase {
           }
 
           static isSupported() {
-            return window.cordova.platformId === 'ios';
+            return Utils.platformId() === 'ios';
           }
         }
       }

@@ -124,7 +124,7 @@ namespace CdvPurchase {
 
             /** Returns true on Android, the only platform supported by this adapter */
             get isSupported(): boolean {
-                return window.cordova.platformId === 'android';
+                return Utils.platformId() === 'android';
             }
 
             async initialize(): Promise<undefined | IError> {

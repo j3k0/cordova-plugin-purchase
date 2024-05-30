@@ -676,7 +676,7 @@ namespace CdvPurchase {
          * - on Android: `GOOGLE_PLAY`
          */
         defaultPlatform(): Platform {
-            switch (window.cordova.platformId) {
+            switch (Utils.platformId()) {
                 case 'android': return Platform.GOOGLE_PLAY;
                 case 'ios': return Platform.APPLE_APPSTORE;
                 default: return Platform.TEST;

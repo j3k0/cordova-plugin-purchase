@@ -156,7 +156,7 @@ namespace CdvPurchase {
 
             /** Returns true on iOS, the only platform supported by this adapter */
             get isSupported(): boolean {
-                return window.cordova.platformId === 'ios';
+                return Utils.platformId() === 'ios';
             }
 
             private upsertTransactionInProgress(productId: string, state: TransactionState): Promise<SKTransaction> {
