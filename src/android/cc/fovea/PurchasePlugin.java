@@ -24,6 +24,8 @@ import android.net.Uri;
 import android.util.Log;
 import com.android.billingclient.api.AcknowledgePurchaseParams;
 import com.android.billingclient.api.AcknowledgePurchaseResponseListener;
+import com.android.billingclient.api.AlternativeBillingListener;
+import com.android.billingclient.api.AlternativeChoiceDetails;
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClient.BillingResponseCode;
 import com.android.billingclient.api.BillingClient.FeatureType;
@@ -67,7 +69,8 @@ public final class PurchasePlugin
         extends CordovaPlugin
         implements PurchasesUpdatedListener,
         ConsumeResponseListener,
-        AcknowledgePurchaseResponseListener {
+        AcknowledgePurchaseResponseListener,
+        AlternativeBillingListener {
 
   /** Tag used for log messages. */
   private final String mTag = "CdvPurchase";
@@ -299,6 +302,7 @@ public final class PurchasePlugin
 
     mBillingClient = BillingClient
       .newBuilder(cordova.getActivity())
+      .enableAlternativeBilling(this)
       .enablePendingPurchases()
       .setListener(this)
       .build();
@@ -1293,5 +1297,10 @@ public final class PurchasePlugin
       ? result.getDebugMessage()
       : codeToMessage(code);
     return codeToString(code) + ": " + message;
+  }
+
+  @Override
+  public void userSelectedAlternativeBilling(@NonNull AlternativeChoiceDetails alternativeChoiceDetails) {
+    Log.d(mTag, "userSelectedAlternativeBilling() -> " + alternativeChoiceDetails.toString());
   }
 }
