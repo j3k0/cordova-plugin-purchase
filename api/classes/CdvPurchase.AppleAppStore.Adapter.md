@@ -31,6 +31,7 @@ Adapter for Apple AppStore using StoreKit version 1
 - [onRestoreCompleted](CdvPurchase.AppleAppStore.Adapter.md#onrestorecompleted)
 - [pseudoReceipt](CdvPurchase.AppleAppStore.Adapter.md#pseudoreceipt)
 - [ready](CdvPurchase.AppleAppStore.Adapter.md#ready)
+- [receiptsUpdated](CdvPurchase.AppleAppStore.Adapter.md#receiptsupdated)
 - [supportsParallelLoading](CdvPurchase.AppleAppStore.Adapter.md#supportsparallelloading)
 
 ### Accessors
@@ -216,6 +217,14 @@ The value is set by the "Adapters" class (which is responsible for initializing 
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[ready](../interfaces/CdvPurchase.Adapter.md#ready)
+
+___
+
+### receiptsUpdated
+
+• **receiptsUpdated**: `Debouncer`
+
+Debounced version of _receiptUpdated
 
 ___
 

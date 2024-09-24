@@ -15,7 +15,6 @@
 ### Functions
 
 - [ajax](CdvPurchase.Utils.md#ajax)
-- [asyncDelay](CdvPurchase.Utils.md#asyncdelay)
 - [formatBillingCycleEN](CdvPurchase.Utils.md#formatbillingcycleen)
 - [formatDurationEN](CdvPurchase.Utils.md#formatdurationen)
 - [md5](CdvPurchase.Utils.md#md5)
@@ -65,22 +64,6 @@ Only supports JSON requests.
 | Name | Type |
 | :------ | :------ |
 | `done` | (`cb`: () => `void`) => `void` |
-
-___
-
-### asyncDelay
-
-▸ **asyncDelay**(`milliseconds`): `Promise`\<`void`\>
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `milliseconds` | `number` |
-
-#### Returns
-
-`Promise`\<`void`\>
 
 ___
 
