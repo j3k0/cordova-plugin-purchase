@@ -2444,6 +2444,8 @@ declare namespace CdvPurchase {
             autoFinish: boolean;
             /** Callback called when the restore process is completed */
             onRestoreCompleted?: (code: IError | undefined) => void;
+            /** Debounced version of _receiptUpdated */
+            receiptsUpdated: Utils.Debouncer;
             constructor(context: CdvPurchase.Internal.AdapterContext, options: AdapterOptions);
             /** Returns true on iOS, the only platform supported by this adapter */
             get isSupported(): boolean;
@@ -2453,8 +2455,6 @@ declare namespace CdvPurchase {
             /** Insert or update a transaction in the pseudo receipt, based on data collected from the native side */
             private upsertTransaction;
             private removeTransaction;
-            /** Debounced version of _receiptUpdated */
-            private receiptsUpdated;
             /** Notify the store that the receipts have been updated */
             private _receiptsUpdated;
             private _paymentMonitor;
@@ -5330,7 +5330,15 @@ declare namespace CdvPurchase {
         function delay(fn: () => void, milliseconds: number): number;
         /** @internal */
         function debounce(fn: () => void, milliseconds: number): () => void;
+        /** @internal */
+        function createDebouncer(fn: () => void, milliseconds: number): Debouncer;
+        /** @internal */
         function asyncDelay(milliseconds: number): Promise<void>;
+        /** @internal */
+        interface Debouncer {
+            call: () => void;
+            wait: () => Promise<void>;
+        }
     }
 }
 declare namespace CdvPurchase {

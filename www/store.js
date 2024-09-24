@@ -607,6 +607,7 @@ var CdvPurchase;
                 receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));
             }
             runOnReceipt(receipt, callback) {
+                var _a, _b;
                 return __awaiter(this, void 0, void 0, function* () {
                     if (receipt.platform === CdvPurchase.Platform.TEST) {
                         this.log.debug('Using Test Adapter mock verify function.');
@@ -620,7 +621,7 @@ var CdvPurchase;
                             payload: {
                                 ok: true,
                                 data: {
-                                    id: receipt.transactions[0].transactionId,
+                                    id: ((_b = (_a = receipt.transactions) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.transactionId) || 'unknown',
                                     latest_receipt: true,
                                     transaction: { type: 'test' } // dummy data
                                 }
@@ -2676,7 +2677,7 @@ var CdvPurchase;
                 this.needAppReceipt = (_a = options.needAppReceipt) !== null && _a !== void 0 ? _a : true;
                 this.autoFinish = (_b = options.autoFinish) !== null && _b !== void 0 ? _b : false;
                 this.pseudoReceipt = new CdvPurchase.Receipt(CdvPurchase.Platform.APPLE_APPSTORE, this.context.apiDecorators);
-                this.receiptsUpdated = CdvPurchase.Utils.debounce(() => {
+                this.receiptsUpdated = CdvPurchase.Utils.createDebouncer(() => {
                     this._receiptsUpdated();
                 }, 300);
             }
@@ -2807,7 +2808,7 @@ var CdvPurchase;
                             const transaction = yield this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.APPROVED);
                             transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId);
                             this.removeTransactionInProgress(productId);
-                            this.receiptsUpdated();
+                            this.receiptsUpdated.call();
                             this.callPaymentMonitor('purchased');
                         }),
                         purchaseEnqueued: (productId, quantity) => __awaiter(this, void 0, void 0, function* () {
@@ -2839,15 +2840,27 @@ var CdvPurchase;
                             this.callPaymentMonitor('deferred');
                         }),
                         finished: (transactionIdentifier, productId) => __awaiter(this, void 0, void 0, function* () {
+                            // An issue occurs here if finished is triggered the "debounced" receiptUpdated call has
+                            // been performed for the APPROVED event. Because the transaction will go straight to
+                            // FINISHED, skipping validation.
+                            //
+                            // This was observed specifically when "autoFinish" is set.
+                            //
+                            // In order to get rid of that bug, we want to wait for processing of the previous
+                            // receiptUpdated call.
+                            //
+                            // A side effect will be that when there are many "finished" transactions, how could we process
+                            // them all in batch?
+                            yield this.receiptsUpdated.wait();
                             this.log.info('finish: ' + transactionIdentifier + ' - ' + productId);
                             this.removeTransactionInProgress(productId);
                             yield this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.FINISHED);
-                            this.receiptsUpdated();
+                            this.receiptsUpdated.call();
                         }),
                         restored: (transactionIdentifier, productId) => __awaiter(this, void 0, void 0, function* () {
                             this.log.info('restore: ' + transactionIdentifier + ' - ' + productId);
                             yield this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.APPROVED);
-                            this.receiptsUpdated();
+                            this.receiptsUpdated.call();
                         }),
                         receiptsRefreshed: (receipt) => {
                             this.log.info('receiptsRefreshed');
@@ -2882,7 +2895,7 @@ var CdvPurchase;
                 return new Promise((resolve) => {
                     setTimeout(() => {
                         this.initializeAppReceipt(() => {
-                            this.receiptsUpdated();
+                            this.receiptsUpdated.call();
                             if (this._receipt) {
                                 resolve([this._receipt, this.pseudoReceipt]);
                             }
@@ -6481,19 +6494,37 @@ var CdvPurchase;
         Utils.delay = delay;
         /** @internal */
         function debounce(fn, milliseconds) {
+            return createDebouncer(fn, milliseconds).call;
+        }
+        Utils.debounce = debounce;
+        /** @internal */
+        function createDebouncer(fn, milliseconds) {
             let timeout = null;
+            let waiting = [];
             const later = function (context, args) {
+                const toCall = waiting;
+                waiting = [];
                 timeout = null;
                 fn();
+                toCall.forEach(fn => fn());
             };
             const debounced = function () {
                 if (timeout)
                     window.clearTimeout(timeout);
                 timeout = setTimeout(later, milliseconds);
             };
-            return debounced;
+            return {
+                call: debounced,
+                wait: () => new Promise(resolve => {
+                    if (timeout)
+                        waiting.push(resolve);
+                    else
+                        resolve();
+                })
+            };
         }
-        Utils.debounce = debounce;
+        Utils.createDebouncer = createDebouncer;
+        /** @internal */
         function asyncDelay(milliseconds) {
             return new Promise(resolve => setTimeout(resolve, milliseconds));
         }

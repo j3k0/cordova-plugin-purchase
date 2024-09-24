@@ -132,7 +132,7 @@ For platform setup, the [wiki](https://github.com/j3k0/cordova-plugin-purchase/w
 
 There's a specific page for the [version 13](https://github.com/j3k0/cordova-plugin-purchase/wiki/Version-13).
 
-API documentation can be found here: [cordova-plugin-purchase API](https://www.iaptic.com/documentation/cordova-plugin-api/)
+**API documentation** can be found here: [cordova-plugin-purchase API](https://www.iaptic.com/documentation/cordova-plugin-api/)
 
 ### Upgrading to Version 13
 
