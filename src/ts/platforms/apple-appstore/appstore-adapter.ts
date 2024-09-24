@@ -141,6 +141,9 @@ namespace CdvPurchase {
             /** Callback called when the restore process is completed */
             onRestoreCompleted?: (code: IError | undefined) => void;
 
+            /** Debounced version of _receiptUpdated */
+            receiptsUpdated: Utils.Debouncer;
+
             constructor(context: CdvPurchase.Internal.AdapterContext, options: AdapterOptions) {
                 this.context = context;
                 this.bridge = new Bridge.Bridge();
@@ -149,7 +152,7 @@ namespace CdvPurchase {
                 this.needAppReceipt = options.needAppReceipt ?? true;
                 this.autoFinish = options.autoFinish ?? false;
                 this.pseudoReceipt = new Receipt(Platform.APPLE_APPSTORE, this.context.apiDecorators);
-                this.receiptsUpdated = Utils.debounce(() => {
+                this.receiptsUpdated = Utils.createDebouncer(() => {
                     this._receiptsUpdated();
                 }, 300);
             }
@@ -218,9 +221,6 @@ namespace CdvPurchase {
                 }
             }
 
-            /** Debounced version of _receiptUpdated */
-            private receiptsUpdated: () => void;
-
             /** Notify the store that the receipts have been updated */
             private _receiptsUpdated() {
                 if (this._receipt) {
@@ -275,7 +275,7 @@ namespace CdvPurchase {
                             const transaction = await this.upsertTransaction(productId, transactionIdentifier, TransactionState.APPROVED);
                             transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId);
                             this.removeTransactionInProgress(productId);
-                            this.receiptsUpdated();
+                            this.receiptsUpdated.call();
                             this.callPaymentMonitor('purchased');
                         },
 
@@ -312,16 +312,28 @@ namespace CdvPurchase {
                         },
 
                         finished: async (transactionIdentifier: string, productId: string) => {
+                            // An issue occurs here if finished is triggered the "debounced" receiptUpdated call has
+                            // been performed for the APPROVED event. Because the transaction will go straight to
+                            // FINISHED, skipping validation.
+                            //
+                            // This was observed specifically when "autoFinish" is set.
+                            //
+                            // In order to get rid of that bug, we want to wait for processing of the previous
+                            // receiptUpdated call.
+                            //
+                            // A side effect will be that when there are many "finished" transactions, how could we process
+                            // them all in batch?
+                            await this.receiptsUpdated.wait();
                             this.log.info('finish: ' + transactionIdentifier + ' - ' + productId);
                             this.removeTransactionInProgress(productId);
                             await this.upsertTransaction(productId, transactionIdentifier, TransactionState.FINISHED);
-                            this.receiptsUpdated();
+                            this.receiptsUpdated.call();
                         },
 
                         restored: async (transactionIdentifier: string, productId: string) => {
                             this.log.info('restore: ' + transactionIdentifier + ' - ' + productId);
                             await this.upsertTransaction(productId, transactionIdentifier, TransactionState.APPROVED);
-                            this.receiptsUpdated();
+                            this.receiptsUpdated.call();
                         },
 
                         receiptsRefreshed: (receipt: ApplicationReceipt) => {
@@ -361,7 +373,7 @@ namespace CdvPurchase {
                 return new Promise((resolve) => {
                     setTimeout(() => {
                         this.initializeAppReceipt(() => {
-                            this.receiptsUpdated();
+                            this.receiptsUpdated.call();
                             if (this._receipt) {
                                 resolve([this._receipt, this.pseudoReceipt]);
                             }
