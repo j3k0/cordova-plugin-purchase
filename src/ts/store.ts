@@ -80,7 +80,12 @@ namespace CdvPurchase {
          */
         public verbosity: LogLevel = LogLevel.ERROR;
 
-        /** Return the identifier of the user for your application */
+        /**
+         * Return the identifier of the user for your application.
+         * 
+         * **Note:** Apple AppStore requires an UUIDv4 if you want it to appear as the "appAccountToken" in
+         * the transaction data.
+         */
         public applicationUsername?: string | (() => string | undefined);
 
         /**
