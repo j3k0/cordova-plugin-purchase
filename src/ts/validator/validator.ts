@@ -278,6 +278,7 @@ namespace CdvPurchase {
                 const bodyTransactionHash = Utils.md5(JSON.stringify(body.transaction));
                 const cached = this.cache[bodyTransactionHash];
                 if (cached) {
+                    this.log.debug("validator cache hit, using cached response");
                     return callback({receipt, payload: cached.payload});
                 }
 
