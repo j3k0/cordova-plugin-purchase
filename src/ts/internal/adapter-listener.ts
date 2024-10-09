@@ -108,22 +108,22 @@ namespace CdvPurchase
                         if (transaction.state === TransactionState.APPROVED) {
                             // prevent calling approved twice in a very short period (60 seconds).
                             if ((this.lastCallTimeForState[tokenWithState] | 0) < now - 60000) {
-                                this.delegate.approvedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_approved');
                                 this.lastCallTimeForState[tokenWithState] = now;
+                                this.delegate.approvedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_approved');
                             }
                         }
                         else if (lastState !== transaction.state) {
                             if (transaction.state === TransactionState.INITIATED) {
-                                this.delegate.initiatedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_initiated');
                                 this.lastCallTimeForState[tokenWithState] = now;
+                                this.delegate.initiatedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_initiated');
                             }
                             else if (transaction.state === TransactionState.FINISHED) {
-                                this.delegate.finishedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_finished');
                                 this.lastCallTimeForState[tokenWithState] = now;
+                                this.delegate.finishedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_finished');
                             }
                             else if (transaction.state === TransactionState.PENDING) {
-                                this.delegate.pendingCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_pending');
                                 this.lastCallTimeForState[tokenWithState] = now;
+                                this.delegate.pendingCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_pending');
                             }
                         }
                         this.lastTransactionState[transactionToken] = transaction.state;
