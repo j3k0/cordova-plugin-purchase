@@ -35,8 +35,19 @@ namespace CdvPurchase {
           && monitor.transaction.transactionId === transaction.transactionId);
       }
 
+      private when: When;
+      private isListening: boolean = false;
+
       constructor(when: When) {
-        when
+        this.when = when;
+      }
+
+      private startListening() {
+        if (this.isListening) {
+          return;
+        }
+        this.isListening = true;
+        this.when
           .approved(transaction => this.callOnChange(transaction), 'transactionStateMonitors_callOnChange')
           .finished(transaction => this.callOnChange(transaction), 'transactionStateMonitors_callOnChange');
       }
@@ -54,6 +65,7 @@ namespace CdvPurchase {
        * Start monitoring the provided transaction for state changes.
        */
       start(transaction: Transaction, onChange: Callback<TransactionState>): TransactionMonitor {
+        this.startListening();
         const monitorId = Utils.uuidv4();
         this.monitors.push({ monitorId, transaction, onChange, lastChange: transaction.state });
         setTimeout(onChange, 0, transaction.state);
