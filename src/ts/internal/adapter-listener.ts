@@ -107,9 +107,13 @@ namespace CdvPurchase
                         // Retrigger "approved", so validation is rerun on potential update.
                         if (transaction.state === TransactionState.APPROVED) {
                             // prevent calling approved twice in a very short period (60 seconds).
-                            if ((this.lastCallTimeForState[tokenWithState] | 0) < now - 60000) {
+                            const lastCalled = this.lastCallTimeForState[tokenWithState] ?? 0;
+                            if (now - lastCalled > 60000) {
                                 this.lastCallTimeForState[tokenWithState] = now;
                                 this.delegate.approvedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_approved');
+                            }
+                            else {
+                                this.log.debug(`Skipping ${tokenWithState}, because it has been last called ${lastCalled > 0 ? Math.round(now - lastCalled) + 'ms ago (' + now + '-' + lastCalled + ')' : 'never'}`);
                             }
                         }
                         else if (lastState !== transaction.state) {
