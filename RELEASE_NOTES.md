@@ -1,5 +1,35 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.12
+
+### 13.12.0
+
+#### (googleplay) Upgrade to Google Play Billing library 7.1.1
+
+- Improved thread safety related to connection status and management.
+- Added new testing response codes to BillingResult
+
+https://developer.android.com/google/play/billing/release-notes
+
+#### (all) Fix issue with large number of transactions
+
+In particular, when calling "restorePurchases" in Apple and the user has more than 100 transactions.
+
+- 5e2ad5b Delay processing of updated receipts
+- 71a071c Do not retrigger "approved" for a given transaction until a minute has elapsed
+
+#### (appstore) Fix issue with event handling when autoFinish is set
+
+Issue #1526, approved never fires after initiating the purchase when autoFinish was set.
+
+#### (all) Fix receipt without a transaction
+
+Issue #1526
+
+#### Minor changes
+
+Logs and documentation
+
 ## 13.11
 
 ### 13.11.1

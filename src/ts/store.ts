@@ -32,7 +32,7 @@ namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    export const PLUGIN_VERSION = '13.11.1';
+    export const PLUGIN_VERSION = '13.12.0';
 
     /**
      * Entry class of the plugin.
@@ -82,7 +82,7 @@ namespace CdvPurchase {
 
         /**
          * Return the identifier of the user for your application.
-         * 
+         *
          * **Note:** Apple AppStore requires an UUIDv4 if you want it to appear as the "appAccountToken" in
          * the transaction data.
          */

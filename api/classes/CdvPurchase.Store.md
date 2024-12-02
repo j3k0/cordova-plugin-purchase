@@ -70,7 +70,10 @@ Entry class of the plugin.
 
 • `Optional` **applicationUsername**: `string` \| () => `undefined` \| `string`
 
-Return the identifier of the user for your application
+Return the identifier of the user for your application.
+
+**Note:** Apple AppStore requires an UUIDv4 if you want it to appear as the "appAccountToken" in
+the transaction data.
 
 ___
 

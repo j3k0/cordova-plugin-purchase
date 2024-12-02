@@ -703,6 +703,7 @@ var CdvPurchase;
                 const bodyTransactionHash = CdvPurchase.Utils.md5(JSON.stringify(body.transaction));
                 const cached = this.cache[bodyTransactionHash];
                 if (cached) {
+                    this.log.debug("validator cache hit, using cached response");
                     return callback({ receipt, payload: cached.payload });
                 }
                 CdvPurchase.Utils.ajax(this.log.child("Ajax"), {
@@ -894,6 +895,7 @@ var CdvPurchase;
                 this.lastTransactionState = {};
                 /** Store the listener's latest calling time (in ms) for a given transaction at a given state */
                 this.lastCallTimeForState = {};
+                this.updatedReceiptsToProcess = [];
                 this.delegate = delegate;
                 this.log = log.child('AdapterListener');
             }
@@ -951,34 +953,58 @@ var CdvPurchase;
              * @param receipts The receipts that have been updated.
              */
             receiptsUpdated(platform, receipts) {
+                this.log.debug("receiptsUpdated: " + JSON.stringify(receipts.map(r => ({
+                    platform: r.platform,
+                    transactions: r.transactions,
+                }))));
+                for (const receipt of receipts) {
+                    if (this.updatedReceiptsToProcess.indexOf(receipt) < 0) {
+                        this.updatedReceiptsToProcess.push(receipt);
+                    }
+                }
+                if (this.updatedReceiptsProcessor !== undefined) {
+                    clearTimeout(this.updatedReceiptsProcessor);
+                }
+                this.updatedReceiptsProcessor = setTimeout(() => {
+                    this._processUpdatedReceipts();
+                }, 500);
+            }
+            _processUpdatedReceipts() {
+                this.log.debug("processing " + this.updatedReceiptsToProcess.length + " updated receipts");
                 const now = +new Date();
-                this.log.debug("receiptsUpdated: " + JSON.stringify(receipts));
+                const receipts = this.updatedReceiptsToProcess;
+                this.updatedReceiptsToProcess = [];
                 receipts.forEach(receipt => {
                     this.delegate.updatedReceiptCallbacks.trigger(receipt, 'adapterListener_receiptsUpdated');
                     receipt.transactions.forEach(transaction => {
+                        var _a;
                         const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
                         const tokenWithState = transactionToken + '@' + transaction.state;
                         const lastState = this.lastTransactionState[transactionToken];
                         // Retrigger "approved", so validation is rerun on potential update.
                         if (transaction.state === CdvPurchase.TransactionState.APPROVED) {
                             // prevent calling approved twice in a very short period (60 seconds).
-                            if ((this.lastCallTimeForState[tokenWithState] | 0) < now - 60000) {
-                                this.delegate.approvedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_approved');
+                            const lastCalled = (_a = this.lastCallTimeForState[tokenWithState]) !== null && _a !== void 0 ? _a : 0;
+                            if (now - lastCalled > 60000) {
                                 this.lastCallTimeForState[tokenWithState] = now;
+                                this.delegate.approvedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_approved');
+                            }
+                            else {
+                                this.log.debug(`Skipping ${tokenWithState}, because it has been last called ${lastCalled > 0 ? Math.round(now - lastCalled) + 'ms ago (' + now + '-' + lastCalled + ')' : 'never'}`);
                             }
                         }
                         else if (lastState !== transaction.state) {
                             if (transaction.state === CdvPurchase.TransactionState.INITIATED) {
-                                this.delegate.initiatedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_initiated');
                                 this.lastCallTimeForState[tokenWithState] = now;
+                                this.delegate.initiatedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_initiated');
                             }
                             else if (transaction.state === CdvPurchase.TransactionState.FINISHED) {
-                                this.delegate.finishedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_finished');
                                 this.lastCallTimeForState[tokenWithState] = now;
+                                this.delegate.finishedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_finished');
                             }
                             else if (transaction.state === CdvPurchase.TransactionState.PENDING) {
-                                this.delegate.pendingCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_pending');
                                 this.lastCallTimeForState[tokenWithState] = now;
+                                this.delegate.pendingCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_pending');
                             }
                         }
                         this.lastTransactionState[transactionToken] = transaction.state;
@@ -1143,13 +1169,21 @@ var CdvPurchase;
         class TransactionStateMonitors {
             constructor(when) {
                 this.monitors = [];
-                when
-                    .approved(transaction => this.callOnChange(transaction), 'transactionStateMonitors_callOnChange')
-                    .finished(transaction => this.callOnChange(transaction), 'transactionStateMonitors_callOnChange');
+                this.isListening = false;
+                this.when = when;
             }
             findMonitors(transaction) {
                 return this.monitors.filter(monitor => monitor.transaction.platform === transaction.platform
                     && monitor.transaction.transactionId === transaction.transactionId);
+            }
+            startListening() {
+                if (this.isListening) {
+                    return;
+                }
+                this.isListening = true;
+                this.when
+                    .approved(transaction => this.callOnChange(transaction), 'transactionStateMonitors_callOnChange')
+                    .finished(transaction => this.callOnChange(transaction), 'transactionStateMonitors_callOnChange');
             }
             callOnChange(transaction) {
                 this.findMonitors(transaction).forEach(monitor => {
@@ -1163,6 +1197,7 @@ var CdvPurchase;
              * Start monitoring the provided transaction for state changes.
              */
             start(transaction, onChange) {
+                this.startListening();
                 const monitorId = CdvPurchase.Utils.uuidv4();
                 this.monitors.push({ monitorId, transaction, onChange, lastChange: transaction.state });
                 setTimeout(onChange, 0, transaction.state);
@@ -1349,7 +1384,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.11.1';
+    CdvPurchase.PLUGIN_VERSION = '13.12.0';
     /**
      * Entry class of the plugin.
      */

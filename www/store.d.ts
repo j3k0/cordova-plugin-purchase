@@ -515,6 +515,8 @@ declare namespace CdvPurchase {
              * Trigger the "updated" event for each product.
              */
             productsUpdated(platform: Platform, products: Product[]): void;
+            updatedReceiptsToProcess: Receipt[];
+            updatedReceiptsProcessor: number | undefined;
             /**
              * Triggers the "approved", "pending" and "finished" events for transactions.
              *
@@ -525,6 +527,7 @@ declare namespace CdvPurchase {
              * @param receipts The receipts that have been updated.
              */
             receiptsUpdated(platform: Platform, receipts: Receipt[]): void;
+            private _processUpdatedReceipts;
         }
     }
 }
@@ -645,7 +648,10 @@ declare namespace CdvPurchase {
         class TransactionStateMonitors {
             private monitors;
             private findMonitors;
+            private when;
+            private isListening;
             constructor(when: When);
+            private startListening;
             private callOnChange;
             /**
              * Start monitoring the provided transaction for state changes.
@@ -743,7 +749,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.11.1";
+    const PLUGIN_VERSION = "13.12.0";
     /**
      * Entry class of the plugin.
      */
@@ -782,7 +788,12 @@ declare namespace CdvPurchase {
          * @see {@link LogLevel}
          */
         verbosity: LogLevel;
-        /** Return the identifier of the user for your application */
+        /**
+         * Return the identifier of the user for your application.
+         *
+         * **Note:** Apple AppStore requires an UUIDv4 if you want it to appear as the "appAccountToken" in
+         * the transaction data.
+         */
         applicationUsername?: string | (() => string | undefined);
         /**
          * Get the application username as a string by either calling or returning {@link Store.applicationUsername}
