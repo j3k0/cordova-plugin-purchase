@@ -74,6 +74,11 @@ namespace CdvPurchase {
 
         /**
          * Returns true if the product is owned.
+         * 
+         * Important: This value will be false when the app starts and will only become
+         * true after purchase receipts have been loaded and validated. Without receipt validation,
+         * it might remain false depending on the platform, make sure to store the ownership status
+         * of non-consumable products in some way.
          */
         get owned(): boolean {
             // Pseudo implementation to make typescript happy.

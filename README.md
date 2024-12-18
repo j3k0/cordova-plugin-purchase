@@ -138,6 +138,102 @@ There's a specific page for the [version 13](https://github.com/j3k0/cordova-plu
 
 There's been some changes to the API with version 13 of the plugin. This document should help existing apps with the migration: [Migrate to version 13](https://github.com/j3k0/cordova-plugin-purchase/wiki/HOWTO:-Migrate-to-v13).
 
+### Receipt Validation
+
+The plugin supports two modes of operation for managing product ownership:
+
+1. **With Receipt Validation (Recommended)**
+   - Products ownership status is determined by validating receipts with a server
+   - `product.owned` reflects the validated ownership status
+   - Works reliably across all environments (TestFlight, AppStore)
+   - Can be setup using [Iaptic's receipt validation service](https://www.iaptic.com)
+
+2. **Without Receipt Validation**
+   - Relies only on local device data
+   - `product.owned` will initially be false
+   - Use `store.owned(productId)` to check ownership status
+   - Limited functionality in test environments
+
+For proper subscription support, receipt validation is strongly recommended. You can:
+- Implement your own validation server
+- Use [Iaptic's receipt validation service](https://www.iaptic.com)
+
+See our [receipt validation guide](https://purchase.cordova.fovea.cc/v/v13.0/advanced/receipt-validation) for more details.
+
+### Subscription Example
+
+Here's a complete example showing how to implement subscriptions with the plugin:
+
+```typescript
+class SubscriptionService {
+
+  constructor(store: CdvPurchase.Store) {
+    // Setup receipt validation (recommended)
+    store.validator = "https://validator.iaptic.com/v1/validate?appName=demo&apiKey=12345678";
+
+    // Register products
+    store.register([{
+      id: 'subscription1',
+      platform: CdvPurchase.Platform.APPLE_APPSTORE,
+      type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
+    }]);
+
+    // Setup event handlers
+    store.when()
+      .productUpdated(() => {
+        console.log('Products loaded from the store:', store.products);
+        updateProductsUI(); //
+      })
+      .approved(transaction => {
+        console.log('Purchase approved:', transaction);
+        transaction.verify();
+      })
+      .verified(receipt => {
+        console.log('Purchase verified:', receipt);
+        receipt.finish();
+        updateActiveSubscriptionUI();
+      });
+
+    // Initialize the store
+    store.initialize([{
+      platform: CdvPurchase.Platform.APPLE_APPSTORE,
+      options: {
+        needAppReceipt: true,
+      }
+    }]);
+  }
+
+  /** Purchase a subscription */
+  subscribe(productId: string) {
+    const product = store.get(productId);
+    if (!product) {
+      console.log('Product not found');
+      return;
+    }
+    product.getOffer()?.order()
+      .then(error => {
+        if (error) {
+          if (error.code === CdvPurchase.ErrorCode.PAYMENT_CANCELLED) {
+            console.log('Payment cancelled by user');
+          }
+          else {
+            console.log('Failed to subscribe:', error);
+          }
+        }
+      });
+  }
+
+  /** Check if user has an active subscription */
+  hasActiveSubscription(): boolean {
+    return store.owned('subscription1');
+  }
+}
+```
+
+For a more complete example with a backend integration, check:
+- Client: https://github.com/j3k0/cordova-subscription-example
+- Server: https://github.com/iaptic/iaptic-example-nodejs-backend
+
 ## Extra Resources
 
 ### For iOS
