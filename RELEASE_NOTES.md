@@ -6,7 +6,7 @@
 
 #### (googleplay) Fix #1434 - validProducts.find is not a product
 
-Somet user had this occasional error:
+Some users had this occasional error:
 
     Error: TypeError: validProducts.find is not a function
         at http://localhost/:9909:64
