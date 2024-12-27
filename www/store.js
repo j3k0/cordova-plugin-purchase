@@ -402,6 +402,11 @@ var CdvPurchase;
         }
         /**
          * Returns true if the product is owned.
+         *
+         * Important: This value will be false when the app starts and will only become
+         * true after purchase receipts have been loaded and validated. Without receipt validation,
+         * it might remain false depending on the platform, make sure to store the ownership status
+         * of non-consumable products in some way.
          */
         get owned() {
             // Pseudo implementation to make typescript happy.
@@ -1384,7 +1389,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.12.0';
+    CdvPurchase.PLUGIN_VERSION = '13.12.1';
     /**
      * Entry class of the plugin.
      */
@@ -1618,13 +1623,30 @@ var CdvPurchase;
         /** true if the plugin is initialized and ready */
         get isReady() { return this._readyCallbacks.isReady; }
         /**
-         * Setup events listener.
+         * Register event callbacks.
+         *
+         * Events overview:
+         * - `productUpdated`: Called when product metadata is loaded from the store
+         * - `receiptUpdated`: Called when local receipt information changes (ownership status change, for example)
+         * - `verified`: Called after successful receipt validation (requires a receipt validator)
          *
          * @example
+         * // Monitor ownership with receipt validation
          * store.when()
-         *      .productUpdated(product => updateUI(product))
          *      .approved(transaction => transaction.verify())
-         *      .verified(receipt => receipt.finish());
+         *      .verified(receipt => {
+         *          if (store.owned("my-product")) {
+         *              // Product is owned and verified
+         *          }
+         *      });
+         *
+         * @example
+         * // Monitor ownership without receipt validation
+         * store.when().receiptUpdated(receipt => {
+         *   if (store.owned("my-product")) {
+         *     // Product is owned according to local data
+         *   }
+         * });
          */
         when() {
             const ret = {
@@ -1746,6 +1768,11 @@ var CdvPurchase;
         }
         /**
          * Return true if a product is owned
+         *
+         * Important: The value will be false when the app starts and will only become
+         * true after purchase receipts have been loaded and validated. Without receipt validation,
+         * it might remain false depending on the platform, make sure to store the ownership status
+         * of non-consumable products in some way.
          *
          * @param product - The product object or identifier of the product.
          */
@@ -4944,6 +4971,14 @@ var CdvPurchase;
                     /** Called when a list of product definitions have been loaded */
                     const iabLoaded = (validProducts) => {
                         this.log.debug("Loaded: " + JSON.stringify(validProducts));
+                        // Add type check to handle invalid responses
+                        if (!Array.isArray(validProducts)) {
+                            const message = `Invalid product list received: ${JSON.stringify(validProducts)}, retrying later...`;
+                            this.log.warn(message);
+                            this.retry.retry(go);
+                            this.context.error(playStoreError(CdvPurchase.ErrorCode.LOAD, message, null));
+                            return;
+                        }
                         const ret = products.map(registeredProduct => {
                             const validProduct = validProducts.find(vp => vp.productId === registeredProduct.id);
                             if (validProduct && validProduct.productId) {

@@ -2,6 +2,21 @@
 
 ## 13.12
 
+### 13.12.1
+
+#### (googleplay) Fix #1434 - validProducts.find is not a product
+
+Somet user had this occasional error:
+
+    Error: TypeError: validProducts.find is not a function
+        at http://localhost/:9909:64
+        at Array.map (<anonymous>)
+        at iabLoaded (http://localhost/:9908:46)
+        at Object.callbackFromNative (http://localhost/:1708:52)
+        at <anonymous>:1:9
+
+This happened when another call to the native side was made before the list of products was returned (race condition kind of bug). It's fixed in that release.
+
 ### 13.12.0
 
 #### (googleplay) Upgrade to Google Play Billing library 7.1.1
