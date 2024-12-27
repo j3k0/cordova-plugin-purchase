@@ -557,29 +557,30 @@ public final class PurchasePlugin
 
   private void getAvailableProducts(List<String> inAppProductIds, List<String> subsProductIds) {
     Log.d(mTag, "getAvailableProducts()");
+    final CallbackContext callbackContext = this.mCallbackContext; // Store current context
     queryAllProductDetails(inAppProductIds, subsProductIds, new ProductDetailsResponseListener() {
-      @Override
+        @Override
         public void onProductDetailsResponse(
             final BillingResult result,
             final List<ProductDetails> productDetailsList) {
-          if (result.getResponseCode() != BillingResponseCode.OK) {
-            Log.d(mTag, "getAvailableProducts() -> Failed: " + format(result));
-            callError(Constants.ERR_LOAD, "Failed to load Products, code: "
-                + result.getResponseCode());
-            return;
-          }
-          JSONArray jsonProductList = new JSONArray();
-          try {
-            for (ProductDetails product : productDetailsList) {
-              Log.d(mTag, "getAvailableProducts() -> productDetails: " + product.toString());
-              jsonProductList.put(productDetailsToJson(product));
+            if (result.getResponseCode() != BillingResponseCode.OK) {
+                Log.d(mTag, "getAvailableProducts() -> Failed: " + format(result));
+                callError(callbackContext, Constants.ERR_LOAD, "Failed to load Products, code: "
+                    + result.getResponseCode());
+                return;
             }
-            Log.d(mTag, "getAvailableProducts() -> Success");
-            callSuccess(jsonProductList);
-          } catch (JSONException e) {
-            Log.d(mTag, "getAvailableProducts() -> Failed: " + e.getMessage());
-            callError(Constants.ERR_LOAD, e.getMessage());
-          }
+            JSONArray jsonProductList = new JSONArray();
+            try {
+                for (ProductDetails product : productDetailsList) {
+                    Log.d(mTag, "getAvailableProducts() -> productDetails: " + product.toString());
+                    jsonProductList.put(productDetailsToJson(product));
+                }
+                Log.d(mTag, "getAvailableProducts() -> Success");
+                callSuccess(callbackContext, jsonProductList);
+            } catch (JSONException e) {
+                Log.d(mTag, "getAvailableProducts() -> Failed: " + e.getMessage());
+                callError(callbackContext, Constants.ERR_LOAD, e.getMessage());
+            }
         }
     });
   }
@@ -1293,5 +1294,18 @@ public final class PurchasePlugin
       ? result.getDebugMessage()
       : codeToMessage(code);
     return codeToString(code) + ": " + message;
+  }
+
+  // Add new methods to handle callbacks with specific contexts
+  private void callSuccess(CallbackContext callbackContext, JSONArray array) {
+    if (callbackContext != null) {
+        callbackContext.success(array);
+    }
+  }
+
+  private void callError(CallbackContext callbackContext, int code, String msg) {
+    if (callbackContext != null) {
+        callbackContext.error(code + "|" + msg);
+    }
   }
 }

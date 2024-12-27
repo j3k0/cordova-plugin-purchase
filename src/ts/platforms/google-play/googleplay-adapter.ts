@@ -201,6 +201,16 @@ namespace CdvPurchase {
                     const iabLoaded = (validProducts: (Bridge.InAppProduct | Bridge.Subscription)[]) => {
 
                         this.log.debug("Loaded: " + JSON.stringify(validProducts));
+
+                        // Add type check to handle invalid responses
+                        if (!Array.isArray(validProducts)) {
+                            const message = `Invalid product list received: ${JSON.stringify(validProducts)}, retrying later...`;
+                            this.log.warn(message);
+                            this.retry.retry(go);
+                            this.context.error(playStoreError(ErrorCode.LOAD, message, null));
+                            return;
+                        }
+
                         const ret = products.map(registeredProduct => {
                             const validProduct = validProducts.find(vp => vp.productId === registeredProduct.id);
                             if (validProduct && validProduct.productId) {
