@@ -250,6 +250,9 @@ namespace CdvPurchase {
 
         /** Test platform */
         TEST = 'test',
+
+        /** Iaptic.js */
+        IAPTIC_JS = 'iaptic-js',
     }
 
     /**

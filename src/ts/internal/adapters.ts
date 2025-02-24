@@ -17,6 +17,10 @@ namespace CdvPurchase
 
         export interface Test { platform: Platform.TEST; }
         export interface WindowsStore { platform: Platform.WINDOWS_STORE; }
+        export interface IapticJS { 
+            platform: Platform.IAPTIC_JS;
+            options: IapticJS.AdapterOptions;
+        }
     }
 
     /**
@@ -30,6 +34,7 @@ namespace CdvPurchase
         | PlatformOptions.GooglePlay
         | PlatformOptions.Test
         | PlatformOptions.WindowsStore
+        | PlatformOptions.IapticJS
         ;
 
     /** @internal */
@@ -94,6 +99,11 @@ namespace CdvPurchase
                             return this.list.push(new Braintree.Adapter(context, po.options));
                         case Platform.TEST:
                             return this.list.push(new Test.Adapter(context));
+                        case Platform.IAPTIC_JS:
+                            if (!po.options) {
+                                log.error('Options missing for IapticJS initialization. Use {platform: Platform.IAPTIC_JS, options: {...}} in your call to store.initialize');
+                            }
+                            return this.list.push(new IapticJS.Adapter(context, po.options));
                         default:
                             return;
                     }
