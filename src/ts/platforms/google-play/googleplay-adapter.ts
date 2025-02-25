@@ -59,6 +59,16 @@ namespace CdvPurchase {
                 
                 this.state = Transaction.toState(fromConstructor ?? false, purchase.getPurchaseState, this.isAcknowledged ?? false, this.isConsumed ?? false);
             }
+
+            removed() {
+                if (this.renewalIntent) {
+                    this.expirationDate = new Date(Date.now() - Internal.ExpiryMonitor.GRACE_PERIOD_MS[Platform.GOOGLE_PLAY]);
+                }
+                else {
+                    this.isConsumed = true;
+                }
+                this.state = TransactionState.CANCELLED;
+            }
         }
 
         export class Receipt extends CdvPurchase.Receipt {
@@ -81,6 +91,10 @@ namespace CdvPurchase {
             refreshPurchase(purchase: Bridge.Purchase) {
                 (this.transactions[0] as Transaction)?.refresh(purchase);
                 this.orderId = purchase.orderId;
+            }
+
+            removed() {
+                this.transactions.forEach(t => (t as Transaction)?.removed());
             }
         }
 
@@ -297,10 +311,101 @@ namespace CdvPurchase {
                 this.onPurchasesUpdated([purchase]);
             }
 
-            /** Called when the platform reports update for some purchases */
+            /** Schedule to refresh purchases for subscriptions that don't have expiration dates */
+            private refreshSchedule: {
+                [purchaseToken: string]: {
+                    timeoutId: number;
+                    refreshTime: number;
+                }[];
+            } = {};
+            
+            /** Refresh intervals (in milliseconds) */
+            private static REFRESH_INTERVALS = {
+                SANDBOX: 6 * 60 * 1000, // 6 minutes for sandbox
+                PRODUCTION: 7 * 24 * 60 * 60 * 1000 + 10 * 60 * 1000, // 7 days + 10 minutes for production
+            };
+
+            /**
+             * Schedule a purchase refresh for a subscription without expiration date
+             */
+            private scheduleRefreshForSubscription(purchase: Bridge.Purchase): void {
+                if (!purchase.purchaseToken) return;
+
+                const schedule = this.refreshSchedule[purchase.purchaseToken] || [];
+                if (schedule.length === 0) {
+                    this.refreshSchedule[purchase.purchaseToken] = schedule;
+                }
+
+                // Determine refresh interval based on sandbox status and auto-renewing flag
+                let refreshIntervals = [Adapter.REFRESH_INTERVALS.SANDBOX, Adapter.REFRESH_INTERVALS.PRODUCTION];
+                refreshIntervals.forEach(refreshInterval => {
+                    const refreshTime = purchase.purchaseTime + refreshInterval;
+                    if (schedule.find(s => s.refreshTime === refreshTime) || refreshTime < Date.now()) {
+                        return;
+                    }
+                    this.log.debug(`Scheduling refresh for purchase token ${purchase.purchaseToken} at ${new Date(refreshTime).toISOString()}`);
+                    
+                    // Schedule the refresh
+                    const timeoutId = window.setTimeout(() => {
+                        this.log.debug(`Executing scheduled refresh for purchase token ${purchase.purchaseToken}`);
+                        delete this.refreshSchedule[purchase.purchaseToken];
+                        this.getPurchases().catch(err => {
+                            this.log.warn(`Failed scheduled refresh: ${err}`);
+                        });
+                    }, refreshTime - Date.now());
+                
+                    // Store the scheduled refresh
+                    schedule.push({
+                        timeoutId: timeoutId as unknown as number,
+                        refreshTime
+                    });
+                });
+            }
+            
+            /**
+             * Detect subscriptions that need scheduled refreshes
+             */
+            private scheduleRefreshesForSubscriptions(purchases: Bridge.Purchase[]): void {
+                for (const purchase of purchases) {
+                    // Skip if not auto-renewing
+                    if (purchase.autoRenewing !== false) continue;
+                    const productId = purchase.productIds[0];
+                    const product = productId ? this._products.getProduct(productId) : undefined;
+                    if (!product || product.type !== ProductType.PAID_SUBSCRIPTION) continue;
+                    if (!purchase.expiryTimeMillis) {
+                        this.scheduleRefreshForSubscription(purchase);
+                    }
+                }
+            }
+
+            /**
+             * Called when the platform reports some purchases
+             */
+            onSetPurchases(purchases: Bridge.Purchase[]): void {
+                this.log.debug("onSetPurchases: " + JSON.stringify(purchases));
+                this.onPurchasesUpdated(purchases);
+                this.context.listener.receiptsReady(Platform.GOOGLE_PLAY);
+                
+                // Schedule refreshes for subscriptions without expiration dates
+                this.scheduleRefreshesForSubscriptions(purchases);
+            }
+
+            /**
+             * Called when the platform reports updates for some purchases
+             * 
+             * Notice that purchases can be removed from the array, we should handle that so they stop
+             * being "owned" by the user.
+             */
             onPurchasesUpdated(purchases: Bridge.Purchase[]): void {
                 this.log.debug("onPurchaseUpdated: " + purchases.map(p => p.orderId).join(', '));
                 // GooglePlay generates one receipt for each purchase
+
+                const removedReceipts = this.receipts.filter(r => !purchases.find(p => p.purchaseToken === r.purchaseToken));
+                if (removedReceipts.length > 0) {
+                    this.log.debug("Removed purchases: " + removedReceipts.map(r => r.purchaseToken).join(', '));
+                    removedReceipts.forEach(receipt => receipt.removed());
+                }
+
                 purchases.forEach(purchase => {
                     const existingReceipt = this.receipts.find(r => r.purchaseToken === purchase.purchaseToken);
                     if (existingReceipt) {
@@ -345,13 +450,6 @@ namespace CdvPurchase {
                         }
                     }
                 });
-            }
-
-            /** Called when the platform reports some purchases */
-            onSetPurchases(purchases: Bridge.Purchase[]): void {
-                this.log.debug("onSetPurchases: " + JSON.stringify(purchases));
-                this.onPurchasesUpdated(purchases);
-                this.context.listener.receiptsReady(Platform.GOOGLE_PLAY);
             }
 
             onPriceChangeConfirmationResult(result: "OK" | "UserCanceled" | "UnknownProduct"): void {

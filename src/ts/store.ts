@@ -242,21 +242,18 @@ namespace CdvPurchase {
                 },
                 get verifiedReceipts() { return store.verifiedReceipts; },
                 onTransactionExpired(transaction) {
-                    // When a local transaction expires, refresh the purchases
                     store.log.debug(`Local transaction expired (${transaction.transactionId}), refreshing purchases`);
-                    if (transaction.platform === Platform.GOOGLE_PLAY) {
-                        const adapter = store.adapters.findReady(Platform.GOOGLE_PLAY);
-                        if (adapter) {
-                            adapter.getPurchases().then(error => {
-                                if (error) store.log.warn('Failed to refresh purchases: ' + error.message);
-                            });
+                    if (!store.validator) {
+                        const productId = transaction.products[0]?.id;
+                        if (productId && !store.owned(productId)) {
+                            store.updatedReceiptsCallbacks.trigger(transaction.parentReceipt, 'expiry_monitor_transaction_expired');
                         }
                     }
                 },
                 onVerifiedPurchaseExpired(verifiedPurchase, receipt) {
                     store.verify(receipt.sourceReceipt);
                 },
-            });
+            }, this.log);
             this.expiryMonitor.launch();
         }
 

@@ -45,6 +45,9 @@ namespace CdvPurchase {
       /** reference to the function that runs at a given interval */
       interval?: number;
 
+      /** Logger */
+      log: Logger;
+
       /** Track active verified purchases */
       activePurchases: {
         [transactionId: string]: true;
@@ -65,13 +68,24 @@ namespace CdvPurchase {
         [transactionId: string]: true;
       } = {};
 
-      constructor(controller: ExpiryMonitorController) {
+      constructor(controller: ExpiryMonitorController, log: Logger) {
         this.controller = controller;
+        this.log = log.child('ExpiryMonitor');
+      }
+
+      stop() {
+        if (this.interval) {
+          clearInterval(this.interval);
+          this.interval = undefined;
+        }
       }
 
       launch() {
+        this.log.info('Starting expiry monitoring');
+        this.stop();
         this.interval = setInterval(() => {
           const now = +new Date();
+          
           // Check for verified purchases expiry
           for (const receipt of this.controller.verifiedReceipts) {
             const gracePeriod = ExpiryMonitor.GRACE_PERIOD_MS[receipt.platform] ?? ExpiryMonitor.GRACE_PERIOD_MS.DEFAULT;
@@ -79,27 +93,47 @@ namespace CdvPurchase {
               if (purchase.expiryDate) {
                 const expiryDate = purchase.expiryDate + gracePeriod;
                 const transactionId = purchase.transactionId ?? `${expiryDate}`;
+                
                 if (expiryDate > now) {
                   this.activePurchases[transactionId] = true;
                 }
+                
                 if (expiryDate < now && this.activePurchases[transactionId] && !this.notifiedPurchases[transactionId]) {
+                  this.log.info(`Verified purchase expired: ${transactionId}`);
                   this.notifiedPurchases[transactionId] = true;
                   this.controller.onVerifiedPurchaseExpired(purchase, receipt);
                 }
               }
             }
           }
+          
           // Check for local purchases expiry
           for (const receipt of this.controller.localReceipts) {
             for (const transaction of receipt.transactions) {
+              // Handle Google Play subscriptions without expiration date
+              if (receipt.platform === 'android-playstore' && !transaction.expirationDate) {
+                const googleTransaction = transaction as GooglePlay.Transaction;
+                if (googleTransaction.nativePurchase?.autoRenewing) {
+                  const transactionId = transaction.transactionId ?? `${now}`;
+                  // Mark auto-renewing subscriptions as active
+                  if (!this.activeTransactions[transactionId]) {
+                    this.log.debug(`Tracking auto-renewing Google Play subscription without expiration: ${transactionId}`);
+                    this.activeTransactions[transactionId] = true;
+                  }
+                }
+              }
+              
               if (transaction.expirationDate) {
                 const gracePeriod = ExpiryMonitor.GRACE_PERIOD_MS[receipt.platform] ?? ExpiryMonitor.GRACE_PERIOD_MS.DEFAULT;
                 const expirationDate = +transaction.expirationDate + gracePeriod;
                 const transactionId = transaction.transactionId ?? `${expirationDate}`;
+                
                 if (expirationDate > now) {
                   this.activeTransactions[transactionId] = true;
                 }
+                
                 if (expirationDate < now && this.activeTransactions[transactionId] && !this.notifiedTransactions[transactionId]) {
+                  this.log.info(`Local transaction expired: ${transactionId}`);
                   this.notifiedTransactions[transactionId] = true;
                   this.controller.onTransactionExpired(transaction);
                 }

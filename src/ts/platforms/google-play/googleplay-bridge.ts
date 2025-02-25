@@ -143,7 +143,7 @@ namespace CdvPurchase {
                 getPurchaseState: PurchaseState;
 
                 /** Whether the subscription renews automatically. */
-                autoRenewing: false;
+                autoRenewing: boolean;
 
                 /** String containing the signature of the purchase data that was signed with the private key of the developer. */
                 signature: string;
