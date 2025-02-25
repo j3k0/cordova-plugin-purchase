@@ -367,7 +367,8 @@ public final class PurchasePlugin
       .put("accountId", p.getAccountIdentifiers().getObfuscatedAccountId())
       .put("profileId", p.getAccountIdentifiers().getObfuscatedProfileId())
       .put("signature", p.getSignature())
-      .put("receipt", p.getOriginalJson().toString());
+      .put("receipt", p.getOriginalJson().toString())
+      .put("quantity", p.getQuantity());
   }
 
   BillingResult mInAppResult;
