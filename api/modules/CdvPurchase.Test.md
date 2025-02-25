@@ -10,10 +10,28 @@ Test Adapter and related classes.
 
 - [Adapter](../classes/CdvPurchase.Test.Adapter.md)
 
+### Interfaces
+
+- [TestProductMetadata](../interfaces/CdvPurchase.Test.TestProductMetadata.md)
+
+### Type Aliases
+
+- [IRegisterTestProduct](CdvPurchase.Test.md#iregistertestproduct)
+
 ### Variables
 
 - [testProducts](CdvPurchase.Test.md#testproducts)
 - [testProductsArray](CdvPurchase.Test.md#testproductsarray)
+
+### Functions
+
+- [registerTestProduct](CdvPurchase.Test.md#registertestproduct)
+
+## Type Aliases
+
+### IRegisterTestProduct
+
+Ƭ **IRegisterTestProduct**: [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md) & `Partial`\<[`TestProductMetadata`](../interfaces/CdvPurchase.Test.TestProductMetadata.md)\>
 
 ## Variables
 
@@ -21,7 +39,7 @@ Test Adapter and related classes.
 
 • `Const` **testProducts**: `Object`
 
-Definition of the test products.
+Definition of the built-in test products.
 
 #### Type declaration
 
@@ -55,3 +73,65 @@ ___
 • `Const` **testProductsArray**: [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md)[]
 
 List of test products definitions as an array.
+
+## Functions
+
+### registerTestProduct
+
+▸ **registerTestProduct**(`config`): [`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md) & \{ `customMetadata?`: [`TestProductMetadata`](../interfaces/CdvPurchase.Test.TestProductMetadata.md)  }
+
+Register a custom test product that can be used during development.
+
+This function allows developers to create custom test products for development
+and testing purposes. These products will be available in the Test platform
+alongside the standard test products.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `config` | [`IRegisterTestProduct`](CdvPurchase.Test.md#iregistertestproduct) | Configuration for the test product |
+
+#### Returns
+
+[`IRegisterProduct`](../interfaces/CdvPurchase.IRegisterProduct.md) & \{ `customMetadata?`: [`TestProductMetadata`](../interfaces/CdvPurchase.Test.TestProductMetadata.md)  }
+
+The registered product configuration
+
+**`Example`**
+
+```typescript
+// Register a custom consumable product
+CdvPurchase.Test.registerTestProduct({
+  id: 'my-consumable',
+  type: CdvPurchase.ProductType.CONSUMABLE,
+  title: 'My Custom Consumable',
+  description: 'A custom test consumable product',
+  pricing: {
+    price: '$2.99', 
+    currency: 'USD',
+    priceMicros: 2990000
+  }
+});
+
+// Later register it with the store
+store.register([{
+  id: 'my-consumable',
+  type: CdvPurchase.ProductType.CONSUMABLE,
+  platform: CdvPurchase.Platform.TEST
+}]);
+
+// Note that this can be done in a single step:
+store.register([{
+  id: 'my-custom-product',
+  type: CdvPurchase.ProductType.CONSUMABLE,
+  platform: CdvPurchase.Platform.TEST,
+  title: '...',
+  description: 'A custom test consumable product',
+  pricing: {
+    price: '$2.99', 
+    currency: 'USD',
+    priceMicros: 2990000
+  }
+}]);
+```

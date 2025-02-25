@@ -1135,11 +1135,17 @@ var CdvPurchase;
                 const products = Array.isArray(product) ? product : [product];
                 const newProducts = products.filter(p => !this.find(p.platform, p.id));
                 for (const p of newProducts) {
-                    if (isValidRegisteredProduct(p))
+                    if (isValidRegisteredProduct(p)) {
+                        // This is a custom test product
+                        if (p.platform === CdvPurchase.Platform.TEST && !CdvPurchase.Test.testProductsArray.some(tp => tp.id === p.id)) {
+                            CdvPurchase.Test.registerTestProduct(p);
+                        }
                         this.list.push(p);
-                    else
+                    }
+                    else {
                         errors.push(CdvPurchase.storeError(CdvPurchase.ErrorCode.LOAD, 'Invalid parameter to "register", expected "id", "type" and "platform". '
                             + 'Got: ' + JSON.stringify(p), null, null));
+                    }
                 }
                 return errors;
             }
@@ -1536,6 +1542,20 @@ var CdvPurchase;
          *       type: ProductType.CONSUMABLE,
          *       platform: Platform.BRAINTREE,
          *   }]);
+         *
+         * // Can also be used in development to register test products
+         * store.register([{
+         *   id: 'my-custom-product',
+         *   type: CdvPurchase.ProductType.CONSUMABLE,
+         *   platform: CdvPurchase.Platform.TEST,
+         *   title: '...',
+         *   description: 'A custom test consumable product',
+         *   pricing: {
+         *     price: '$2.99',
+         *     currency: 'USD',
+         *     priceMicros: 2990000
+         *   }
+         * }]);
          */
         register(product) {
             const errors = this.registeredProducts.add(product);
@@ -5925,7 +5945,10 @@ var CdvPurchase;
             loadProducts(products) {
                 return __awaiter(this, void 0, void 0, function* () {
                     return products.map(registerProduct => {
-                        if (!Test.testProductsArray.find(p => p.id === registerProduct.id && p.type === registerProduct.type)) {
+                        // Check if the product is a custom test product or a built-in test product
+                        const isCustomProduct = !!Test.customTestProducts[registerProduct.id];
+                        const isBuiltInProduct = !!Test.testProductsArray.find(p => p.id === registerProduct.id && p.type === registerProduct.type);
+                        if (!isCustomProduct && !isBuiltInProduct) {
                             return testStoreError(CdvPurchase.ErrorCode.PRODUCT_NOT_AVAILABLE, 'This product is not available', registerProduct.id);
                         }
                         // Ensure it's not been loaded already.
@@ -6151,7 +6174,13 @@ var CdvPurchase;
     (function (Test) {
         const platform = CdvPurchase.Platform.TEST;
         /**
-         * Definition of the test products.
+         * Storage for custom test products registered by the user.
+         *
+         * @internal
+         */
+        Test.customTestProducts = {};
+        /**
+         * Definition of the built-in test products.
          */
         Test.testProducts = {
             /**
@@ -6224,11 +6253,152 @@ var CdvPurchase;
          */
         Test.testProductsArray = CdvPurchase.Utils.objectValues(Test.testProducts);
         /**
+         * Default pricing phase configuration for different product types.
+         */
+        const defaultPricingPhaseConfig = {
+            [CdvPurchase.ProductType.CONSUMABLE]: [{
+                    price: '$1.99',
+                    currency: 'USD',
+                    priceMicros: 1990000,
+                    paymentMode: CdvPurchase.PaymentMode.UP_FRONT,
+                    recurrenceMode: CdvPurchase.RecurrenceMode.NON_RECURRING,
+                }],
+            [CdvPurchase.ProductType.NON_CONSUMABLE]: [{
+                    price: '$4.99',
+                    currency: 'USD',
+                    priceMicros: 4990000,
+                    paymentMode: CdvPurchase.PaymentMode.UP_FRONT,
+                    recurrenceMode: CdvPurchase.RecurrenceMode.NON_RECURRING,
+                }],
+            [CdvPurchase.ProductType.PAID_SUBSCRIPTION]: [{
+                    price: '$9.99',
+                    currency: 'USD',
+                    priceMicros: 9990000,
+                    paymentMode: CdvPurchase.PaymentMode.PAY_AS_YOU_GO,
+                    recurrenceMode: CdvPurchase.RecurrenceMode.INFINITE_RECURRING,
+                    billingPeriod: 'P1M',
+                }],
+        };
+        /**
+         * Register a custom test product that can be used during development.
+         *
+         * This function allows developers to create custom test products for development
+         * and testing purposes. These products will be available in the Test platform
+         * alongside the standard test products.
+         *
+         * @param config - Configuration for the test product
+         * @returns The registered product configuration
+         *
+         * @example
+         * ```typescript
+         * // Register a custom consumable product
+         * CdvPurchase.Test.registerTestProduct({
+         *   id: 'my-consumable',
+         *   type: CdvPurchase.ProductType.CONSUMABLE,
+         *   title: 'My Custom Consumable',
+         *   description: 'A custom test consumable product',
+         *   pricing: {
+         *     price: '$2.99',
+         *     currency: 'USD',
+         *     priceMicros: 2990000
+         *   }
+         * });
+         *
+         * // Later register it with the store
+         * store.register([{
+         *   id: 'my-consumable',
+         *   type: CdvPurchase.ProductType.CONSUMABLE,
+         *   platform: CdvPurchase.Platform.TEST
+         * }]);
+         *
+         * // Note that this can be done in a single step:
+         * store.register([{
+         *   id: 'my-custom-product',
+         *   type: CdvPurchase.ProductType.CONSUMABLE,
+         *   platform: CdvPurchase.Platform.TEST,
+         *   title: '...',
+         *   description: 'A custom test consumable product',
+         *   pricing: {
+         *     price: '$2.99',
+         *     currency: 'USD',
+         *     priceMicros: 2990000
+         *   }
+         * }]);
+         * ```
+         */
+        function registerTestProduct(config) {
+            // Validate required fields
+            if (!config.id)
+                throw new Error('Product ID is required');
+            if (config.type === undefined)
+                throw new Error('Product type is required');
+            // Create the product configuration with required metadata
+            const metadata = {
+                title: config.title || `Test ${config.type}`,
+                description: config.description || `A test ${config.type} product`,
+                offerId: config.offerId || `${config.id}-offer1`,
+                pricing: config.pricing || defaultPricingPhaseConfig[config.type]
+            };
+            const productConfig = {
+                platform,
+                id: config.id,
+                type: config.type,
+                customMetadata: metadata
+            };
+            // Store the custom product
+            Test.customTestProducts[config.id] = productConfig;
+            return productConfig;
+        }
+        Test.registerTestProduct = registerTestProduct;
+        /**
          * Initialize a test product.
          *
          * @internal
          */
         function initTestProduct(productId, decorator) {
+            // First check if it's a custom product
+            if (Test.customTestProducts[productId]) {
+                const customConfig = Test.customTestProducts[productId];
+                const product = new CdvPurchase.Product({
+                    platform,
+                    id: customConfig.id,
+                    type: customConfig.type
+                }, decorator);
+                // Set product details from custom metadata
+                if (customConfig.customMetadata) {
+                    product.title = customConfig.customMetadata.title;
+                    product.description = customConfig.customMetadata.description;
+                    const offerId = customConfig.customMetadata.offerId;
+                    let pricingPhases = [];
+                    // Handle different pricing formats
+                    if (Array.isArray(customConfig.customMetadata.pricing)) {
+                        pricingPhases = customConfig.customMetadata.pricing;
+                    }
+                    else if (customConfig.customMetadata.pricing) {
+                        const pricing = customConfig.customMetadata.pricing;
+                        pricingPhases = [{
+                                price: pricing.price,
+                                currency: pricing.currency,
+                                priceMicros: pricing.priceMicros,
+                                paymentMode: customConfig.type === CdvPurchase.ProductType.PAID_SUBSCRIPTION
+                                    ? CdvPurchase.PaymentMode.PAY_AS_YOU_GO
+                                    : CdvPurchase.PaymentMode.UP_FRONT,
+                                recurrenceMode: customConfig.type === CdvPurchase.ProductType.PAID_SUBSCRIPTION
+                                    ? CdvPurchase.RecurrenceMode.INFINITE_RECURRING
+                                    : CdvPurchase.RecurrenceMode.NON_RECURRING,
+                                billingPeriod: customConfig.type === CdvPurchase.ProductType.PAID_SUBSCRIPTION ? 'P1M' : undefined,
+                            }];
+                    }
+                    // Add offer to the product
+                    product.addOffer(new CdvPurchase.Offer({
+                        id: offerId,
+                        product,
+                        pricingPhases
+                    }, decorator));
+                }
+                return product;
+            }
+            // If not a custom product, use the built-in test products implementation
             const key = Object.keys(Test.testProducts).find(key => Test.testProducts[key] && Test.testProducts[key].id === productId);
             if (!key)
                 return;
