@@ -619,7 +619,7 @@ declare namespace CdvPurchase {
         class RegisteredProducts {
             list: IRegisterProduct[];
             find(platform: Platform, id: string): IRegisterProduct | undefined;
-            add(product: IRegisterProduct | IRegisterProduct[]): IError[];
+            add(product: IRegisterProduct | Test.IRegisterTestProduct | (IRegisterProduct | Test.IRegisterTestProduct)[]): IError[];
             byPlatform(): {
                 platform: Platform;
                 products: IRegisterProduct[];
@@ -896,8 +896,22 @@ declare namespace CdvPurchase {
          *       type: ProductType.CONSUMABLE,
          *       platform: Platform.BRAINTREE,
          *   }]);
+         *
+         * // Can also be used in development to register test products
+         * store.register([{
+         *   id: 'my-custom-product',
+         *   type: CdvPurchase.ProductType.CONSUMABLE,
+         *   platform: CdvPurchase.Platform.TEST,
+         *   title: '...',
+         *   description: 'A custom test consumable product',
+         *   pricing: {
+         *     price: '$2.99',
+         *     currency: 'USD',
+         *     priceMicros: 2990000
+         *   }
+         * }]);
          */
-        register(product: IRegisterProduct | IRegisterProduct[]): void;
+        register(product: IRegisterProduct | Test.IRegisterTestProduct | (IRegisterProduct | Test.IRegisterTestProduct)[]): void;
         private initializedHasBeenCalled;
         /**
          * Call to initialize the in-app purchase plugin.
@@ -5110,7 +5124,31 @@ declare namespace CdvPurchase {
 declare namespace CdvPurchase {
     namespace Test {
         /**
-         * Definition of the test products.
+         * Metadata for test products.
+         */
+        interface TestProductMetadata {
+            title: string;
+            description: string;
+            offerId: string;
+            pricing: {
+                price: string;
+                currency: string;
+                priceMicros: number;
+            } | PricingPhase[];
+        }
+        type IRegisterTestProduct = IRegisterProduct & Partial<TestProductMetadata>;
+        /**
+         * Storage for custom test products registered by the user.
+         *
+         * @internal
+         */
+        const customTestProducts: {
+            [key: string]: IRegisterProduct & {
+                customMetadata?: TestProductMetadata;
+            };
+        };
+        /**
+         * Definition of the built-in test products.
          */
         const testProducts: {
             /**
@@ -5182,6 +5220,56 @@ declare namespace CdvPurchase {
          * List of test products definitions as an array.
          */
         const testProductsArray: IRegisterProduct[];
+        /**
+         * Register a custom test product that can be used during development.
+         *
+         * This function allows developers to create custom test products for development
+         * and testing purposes. These products will be available in the Test platform
+         * alongside the standard test products.
+         *
+         * @param config - Configuration for the test product
+         * @returns The registered product configuration
+         *
+         * @example
+         * ```typescript
+         * // Register a custom consumable product
+         * CdvPurchase.Test.registerTestProduct({
+         *   id: 'my-consumable',
+         *   type: CdvPurchase.ProductType.CONSUMABLE,
+         *   title: 'My Custom Consumable',
+         *   description: 'A custom test consumable product',
+         *   pricing: {
+         *     price: '$2.99',
+         *     currency: 'USD',
+         *     priceMicros: 2990000
+         *   }
+         * });
+         *
+         * // Later register it with the store
+         * store.register([{
+         *   id: 'my-consumable',
+         *   type: CdvPurchase.ProductType.CONSUMABLE,
+         *   platform: CdvPurchase.Platform.TEST
+         * }]);
+         *
+         * // Note that this can be done in a single step:
+         * store.register([{
+         *   id: 'my-custom-product',
+         *   type: CdvPurchase.ProductType.CONSUMABLE,
+         *   platform: CdvPurchase.Platform.TEST,
+         *   title: '...',
+         *   description: 'A custom test consumable product',
+         *   pricing: {
+         *     price: '$2.99',
+         *     currency: 'USD',
+         *     priceMicros: 2990000
+         *   }
+         * }]);
+         * ```
+         */
+        function registerTestProduct(config: IRegisterTestProduct): IRegisterProduct & {
+            customMetadata?: TestProductMetadata;
+        };
         /**
          * Initialize a test product.
          *

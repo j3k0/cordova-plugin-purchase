@@ -41,17 +41,23 @@ namespace CdvPurchase {
                 return this.list.find(rp => rp.platform === platform && rp.id === id);
             }
 
-            add(product: IRegisterProduct | IRegisterProduct[]): IError[] {
+            add(product: IRegisterProduct | Test.IRegisterTestProduct | (IRegisterProduct | Test.IRegisterTestProduct)[]): IError[] {
                 const errors: IError[] = [];
                 const products = Array.isArray(product) ? product : [product];
                 const newProducts = products.filter(p => !this.find(p.platform, p.id));
                 for (const p of newProducts) {
-                    if (isValidRegisteredProduct(p))
+                    if (isValidRegisteredProduct(p)) {
+                        // This is a custom test product
+                        if (p.platform === Platform.TEST && !Test.testProductsArray.some(tp => tp.id === p.id)) {
+                            Test.registerTestProduct(p);
+                        }
                         this.list.push(p);
-                    else
+                    }
+                    else {
                         errors.push(storeError(ErrorCode.LOAD,
                             'Invalid parameter to "register", expected "id", "type" and "platform". '
                             + 'Got: ' + JSON.stringify(p), null, null));
+                    }
                 }
                 return errors;
             }
