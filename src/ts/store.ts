@@ -236,11 +236,23 @@ namespace CdvPurchase {
                 log: this.log,
             }).launch();
             this.expiryMonitor = new Internal.ExpiryMonitor({
-                // get localReceipts() { return store.localReceipts; },
+                get localReceipts() { 
+                    // Only use local receipts if there's no validator configured
+                    return store.validator ? [] : store.localReceipts; 
+                },
                 get verifiedReceipts() { return store.verifiedReceipts; },
-                // onTransactionExpired(transaction) {
-                // store.approvedCallbacks.trigger(transaction);
-                // },
+                onTransactionExpired(transaction) {
+                    // When a local transaction expires, refresh the purchases
+                    store.log.debug(`Local transaction expired (${transaction.transactionId}), refreshing purchases`);
+                    if (transaction.platform === Platform.GOOGLE_PLAY) {
+                        const adapter = store.adapters.findReady(Platform.GOOGLE_PLAY);
+                        if (adapter) {
+                            adapter.getPurchases().then(error => {
+                                if (error) store.log.warn('Failed to refresh purchases: ' + error.message);
+                            });
+                        }
+                    }
+                },
                 onVerifiedPurchaseExpired(verifiedPurchase, receipt) {
                     store.verify(receipt.sourceReceipt);
                 },

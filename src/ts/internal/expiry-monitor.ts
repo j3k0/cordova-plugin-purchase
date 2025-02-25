@@ -6,13 +6,13 @@ namespace CdvPurchase {
     export interface ExpiryMonitorController {
 
       verifiedReceipts: VerifiedReceipt[];
-      // localReceipts: Receipt[];
+      localReceipts: Receipt[];
 
       /** Called when a verified purchase expires */
       onVerifiedPurchaseExpired(verifiedPurchase: VerifiedPurchase, receipt: VerifiedReceipt): void;
 
       /** Called when a transaction expires */
-      // onTransactionExpired(transaction: Transaction): void;
+      onTransactionExpired(transaction: Transaction): void;
     }
 
     /**
@@ -56,14 +56,14 @@ namespace CdvPurchase {
       } = {};
 
       /** Track active local transactions */
-      // activeTransactions: {
-      //   [transactionId: string]: true;
-      // } = {};
+      activeTransactions: {
+        [transactionId: string]: true;
+      } = {};
 
       /** Track notified local transactions */
-      // notifiedTransactions: {
-      //   [transactionId: string]: true;
-      // } = {};
+      notifiedTransactions: {
+        [transactionId: string]: true;
+      } = {};
 
       constructor(controller: ExpiryMonitorController) {
         this.controller = controller;
@@ -90,21 +90,22 @@ namespace CdvPurchase {
             }
           }
           // Check for local purchases expiry
-          // for (const receipt of this.controller.localReceipts) {
-          //   for (const transaction of receipt.transactions) {
-          //     if (transaction.expirationDate) {
-          //       const expirationDate = +transaction.expirationDate + ExpiryMonitor.GRACE_PERIOD_MS;
-          //       const transactionId = transaction.transactionId ?? `${expirationDate}`;
-          //       if (expirationDate > now) {
-          //         this.activeTransactions[transactionId] = true;
-          //       }
-          //       if (expirationDate < now && this.activeTransactions[transactionId] && !this.notifiedTransactions[transactionId]) {
-          //         this.notifiedTransactions[transactionId] = true;
-          //         this.controller.onTransactionExpired(transaction);
-          //       }
-          //     }
-          //   }
-          // }
+          for (const receipt of this.controller.localReceipts) {
+            for (const transaction of receipt.transactions) {
+              if (transaction.expirationDate) {
+                const gracePeriod = ExpiryMonitor.GRACE_PERIOD_MS[receipt.platform] ?? ExpiryMonitor.GRACE_PERIOD_MS.DEFAULT;
+                const expirationDate = +transaction.expirationDate + gracePeriod;
+                const transactionId = transaction.transactionId ?? `${expirationDate}`;
+                if (expirationDate > now) {
+                  this.activeTransactions[transactionId] = true;
+                }
+                if (expirationDate < now && this.activeTransactions[transactionId] && !this.notifiedTransactions[transactionId]) {
+                  this.notifiedTransactions[transactionId] = true;
+                  this.controller.onTransactionExpired(transaction);
+                }
+              }
+            }
+          }
         }, ExpiryMonitor.INTERVAL_MS);
       }
     }
