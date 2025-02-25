@@ -312,10 +312,9 @@ namespace CdvPurchase {
                             if (firstProductId) {
                                 const product = this._products.getProduct(firstProductId);
                                 if (product && product.type === ProductType.PAID_SUBSCRIPTION) {
-                                    // For subscriptions, explicitly ensure expirationDate is set when autoRenewing is false
-                                    // and the purchase state is PURCHASED (i.e., valid but not renewing)
+                                    // Always update the expirationDate if expiryTimeMillis is available
+                                    // regardless of autoRenewing status
                                     if (purchase.getPurchaseState === Bridge.PurchaseState.PURCHASED && 
-                                        purchase.autoRenewing === false && 
                                         purchase.expiryTimeMillis) {
                                         const expiryTime = parseInt(purchase.expiryTimeMillis, 10);
                                         if (!isNaN(expiryTime)) {
@@ -323,7 +322,7 @@ namespace CdvPurchase {
                                             firstTransaction.expirationDate = new Date(expiryTime);
                                             
                                             // Log the expiration update for debugging
-                                            this.log.debug(`Updated expirationDate for ${firstProductId} to ${firstTransaction.expirationDate}`);
+                                            this.log.debug(`Updated expirationDate for ${firstProductId} to ${firstTransaction.expirationDate} (autoRenewing: ${purchase.autoRenewing})`);
                                         }
                                     }
                                 }
