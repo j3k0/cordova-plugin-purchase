@@ -236,15 +236,24 @@ namespace CdvPurchase {
                 log: this.log,
             }).launch();
             this.expiryMonitor = new Internal.ExpiryMonitor({
-                // get localReceipts() { return store.localReceipts; },
+                get localReceipts() { 
+                    // Only use local receipts if there's no validator configured
+                    return store.validator ? [] : store.localReceipts; 
+                },
                 get verifiedReceipts() { return store.verifiedReceipts; },
-                // onTransactionExpired(transaction) {
-                // store.approvedCallbacks.trigger(transaction);
-                // },
+                onTransactionExpired(transaction) {
+                    store.log.debug(`Local transaction expired (${transaction.transactionId}), refreshing purchases`);
+                    if (!store.validator) {
+                        const productId = transaction.products[0]?.id;
+                        if (productId && !store.owned(productId)) {
+                            store.updatedReceiptsCallbacks.trigger(transaction.parentReceipt, 'expiry_monitor_transaction_expired');
+                        }
+                    }
+                },
                 onVerifiedPurchaseExpired(verifiedPurchase, receipt) {
                     store.verify(receipt.sourceReceipt);
                 },
-            });
+            }, this.log);
             this.expiryMonitor.launch();
         }
 

@@ -143,7 +143,7 @@ namespace CdvPurchase {
                 getPurchaseState: PurchaseState;
 
                 /** Whether the subscription renews automatically. */
-                autoRenewing: false;
+                autoRenewing: boolean;
 
                 /** String containing the signature of the purchase data that was signed with the private key of the developer. */
                 signature: string;
@@ -156,6 +156,9 @@ namespace CdvPurchase {
 
                 /** Obfuscated profile id specified at purchase - used when a single user can have multiple profiles */
                 profileId: string;
+
+                /** For subscriptions, timestamp of expiration in milliseconds */
+                expiryTimeMillis?: string;
             }
 
             export enum PurchaseState {
