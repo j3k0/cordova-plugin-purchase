@@ -252,8 +252,22 @@ namespace CdvPurchase {
          *       type: ProductType.CONSUMABLE,
          *       platform: Platform.BRAINTREE,
          *   }]);
+         * 
+         * // Can also be used in development to register test products
+         * store.register([{
+         *   id: 'my-custom-product',
+         *   type: CdvPurchase.ProductType.CONSUMABLE,
+         *   platform: CdvPurchase.Platform.TEST,
+         *   title: '...',
+         *   description: 'A custom test consumable product',
+         *   pricing: {
+         *     price: '$2.99', 
+         *     currency: 'USD',
+         *     priceMicros: 2990000
+         *   }
+         * }]);
          */
-        register(product: IRegisterProduct | IRegisterProduct[]) {
+        register(product: IRegisterProduct | Test.IRegisterTestProduct | (IRegisterProduct | Test.IRegisterTestProduct)[]) {
             const errors = this.registeredProducts.add(product);
             errors.forEach(error => {
                 store.errorCallbacks.trigger(error, 'register_error');

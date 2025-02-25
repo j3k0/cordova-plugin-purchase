@@ -73,9 +73,14 @@ namespace CdvPurchase {
             async loadProducts(products: IRegisterProduct[]): Promise<(Product | IError)[]> {
 
                 return products.map(registerProduct => {
-                    if (!testProductsArray.find(p => p.id === registerProduct.id && p.type === registerProduct.type)) {
+                    // Check if the product is a custom test product or a built-in test product
+                    const isCustomProduct = !!customTestProducts[registerProduct.id];
+                    const isBuiltInProduct = !!testProductsArray.find(p => p.id === registerProduct.id && p.type === registerProduct.type);
+                    
+                    if (!isCustomProduct && !isBuiltInProduct) {
                         return testStoreError(ErrorCode.PRODUCT_NOT_AVAILABLE, 'This product is not available', registerProduct.id);
                     }
+                    
                     // Ensure it's not been loaded already.
                     const existingProduct = this.products.find(p => p.id === registerProduct.id);
                     if (existingProduct) return existingProduct;
