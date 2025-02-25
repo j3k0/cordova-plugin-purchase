@@ -48,6 +48,7 @@ namespace CdvPurchase {
                 if (typeof purchase.acknowledged !== 'undefined') this.isAcknowledged = purchase.acknowledged;
                 if (typeof purchase.consumed !== 'undefined') this.isConsumed = purchase.consumed;
                 if (typeof purchase.autoRenewing !== 'undefined') this.renewalIntent = purchase.autoRenewing ? RenewalIntent.RENEW : RenewalIntent.LAPSE;
+                if (typeof purchase.quantity !== 'undefined') this.quantity = purchase.quantity;
                 
                 // Handle expiryTimeMillis for subscriptions
                 if (purchase.expiryTimeMillis) {

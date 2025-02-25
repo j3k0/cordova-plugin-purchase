@@ -21,6 +21,7 @@ The Cordova-Plugin-Purchase plugin is designed to be easy to use and integrate i
 |  | AppStore (iOS / macOS) | Google Play | Braintree (iOS / Android) |
 |--|--|--|--|
 | consumables | ✅ | ✅ | ✅ |
+| multi-quantity consumables |  | ✅ |  |
 | non consumables | ✅ | ✅ |  |
 | subscriptions | ✅ | ✅ |  |
 | restore purchases | ✅ | ✅ | ✅ |
