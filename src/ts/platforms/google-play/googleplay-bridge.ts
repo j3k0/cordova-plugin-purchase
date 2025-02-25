@@ -156,6 +156,9 @@ namespace CdvPurchase {
 
                 /** Obfuscated profile id specified at purchase - used when a single user can have multiple profiles */
                 profileId: string;
+
+                /** For subscriptions, timestamp of expiration in milliseconds */
+                expiryTimeMillis?: string;
             }
 
             export enum PurchaseState {

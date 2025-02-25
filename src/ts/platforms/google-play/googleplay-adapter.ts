@@ -48,6 +48,15 @@ namespace CdvPurchase {
                 if (typeof purchase.acknowledged !== 'undefined') this.isAcknowledged = purchase.acknowledged;
                 if (typeof purchase.consumed !== 'undefined') this.isConsumed = purchase.consumed;
                 if (typeof purchase.autoRenewing !== 'undefined') this.renewalIntent = purchase.autoRenewing ? RenewalIntent.RENEW : RenewalIntent.LAPSE;
+                
+                // Handle expiryTimeMillis for subscriptions
+                if (purchase.expiryTimeMillis) {
+                    const expiryTime = parseInt(purchase.expiryTimeMillis, 10);
+                    if (!isNaN(expiryTime)) {
+                        this.expirationDate = new Date(expiryTime);
+                    }
+                }
+                
                 this.state = Transaction.toState(fromConstructor ?? false, purchase.getPurchaseState, this.isAcknowledged ?? false, this.isConsumed ?? false);
             }
         }
@@ -295,6 +304,32 @@ namespace CdvPurchase {
                 purchases.forEach(purchase => {
                     const existingReceipt = this.receipts.find(r => r.purchaseToken === purchase.purchaseToken);
                     if (existingReceipt) {
+                        // Before refreshing, check if this is a subscription and update expirationDate
+                        // based on autoRenewing status - this ensures proper "owned" flag status
+                        const firstTransaction = existingReceipt.transactions[0] as Transaction;
+                        if (firstTransaction) {
+                            const firstProductId = firstTransaction.products[0]?.id;
+                            if (firstProductId) {
+                                const product = this._products.getProduct(firstProductId);
+                                if (product && product.type === ProductType.PAID_SUBSCRIPTION) {
+                                    // For subscriptions, explicitly ensure expirationDate is set when autoRenewing is false
+                                    // and the purchase state is PURCHASED (i.e., valid but not renewing)
+                                    if (purchase.getPurchaseState === Bridge.PurchaseState.PURCHASED && 
+                                        purchase.autoRenewing === false && 
+                                        purchase.expiryTimeMillis) {
+                                        const expiryTime = parseInt(purchase.expiryTimeMillis, 10);
+                                        if (!isNaN(expiryTime)) {
+                                            // Set the transaction's expirationDate using the expiryTimeMillis from Google Play
+                                            firstTransaction.expirationDate = new Date(expiryTime);
+                                            
+                                            // Log the expiration update for debugging
+                                            this.log.debug(`Updated expirationDate for ${firstProductId} to ${firstTransaction.expirationDate}`);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
                         existingReceipt.refreshPurchase(purchase);
                         this.context.listener.receiptsUpdated(Platform.GOOGLE_PLAY, [existingReceipt]);
                     }
