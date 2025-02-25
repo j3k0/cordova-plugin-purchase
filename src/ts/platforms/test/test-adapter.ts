@@ -88,7 +88,8 @@ namespace CdvPurchase {
                     // Enable the active subscription if loaded by the user.
                     if (registerProduct.id === testProducts.PAID_SUBSCRIPTION_ACTIVE.id) {
                         setTimeout(() => {
-                            this.reportActiveSubscription();
+                            this.reportActiveSubscription(registerProduct.id, 
+                                testProducts.PAID_SUBSCRIPTION_ACTIVE.extra.offerId);
                         }, 500); // it'll get reported in 500ms
                     }
 
@@ -128,6 +129,15 @@ namespace CdvPurchase {
                 if (offer.productType === CdvPurchase.ProductType.PAID_SUBSCRIPTION) {
                     tr.expirationDate = new Date(+new Date() + 604800000);
                     tr.renewalIntent = RenewalIntent.RENEW;
+                    
+                    // If this is a subscription product, start the auto-renewal process with the same productId
+                    const isAutoRenewingProduct = offer.productId === testProducts.PAID_SUBSCRIPTION.id || 
+                                                  offer.productId === testProducts.PAID_SUBSCRIPTION_ACTIVE.id;
+                    if (isAutoRenewingProduct) {
+                        setTimeout(() => {
+                            this.reportActiveSubscription(offer.productId, offer.id);
+                        }, 500);
+                    }
                 }
                 updateVerifiedPurchases(tr);
                 this.receipts.push(receipt);
@@ -216,10 +226,13 @@ namespace CdvPurchase {
                 return;
             }
 
-            private reportActiveSubscription() {
+            private reportActiveSubscription(productId = testProducts.PAID_SUBSCRIPTION_ACTIVE.id, 
+                                       offerId = testProducts.PAID_SUBSCRIPTION_ACTIVE.extra.offerId) {
 
-                if (this.receipts.find(r => r.transactions[0].transactionId === transactionId(1))) {
-                    // already reported
+                const transactionIdPrefix = 'test-active-' + productId + '-transaction-';
+
+                if (this.receipts.find(r => r.transactions.some(t => t.transactionId.startsWith(transactionIdPrefix)))) {
+                    // already reported a subscription for this product
                     return;
                 }
 
@@ -229,8 +242,8 @@ namespace CdvPurchase {
                 const makeTransaction = (n: number) => {
                     const tr = new Transaction(platform, receipt, this.context.apiDecorators);
                     tr.products = [{
-                        id: testProducts.PAID_SUBSCRIPTION_ACTIVE.id,
-                        offerId: testProducts.PAID_SUBSCRIPTION_ACTIVE.extra.offerId,
+                        id: productId,
+                        offerId: offerId,
                     }];
                     tr.state = TransactionState.APPROVED;
                     tr.transactionId = transactionId(n);
@@ -248,12 +261,12 @@ namespace CdvPurchase {
                 this.context.listener.receiptsUpdated(Platform.TEST, [receipt]);
 
                 function transactionId(n: number) {
-                    return 'test-active-subscription-transaction-' + n;
+                    return transactionIdPrefix + n;
                 }
 
                 let transactionNumber = 1;
                 setInterval(() => {
-                    this.log.info('auto-renewing the mock subscription')
+                    this.log.info(`auto-renewing the mock subscription for ${productId}`)
                     transactionNumber += 1;
                     receipt.transactions.push(makeTransaction(transactionNumber));
                     this.context.listener.receiptsUpdated(Platform.TEST, [receipt]);

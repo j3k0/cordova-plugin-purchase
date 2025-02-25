@@ -694,8 +694,11 @@ declare namespace CdvPurchase {
         /** Data and callbacks to interface with the ExpiryMonitor */
         interface ExpiryMonitorController {
             verifiedReceipts: VerifiedReceipt[];
+            localReceipts: Receipt[];
             /** Called when a verified purchase expires */
             onVerifiedPurchaseExpired(verifiedPurchase: VerifiedPurchase, receipt: VerifiedReceipt): void;
+            /** Called when a transaction expires */
+            onTransactionExpired(transaction: Transaction): void;
         }
         /**
          * Send a notification when a subscription expires.
@@ -720,6 +723,8 @@ declare namespace CdvPurchase {
             controller: ExpiryMonitorController;
             /** reference to the function that runs at a given interval */
             interval?: number;
+            /** Logger */
+            log: Logger;
             /** Track active verified purchases */
             activePurchases: {
                 [transactionId: string]: true;
@@ -729,8 +734,15 @@ declare namespace CdvPurchase {
                 [transactionId: string]: true;
             };
             /** Track active local transactions */
+            activeTransactions: {
+                [transactionId: string]: true;
+            };
             /** Track notified local transactions */
-            constructor(controller: ExpiryMonitorController);
+            notifiedTransactions: {
+                [transactionId: string]: true;
+            };
+            constructor(controller: ExpiryMonitorController, log: Logger);
+            stop(): void;
             launch(): void;
         }
     }
@@ -744,10 +756,23 @@ declare namespace CdvPurchase {
  *
  * When you see, for example `ProductType.PAID_SUBSCRIPTION`, it refers to `CdvPurchase.ProductType.PAID_SUBSCRIPTION`.
  *
- * In the files that interact with the plugin, I recommend creating those shortcuts (and more if needed):
+ * In your code, you should access members directly through the CdvPurchase namespace:
  *
  * ```ts
- * const {store, ProductType, Platform, LogLevel} = CdvPurchase;
+ * // Recommended approach (works reliably with minification)
+ * CdvPurchase.store.initialize();
+ * CdvPurchase.store.register({
+ *   id: 'my-product',
+ *   type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
+ *   platform: CdvPurchase.Platform.APPLE_APPSTORE
+ * });
+ * ```
+ *
+ * Note: Using destructuring with the namespace may cause issues with minification tools:
+ *
+ * ```ts
+ * // NOT recommended - may cause issues with minification tools like Terser
+ * const { store, ProductType, Platform, LogLevel } = CdvPurchase;
  * ```
  */
 declare namespace CdvPurchase {
@@ -4206,6 +4231,7 @@ declare namespace CdvPurchase {
              * Refresh the value in the transaction based on the native purchase update
              */
             refresh(purchase: Bridge.Purchase, fromConstructor?: boolean): void;
+            removed(): void;
         }
         class Receipt extends CdvPurchase.Receipt {
             /** Token that uniquely identifies a purchase for a given item and user pair. */
@@ -4216,6 +4242,7 @@ declare namespace CdvPurchase {
             constructor(purchase: Bridge.Purchase, decorator: Internal.TransactionDecorator & Internal.ReceiptDecorator);
             /** Refresh the content of the purchase based on the native BridgePurchase */
             refreshPurchase(purchase: Bridge.Purchase): void;
+            removed(): void;
         }
         class Adapter implements CdvPurchase.Adapter {
             /** Adapter identifier */
@@ -4259,10 +4286,29 @@ declare namespace CdvPurchase {
             finish(transaction: CdvPurchase.Transaction): Promise<IError | undefined>;
             /** Called by the bridge when a purchase has been consumed */
             onPurchaseConsumed(purchase: Bridge.Purchase): void;
-            /** Called when the platform reports update for some purchases */
-            onPurchasesUpdated(purchases: Bridge.Purchase[]): void;
-            /** Called when the platform reports some purchases */
+            /** Schedule to refresh purchases for subscriptions that don't have expiration dates */
+            private refreshSchedule;
+            /** Refresh intervals (in milliseconds) */
+            private static REFRESH_INTERVALS;
+            /**
+             * Schedule a purchase refresh for a subscription without expiration date
+             */
+            private scheduleRefreshForSubscription;
+            /**
+             * Detect subscriptions that need scheduled refreshes
+             */
+            private scheduleRefreshesForSubscriptions;
+            /**
+             * Called when the platform reports some purchases
+             */
             onSetPurchases(purchases: Bridge.Purchase[]): void;
+            /**
+             * Called when the platform reports updates for some purchases
+             *
+             * Notice that purchases can be removed from the array, we should handle that so they stop
+             * being "owned" by the user.
+             */
+            onPurchasesUpdated(purchases: Bridge.Purchase[]): void;
             onPriceChangeConfirmationResult(result: "OK" | "UserCanceled" | "UnknownProduct"): void;
             /** Refresh purchases from GooglePlay */
             getPurchases(): Promise<IError | undefined>;
@@ -4450,7 +4496,7 @@ declare namespace CdvPurchase {
                 /** One of BridgePurchaseState indicating the state of the purchase. */
                 getPurchaseState: PurchaseState;
                 /** Whether the subscription renews automatically. */
-                autoRenewing: false;
+                autoRenewing: boolean;
                 /** String containing the signature of the purchase data that was signed with the private key of the developer. */
                 signature: string;
                 /** String in JSON format that contains details about the purchase order. */
@@ -4459,6 +4505,8 @@ declare namespace CdvPurchase {
                 accountId: string;
                 /** Obfuscated profile id specified at purchase - used when a single user can have multiple profiles */
                 profileId: string;
+                /** For subscriptions, timestamp of expiration in milliseconds */
+                expiryTimeMillis?: string;
             }
             enum PurchaseState {
                 UNSPECIFIED_STATE = 0,

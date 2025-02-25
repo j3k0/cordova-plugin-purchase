@@ -1291,24 +1291,29 @@ var CdvPurchase;
          * However this is useful, so let's do just that.
          */
         class ExpiryMonitor {
-            /** Track active local transactions */
-            // activeTransactions: {
-            //   [transactionId: string]: true;
-            // } = {};
-            /** Track notified local transactions */
-            // notifiedTransactions: {
-            //   [transactionId: string]: true;
-            // } = {};
-            constructor(controller) {
+            constructor(controller, log) {
                 /** Track active verified purchases */
                 this.activePurchases = {};
                 /** Track notified verified purchases */
                 this.notifiedPurchases = {};
+                /** Track active local transactions */
+                this.activeTransactions = {};
+                /** Track notified local transactions */
+                this.notifiedTransactions = {};
                 this.controller = controller;
+                this.log = log.child('ExpiryMonitor');
+            }
+            stop() {
+                if (this.interval) {
+                    clearInterval(this.interval);
+                    this.interval = undefined;
+                }
             }
             launch() {
+                this.log.info('Starting expiry monitoring');
+                this.stop();
                 this.interval = setInterval(() => {
-                    var _a, _b;
+                    var _a, _b, _c, _d, _e, _f;
                     const now = +new Date();
                     // Check for verified purchases expiry
                     for (const receipt of this.controller.verifiedReceipts) {
@@ -1321,6 +1326,7 @@ var CdvPurchase;
                                     this.activePurchases[transactionId] = true;
                                 }
                                 if (expiryDate < now && this.activePurchases[transactionId] && !this.notifiedPurchases[transactionId]) {
+                                    this.log.info(`Verified purchase expired: ${transactionId}`);
                                     this.notifiedPurchases[transactionId] = true;
                                     this.controller.onVerifiedPurchaseExpired(purchase, receipt);
                                 }
@@ -1328,21 +1334,35 @@ var CdvPurchase;
                         }
                     }
                     // Check for local purchases expiry
-                    // for (const receipt of this.controller.localReceipts) {
-                    //   for (const transaction of receipt.transactions) {
-                    //     if (transaction.expirationDate) {
-                    //       const expirationDate = +transaction.expirationDate + ExpiryMonitor.GRACE_PERIOD_MS;
-                    //       const transactionId = transaction.transactionId ?? `${expirationDate}`;
-                    //       if (expirationDate > now) {
-                    //         this.activeTransactions[transactionId] = true;
-                    //       }
-                    //       if (expirationDate < now && this.activeTransactions[transactionId] && !this.notifiedTransactions[transactionId]) {
-                    //         this.notifiedTransactions[transactionId] = true;
-                    //         this.controller.onTransactionExpired(transaction);
-                    //       }
-                    //     }
-                    //   }
-                    // }
+                    for (const receipt of this.controller.localReceipts) {
+                        for (const transaction of receipt.transactions) {
+                            // Handle Google Play subscriptions without expiration date
+                            if (receipt.platform === 'android-playstore' && !transaction.expirationDate) {
+                                const googleTransaction = transaction;
+                                if ((_c = googleTransaction.nativePurchase) === null || _c === void 0 ? void 0 : _c.autoRenewing) {
+                                    const transactionId = (_d = transaction.transactionId) !== null && _d !== void 0 ? _d : `${now}`;
+                                    // Mark auto-renewing subscriptions as active
+                                    if (!this.activeTransactions[transactionId]) {
+                                        this.log.debug(`Tracking auto-renewing Google Play subscription without expiration: ${transactionId}`);
+                                        this.activeTransactions[transactionId] = true;
+                                    }
+                                }
+                            }
+                            if (transaction.expirationDate) {
+                                const gracePeriod = (_e = ExpiryMonitor.GRACE_PERIOD_MS[receipt.platform]) !== null && _e !== void 0 ? _e : ExpiryMonitor.GRACE_PERIOD_MS.DEFAULT;
+                                const expirationDate = +transaction.expirationDate + gracePeriod;
+                                const transactionId = (_f = transaction.transactionId) !== null && _f !== void 0 ? _f : `${expirationDate}`;
+                                if (expirationDate > now) {
+                                    this.activeTransactions[transactionId] = true;
+                                }
+                                if (expirationDate < now && this.activeTransactions[transactionId] && !this.notifiedTransactions[transactionId]) {
+                                    this.log.info(`Local transaction expired: ${transactionId}`);
+                                    this.notifiedTransactions[transactionId] = true;
+                                    this.controller.onTransactionExpired(transaction);
+                                }
+                            }
+                        }
+                    }
                 }, ExpiryMonitor.INTERVAL_MS);
             }
         }
@@ -1384,10 +1404,23 @@ var CdvPurchase;
  *
  * When you see, for example `ProductType.PAID_SUBSCRIPTION`, it refers to `CdvPurchase.ProductType.PAID_SUBSCRIPTION`.
  *
- * In the files that interact with the plugin, I recommend creating those shortcuts (and more if needed):
+ * In your code, you should access members directly through the CdvPurchase namespace:
  *
  * ```ts
- * const {store, ProductType, Platform, LogLevel} = CdvPurchase;
+ * // Recommended approach (works reliably with minification)
+ * CdvPurchase.store.initialize();
+ * CdvPurchase.store.register({
+ *   id: 'my-product',
+ *   type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
+ *   platform: CdvPurchase.Platform.APPLE_APPSTORE
+ * });
+ * ```
+ *
+ * Note: Using destructuring with the namespace may cause issues with minification tools:
+ *
+ * ```ts
+ * // NOT recommended - may cause issues with minification tools like Terser
+ * const { store, ProductType, Platform, LogLevel } = CdvPurchase;
  * ```
  */
 var CdvPurchase;
@@ -1496,15 +1529,25 @@ var CdvPurchase;
                 log: this.log,
             }).launch();
             this.expiryMonitor = new CdvPurchase.Internal.ExpiryMonitor({
-                // get localReceipts() { return store.localReceipts; },
+                get localReceipts() {
+                    // Only use local receipts if there's no validator configured
+                    return store.validator ? [] : store.localReceipts;
+                },
                 get verifiedReceipts() { return store.verifiedReceipts; },
-                // onTransactionExpired(transaction) {
-                // store.approvedCallbacks.trigger(transaction);
-                // },
+                onTransactionExpired(transaction) {
+                    var _a;
+                    store.log.debug(`Local transaction expired (${transaction.transactionId}), refreshing purchases`);
+                    if (!store.validator) {
+                        const productId = (_a = transaction.products[0]) === null || _a === void 0 ? void 0 : _a.id;
+                        if (productId && !store.owned(productId)) {
+                            store.updatedReceiptsCallbacks.trigger(transaction.parentReceipt, 'expiry_monitor_transaction_expired');
+                        }
+                    }
+                },
                 onVerifiedPurchaseExpired(verifiedPurchase, receipt) {
                     store.verify(receipt.sourceReceipt);
                 },
-            });
+            }, this.log);
             this.expiryMonitor.launch();
         }
         /**
@@ -4879,7 +4922,23 @@ var CdvPurchase;
                     this.isConsumed = purchase.consumed;
                 if (typeof purchase.autoRenewing !== 'undefined')
                     this.renewalIntent = purchase.autoRenewing ? CdvPurchase.RenewalIntent.RENEW : CdvPurchase.RenewalIntent.LAPSE;
+                // Handle expiryTimeMillis for subscriptions
+                if (purchase.expiryTimeMillis) {
+                    const expiryTime = parseInt(purchase.expiryTimeMillis, 10);
+                    if (!isNaN(expiryTime)) {
+                        this.expirationDate = new Date(expiryTime);
+                    }
+                }
                 this.state = Transaction.toState(fromConstructor !== null && fromConstructor !== void 0 ? fromConstructor : false, purchase.getPurchaseState, (_a = this.isAcknowledged) !== null && _a !== void 0 ? _a : false, (_b = this.isConsumed) !== null && _b !== void 0 ? _b : false);
+            }
+            removed() {
+                if (this.renewalIntent) {
+                    this.expirationDate = new Date(Date.now() - CdvPurchase.Internal.ExpiryMonitor.GRACE_PERIOD_MS[CdvPurchase.Platform.GOOGLE_PLAY]);
+                }
+                else {
+                    this.isConsumed = true;
+                }
+                this.state = CdvPurchase.TransactionState.CANCELLED;
             }
         }
         GooglePlay.Transaction = Transaction;
@@ -4896,6 +4955,9 @@ var CdvPurchase;
                 var _a;
                 (_a = this.transactions[0]) === null || _a === void 0 ? void 0 : _a.refresh(purchase);
                 this.orderId = purchase.orderId;
+            }
+            removed() {
+                this.transactions.forEach(t => t === null || t === void 0 ? void 0 : t.removed());
             }
         }
         GooglePlay.Receipt = Receipt;
@@ -4916,6 +4978,8 @@ var CdvPurchase;
                 /** Used to retry failed commands */
                 this.retry = new CdvPurchase.Internal.Retry();
                 this.autoRefreshIntervalMillis = 0;
+                /** Schedule to refresh purchases for subscriptions that don't have expiration dates */
+                this.refreshSchedule = {};
                 if (Adapter._instance)
                     throw new Error('GooglePlay adapter already initialized');
                 this._products = new GooglePlay.Products(context.apiDecorators);
@@ -5064,13 +5128,107 @@ var CdvPurchase;
                 purchase.consumed = true;
                 this.onPurchasesUpdated([purchase]);
             }
-            /** Called when the platform reports update for some purchases */
+            /**
+             * Schedule a purchase refresh for a subscription without expiration date
+             */
+            scheduleRefreshForSubscription(purchase) {
+                if (!purchase.purchaseToken)
+                    return;
+                const schedule = this.refreshSchedule[purchase.purchaseToken] || [];
+                if (schedule.length === 0) {
+                    this.refreshSchedule[purchase.purchaseToken] = schedule;
+                }
+                // Determine refresh interval based on sandbox status and auto-renewing flag
+                let refreshIntervals = [Adapter.REFRESH_INTERVALS.SANDBOX, Adapter.REFRESH_INTERVALS.PRODUCTION];
+                refreshIntervals.forEach(refreshInterval => {
+                    const refreshTime = purchase.purchaseTime + refreshInterval;
+                    if (schedule.find(s => s.refreshTime === refreshTime) || refreshTime < Date.now()) {
+                        return;
+                    }
+                    this.log.debug(`Scheduling refresh for purchase token ${purchase.purchaseToken} at ${new Date(refreshTime).toISOString()}`);
+                    // Schedule the refresh
+                    const timeoutId = window.setTimeout(() => {
+                        this.log.debug(`Executing scheduled refresh for purchase token ${purchase.purchaseToken}`);
+                        delete this.refreshSchedule[purchase.purchaseToken];
+                        this.getPurchases().catch(err => {
+                            this.log.warn(`Failed scheduled refresh: ${err}`);
+                        });
+                    }, refreshTime - Date.now());
+                    // Store the scheduled refresh
+                    schedule.push({
+                        timeoutId: timeoutId,
+                        refreshTime
+                    });
+                });
+            }
+            /**
+             * Detect subscriptions that need scheduled refreshes
+             */
+            scheduleRefreshesForSubscriptions(purchases) {
+                for (const purchase of purchases) {
+                    // Skip if not auto-renewing
+                    if (purchase.autoRenewing !== false)
+                        continue;
+                    const productId = purchase.productIds[0];
+                    const product = productId ? this._products.getProduct(productId) : undefined;
+                    if (!product || product.type !== CdvPurchase.ProductType.PAID_SUBSCRIPTION)
+                        continue;
+                    if (!purchase.expiryTimeMillis) {
+                        this.scheduleRefreshForSubscription(purchase);
+                    }
+                }
+            }
+            /**
+             * Called when the platform reports some purchases
+             */
+            onSetPurchases(purchases) {
+                this.log.debug("onSetPurchases: " + JSON.stringify(purchases));
+                this.onPurchasesUpdated(purchases);
+                this.context.listener.receiptsReady(CdvPurchase.Platform.GOOGLE_PLAY);
+                // Schedule refreshes for subscriptions without expiration dates
+                this.scheduleRefreshesForSubscriptions(purchases);
+            }
+            /**
+             * Called when the platform reports updates for some purchases
+             *
+             * Notice that purchases can be removed from the array, we should handle that so they stop
+             * being "owned" by the user.
+             */
             onPurchasesUpdated(purchases) {
                 this.log.debug("onPurchaseUpdated: " + purchases.map(p => p.orderId).join(', '));
                 // GooglePlay generates one receipt for each purchase
+                const removedReceipts = this.receipts.filter(r => !purchases.find(p => p.purchaseToken === r.purchaseToken));
+                if (removedReceipts.length > 0) {
+                    this.log.debug("Removed purchases: " + removedReceipts.map(r => r.purchaseToken).join(', '));
+                    removedReceipts.forEach(receipt => receipt.removed());
+                }
                 purchases.forEach(purchase => {
+                    var _a;
                     const existingReceipt = this.receipts.find(r => r.purchaseToken === purchase.purchaseToken);
                     if (existingReceipt) {
+                        // Before refreshing, check if this is a subscription and update expirationDate
+                        // based on autoRenewing status - this ensures proper "owned" flag status
+                        const firstTransaction = existingReceipt.transactions[0];
+                        if (firstTransaction) {
+                            const firstProductId = (_a = firstTransaction.products[0]) === null || _a === void 0 ? void 0 : _a.id;
+                            if (firstProductId) {
+                                const product = this._products.getProduct(firstProductId);
+                                if (product && product.type === CdvPurchase.ProductType.PAID_SUBSCRIPTION) {
+                                    // Always update the expirationDate if expiryTimeMillis is available
+                                    // regardless of autoRenewing status
+                                    if (purchase.getPurchaseState === GooglePlay.Bridge.PurchaseState.PURCHASED &&
+                                        purchase.expiryTimeMillis) {
+                                        const expiryTime = parseInt(purchase.expiryTimeMillis, 10);
+                                        if (!isNaN(expiryTime)) {
+                                            // Set the transaction's expirationDate using the expiryTimeMillis from Google Play
+                                            firstTransaction.expirationDate = new Date(expiryTime);
+                                            // Log the expiration update for debugging
+                                            this.log.debug(`Updated expirationDate for ${firstProductId} to ${firstTransaction.expirationDate} (autoRenewing: ${purchase.autoRenewing})`);
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         existingReceipt.refreshPurchase(purchase);
                         this.context.listener.receiptsUpdated(CdvPurchase.Platform.GOOGLE_PLAY, [existingReceipt]);
                     }
@@ -5087,12 +5245,6 @@ var CdvPurchase;
                         }
                     }
                 });
-            }
-            /** Called when the platform reports some purchases */
-            onSetPurchases(purchases) {
-                this.log.debug("onSetPurchases: " + JSON.stringify(purchases));
-                this.onPurchasesUpdated(purchases);
-                this.context.listener.receiptsReady(CdvPurchase.Platform.GOOGLE_PLAY);
             }
             onPriceChangeConfirmationResult(result) {
             }
@@ -5252,6 +5404,11 @@ var CdvPurchase;
             }
         }
         Adapter.trimProductTitles = true;
+        /** Refresh intervals (in milliseconds) */
+        Adapter.REFRESH_INTERVALS = {
+            SANDBOX: 6 * 60 * 1000,
+            PRODUCTION: 7 * 24 * 60 * 60 * 1000 + 10 * 60 * 1000, // 7 days + 10 minutes for production
+        };
         GooglePlay.Adapter = Adapter;
         function playStoreError(code, message, productId) {
             return CdvPurchase.storeError(code, message, CdvPurchase.Platform.GOOGLE_PLAY, productId);
@@ -5958,7 +6115,7 @@ var CdvPurchase;
                         // Enable the active subscription if loaded by the user.
                         if (registerProduct.id === Test.testProducts.PAID_SUBSCRIPTION_ACTIVE.id) {
                             setTimeout(() => {
-                                this.reportActiveSubscription();
+                                this.reportActiveSubscription(registerProduct.id, Test.testProducts.PAID_SUBSCRIPTION_ACTIVE.extra.offerId);
                             }, 500); // it'll get reported in 500ms
                         }
                         const product = Test.initTestProduct(registerProduct.id, this.context.apiDecorators);
@@ -6001,6 +6158,14 @@ var CdvPurchase;
                     if (offer.productType === CdvPurchase.ProductType.PAID_SUBSCRIPTION) {
                         tr.expirationDate = new Date(+new Date() + 604800000);
                         tr.renewalIntent = CdvPurchase.RenewalIntent.RENEW;
+                        // If this is a subscription product, start the auto-renewal process with the same productId
+                        const isAutoRenewingProduct = offer.productId === Test.testProducts.PAID_SUBSCRIPTION.id ||
+                            offer.productId === Test.testProducts.PAID_SUBSCRIPTION_ACTIVE.id;
+                        if (isAutoRenewingProduct) {
+                            setTimeout(() => {
+                                this.reportActiveSubscription(offer.productId, offer.id);
+                            }, 500);
+                        }
                     }
                     updateVerifiedPurchases(tr);
                     this.receipts.push(receipt);
@@ -6096,9 +6261,10 @@ var CdvPurchase;
                     return;
                 });
             }
-            reportActiveSubscription() {
-                if (this.receipts.find(r => r.transactions[0].transactionId === transactionId(1))) {
-                    // already reported
+            reportActiveSubscription(productId = Test.testProducts.PAID_SUBSCRIPTION_ACTIVE.id, offerId = Test.testProducts.PAID_SUBSCRIPTION_ACTIVE.extra.offerId) {
+                const transactionIdPrefix = 'test-active-' + productId + '-transaction-';
+                if (this.receipts.find(r => r.transactions.some(t => t.transactionId.startsWith(transactionIdPrefix)))) {
+                    // already reported a subscription for this product
                     return;
                 }
                 const RENEWS_EVERY_MS = 2 * 60000; // 2 minutes
@@ -6107,8 +6273,8 @@ var CdvPurchase;
                     var _a, _b;
                     const tr = new CdvPurchase.Transaction(platform, receipt, this.context.apiDecorators);
                     tr.products = [{
-                            id: Test.testProducts.PAID_SUBSCRIPTION_ACTIVE.id,
-                            offerId: Test.testProducts.PAID_SUBSCRIPTION_ACTIVE.extra.offerId,
+                            id: productId,
+                            offerId: offerId,
                         }];
                     tr.state = CdvPurchase.TransactionState.APPROVED;
                     tr.transactionId = transactionId(n);
@@ -6125,11 +6291,11 @@ var CdvPurchase;
                 this.receipts.push(receipt);
                 this.context.listener.receiptsUpdated(CdvPurchase.Platform.TEST, [receipt]);
                 function transactionId(n) {
-                    return 'test-active-subscription-transaction-' + n;
+                    return transactionIdPrefix + n;
                 }
                 let transactionNumber = 1;
                 setInterval(() => {
-                    this.log.info('auto-renewing the mock subscription');
+                    this.log.info(`auto-renewing the mock subscription for ${productId}`);
                     transactionNumber += 1;
                     receipt.transactions.push(makeTransaction(transactionNumber));
                     this.context.listener.receiptsUpdated(CdvPurchase.Platform.TEST, [receipt]);
