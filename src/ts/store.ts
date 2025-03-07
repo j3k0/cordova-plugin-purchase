@@ -690,12 +690,7 @@ namespace CdvPurchase {
                     // Find matching purchase in the verified collection
                     const verifiedPurchase = receipt.collection.find(p => {
                         // Match by transactionId if available
-                        if (p.transactionId && p.transactionId === transaction.transactionId) 
-                            return true;
-                        
-                        // Otherwise match by product id and purchase id if available
-                        return p.id === transaction.products[0]?.id && 
-                               p.purchaseId === transaction.purchaseId;
+                        return (p.transactionId && p.transactionId === transaction.transactionId);
                     });
                     
                     if (verifiedPurchase) {
@@ -712,32 +707,15 @@ namespace CdvPurchase {
                             transaction.isConsumed = true;
                             skipNativeFinish = true;
                         }
-                        
-                        // If the verified purchase has no explicit acknowledgement or consumption status,
-                        // we can make some assumptions based on other properties
-                        
-                        // For subscription transaction - a server-validated subscription is implicitly acknowledged
-                        const productId = transaction.products[0]?.id;
-                        const product = productId ? this.get(productId, transaction.platform) : undefined;
-                        if (product && 
-                            verifiedPurchase.isAcknowledged !== false && // Only if not explicitly marked as not acknowledged
-                            (product.type === ProductType.PAID_SUBSCRIPTION || 
-                             product.type === ProductType.FREE_SUBSCRIPTION ||
-                             product.type === ProductType.NON_RENEWING_SUBSCRIPTION)) {
-                            // If we have the purchase info in verified purchases, it's definitely acknowledged
-                            this.log.info(`Subscription transaction ${transaction.transactionId} implicitly acknowledged`);
-                            transaction.isAcknowledged = true;
-                            skipNativeFinish = true;
-                        }
                     }
                 }
-                
-                if (skipNativeFinish && transaction.state === TransactionState.APPROVED) {
+
+                const adapter = this.adapters.findReady(transaction.platform);
+
+                if (adapter?.canSkipFinish && skipNativeFinish && transaction.state === TransactionState.APPROVED) {
                     transaction.state = TransactionState.FINISHED;
                 }
                 else {
-                    // Only call the native adapter if we haven't determined that the transaction
-                    // is already consumed or acknowledged
                     const adapter = this.adapters.findReady(transaction.platform)?.finish(transaction);
                 }
             });
