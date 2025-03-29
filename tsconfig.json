@@ -23,7 +23,10 @@
     // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
     // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
     // "rootDirs": ["./src/ts"],                         /* Allow multiple folders to be treated as one when resolving modules. */
-    // "typeRoots": ["./src/ts"],                        /* Specify multiple folders that act like './node_modules/@types'. */
+    // "typeRoots": [
+    //   "./node_modules/@types",
+    //   "./node_modules/iaptic-js"
+    // ],
     "types": [],                                         /* Specify type package names to be included without being referenced in a source file. */
     // "types": ["./src/ts/index"],                      /* Specify type package names to be included without being referenced in a source file. */
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */

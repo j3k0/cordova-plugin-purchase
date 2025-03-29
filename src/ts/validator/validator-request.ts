@@ -110,8 +110,15 @@ namespace CdvPurchase {
                 | ApiValidatorBodyTransactionGoogle
                 | ApiValidatorBodyTransactionWindows
                 | ApiValidatorBodyTransactionBraintree
-            //  | ApiValidatorBodyTransactionStripe;
-                ;
+                | ApiValidatorBodyTransactionIaptic;
+
+            export interface ApiValidatorBodyTransactionIaptic {
+                type: 'iaptic';
+                /** The backend adapter type (e.g., 'stripe') */
+                adapter: 'stripe';
+                /** The access token */
+                accessToken?: string;
+            }
 
             /** Transaction type from an Apple powered device  */
             export interface ApiValidatorBodyTransactionApple {
