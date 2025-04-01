@@ -130,6 +130,14 @@ namespace CdvPurchase {
         isSupported: boolean;
 
         /**
+         * Returns true if the adapter can skip the native finish method for a transaction.
+         * 
+         * Some platforms (e.g. Apple AppStore) require explicit acknowledgement of a purchase so it can be removed from
+         * the queue of pending transactions, regardless of whether the transaction is acknowledged or consumed already.
+         */
+        canSkipFinish?: boolean;
+
+        /**
          * Initializes a platform adapter.
          *
          * Will resolve when initialization is complete.
