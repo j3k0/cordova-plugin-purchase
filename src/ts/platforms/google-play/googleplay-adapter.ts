@@ -112,6 +112,8 @@ namespace CdvPurchase {
 
             supportsParallelLoading = false;
 
+            canSkipFinish = true;
+
             /** List of products managed by the GooglePlay adapter */
             get products(): GProduct[] { return this._products.products; }
             private _products: Products;

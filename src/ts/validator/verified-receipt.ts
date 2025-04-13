@@ -120,6 +120,12 @@ namespace CdvPurchase {
         /** True when a subscription is expired. */
         isExpired?: boolean;
 
+        /** True when a purchase has been acknowledged to the platform. */
+        isAcknowledged?: boolean;
+
+        /** True when a purchase has been consumed (for consumable products). */
+        isConsumed?: boolean;
+
         /** Renewal intent. */
         renewalIntent?: string;
 
