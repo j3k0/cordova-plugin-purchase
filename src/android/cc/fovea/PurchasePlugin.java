@@ -892,6 +892,12 @@ public final class PurchasePlugin
     if (params == null) {
       return;
     }
+    final Activity activity = cordova.getActivity();
+    if (activity == null || activity.isFinishing()) {
+        Log.e(mTag, "Activity is null or finishing, cannot launch billing flow.");
+        callError(Constants.ERR_COMMUNICATION, "Activity not available to launch billing flow.");
+        return;
+    }
     executeServiceRequest(() -> {
       if (getLastResponseCode() != BillingResponseCode.OK) {
         Log.d(mTag, "initiatePurchaseFlow() -> Failed: "
@@ -900,9 +906,19 @@ public final class PurchasePlugin
             "Failed to execute service request. " + format(getLastResult()));
         return;
       }
-      Log.d(mTag, "initiatePurchaseFlow() -> launchBillingFlow.");
+      Log.d(mTag, "Attempting to launch billing flow on UI thread.");
       cordova.setActivityResultCallback(this);
-      mBillingClient.launchBillingFlow(cordova.getActivity(), params);
+      // Ensure the actual launch call is on the UI thread
+      activity.runOnUiThread(() -> {
+        Log.d(mTag, "launchBillingFlow happening now.");
+        BillingResult billingResult = mBillingClient.launchBillingFlow(activity, params);
+        // Log the immediate result (though the main result comes via listener)
+        Log.d(mTag, "launchBillingFlow immediate result: " + format(billingResult));
+        if (billingResult.getResponseCode() != BillingResponseCode.OK) {
+           Log.e(mTag, "launchBillingFlow failed immediately with code: " + format(billingResult));
+           // Potentially callError here if appropriate, though onPurchasesUpdated usually handles final state
+        }
+      });
     });
   }
 
