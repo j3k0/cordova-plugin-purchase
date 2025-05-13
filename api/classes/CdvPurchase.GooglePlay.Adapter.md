@@ -18,6 +18,7 @@ Adapter for a payment or in-app purchase platform
 
 - [autoRefreshIntervalMillis](CdvPurchase.GooglePlay.Adapter.md#autorefreshintervalmillis)
 - [bridge](CdvPurchase.GooglePlay.Adapter.md#bridge)
+- [canSkipFinish](CdvPurchase.GooglePlay.Adapter.md#canskipfinish)
 - [id](CdvPurchase.GooglePlay.Adapter.md#id)
 - [initialized](CdvPurchase.GooglePlay.Adapter.md#initialized)
 - [name](CdvPurchase.GooglePlay.Adapter.md#name)
@@ -85,6 +86,21 @@ ___
 • **bridge**: [`Bridge`](CdvPurchase.GooglePlay.Bridge.Bridge.md)
 
 The GooglePlay bridge
+
+___
+
+### canSkipFinish
+
+• **canSkipFinish**: `boolean` = `true`
+
+Returns true if the adapter can skip the native finish method for a transaction.
+
+Some platforms (e.g. Apple AppStore) require explicit acknowledgement of a purchase so it can be removed from
+the queue of pending transactions, regardless of whether the transaction is acknowledged or consumed already.
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[canSkipFinish](../interfaces/CdvPurchase.Adapter.md#canskipfinish)
 
 ___
 
@@ -468,7 +484,10 @@ ___
 
 ▸ **onPurchasesUpdated**(`purchases`): `void`
 
-Called when the platform reports update for some purchases
+Called when the platform reports updates for some purchases
+
+Notice that purchases can be removed from the array, we should handle that so they stop
+being "owned" by the user.
 
 #### Parameters
 

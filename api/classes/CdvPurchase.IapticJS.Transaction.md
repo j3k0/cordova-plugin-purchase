@@ -1,46 +1,77 @@
-# Class: SKTransaction
+# Class: Transaction
 
-[CdvPurchase](../modules/CdvPurchase.md).[AppleAppStore](../modules/CdvPurchase.AppleAppStore.md).SKTransaction
+[CdvPurchase](../modules/CdvPurchase.md).[IapticJS](../modules/CdvPurchase.IapticJS.md).Transaction
 
-StoreKit transaction
+Transaction as reported by the device
+
+**`See`**
+
+ - [Receipt](CdvPurchase.Receipt.md)
+ - [store.localTransactions](CdvPurchase.Store.md#localtransactions)
 
 ## Hierarchy
 
 - [`Transaction`](CdvPurchase.Transaction.md)
 
-  ↳ **`SKTransaction`**
+  ↳ **`Transaction`**
 
 ## Table of contents
 
+### Constructors
+
+- [constructor](CdvPurchase.IapticJS.Transaction.md#constructor)
+
 ### Properties
 
-- [amountMicros](CdvPurchase.AppleAppStore.SKTransaction.md#amountmicros)
-- [currency](CdvPurchase.AppleAppStore.SKTransaction.md#currency)
-- [expirationDate](CdvPurchase.AppleAppStore.SKTransaction.md#expirationdate)
-- [isAcknowledged](CdvPurchase.AppleAppStore.SKTransaction.md#isacknowledged)
-- [isConsumed](CdvPurchase.AppleAppStore.SKTransaction.md#isconsumed)
-- [isPending](CdvPurchase.AppleAppStore.SKTransaction.md#ispending)
-- [lastRenewalDate](CdvPurchase.AppleAppStore.SKTransaction.md#lastrenewaldate)
-- [originalTransactionId](CdvPurchase.AppleAppStore.SKTransaction.md#originaltransactionid)
-- [platform](CdvPurchase.AppleAppStore.SKTransaction.md#platform)
-- [products](CdvPurchase.AppleAppStore.SKTransaction.md#products)
-- [purchaseDate](CdvPurchase.AppleAppStore.SKTransaction.md#purchasedate)
-- [purchaseId](CdvPurchase.AppleAppStore.SKTransaction.md#purchaseid)
-- [quantity](CdvPurchase.AppleAppStore.SKTransaction.md#quantity)
-- [renewalIntent](CdvPurchase.AppleAppStore.SKTransaction.md#renewalintent)
-- [renewalIntentChangeDate](CdvPurchase.AppleAppStore.SKTransaction.md#renewalintentchangedate)
-- [state](CdvPurchase.AppleAppStore.SKTransaction.md#state)
-- [transactionId](CdvPurchase.AppleAppStore.SKTransaction.md#transactionid)
+- [amountMicros](CdvPurchase.IapticJS.Transaction.md#amountmicros)
+- [currency](CdvPurchase.IapticJS.Transaction.md#currency)
+- [expirationDate](CdvPurchase.IapticJS.Transaction.md#expirationdate)
+- [isAcknowledged](CdvPurchase.IapticJS.Transaction.md#isacknowledged)
+- [isConsumed](CdvPurchase.IapticJS.Transaction.md#isconsumed)
+- [isPending](CdvPurchase.IapticJS.Transaction.md#ispending)
+- [lastRenewalDate](CdvPurchase.IapticJS.Transaction.md#lastrenewaldate)
+- [platform](CdvPurchase.IapticJS.Transaction.md#platform)
+- [products](CdvPurchase.IapticJS.Transaction.md#products)
+- [purchase](CdvPurchase.IapticJS.Transaction.md#purchase)
+- [purchaseDate](CdvPurchase.IapticJS.Transaction.md#purchasedate)
+- [purchaseId](CdvPurchase.IapticJS.Transaction.md#purchaseid)
+- [quantity](CdvPurchase.IapticJS.Transaction.md#quantity)
+- [renewalIntent](CdvPurchase.IapticJS.Transaction.md#renewalintent)
+- [renewalIntentChangeDate](CdvPurchase.IapticJS.Transaction.md#renewalintentchangedate)
+- [state](CdvPurchase.IapticJS.Transaction.md#state)
+- [transactionId](CdvPurchase.IapticJS.Transaction.md#transactionid)
 
 ### Accessors
 
-- [parentReceipt](CdvPurchase.AppleAppStore.SKTransaction.md#parentreceipt)
+- [parentReceipt](CdvPurchase.IapticJS.Transaction.md#parentreceipt)
 
 ### Methods
 
-- [finish](CdvPurchase.AppleAppStore.SKTransaction.md#finish)
-- [refresh](CdvPurchase.AppleAppStore.SKTransaction.md#refresh)
-- [verify](CdvPurchase.AppleAppStore.SKTransaction.md#verify)
+- [finish](CdvPurchase.IapticJS.Transaction.md#finish)
+- [refresh](CdvPurchase.IapticJS.Transaction.md#refresh)
+- [verify](CdvPurchase.IapticJS.Transaction.md#verify)
+
+## Constructors
+
+### constructor
+
+• **new Transaction**(`receipt`, `purchase`, `decorator`): [`Transaction`](CdvPurchase.IapticJS.Transaction.md)
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `receipt` | [`Receipt`](CdvPurchase.IapticJS.Receipt.md) |
+| `purchase` | `Purchase` |
+| `decorator` | `TransactionDecorator` |
+
+#### Returns
+
+[`Transaction`](CdvPurchase.IapticJS.Transaction.md)
+
+#### Overrides
+
+CdvPurchase.Transaction.constructor
 
 ## Properties
 
@@ -128,12 +159,6 @@ Time a subscription was last renewed
 
 ___
 
-### originalTransactionId
-
-• `Optional` **originalTransactionId**: `string`
-
-___
-
 ### platform
 
 • **platform**: [`Platform`](../enums/CdvPurchase.Platform.md)
@@ -155,6 +180,12 @@ Purchased products
 #### Inherited from
 
 [Transaction](CdvPurchase.Transaction.md).[products](CdvPurchase.Transaction.md#products)
+
+___
+
+### purchase
+
+• **purchase**: `Purchase`
 
 ___
 
@@ -263,7 +294,7 @@ Return the receipt this transaction is part of.
 
 #### Inherited from
 
-Transaction.parentReceipt
+CdvPurchase.Transaction.parentReceipt
 
 ## Methods
 
@@ -297,16 +328,13 @@ ___
 
 ### refresh
 
-▸ **refresh**(`productId?`, `originalTransactionIdentifier?`, `transactionDate?`, `discountId?`): `void`
+▸ **refresh**(`purchase`): `void`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `productId?` | `string` |
-| `originalTransactionIdentifier?` | `string` |
-| `transactionDate?` | `string` |
-| `discountId?` | `string` |
+| `purchase` | `Purchase` |
 
 #### Returns
 

@@ -35,6 +35,7 @@ Transaction as reported by the device
 - [products](CdvPurchase.GooglePlay.Transaction.md#products)
 - [purchaseDate](CdvPurchase.GooglePlay.Transaction.md#purchasedate)
 - [purchaseId](CdvPurchase.GooglePlay.Transaction.md#purchaseid)
+- [quantity](CdvPurchase.GooglePlay.Transaction.md#quantity)
 - [renewalIntent](CdvPurchase.GooglePlay.Transaction.md#renewalintent)
 - [renewalIntentChangeDate](CdvPurchase.GooglePlay.Transaction.md#renewalintentchangedate)
 - [state](CdvPurchase.GooglePlay.Transaction.md#state)
@@ -48,6 +49,7 @@ Transaction as reported by the device
 
 - [finish](CdvPurchase.GooglePlay.Transaction.md#finish)
 - [refresh](CdvPurchase.GooglePlay.Transaction.md#refresh)
+- [removed](CdvPurchase.GooglePlay.Transaction.md#removed)
 - [verify](CdvPurchase.GooglePlay.Transaction.md#verify)
 - [toState](CdvPurchase.GooglePlay.Transaction.md#tostate)
 
@@ -216,6 +218,24 @@ Identifier for the purchase this transaction is a part of.
 
 ___
 
+### quantity
+
+• `Optional` **quantity**: `number`
+
+Quantity of items purchased in a single transaction.
+
+For consumable products, this value represents the number of items purchased.
+For non-consumable products and subscriptions, this value is always 1.
+
+This is only supported on Android (Google Play) platform when using the multi-quantity purchase feature.
+On other platforms, the quantity is always 1.
+
+#### Inherited from
+
+[Transaction](CdvPurchase.Transaction.md).[quantity](CdvPurchase.Transaction.md#quantity)
+
+___
+
 ### renewalIntent
 
 • `Optional` **renewalIntent**: [`RenewalIntent`](../enums/CdvPurchase.RenewalIntent.md)
@@ -320,6 +340,16 @@ Refresh the value in the transaction based on the native purchase update
 | :------ | :------ |
 | `purchase` | [`Purchase`](../interfaces/CdvPurchase.GooglePlay.Bridge.Purchase.md) |
 | `fromConstructor?` | `boolean` |
+
+#### Returns
+
+`void`
+
+___
+
+### removed
+
+▸ **removed**(): `void`
 
 #### Returns
 

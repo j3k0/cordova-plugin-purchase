@@ -11,6 +11,7 @@ Purchase platforms supported by the plugin
 - [APPLE\_APPSTORE](CdvPurchase.Platform.md#apple_appstore)
 - [BRAINTREE](CdvPurchase.Platform.md#braintree)
 - [GOOGLE\_PLAY](CdvPurchase.Platform.md#google_play)
+- [IAPTIC\_JS](CdvPurchase.Platform.md#iaptic_js)
 - [TEST](CdvPurchase.Platform.md#test)
 - [WINDOWS\_STORE](CdvPurchase.Platform.md#windows_store)
 
@@ -37,6 +38,14 @@ ___
 • **GOOGLE\_PLAY** = ``"android-playstore"``
 
 Google Play
+
+___
+
+### IAPTIC\_JS
+
+• **IAPTIC\_JS** = ``"iaptic-js"``
+
+Iaptic.js
 
 ___
 

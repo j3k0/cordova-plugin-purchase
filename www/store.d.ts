@@ -1,3 +1,4 @@
+/// <reference path="../src/ts/platforms/iaptic-js/iaptic-js-types.d.ts" />
 declare namespace CdvPurchase {
     /**
      * Error codes
@@ -407,13 +408,17 @@ declare namespace CdvPurchase {
         interface WindowsStore {
             platform: Platform.WINDOWS_STORE;
         }
+        interface IapticJS {
+            platform: Platform.IAPTIC_JS;
+            options: IapticJS.AdapterOptions;
+        }
     }
     /**
      * Used to initialize a platform with some options
      *
      * @see {@link Store.initialize}
      */
-    type PlatformWithOptions = PlatformOptions.Braintree | PlatformOptions.AppleAppStore | PlatformOptions.GooglePlay | PlatformOptions.Test | PlatformOptions.WindowsStore;
+    type PlatformWithOptions = PlatformOptions.Braintree | PlatformOptions.AppleAppStore | PlatformOptions.GooglePlay | PlatformOptions.Test | PlatformOptions.WindowsStore | PlatformOptions.IapticJS;
     /** @internal */
     namespace Internal {
         interface AdapterListener {
@@ -694,8 +699,11 @@ declare namespace CdvPurchase {
         /** Data and callbacks to interface with the ExpiryMonitor */
         interface ExpiryMonitorController {
             verifiedReceipts: VerifiedReceipt[];
+            localReceipts: Receipt[];
             /** Called when a verified purchase expires */
             onVerifiedPurchaseExpired(verifiedPurchase: VerifiedPurchase, receipt: VerifiedReceipt): void;
+            /** Called when a transaction expires */
+            onTransactionExpired(transaction: Transaction): void;
         }
         /**
          * Send a notification when a subscription expires.
@@ -720,6 +728,8 @@ declare namespace CdvPurchase {
             controller: ExpiryMonitorController;
             /** reference to the function that runs at a given interval */
             interval?: number;
+            /** Logger */
+            log: Logger;
             /** Track active verified purchases */
             activePurchases: {
                 [transactionId: string]: true;
@@ -729,8 +739,15 @@ declare namespace CdvPurchase {
                 [transactionId: string]: true;
             };
             /** Track active local transactions */
+            activeTransactions: {
+                [transactionId: string]: true;
+            };
             /** Track notified local transactions */
-            constructor(controller: ExpiryMonitorController);
+            notifiedTransactions: {
+                [transactionId: string]: true;
+            };
+            constructor(controller: ExpiryMonitorController, log: Logger);
+            stop(): void;
             launch(): void;
         }
     }
@@ -744,10 +761,23 @@ declare namespace CdvPurchase {
  *
  * When you see, for example `ProductType.PAID_SUBSCRIPTION`, it refers to `CdvPurchase.ProductType.PAID_SUBSCRIPTION`.
  *
- * In the files that interact with the plugin, I recommend creating those shortcuts (and more if needed):
+ * In your code, you should access members directly through the CdvPurchase namespace:
  *
  * ```ts
- * const {store, ProductType, Platform, LogLevel} = CdvPurchase;
+ * // Recommended approach (works reliably with minification)
+ * CdvPurchase.store.initialize();
+ * CdvPurchase.store.register({
+ *   id: 'my-product',
+ *   type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
+ *   platform: CdvPurchase.Platform.APPLE_APPSTORE
+ * });
+ * ```
+ *
+ * Note: Using destructuring with the namespace may cause issues with minification tools:
+ *
+ * ```ts
+ * // NOT recommended - may cause issues with minification tools like Terser
+ * const { store, ProductType, Platform, LogLevel } = CdvPurchase;
  * ```
  */
 declare namespace CdvPurchase {
@@ -1072,6 +1102,9 @@ declare namespace CdvPurchase {
          * Finalize a transaction.
          *
          * This will be called from the Receipt, Transaction or VerifiedReceipt objects using the API decorators.
+         *
+         * If the transaction has already been consumed or acknowledged according to the verification API,
+         * the native platform's finish method will be skipped to avoid errors.
          */
         private finish;
         /**
@@ -1250,6 +1283,13 @@ declare namespace CdvPurchase {
          */
         isSupported: boolean;
         /**
+         * Returns true if the adapter can skip the native finish method for a transaction.
+         *
+         * Some platforms (e.g. Apple AppStore) require explicit acknowledgement of a purchase so it can be removed from
+         * the queue of pending transactions, regardless of whether the transaction is acknowledged or consumed already.
+         */
+        canSkipFinish?: boolean;
+        /**
          * Initializes a platform adapter.
          *
          * Will resolve when initialization is complete.
@@ -1342,7 +1382,9 @@ declare namespace CdvPurchase {
         /** Braintree */
         BRAINTREE = "braintree",
         /** Test platform */
-        TEST = "test"
+        TEST = "test",
+        /** Iaptic.js */
+        IAPTIC_JS = "iaptic-js"
     }
     /**
      * Functionality optionality provided by a given platform.
@@ -1753,6 +1795,16 @@ declare namespace CdvPurchase {
         amountMicros?: number;
         /** Currency used to pay for the transaction, if known. */
         currency?: string;
+        /**
+         * Quantity of items purchased in a single transaction.
+         *
+         * For consumable products, this value represents the number of items purchased.
+         * For non-consumable products and subscriptions, this value is always 1.
+         *
+         * This is only supported on Android (Google Play) platform when using the multi-quantity purchase feature.
+         * On other platforms, the quantity is always 1.
+         */
+        quantity?: number;
         /** Purchased products */
         products: {
             /** Product identifier */
@@ -4206,6 +4258,7 @@ declare namespace CdvPurchase {
              * Refresh the value in the transaction based on the native purchase update
              */
             refresh(purchase: Bridge.Purchase, fromConstructor?: boolean): void;
+            removed(): void;
         }
         class Receipt extends CdvPurchase.Receipt {
             /** Token that uniquely identifies a purchase for a given item and user pair. */
@@ -4216,6 +4269,7 @@ declare namespace CdvPurchase {
             constructor(purchase: Bridge.Purchase, decorator: Internal.TransactionDecorator & Internal.ReceiptDecorator);
             /** Refresh the content of the purchase based on the native BridgePurchase */
             refreshPurchase(purchase: Bridge.Purchase): void;
+            removed(): void;
         }
         class Adapter implements CdvPurchase.Adapter {
             /** Adapter identifier */
@@ -4225,6 +4279,7 @@ declare namespace CdvPurchase {
             /** Has the adapter been successfully initialized */
             ready: boolean;
             supportsParallelLoading: boolean;
+            canSkipFinish: boolean;
             /** List of products managed by the GooglePlay adapter */
             get products(): GProduct[];
             private _products;
@@ -4259,10 +4314,29 @@ declare namespace CdvPurchase {
             finish(transaction: CdvPurchase.Transaction): Promise<IError | undefined>;
             /** Called by the bridge when a purchase has been consumed */
             onPurchaseConsumed(purchase: Bridge.Purchase): void;
-            /** Called when the platform reports update for some purchases */
-            onPurchasesUpdated(purchases: Bridge.Purchase[]): void;
-            /** Called when the platform reports some purchases */
+            /** Schedule to refresh purchases for subscriptions that don't have expiration dates */
+            private refreshSchedule;
+            /** Refresh intervals (in milliseconds) */
+            private static REFRESH_INTERVALS;
+            /**
+             * Schedule a purchase refresh for a subscription without expiration date
+             */
+            private scheduleRefreshForSubscription;
+            /**
+             * Detect subscriptions that need scheduled refreshes
+             */
+            private scheduleRefreshesForSubscriptions;
+            /**
+             * Called when the platform reports some purchases
+             */
             onSetPurchases(purchases: Bridge.Purchase[]): void;
+            /**
+             * Called when the platform reports updates for some purchases
+             *
+             * Notice that purchases can be removed from the array, we should handle that so they stop
+             * being "owned" by the user.
+             */
+            onPurchasesUpdated(purchases: Bridge.Purchase[]): void;
             onPriceChangeConfirmationResult(result: "OK" | "UserCanceled" | "UnknownProduct"): void;
             /** Refresh purchases from GooglePlay */
             getPurchases(): Promise<IError | undefined>;
@@ -4441,7 +4515,14 @@ declare namespace CdvPurchase {
                 purchaseState: number;
                 /** Token that uniquely identifies a purchase for a given item and user pair. */
                 purchaseToken: string;
-                /** quantity of the purchased product */
+                /** Quantity of items purchased in a single transaction.
+                 *
+                 * For consumable products, this value represents the number of items purchased.
+                 * For non-consumable products and subscriptions, this value is always 1.
+                 *
+                 * This is particularly useful for apps that support multi-quantity purchases
+                 * through Google Play Billing Library.
+                 */
                 quantity: number;
                 /** Whether the purchase has been acknowledged. */
                 acknowledged: boolean;
@@ -4450,7 +4531,7 @@ declare namespace CdvPurchase {
                 /** One of BridgePurchaseState indicating the state of the purchase. */
                 getPurchaseState: PurchaseState;
                 /** Whether the subscription renews automatically. */
-                autoRenewing: false;
+                autoRenewing: boolean;
                 /** String containing the signature of the purchase data that was signed with the private key of the developer. */
                 signature: string;
                 /** String in JSON format that contains details about the purchase order. */
@@ -4459,6 +4540,8 @@ declare namespace CdvPurchase {
                 accountId: string;
                 /** Obfuscated profile id specified at purchase - used when a single user can have multiple profiles */
                 profileId: string;
+                /** For subscriptions, timestamp of expiration in milliseconds */
+                expiryTimeMillis?: string;
             }
             enum PurchaseState {
                 UNSPECIFIED_STATE = 0,
@@ -5053,6 +5136,65 @@ declare namespace CdvPurchase {
     }
 }
 declare namespace CdvPurchase {
+    namespace Utils {
+        /**
+         * Returns the MD5 hash-value of the passed string.
+         *
+         * Based on the work of Jeff Mott, who did a pure JS implementation of the MD5 algorithm that was published by Ronald L. Rivest in 1991.
+         * Code was imported from https://github.com/pvorb/node-md5
+         *
+         * I cleaned up the all-including minified version of it.
+         */
+        function md5(str: string): string;
+    }
+}
+declare namespace CdvPurchase {
+    namespace IapticJS {
+        type AdapterOptions = ModuleIapticJS.Config;
+        class Receipt extends CdvPurchase.Receipt {
+            purchases: ModuleIapticJS.Purchase[];
+            accessToken: string;
+            private context;
+            constructor(purchases: ModuleIapticJS.Purchase[], accessToken: string, context: Internal.AdapterContext);
+            refresh(purchases: ModuleIapticJS.Purchase[]): void;
+        }
+        class Transaction extends CdvPurchase.Transaction {
+            purchase: ModuleIapticJS.Purchase;
+            constructor(receipt: Receipt, purchase: ModuleIapticJS.Purchase, decorator: Internal.TransactionDecorator);
+            refresh(purchase: ModuleIapticJS.Purchase): void;
+        }
+        class Adapter implements CdvPurchase.Adapter {
+            id: Platform;
+            name: string;
+            ready: boolean;
+            products: CdvPurchase.Product[];
+            _receipts: Receipt[];
+            get receipts(): Receipt[];
+            private context;
+            private log;
+            private options;
+            private iapticAdapterInstance;
+            private backendAdapterType;
+            private upsertProduct;
+            constructor(context: Internal.AdapterContext, options: AdapterOptions);
+            get isSupported(): boolean;
+            supportsParallelLoading: boolean;
+            initialize(): Promise<IError | undefined>;
+            loadProducts(products: IRegisterProduct[]): Promise<(CdvPurchase.Product | IError)[]>;
+            loadReceipts(): Promise<Receipt[]>;
+            order(offer: CdvPurchase.Offer, additionalData: CdvPurchase.AdditionalData): Promise<undefined | IError>;
+            finish(transaction: Transaction): Promise<undefined | IError>;
+            receiptValidationBody(receipt: Receipt): Promise<Validator.Request.Body | undefined>;
+            handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void>;
+            requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
+            manageSubscriptions(): Promise<IError | undefined>;
+            manageBilling(): Promise<IError | undefined>;
+            checkSupport(functionality: PlatformFunctionality): boolean;
+            restorePurchases(): Promise<IError | undefined>;
+        }
+    }
+}
+declare namespace CdvPurchase {
     /**
      * Test Adapter and related classes.
      */
@@ -5506,19 +5648,6 @@ declare namespace CdvPurchase {
 }
 declare namespace CdvPurchase {
     namespace Utils {
-        /**
-         * Returns the MD5 hash-value of the passed string.
-         *
-         * Based on the work of Jeff Mott, who did a pure JS implementation of the MD5 algorithm that was published by Ronald L. Rivest in 1991.
-         * Code was imported from https://github.com/pvorb/node-md5
-         *
-         * I cleaned up the all-including minified version of it.
-         */
-        function md5(str: string): string;
-    }
-}
-declare namespace CdvPurchase {
-    namespace Utils {
         type PlatformID = 'ios' | 'android' | 'web';
         /** Returns an UUID v4. Uses `window.crypto` internally to generate random values. */
         function platformId(): PlatformID;
@@ -5688,7 +5817,14 @@ declare namespace CdvPurchase {
                     }[];
                 }[];
             }
-            type ApiValidatorBodyTransaction = ApiValidatorBodyTransactionApple | ApiValidatorBodyTransactionGoogle | ApiValidatorBodyTransactionWindows | ApiValidatorBodyTransactionBraintree;
+            type ApiValidatorBodyTransaction = ApiValidatorBodyTransactionApple | ApiValidatorBodyTransactionGoogle | ApiValidatorBodyTransactionWindows | ApiValidatorBodyTransactionBraintree | ApiValidatorBodyTransactionIaptic;
+            interface ApiValidatorBodyTransactionIaptic {
+                type: 'iaptic';
+                /** The backend adapter type (e.g., 'stripe') */
+                adapter: 'stripe';
+                /** The access token */
+                accessToken?: string;
+            }
             /** Transaction type from an Apple powered device  */
             interface ApiValidatorBodyTransactionApple {
                 /** Value `"ios-appstore"` */
@@ -5962,6 +6098,10 @@ declare namespace CdvPurchase {
         expiryDate?: number;
         /** True when a subscription is expired. */
         isExpired?: boolean;
+        /** True when a purchase has been acknowledged to the platform. */
+        isAcknowledged?: boolean;
+        /** True when a purchase has been consumed (for consumable products). */
+        isConsumed?: boolean;
         /** Renewal intent. */
         renewalIntent?: string;
         /** Date the renewal intent was updated by the user. */

@@ -1,6 +1,6 @@
 # Class: Receipt
 
-[CdvPurchase](../modules/CdvPurchase.md).[GooglePlay](../modules/CdvPurchase.GooglePlay.md).Receipt
+[CdvPurchase](../modules/CdvPurchase.md).[IapticJS](../modules/CdvPurchase.IapticJS.md).Receipt
 
 ## Hierarchy
 
@@ -10,29 +10,52 @@
 
 ## Table of contents
 
+### Constructors
+
+- [constructor](CdvPurchase.IapticJS.Receipt.md#constructor)
+
 ### Properties
 
-- [orderId](CdvPurchase.GooglePlay.Receipt.md#orderid)
-- [platform](CdvPurchase.GooglePlay.Receipt.md#platform)
-- [purchaseToken](CdvPurchase.GooglePlay.Receipt.md#purchasetoken)
-- [transactions](CdvPurchase.GooglePlay.Receipt.md#transactions)
+- [accessToken](CdvPurchase.IapticJS.Receipt.md#accesstoken)
+- [platform](CdvPurchase.IapticJS.Receipt.md#platform)
+- [purchases](CdvPurchase.IapticJS.Receipt.md#purchases)
+- [transactions](CdvPurchase.IapticJS.Receipt.md#transactions)
 
 ### Methods
 
-- [finish](CdvPurchase.GooglePlay.Receipt.md#finish)
-- [hasTransaction](CdvPurchase.GooglePlay.Receipt.md#hastransaction)
-- [lastTransaction](CdvPurchase.GooglePlay.Receipt.md#lasttransaction)
-- [refreshPurchase](CdvPurchase.GooglePlay.Receipt.md#refreshpurchase)
-- [removed](CdvPurchase.GooglePlay.Receipt.md#removed)
-- [verify](CdvPurchase.GooglePlay.Receipt.md#verify)
+- [finish](CdvPurchase.IapticJS.Receipt.md#finish)
+- [hasTransaction](CdvPurchase.IapticJS.Receipt.md#hastransaction)
+- [lastTransaction](CdvPurchase.IapticJS.Receipt.md#lasttransaction)
+- [refresh](CdvPurchase.IapticJS.Receipt.md#refresh)
+- [verify](CdvPurchase.IapticJS.Receipt.md#verify)
+
+## Constructors
+
+### constructor
+
+• **new Receipt**(`purchases`, `accessToken`, `context`): [`Receipt`](CdvPurchase.IapticJS.Receipt.md)
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `purchases` | `Purchase`[] |
+| `accessToken` | `string` |
+| `context` | `AdapterContext` |
+
+#### Returns
+
+[`Receipt`](CdvPurchase.IapticJS.Receipt.md)
+
+#### Overrides
+
+CdvPurchase.Receipt.constructor
 
 ## Properties
 
-### orderId
+### accessToken
 
-• `Optional` **orderId**: `string`
-
-Unique order identifier for the transaction.  (like GPA.XXXX-XXXX-XXXX-XXXXX)
+• **accessToken**: `string`
 
 ___
 
@@ -48,11 +71,9 @@ Platform that generated the receipt
 
 ___
 
-### purchaseToken
+### purchases
 
-• **purchaseToken**: `string`
-
-Token that uniquely identifies a purchase for a given item and user pair.
+• **purchases**: `Purchase`[]
 
 ___
 
@@ -122,27 +143,15 @@ Return the last transaction in this receipt
 
 ___
 
-### refreshPurchase
+### refresh
 
-▸ **refreshPurchase**(`purchase`): `void`
-
-Refresh the content of the purchase based on the native BridgePurchase
+▸ **refresh**(`purchases`): `void`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `purchase` | [`Purchase`](../interfaces/CdvPurchase.GooglePlay.Bridge.Purchase.md) |
-
-#### Returns
-
-`void`
-
-___
-
-### removed
-
-▸ **removed**(): `void`
+| `purchases` | `Purchase`[] |
 
 #### Returns
 

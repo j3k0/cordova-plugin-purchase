@@ -9,5 +9,6 @@
 - [AppleAppStore](../interfaces/CdvPurchase.PlatformOptions.AppleAppStore.md)
 - [Braintree](../interfaces/CdvPurchase.PlatformOptions.Braintree.md)
 - [GooglePlay](../interfaces/CdvPurchase.PlatformOptions.GooglePlay.md)
+- [IapticJS](../interfaces/CdvPurchase.PlatformOptions.IapticJS.md)
 - [Test](../interfaces/CdvPurchase.PlatformOptions.Test.md)
 - [WindowsStore](../interfaces/CdvPurchase.PlatformOptions.WindowsStore.md)

@@ -12,6 +12,8 @@
 
   ↳ [`Receipt`](CdvPurchase.GooglePlay.Receipt.md)
 
+  ↳ [`Receipt`](CdvPurchase.IapticJS.Receipt.md)
+
 ## Table of contents
 
 ### Properties

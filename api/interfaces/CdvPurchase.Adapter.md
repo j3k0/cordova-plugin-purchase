@@ -9,6 +9,7 @@ Adapter for a payment or in-app purchase platform
 - [`Adapter`](../classes/CdvPurchase.AppleAppStore.Adapter.md)
 - [`Adapter`](../classes/CdvPurchase.Braintree.Adapter.md)
 - [`Adapter`](../classes/CdvPurchase.GooglePlay.Adapter.md)
+- [`Adapter`](../classes/CdvPurchase.IapticJS.Adapter.md)
 - [`Adapter`](../classes/CdvPurchase.Test.Adapter.md)
 - [`Adapter`](../classes/CdvPurchase.WindowsStore.Adapter.md)
 
@@ -16,6 +17,7 @@ Adapter for a payment or in-app purchase platform
 
 ### Properties
 
+- [canSkipFinish](CdvPurchase.Adapter.md#canskipfinish)
 - [id](CdvPurchase.Adapter.md#id)
 - [isSupported](CdvPurchase.Adapter.md#issupported)
 - [name](CdvPurchase.Adapter.md#name)
@@ -40,6 +42,17 @@ Adapter for a payment or in-app purchase platform
 - [restorePurchases](CdvPurchase.Adapter.md#restorepurchases)
 
 ## Properties
+
+### canSkipFinish
+
+• `Optional` **canSkipFinish**: `boolean`
+
+Returns true if the adapter can skip the native finish method for a transaction.
+
+Some platforms (e.g. Apple AppStore) require explicit acknowledgement of a purchase so it can be removed from
+the queue of pending transactions, regardless of whether the transaction is acknowledged or consumed already.
+
+___
 
 ### id
 

@@ -8,10 +8,23 @@ Throughout the documentation, in order to keep examples readable, we omit the `C
 
 When you see, for example `ProductType.PAID_SUBSCRIPTION`, it refers to `CdvPurchase.ProductType.PAID_SUBSCRIPTION`.
 
-In the files that interact with the plugin, I recommend creating those shortcuts (and more if needed):
+In your code, you should access members directly through the CdvPurchase namespace:
 
 ```ts
-const {store, ProductType, Platform, LogLevel} = CdvPurchase;
+// Recommended approach (works reliably with minification)
+CdvPurchase.store.initialize();
+CdvPurchase.store.register({
+  id: 'my-product',
+  type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
+  platform: CdvPurchase.Platform.APPLE_APPSTORE
+});
+```
+
+Note: Using destructuring with the namespace may cause issues with minification tools:
+
+```ts
+// NOT recommended - may cause issues with minification tools like Terser
+const { store, ProductType, Platform, LogLevel } = CdvPurchase;
 ```
 
 ## Table of contents
@@ -22,6 +35,7 @@ const {store, ProductType, Platform, LogLevel} = CdvPurchase;
 - [ApplePay](CdvPurchase.ApplePay.md)
 - [Braintree](CdvPurchase.Braintree.md)
 - [GooglePlay](CdvPurchase.GooglePlay.md)
+- [IapticJS](CdvPurchase.IapticJS.md)
 - [PlatformOptions](CdvPurchase.PlatformOptions.md)
 - [Test](CdvPurchase.Test.md)
 - [Utils](CdvPurchase.Utils.md)
@@ -135,7 +149,7 @@ ___
 
 ### PlatformWithOptions
 
-Ƭ **PlatformWithOptions**: [`Braintree`](../interfaces/CdvPurchase.PlatformOptions.Braintree.md) \| [`AppleAppStore`](../interfaces/CdvPurchase.PlatformOptions.AppleAppStore.md) \| [`GooglePlay`](../interfaces/CdvPurchase.PlatformOptions.GooglePlay.md) \| [`Test`](../interfaces/CdvPurchase.PlatformOptions.Test.md) \| [`WindowsStore`](../interfaces/CdvPurchase.PlatformOptions.WindowsStore.md)
+Ƭ **PlatformWithOptions**: [`Braintree`](../interfaces/CdvPurchase.PlatformOptions.Braintree.md) \| [`AppleAppStore`](../interfaces/CdvPurchase.PlatformOptions.AppleAppStore.md) \| [`GooglePlay`](../interfaces/CdvPurchase.PlatformOptions.GooglePlay.md) \| [`Test`](../interfaces/CdvPurchase.PlatformOptions.Test.md) \| [`WindowsStore`](../interfaces/CdvPurchase.PlatformOptions.WindowsStore.md) \| [`IapticJS`](../interfaces/CdvPurchase.PlatformOptions.IapticJS.md)
 
 Used to initialize a platform with some options
 

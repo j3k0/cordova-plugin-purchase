@@ -11,6 +11,7 @@
 - [autoRenewing](CdvPurchase.GooglePlay.Bridge.Purchase.md#autorenewing)
 - [consumed](CdvPurchase.GooglePlay.Bridge.Purchase.md#consumed)
 - [developerPayload](CdvPurchase.GooglePlay.Bridge.Purchase.md#developerpayload)
+- [expiryTimeMillis](CdvPurchase.GooglePlay.Bridge.Purchase.md#expirytimemillis)
 - [getPurchaseState](CdvPurchase.GooglePlay.Bridge.Purchase.md#getpurchasestate)
 - [orderId](CdvPurchase.GooglePlay.Bridge.Purchase.md#orderid)
 - [packageName](CdvPurchase.GooglePlay.Bridge.Purchase.md#packagename)
@@ -44,7 +45,7 @@ ___
 
 ### autoRenewing
 
-• **autoRenewing**: ``false``
+• **autoRenewing**: `boolean`
 
 Whether the subscription renews automatically.
 
@@ -67,6 +68,14 @@ Payload specified when the purchase was acknowledged or consumed.
 **`Deprecated`**
 
 - This was removed from Billing v5
+
+___
+
+### expiryTimeMillis
+
+• `Optional` **expiryTimeMillis**: `string`
+
+For subscriptions, timestamp of expiration in milliseconds
 
 ___
 
@@ -154,7 +163,13 @@ ___
 
 • **quantity**: `number`
 
-quantity of the purchased product
+Quantity of items purchased in a single transaction.
+
+For consumable products, this value represents the number of items purchased.
+For non-consumable products and subscriptions, this value is always 1.
+
+This is particularly useful for apps that support multi-quantity purchases
+through Google Play Billing Library.
 
 ___
 

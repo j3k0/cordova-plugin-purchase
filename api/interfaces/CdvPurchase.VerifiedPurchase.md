@@ -12,7 +12,9 @@ A purchase object returned by the receipt validator
 - [discountId](CdvPurchase.VerifiedPurchase.md#discountid)
 - [expiryDate](CdvPurchase.VerifiedPurchase.md#expirydate)
 - [id](CdvPurchase.VerifiedPurchase.md#id)
+- [isAcknowledged](CdvPurchase.VerifiedPurchase.md#isacknowledged)
 - [isBillingRetryPeriod](CdvPurchase.VerifiedPurchase.md#isbillingretryperiod)
+- [isConsumed](CdvPurchase.VerifiedPurchase.md#isconsumed)
 - [isExpired](CdvPurchase.VerifiedPurchase.md#isexpired)
 - [isIntroPeriod](CdvPurchase.VerifiedPurchase.md#isintroperiod)
 - [isTrialPeriod](CdvPurchase.VerifiedPurchase.md#istrialperiod)
@@ -61,11 +63,27 @@ Product identifier
 
 ___
 
+### isAcknowledged
+
+• `Optional` **isAcknowledged**: `boolean`
+
+True when a purchase has been acknowledged to the platform.
+
+___
+
 ### isBillingRetryPeriod
 
 • `Optional` **isBillingRetryPeriod**: `boolean`
 
 True when a subscription a subscription is in the grace period after a failed attempt to collect payment
+
+___
+
+### isConsumed
+
+• `Optional` **isConsumed**: `boolean`
+
+True when a purchase has been consumed (for consumable products).
 
 ___
 

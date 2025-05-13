@@ -17,6 +17,8 @@ Transaction as reported by the device
 
   ↳ [`Transaction`](CdvPurchase.GooglePlay.Transaction.md)
 
+  ↳ [`Transaction`](CdvPurchase.IapticJS.Transaction.md)
+
 ## Table of contents
 
 ### Properties
@@ -32,6 +34,7 @@ Transaction as reported by the device
 - [products](CdvPurchase.Transaction.md#products)
 - [purchaseDate](CdvPurchase.Transaction.md#purchasedate)
 - [purchaseId](CdvPurchase.Transaction.md#purchaseid)
+- [quantity](CdvPurchase.Transaction.md#quantity)
 - [renewalIntent](CdvPurchase.Transaction.md#renewalintent)
 - [renewalIntentChangeDate](CdvPurchase.Transaction.md#renewalintentchangedate)
 - [state](CdvPurchase.Transaction.md#state)
@@ -136,6 +139,20 @@ ___
 • `Optional` **purchaseId**: `string`
 
 Identifier for the purchase this transaction is a part of.
+
+___
+
+### quantity
+
+• `Optional` **quantity**: `number`
+
+Quantity of items purchased in a single transaction.
+
+For consumable products, this value represents the number of items purchased.
+For non-consumable products and subscriptions, this value is always 1.
+
+This is only supported on Android (Google Play) platform when using the multi-quantity purchase feature.
+On other platforms, the quantity is always 1.
 
 ___
 

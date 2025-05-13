@@ -9,6 +9,7 @@
 - [ApiValidatorBodyTransactionApple](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionApple.md)
 - [ApiValidatorBodyTransactionBraintree](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionBraintree.md)
 - [ApiValidatorBodyTransactionGoogle](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionGoogle.md)
+- [ApiValidatorBodyTransactionIaptic](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionIaptic.md)
 - [ApiValidatorBodyTransactionWindows](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionWindows.md)
 - [Body](../interfaces/CdvPurchase.Validator.Request.Body.md)
 - [DiscountDefinition](../interfaces/CdvPurchase.Validator.Request.DiscountDefinition.md)
@@ -24,7 +25,7 @@
 
 ### ApiValidatorBodyTransaction
 
-Ƭ **ApiValidatorBodyTransaction**: [`ApiValidatorBodyTransactionApple`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionApple.md) \| [`ApiValidatorBodyTransactionGoogle`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionGoogle.md) \| [`ApiValidatorBodyTransactionWindows`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionWindows.md) \| [`ApiValidatorBodyTransactionBraintree`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionBraintree.md)
+Ƭ **ApiValidatorBodyTransaction**: [`ApiValidatorBodyTransactionApple`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionApple.md) \| [`ApiValidatorBodyTransactionGoogle`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionGoogle.md) \| [`ApiValidatorBodyTransactionWindows`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionWindows.md) \| [`ApiValidatorBodyTransactionBraintree`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionBraintree.md) \| [`ApiValidatorBodyTransactionIaptic`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionIaptic.md)
 
 ___
 
