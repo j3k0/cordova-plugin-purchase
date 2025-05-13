@@ -22,6 +22,7 @@ package cc.fovea;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+import android.app.Activity;
 import com.android.billingclient.api.AcknowledgePurchaseParams;
 import com.android.billingclient.api.AcknowledgePurchaseResponseListener;
 import com.android.billingclient.api.BillingClient;
