@@ -65,6 +65,20 @@ namespace CdvPurchase {
                 price_currency_code: string;
             }
 
+            /** One-time purchase offer details (new in Billing Library 8.0.0) */
+            export interface InAppOffer {
+                /** Offer id associated with this offer (may be null for default offer) */
+                offer_id: string | null;
+                /** Token required to pass in launchBillingFlow to purchase with this offer */
+                offer_token: string;
+                /** Formatted price for display */
+                formatted_price: string;
+                /** Price in micro-units (divide by 1000000 to get numeric price) */
+                price_amount_micros: number;
+                /** ISO 4217 currency code */
+                price_currency_code: string;
+            }
+
             export interface InAppProduct {
                 product_format: "v12.0" | "v11.0";
                 product_type: "inapp";
@@ -76,6 +90,8 @@ namespace CdvPurchase {
                 formatted_price?: string;
                 price?: string;
                 price_amount_micros?: number;
+                /** Array of offers for this product (new in Billing Library 8.0.0, only present in v12.0 format) */
+                offers?: InAppOffer[];
             }
         }
     }

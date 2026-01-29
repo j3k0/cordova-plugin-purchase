@@ -1,5 +1,34 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.13
+
+### 13.13.0
+
+#### (googleplay) Upgrade to Google Play Billing Library 8.3.0
+
+Major upgrade from 7.1.1 to 8.3.0. Key changes:
+
+**Breaking Changes (internal):**
+- Updated `enablePendingPurchases()` API to use `PendingPurchasesParams`
+- Requires `minSdkVersion` 23 or higher (Billing Library 8.1.0+ requirement)
+
+**New Features:**
+- Auto service reconnection for more reliable billing client connections
+- One-time product offers - INAPP products can now have multiple offers (v12.0 format)
+- Enabled pending purchases for one-time products and prepaid plans
+- Suspended subscriptions now returned in purchases list (aligns with Apple behavior)
+
+**New Bridge Types:**
+- `InAppOffer` interface for one-time product offers
+- `offers?: InAppOffer[]` on InAppProduct for v12.0 format products
+
+**Note on Suspended Subscriptions:**
+
+Previously, Google Play didn't return suspended subscriptions (paused or payment on hold) in the purchases list. Now it does, aligning with Apple's behavior. Suspended subscriptions have an `expirationDate` in the past, so `product.owned` will correctly return `false`. No code changes are needed - the existing `expirationDate` check handles this automatically.
+
+See Google Play Billing release notes for full details:
+https://developer.android.com/google/play/billing/release-notes
+
 ## 13.12
 
 ### 13.12.1

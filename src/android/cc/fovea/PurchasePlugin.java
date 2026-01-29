@@ -14,11 +14,6 @@
 
 package cc.fovea;
 
-// import com.android.billingclient.api.PriceChangeConfirmationListener;
-// import com.android.billingclient.api.PriceChangeFlowParams;
-// import com.android.billingclient.api.ProductDetails.PricingPhases;
-// import java.io.IOException;
-// import java.lang.reflect.Array;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
@@ -40,11 +35,13 @@ import com.android.billingclient.api.ProductDetails.OneTimePurchaseOfferDetails;
 import com.android.billingclient.api.ProductDetails.PricingPhase;
 import com.android.billingclient.api.ProductDetails.SubscriptionOfferDetails;
 import com.android.billingclient.api.ProductDetailsResponseListener;
+import com.android.billingclient.api.QueryProductDetailsResult;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
 import com.android.billingclient.api.QueryProductDetailsParams.Product;
+import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.QueryPurchasesParams;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -72,6 +69,15 @@ public final class PurchasePlugin
 
   /** Tag used for log messages. */
   private final String mTag = "CdvPurchase";
+
+  /**
+   * Internal callback interface for product details queries.
+   * This allows us to use List<ProductDetails> internally while adapting to
+   * the Billing Library 8.x QueryProductDetailsResult API.
+   */
+  private interface InternalProductDetailsResponseListener {
+    void onProductDetailsResponse(BillingResult result, List<ProductDetails> productDetailsList);
+  }
 
   /**
    * Context for the last plugin call.
@@ -300,7 +306,12 @@ public final class PurchasePlugin
 
     mBillingClient = BillingClient
       .newBuilder(cordova.getActivity())
-      .enablePendingPurchases()
+      .enablePendingPurchases(
+          PendingPurchasesParams.newBuilder()
+              .enableOneTimeProducts()
+              .enablePrepaidPlans()
+              .build())
+      .enableAutoServiceReconnection()
       .setListener(this)
       .build();
 
@@ -482,13 +493,34 @@ public final class PurchasePlugin
       .put("name", product.getName())
       .put("description", product.getDescription());
     if (product.getProductType().equals(ProductType.INAPP)) {
-      final OneTimePurchaseOfferDetails details = product.getOneTimePurchaseOfferDetails();
-      ret
-        .put("product_type", "inapp")
-        .put("product_format", "v11.0")
-        .put("formatted_price", details.getFormattedPrice())
-        .put("price_amount_micros", details.getPriceAmountMicros())
-        .put("price_currency_code", details.getPriceCurrencyCode());
+      // Check for multiple offers (new in Billing Library 8.0.0)
+      List<OneTimePurchaseOfferDetails> offerList = product.getOneTimePurchaseOfferDetailsList();
+
+      if (offerList != null && offerList.size() > 1) {
+        // Multiple offers - use v12.0 format with offers array
+        ret.put("product_format", "v12.0")
+           .put("product_type", "inapp");
+        JSONArray offers = new JSONArray();
+        for (OneTimePurchaseOfferDetails offer : offerList) {
+          JSONObject offerJson = new JSONObject()
+            .put("offer_id", offer.getOfferId())
+            .put("offer_token", offer.getOfferToken())
+            .put("formatted_price", offer.getFormattedPrice())
+            .put("price_amount_micros", offer.getPriceAmountMicros())
+            .put("price_currency_code", offer.getPriceCurrencyCode());
+          offers.put(offerJson);
+        }
+        ret.put("offers", offers);
+      } else {
+        // Single offer - use legacy v11.0 format (current behavior)
+        final OneTimePurchaseOfferDetails details = product.getOneTimePurchaseOfferDetails();
+        ret
+          .put("product_type", "inapp")
+          .put("product_format", "v11.0")
+          .put("formatted_price", details.getFormattedPrice())
+          .put("price_amount_micros", details.getPriceAmountMicros())
+          .put("price_currency_code", details.getPriceCurrencyCode());
+      }
     }
     else if (product.getProductType().equals(ProductType.SUBS)) {
       // Subscription are now described in v12.0 product format.
@@ -560,7 +592,7 @@ public final class PurchasePlugin
   private void getAvailableProducts(List<String> inAppProductIds, List<String> subsProductIds) {
     Log.d(mTag, "getAvailableProducts()");
     final CallbackContext callbackContext = this.mCallbackContext; // Store current context
-    queryAllProductDetails(inAppProductIds, subsProductIds, new ProductDetailsResponseListener() {
+    queryAllProductDetails(inAppProductIds, subsProductIds, new InternalProductDetailsResponseListener() {
         @Override
         public void onProductDetailsResponse(
             final BillingResult result,
@@ -1110,7 +1142,7 @@ public final class PurchasePlugin
    *
    * @param listener Code to run once data has been loaded
    */
-  private void queryAllProductDetails(List<String> inAppProductIds, List<String> subsProductIds, final ProductDetailsResponseListener listener) {
+  private void queryAllProductDetails(List<String> inAppProductIds, List<String> subsProductIds, final InternalProductDetailsResponseListener listener) {
     Log.d(mTag, "queryAllProductDetails()");
     ArrayList<ProductDetails> allProducts = new ArrayList<ProductDetails>();
 
@@ -1119,8 +1151,8 @@ public final class PurchasePlugin
       + (inAppProductIds.size() > 0 ? 1 : 0);
     nProductDetailsQuerySuccessful = 0;
 
-    final ProductDetailsResponseListener queryListener =
-      new ProductDetailsResponseListener() {
+    final InternalProductDetailsResponseListener queryListener =
+      new InternalProductDetailsResponseListener() {
         @Override
         public void onProductDetailsResponse(
             final BillingResult result,
@@ -1188,7 +1220,7 @@ public final class PurchasePlugin
   public void queryProductDetailsAsync(
       // @ProductType final String itemType,
       final List<Product> productList,
-      final ProductDetailsResponseListener listener) {
+      final InternalProductDetailsResponseListener listener) {
     Log.d(mTag, "queryProductDetailsAsync()");
     executeServiceRequest(() -> {
       if (getLastResponseCode() != BillingResponseCode.OK) {
@@ -1199,7 +1231,14 @@ public final class PurchasePlugin
         Log.d(mTag, "queryProductDetailsAsync() -> Success");
         QueryProductDetailsParams.Builder params = QueryProductDetailsParams.newBuilder();
         params.setProductList(productList)/* .setType(itemType) */;
-        mBillingClient.queryProductDetailsAsync(params.build(), listener);
+        // Billing Library 8.x uses QueryProductDetailsResult instead of List<ProductDetails>
+        mBillingClient.queryProductDetailsAsync(params.build(), new ProductDetailsResponseListener() {
+          @Override
+          public void onProductDetailsResponse(BillingResult billingResult, QueryProductDetailsResult queryResult) {
+            List<ProductDetails> productDetailsList = queryResult != null ? queryResult.getProductDetailsList() : null;
+            listener.onProductDetailsResponse(billingResult, productDetailsList);
+          }
+        });
       }
     });
   }

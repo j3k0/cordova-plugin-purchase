@@ -49,7 +49,7 @@ namespace CdvPurchase {
                 if (typeof purchase.consumed !== 'undefined') this.isConsumed = purchase.consumed;
                 if (typeof purchase.autoRenewing !== 'undefined') this.renewalIntent = purchase.autoRenewing ? RenewalIntent.RENEW : RenewalIntent.LAPSE;
                 if (typeof purchase.quantity !== 'undefined') this.quantity = purchase.quantity;
-                
+
                 // Handle expiryTimeMillis for subscriptions
                 if (purchase.expiryTimeMillis) {
                     const expiryTime = parseInt(purchase.expiryTimeMillis, 10);
