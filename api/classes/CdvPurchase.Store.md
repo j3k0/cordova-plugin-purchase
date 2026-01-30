@@ -658,7 +658,7 @@ store.register([{
   title: '...',
   description: 'A custom test consumable product',
   pricing: {
-    price: '$2.99', 
+    price: '$2.99',
     currency: 'USD',
     priceMicros: 2990000
   }

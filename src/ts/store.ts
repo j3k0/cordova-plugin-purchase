@@ -32,9 +32,9 @@
  *   platform: CdvPurchase.Platform.APPLE_APPSTORE
  * });
  * ```
- * 
+ *
  * Note: Using destructuring with the namespace may cause issues with minification tools:
- * 
+ *
  * ```ts
  * // NOT recommended - may cause issues with minification tools like Terser
  * const { store, ProductType, Platform, LogLevel } = CdvPurchase;
@@ -45,7 +45,7 @@ namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    export const PLUGIN_VERSION = '13.12.1';
+    export const PLUGIN_VERSION = '13.13.0';
 
     /**
      * Entry class of the plugin.
@@ -236,9 +236,9 @@ namespace CdvPurchase {
                 log: this.log,
             }).launch();
             this.expiryMonitor = new Internal.ExpiryMonitor({
-                get localReceipts() { 
+                get localReceipts() {
                     // Only use local receipts if there's no validator configured
-                    return store.validator ? [] : store.localReceipts; 
+                    return store.validator ? [] : store.localReceipts;
                 },
                 get verifiedReceipts() { return store.verifiedReceipts; },
                 onTransactionExpired(transaction) {
@@ -274,7 +274,7 @@ namespace CdvPurchase {
          *       type: ProductType.CONSUMABLE,
          *       platform: Platform.BRAINTREE,
          *   }]);
-         * 
+         *
          * // Can also be used in development to register test products
          * store.register([{
          *   id: 'my-custom-product',
@@ -283,7 +283,7 @@ namespace CdvPurchase {
          *   title: '...',
          *   description: 'A custom test consumable product',
          *   pricing: {
-         *     price: '$2.99', 
+         *     price: '$2.99',
          *     currency: 'USD',
          *     priceMicros: 2990000
          *   }
@@ -669,7 +669,7 @@ namespace CdvPurchase {
          * Finalize a transaction.
          *
          * This will be called from the Receipt, Transaction or VerifiedReceipt objects using the API decorators.
-         * 
+         *
          * If the transaction has already been consumed or acknowledged according to the verification API,
          * the native platform's finish method will be skipped to avoid errors.
          */
@@ -681,18 +681,18 @@ namespace CdvPurchase {
                     : receipt instanceof Receipt
                         ? receipt.transactions
                         : [receipt];
-            
+
             transactions.forEach(transaction => {
                 // Check if this transaction has already been consumed or acknowledged according to verification API
                 let skipNativeFinish = false;
-                
+
                 if (this.validator && receipt instanceof VerifiedReceipt) {
                     // Find matching purchase in the verified collection
                     const verifiedPurchase = receipt.collection.find(p => {
                         // Match by transactionId if available
                         return (p.transactionId && p.transactionId === transaction.transactionId);
                     });
-                    
+
                     if (verifiedPurchase) {
                         // Check if transaction is acknowledged
                         if (verifiedPurchase.isAcknowledged === true) {
@@ -700,7 +700,7 @@ namespace CdvPurchase {
                             transaction.isAcknowledged = true;
                             skipNativeFinish = true;
                         }
-                        
+
                         // Check if transaction is consumed
                         if (verifiedPurchase.isConsumed === true) {
                             this.log.info(`Transaction ${transaction.transactionId} already consumed according to verification API`);

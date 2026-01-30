@@ -784,6 +784,43 @@ var CdvPurchase;
                  */
                 this.list = [];
             }
+            /**
+             * Register a custom adapter factory for a platform.
+             *
+             * Use this to add support for platforms not built into the library.
+             *
+             * @param platform - The platform identifier
+             * @param factory - A function that creates an Adapter instance
+             *
+             * @example
+             * ```typescript
+             * CdvPurchase.Internal.Adapters.registerAdapter(
+             *     'my-custom-platform' as CdvPurchase.Platform,
+             *     (context, options) => new MyCustomAdapter(context, options)
+             * );
+             * ```
+             */
+            static registerAdapter(platform, factory) {
+                this.adapterFactories[platform] = factory;
+            }
+            /**
+             * Check if a custom adapter factory is registered for a platform.
+             */
+            static hasAdapterFactory(platform) {
+                return platform in this.adapterFactories;
+            }
+            /**
+             * Create an adapter instance using a registered factory.
+             *
+             * @returns The adapter instance, or undefined if no factory is registered.
+             */
+            static createAdapter(platform, context, options) {
+                const factory = this.adapterFactories[platform];
+                if (factory) {
+                    return factory(context, options);
+                }
+                return undefined;
+            }
             add(log, adapters, context) {
                 adapters.forEach(po => {
                     log.info("");
@@ -807,6 +844,12 @@ var CdvPurchase;
                             }
                             return this.list.push(new CdvPurchase.IapticJS.Adapter(context, po.options));
                         default:
+                            // Check for dynamically registered adapter
+                            const dynamicAdapter = Adapters.createAdapter(po.platform, context, po.options || {});
+                            if (dynamicAdapter) {
+                                return this.list.push(dynamicAdapter);
+                            }
+                            log.warn(`No adapter found for platform: ${po.platform}`);
                             return;
                     }
                 });
@@ -884,6 +927,12 @@ var CdvPurchase;
                 return this.list.filter(adapter => (!platform || adapter.id === platform) && adapter.ready)[0];
             }
         }
+        /**
+         * Registry of adapter factories for dynamic adapter registration.
+         *
+         * This allows third-party adapters to be registered without modifying the core library.
+         */
+        Adapters.adapterFactories = {};
         Internal.Adapters = Adapters;
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
@@ -1433,7 +1482,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.12.1';
+    CdvPurchase.PLUGIN_VERSION = '13.13.0';
     /**
      * Entry class of the plugin.
      */

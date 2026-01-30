@@ -15,6 +15,7 @@
 
 ### Interfaces
 
+- [InAppOffer](../interfaces/CdvPurchase.GooglePlay.Bridge.InAppOffer.md)
 - [InAppProduct](../interfaces/CdvPurchase.GooglePlay.Bridge.InAppProduct.md)
 - [Options](../interfaces/CdvPurchase.GooglePlay.Bridge.Options.md)
 - [PricingPhase](../interfaces/CdvPurchase.GooglePlay.Bridge.PricingPhase.md)

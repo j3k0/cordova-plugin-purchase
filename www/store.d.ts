@@ -448,6 +448,39 @@ declare namespace CdvPurchase {
          */
         class Adapters {
             /**
+             * Registry of adapter factories for dynamic adapter registration.
+             *
+             * This allows third-party adapters to be registered without modifying the core library.
+             */
+            private static adapterFactories;
+            /**
+             * Register a custom adapter factory for a platform.
+             *
+             * Use this to add support for platforms not built into the library.
+             *
+             * @param platform - The platform identifier
+             * @param factory - A function that creates an Adapter instance
+             *
+             * @example
+             * ```typescript
+             * CdvPurchase.Internal.Adapters.registerAdapter(
+             *     'my-custom-platform' as CdvPurchase.Platform,
+             *     (context, options) => new MyCustomAdapter(context, options)
+             * );
+             * ```
+             */
+            static registerAdapter(platform: Platform, factory: (context: AdapterContext, options: object) => Adapter): void;
+            /**
+             * Check if a custom adapter factory is registered for a platform.
+             */
+            static hasAdapterFactory(platform: Platform): boolean;
+            /**
+             * Create an adapter instance using a registered factory.
+             *
+             * @returns The adapter instance, or undefined if no factory is registered.
+             */
+            private static createAdapter;
+            /**
              * List of instantiated adapters.
              *
              * They are added to this list by "initialize()".
@@ -784,7 +817,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.12.1";
+    const PLUGIN_VERSION = "13.13.0";
     /**
      * Entry class of the plugin.
      */
@@ -4401,6 +4434,19 @@ declare namespace CdvPurchase {
                 price_amount_micros: number;
                 price_currency_code: string;
             }
+            /** One-time purchase offer details (new in Billing Library 8.0.0) */
+            interface InAppOffer {
+                /** Offer id associated with this offer (may be null for default offer) */
+                offer_id: string | null;
+                /** Token required to pass in launchBillingFlow to purchase with this offer */
+                offer_token: string;
+                /** Formatted price for display */
+                formatted_price: string;
+                /** Price in micro-units (divide by 1000000 to get numeric price) */
+                price_amount_micros: number;
+                /** ISO 4217 currency code */
+                price_currency_code: string;
+            }
             interface InAppProduct {
                 product_format: "v12.0" | "v11.0";
                 product_type: "inapp";
@@ -4412,6 +4458,8 @@ declare namespace CdvPurchase {
                 formatted_price?: string;
                 price?: string;
                 price_amount_micros?: number;
+                /** Array of offers for this product (new in Billing Library 8.0.0, only present in v12.0 format) */
+                offers?: InAppOffer[];
             }
         }
     }
