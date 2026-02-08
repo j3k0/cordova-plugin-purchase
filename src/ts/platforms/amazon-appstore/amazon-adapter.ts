@@ -228,17 +228,8 @@ namespace CdvPurchase {
 
                     const onFailure = (message: string, code?: ErrorCode) => resolve(amazonError(code || ErrorCode.UNKNOWN, message, null));
 
-                    const firstProduct = transaction.products[0];
-                    const product = firstProduct ? this._products.find(p => p.id === firstProduct.id) : undefined;
-
-                    // For consumables, notify fulfillment
-                    if (!product || product.type === ProductType.CONSUMABLE || product.type === ProductType.NON_RENEWING_SUBSCRIPTION) {
-                        this.bridge.notifyFulfillment(receiptId, onSuccess, onFailure);
-                    }
-                    else {
-                        // For non-consumables and subscriptions, also notify fulfillment
-                        this.bridge.notifyFulfillment(receiptId, onSuccess, onFailure);
-                    }
+                    // Amazon IAP uses notifyFulfillment for all product types
+                    this.bridge.notifyFulfillment(receiptId, onSuccess, onFailure);
                 });
             }
 
