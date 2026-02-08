@@ -29,7 +29,7 @@ SOFTWARE.
     version="13.12.1">
 
     <name>Purchase</name>
-	<description>Cordova Purchase plugin for iOS (AppStore), Android (PlayStore) and Windows</description>
+	<description>Cordova Purchase plugin for iOS (AppStore), Android (PlayStore, Amazon AppStore) and Windows</description>
     <engines>
         <engine name="cordova" version=">=6.0.0" />
         <engine name="cordova-android" version=">=4.0.0" />
@@ -38,7 +38,7 @@ SOFTWARE.
     <issue>https://github.com/j3k0/cordova-plugin-purchase/issues</issue>
 
 	<license>MIT</license>
-    <keywords>cordova,phonegap,purchase,purchases,storekit,billing,ios,android,play,appstore,windows,osx,macos</keywords>
+    <keywords>cordova,phonegap,purchase,purchases,storekit,billing,ios,android,play,appstore,amazon,windows,osx,macos</keywords>
 
     <!-- ios -->
     <platform name="ios">
@@ -127,6 +127,17 @@ SOFTWARE.
       <framework src="com.android.billingclient:billing:7.1.1" />
       <source-file src="src/android/cc/fovea/PurchasePlugin.java" target-dir="src/cc/fovea" />
       <source-file src="src/android/cc/fovea/Constants.java" target-dir="src/cc/fovea" />
+      <source-file src="src/android/cc/fovea/AmazonPurchasePlugin.java" target-dir="src/cc/fovea" />
+
+      <!-- Amazon IAP configuration -->
+      <config-file target="res/xml/config.xml" parent="/*">
+        <feature name="AmazonInAppPurchasePlugin">
+          <param
+            name="android-package"
+            value="cc.fovea.AmazonPurchasePlugin"
+            />
+        </feature>
+      </config-file>
     </platform>
 
     <platform name="browser">

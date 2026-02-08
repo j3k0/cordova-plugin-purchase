@@ -240,7 +240,8 @@ namespace CdvPurchase {
         GOOGLE_PLAY = 'android-playstore',
 
         /** Windows Store */
-        WINDOWS_STORE = 'windows-store-transaction',
+        WINDOWS_STORE = 'windo' +
+			'ws-store-transaction',
 
         /** Braintree */
         BRAINTREE = 'braintree',
@@ -250,6 +251,9 @@ namespace CdvPurchase {
 
         /** Test platform */
         TEST = 'test',
+
+        /** Amazon AppStore */
+        AMAZON_APPSTORE = 'amazon-appstore',
     }
 
     /**

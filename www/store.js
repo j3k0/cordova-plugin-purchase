@@ -801,6 +801,8 @@ var CdvPurchase;
                             return this.list.push(new CdvPurchase.Braintree.Adapter(context, po.options));
                         case CdvPurchase.Platform.TEST:
                             return this.list.push(new CdvPurchase.Test.Adapter(context));
+                        case CdvPurchase.Platform.AMAZON_APPSTORE:
+                            return this.list.push(new CdvPurchase.AmazonAppStore.Adapter(context));
                         default:
                             return;
                     }
@@ -2082,6 +2084,8 @@ var CdvPurchase;
         // STRIPE = 'stripe',
         /** Test platform */
         Platform["TEST"] = "test";
+        /** Amazon AppStore */
+        Platform["AMAZON_APPSTORE"] = "amazon-appstore";
     })(Platform = CdvPurchase.Platform || (CdvPurchase.Platform = {}));
     /**
      * Possible states of a transaction.
@@ -3418,7 +3422,7 @@ var CdvPurchase;
                         transactionDate: string;
                         discountId: string;
                     }[] = [];
-    
+
                     private timer: number | null = null;
                     */
                     /** List of transaction updates to process */
