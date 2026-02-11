@@ -7,6 +7,27 @@
 
 function demo() {
 
+    CdvPurchase.store.requestPayment({
+        items: [{
+            id: 'my-product',
+            title: 'My Product',
+            pricing: {
+                priceMicros: 1990000,
+                currency: 'USD',
+            }
+        }],
+        platform: CdvPurchase.Platform.BRAINTREE,
+    }, {
+        braintree: {
+            dropInRequest: {
+                paypalDisabled: true,
+                googlePayRequest: {
+                    payPalEnabled: false
+                }
+            }
+        }
+    });
+
     CdvPurchase.store.when().receiptsReady(() => {
         console.log('All platforms are done loading their local receipts');
     });
@@ -145,7 +166,15 @@ function demo() {
 store.register({
     id: '',
     platform: CdvPurchase.Platform.APPLE_APPSTORE,
+    type: CdvPurchase.ProductType.PAID_SUBSCRIPTION
 });
+
+type StringValues<T> = {
+    [K in keyof T]: T[K] extends string ? T[K] : never;
+}[keyof T];
+type EnumAsUnion<T> = `${StringValues<T>}`
+type Platforms = EnumAsUnion<typeof CdvPurchase.Platform>;
+
 store.initialize().then().catch();
 store.when().verified(verifiedReceipt => {
 })
@@ -228,4 +257,17 @@ store.defaultPlatform
             appStore.presentCodeRedemptionSheet();
         }
     }
+
+    let thankYouAfterTransaction: string|undefined;
+    CdvPurchase.store.when().initiated(function (transaction) {
+        // a new transaction was initiated.
+        thankYouAfterTransaction = transaction.transactionId;
+    })
+    .verified(function (receipt) {
+        // assuming you are using receipt validation, if not use the "finish" event.
+        if (receipt.collection.find(purchase => purchase.transactionId === thankYouAfterTransaction)) {
+            // show thank you page
+            thankYouAfterTransaction = undefined;
+        }
+    });
 }
