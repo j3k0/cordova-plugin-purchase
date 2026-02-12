@@ -6,6 +6,7 @@ Adapter for a payment or in-app purchase platform
 
 ## Implemented by
 
+- [`Adapter`](../classes/CdvPurchase.AmazonAppStore.Adapter.md)
 - [`Adapter`](../classes/CdvPurchase.AppleAppStore.Adapter.md)
 - [`Adapter`](../classes/CdvPurchase.Braintree.Adapter.md)
 - [`Adapter`](../classes/CdvPurchase.GooglePlay.Adapter.md)

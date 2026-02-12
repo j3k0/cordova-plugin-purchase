@@ -6,6 +6,7 @@
 
 ### Interfaces
 
+- [ApiValidatorBodyTransactionAmazon](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionAmazon.md)
 - [ApiValidatorBodyTransactionApple](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionApple.md)
 - [ApiValidatorBodyTransactionBraintree](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionBraintree.md)
 - [ApiValidatorBodyTransactionGoogle](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionGoogle.md)
@@ -24,7 +25,7 @@
 
 ### ApiValidatorBodyTransaction
 
-Ƭ **ApiValidatorBodyTransaction**: [`ApiValidatorBodyTransactionApple`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionApple.md) \| [`ApiValidatorBodyTransactionGoogle`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionGoogle.md) \| [`ApiValidatorBodyTransactionWindows`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionWindows.md) \| [`ApiValidatorBodyTransactionBraintree`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionBraintree.md)
+Ƭ **ApiValidatorBodyTransaction**: [`ApiValidatorBodyTransactionApple`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionApple.md) \| [`ApiValidatorBodyTransactionGoogle`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionGoogle.md) \| [`ApiValidatorBodyTransactionWindows`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionWindows.md) \| [`ApiValidatorBodyTransactionBraintree`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionBraintree.md) \| [`ApiValidatorBodyTransactionAmazon`](../interfaces/CdvPurchase.Validator.Request.ApiValidatorBodyTransactionAmazon.md)
 
 ___
 

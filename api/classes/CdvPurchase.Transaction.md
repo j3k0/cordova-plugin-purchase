@@ -13,6 +13,8 @@ Transaction as reported by the device
 
 - **`Transaction`**
 
+  ↳ [`Transaction`](CdvPurchase.AmazonAppStore.Transaction.md)
+
   ↳ [`SKTransaction`](CdvPurchase.AppleAppStore.SKTransaction.md)
 
   ↳ [`Transaction`](CdvPurchase.GooglePlay.Transaction.md)

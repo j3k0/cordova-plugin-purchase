@@ -18,6 +18,7 @@ const {store, ProductType, Platform, LogLevel} = CdvPurchase;
 
 ### Namespaces
 
+- [AmazonAppStore](CdvPurchase.AmazonAppStore.md)
 - [AppleAppStore](CdvPurchase.AppleAppStore.md)
 - [ApplePay](CdvPurchase.ApplePay.md)
 - [Braintree](CdvPurchase.Braintree.md)
@@ -135,7 +136,7 @@ ___
 
 ### PlatformWithOptions
 
-Ƭ **PlatformWithOptions**: [`Braintree`](../interfaces/CdvPurchase.PlatformOptions.Braintree.md) \| [`AppleAppStore`](../interfaces/CdvPurchase.PlatformOptions.AppleAppStore.md) \| [`GooglePlay`](../interfaces/CdvPurchase.PlatformOptions.GooglePlay.md) \| [`Test`](../interfaces/CdvPurchase.PlatformOptions.Test.md) \| [`WindowsStore`](../interfaces/CdvPurchase.PlatformOptions.WindowsStore.md)
+Ƭ **PlatformWithOptions**: [`Braintree`](../interfaces/CdvPurchase.PlatformOptions.Braintree.md) \| [`AppleAppStore`](../interfaces/CdvPurchase.PlatformOptions.AppleAppStore.md) \| [`GooglePlay`](../interfaces/CdvPurchase.PlatformOptions.GooglePlay.md) \| [`Test`](../interfaces/CdvPurchase.PlatformOptions.Test.md) \| [`WindowsStore`](../interfaces/CdvPurchase.PlatformOptions.WindowsStore.md) \| [`AmazonAppStore`](../interfaces/CdvPurchase.PlatformOptions.AmazonAppStore.md)
 
 Used to initialize a platform with some options
 

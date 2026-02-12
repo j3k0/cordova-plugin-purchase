@@ -8,6 +8,7 @@ Purchase platforms supported by the plugin
 
 ### Enumeration Members
 
+- [AMAZON\_APPSTORE](CdvPurchase.Platform.md#amazon_appstore)
 - [APPLE\_APPSTORE](CdvPurchase.Platform.md#apple_appstore)
 - [BRAINTREE](CdvPurchase.Platform.md#braintree)
 - [GOOGLE\_PLAY](CdvPurchase.Platform.md#google_play)
@@ -15,6 +16,14 @@ Purchase platforms supported by the plugin
 - [WINDOWS\_STORE](CdvPurchase.Platform.md#windows_store)
 
 ## Enumeration Members
+
+### AMAZON\_APPSTORE
+
+• **AMAZON\_APPSTORE** = ``"amazon-appstore"``
+
+Amazon AppStore
+
+___
 
 ### APPLE\_APPSTORE
 

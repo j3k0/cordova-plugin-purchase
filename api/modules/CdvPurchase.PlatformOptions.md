@@ -6,6 +6,7 @@
 
 ### Interfaces
 
+- [AmazonAppStore](../interfaces/CdvPurchase.PlatformOptions.AmazonAppStore.md)
 - [AppleAppStore](../interfaces/CdvPurchase.PlatformOptions.AppleAppStore.md)
 - [Braintree](../interfaces/CdvPurchase.PlatformOptions.Braintree.md)
 - [GooglePlay](../interfaces/CdvPurchase.PlatformOptions.GooglePlay.md)

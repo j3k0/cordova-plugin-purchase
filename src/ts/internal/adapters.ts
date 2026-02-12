@@ -99,12 +99,6 @@ namespace CdvPurchase
                         case Platform.AMAZON_APPSTORE:
                             return this.list.push(new AmazonAppStore.Adapter(context));
                         default:
-                            // Check for dynamically registered adapter
-                            const dynamicAdapter = Adapters.createAdapter(po.platform, context, (po as { options?: object }).options || {});
-                            if (dynamicAdapter) {
-                                return this.list.push(dynamicAdapter);
-                            }
-                            log.warn(`No adapter found for platform: ${po.platform}`);
                             return;
                     }
                 });
