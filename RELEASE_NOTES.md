@@ -2,6 +2,12 @@
 
 ## 13.13
 
+### 13.13.1
+
+#### (ios) Remove unused FileUtility class — fixes #1657
+
+FileUtility was unused and missing `#import <Foundation/Foundation.h>`, causing build failures with cordova-ios 8 and Capacitor on Xcode 16.
+
 ### 13.13.0
 
 #### (googleplay) Upgrade to Google Play Billing Library 8.3.0
