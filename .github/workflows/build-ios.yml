@@ -37,18 +37,21 @@ jobs:
           npm install -g cordova
           npm ci
 
-      - name: Create test project
+      - name: Create and prepare test project
         run: |
           cordova create "$RUNNER_TEMP/testapp" com.test.purchaseci TestApp
           cd "$RUNNER_TEMP/testapp"
           cordova platform add ios
           cordova plugin add "$GITHUB_WORKSPACE"
+          cordova prepare ios
 
       - name: Build iOS
-        working-directory: ${{ runner.temp }}/testapp
+        working-directory: ${{ runner.temp }}/testapp/platforms/ios
         run: >
-          cordova build ios
-          --device
-          --buildFlag="CODE_SIGN_IDENTITY="
-          --buildFlag="CODE_SIGNING_REQUIRED=NO"
-          --buildFlag="CODE_SIGNING_ALLOWED=NO"
+          xcodebuild build
+          -workspace App.xcworkspace
+          -scheme App
+          -sdk iphoneos
+          CODE_SIGN_IDENTITY=""
+          CODE_SIGNING_REQUIRED=NO
+          CODE_SIGNING_ALLOWED=NO
