@@ -35,11 +35,11 @@ jobs:
 
       - name: Create test project
         run: |
-          cordova create testapp com.test.purchaseci TestApp
-          cd testapp
+          cordova create "$RUNNER_TEMP/testapp" com.test.purchaseci TestApp
+          cd "$RUNNER_TEMP/testapp"
           cordova platform add android@latest
           cordova plugin add "$GITHUB_WORKSPACE"
 
       - name: Build Android
-        working-directory: testapp
+        working-directory: ${{ runner.temp }}/testapp
         run: cordova build android

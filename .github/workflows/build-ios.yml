@@ -39,13 +39,13 @@ jobs:
 
       - name: Create test project
         run: |
-          cordova create testapp com.test.purchaseci TestApp
-          cd testapp
+          cordova create "$RUNNER_TEMP/testapp" com.test.purchaseci TestApp
+          cd "$RUNNER_TEMP/testapp"
           cordova platform add ios
           cordova plugin add "$GITHUB_WORKSPACE"
 
       - name: Build iOS
-        working-directory: testapp
+        working-directory: ${{ runner.temp }}/testapp
         run: >
           cordova build ios
           --device
