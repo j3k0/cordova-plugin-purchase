@@ -33,13 +33,13 @@ jobs:
           npm install -g cordova
           npm ci
 
-      - name: Install paramedic
-        run: npm install -g github:apache/cordova-paramedic
+      - name: Create test project
+        run: |
+          cordova create testapp com.test.purchaseci TestApp
+          cd testapp
+          cordova platform add android@latest
+          cordova plugin add "$GITHUB_WORKSPACE"
 
       - name: Build Android
-        run: >
-          cordova-paramedic
-          --platform android@latest
-          --plugin ./
-          --justbuild
-          --verbose
+        working-directory: testapp
+        run: cordova build android

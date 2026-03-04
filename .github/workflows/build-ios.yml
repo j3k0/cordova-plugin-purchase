@@ -34,16 +34,21 @@ jobs:
 
       - name: Install Cordova and dependencies
         run: |
-          npm install -g cordova ios-deploy
+          npm install -g cordova
           npm ci
 
-      - name: Install paramedic
-        run: npm install -g github:apache/cordova-paramedic
+      - name: Create test project
+        run: |
+          cordova create testapp com.test.purchaseci TestApp
+          cd testapp
+          cordova platform add ios
+          cordova plugin add "$GITHUB_WORKSPACE"
 
       - name: Build iOS
+        working-directory: testapp
         run: >
-          cordova-paramedic
-          --platform ios
-          --plugin ./
-          --justbuild
-          --verbose
+          cordova build ios
+          --device
+          --buildFlag="CODE_SIGN_IDENTITY="
+          --buildFlag="CODE_SIGNING_REQUIRED=NO"
+          --buildFlag="CODE_SIGNING_ALLOWED=NO"
