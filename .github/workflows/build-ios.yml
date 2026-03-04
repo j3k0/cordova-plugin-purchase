@@ -26,6 +26,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -33,7 +34,7 @@ jobs:
 
       - name: Install Cordova and dependencies
         run: |
-          npm install -g cordova
+          npm install -g cordova ios-deploy
           npm ci
 
       - name: Install paramedic
