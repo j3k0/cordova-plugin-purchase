@@ -4446,6 +4446,7 @@ declare namespace CdvPurchase {
                 price_amount_micros: number;
                 /** ISO 4217 currency code */
                 price_currency_code: string;
+                offer_tags: string[];
             }
             interface InAppProduct {
                 product_format: "v12.0" | "v11.0";

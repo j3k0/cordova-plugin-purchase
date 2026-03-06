@@ -502,12 +502,20 @@ public final class PurchasePlugin
            .put("product_type", "inapp");
         JSONArray offers = new JSONArray();
         for (OneTimePurchaseOfferDetails offer : offerList) {
+          // Build offer tags array
+          JSONArray tags = new JSONArray();
+          if (offer.getOfferTags() != null) {
+              for (String tag : offer.getOfferTags()) {
+                  tags.put(tag);
+              }
+          }
           JSONObject offerJson = new JSONObject()
             .put("offer_id", offer.getOfferId())
             .put("offer_token", offer.getOfferToken())
             .put("formatted_price", offer.getFormattedPrice())
             .put("price_amount_micros", offer.getPriceAmountMicros())
-            .put("price_currency_code", offer.getPriceCurrencyCode());
+            .put("price_currency_code", offer.getPriceCurrencyCode())
+            .put("offer_tags", tags);
           offers.put(offerJson);
         }
         ret.put("offers", offers);

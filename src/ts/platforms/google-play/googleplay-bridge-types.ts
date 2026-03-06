@@ -77,6 +77,7 @@ namespace CdvPurchase {
                 price_amount_micros: number;
                 /** ISO 4217 currency code */
                 price_currency_code: string;
+                offer_tags: string[];
             }
 
             export interface InAppProduct {
