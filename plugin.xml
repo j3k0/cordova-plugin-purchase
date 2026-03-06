@@ -26,7 +26,7 @@ SOFTWARE.
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     id="cordova-plugin-purchase"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    version="13.13.0">
+    version="13.13.1">
 
     <name>Purchase</name>
 	<description>Cordova Purchase plugin for iOS (AppStore), Android (PlayStore) and Windows</description>
@@ -65,8 +65,6 @@ SOFTWARE.
         <source-file src="src/ios/SKProduct+LocalizedPrice.m" />
         <header-file src="src/ios/SKProductDiscount+LocalizedPrice.h" />
         <source-file src="src/ios/SKProductDiscount+LocalizedPrice.m" />
-        <header-file src="src/ios/FileUtility.h" />
-        <source-file src="src/ios/FileUtility.m" />
 
         <framework src="StoreKit.framework" />
     </platform>
@@ -96,8 +94,6 @@ SOFTWARE.
         <source-file src="src/ios/SKProduct+LocalizedPrice.m" />
         <header-file src="src/ios/SKProductDiscount+LocalizedPrice.h" />
         <source-file src="src/ios/SKProductDiscount+LocalizedPrice.m" />
-        <header-file src="src/ios/FileUtility.h" />
-        <source-file src="src/ios/FileUtility.m" />
 
         <framework src="StoreKit.framework" />
     </platform>
