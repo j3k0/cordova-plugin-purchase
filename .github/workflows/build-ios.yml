@@ -32,18 +32,6 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode }}
 
-      - name: Cache iOS Simulator runtime
-        if: matrix.runner == 'macos-15'
-        uses: actions/cache@v4
-        id: sim-cache
-        with:
-          path: ~/Library/Developer/CoreSimulator/Profiles/Runtimes
-          key: ios-sim-runtime-${{ matrix.xcode }}
-
-      - name: Install iOS Simulator runtime
-        if: matrix.runner == 'macos-15' && steps.sim-cache.outputs.cache-hit != 'true'
-        run: xcodebuild -downloadPlatform iOS
-
       - name: Install Cordova and dependencies
         run: |
           npm install -g cordova
