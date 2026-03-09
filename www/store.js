@@ -1482,7 +1482,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.13.0';
+    CdvPurchase.PLUGIN_VERSION = '13.13.1';
     /**
      * Entry class of the plugin.
      */
@@ -3369,12 +3369,12 @@ var CdvPurchase;
                     if (transaction.transactionId === AppleAppStore.APPLICATION_VIRTUAL_TRANSACTION_ID || transaction.transactionId === virtualTransactionId(transaction.products[0].id)) {
                         // this is a virtual transaction, nothing to do.
                         transaction.state = CdvPurchase.TransactionState.FINISHED;
-                        this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [transaction.parentReceipt]);
+                        this.receiptsUpdated.call();
                         return resolve(undefined);
                     }
                     const success = () => {
                         transaction.state = CdvPurchase.TransactionState.FINISHED;
-                        this.context.listener.receiptsUpdated(CdvPurchase.Platform.APPLE_APPSTORE, [transaction.parentReceipt]);
+                        this.receiptsUpdated.call();
                         resolve(undefined);
                     };
                     const error = (msg) => {
@@ -6305,7 +6305,7 @@ var CdvPurchase;
         class Receipt extends CdvPurchase.Receipt {
             constructor(purchases, accessToken, context) {
                 super(CdvPurchase.Platform.IAPTIC_JS, context.apiDecorators);
-                this.context = context;
+                Object.defineProperty(this, 'context', { 'enumerable': false, 'writable': true, value: context });
                 this.purchases = purchases;
                 this.accessToken = accessToken;
                 // Create transactions based on the purchases array

@@ -19,11 +19,11 @@ namespace CdvPurchase {
             public accessToken: string;    // The KEY for verification/refreshing
 
             // Keep a reference to the context for decorators
-            private context: Internal.AdapterContext;
+            private context!: Internal.AdapterContext;
 
             constructor(purchases: ModuleIapticJS.Purchase[], accessToken: string, context: Internal.AdapterContext) {
                 super(Platform.IAPTIC_JS, context.apiDecorators);
-                this.context = context;
+                Object.defineProperty(this, 'context', { 'enumerable': false, 'writable': true, value: context });
                 this.purchases = purchases;
                 this.accessToken = accessToken;
                 // Create transactions based on the purchases array
