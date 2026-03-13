@@ -10,6 +10,7 @@ One-time purchase offer details (new in Billing Library 8.0.0)
 
 - [formatted\_price](CdvPurchase.GooglePlay.Bridge.InAppOffer.md#formatted_price)
 - [offer\_id](CdvPurchase.GooglePlay.Bridge.InAppOffer.md#offer_id)
+- [offer\_tags](CdvPurchase.GooglePlay.Bridge.InAppOffer.md#offer_tags)
 - [offer\_token](CdvPurchase.GooglePlay.Bridge.InAppOffer.md#offer_token)
 - [price\_amount\_micros](CdvPurchase.GooglePlay.Bridge.InAppOffer.md#price_amount_micros)
 - [price\_currency\_code](CdvPurchase.GooglePlay.Bridge.InAppOffer.md#price_currency_code)
@@ -29,6 +30,12 @@ ___
 • **offer\_id**: ``null`` \| `string`
 
 Offer id associated with this offer (may be null for default offer)
+
+___
+
+### offer\_tags
+
+• **offer\_tags**: `string`[]
 
 ___
 
