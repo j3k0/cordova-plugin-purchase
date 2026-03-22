@@ -41,6 +41,7 @@ namespace CdvPurchase {
                 | ({ type: 'braintree'; data: Braintree.TransactionObject})
                 | ({ type: 'windows-store-transaction' } & WindowsStore.WindowsSubscription)
                 | ({ type: 'ios-appstore'; } & (AppleAppStore.VerifyReceipt.AppleTransaction | AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt))
+                | ({ type: 'apple-sk2'; })
                 | ({ type: 'android-playstore'; } & GooglePlay.PublisherAPI.GooglePurchase)
                 | ({ type: 'test'; })
                 //  | ({ type: 'stripe-charge'; } & StripeCharge);
