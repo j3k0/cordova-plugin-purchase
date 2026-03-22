@@ -223,7 +223,7 @@ namespace CdvPurchase {
                 autoFinish: boolean;
             }
 
-            export class Bridge {
+            export class Bridge implements BridgeInterface {
 
                 /** Callbacks set by the adapter */
                 options: BridgeCallbacks;
