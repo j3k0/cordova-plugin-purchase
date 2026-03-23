@@ -734,17 +734,28 @@ namespace CdvPurchase {
 
                 // SK2 uses a completely different transaction type ('apple-sk2') with JWS
                 // SK1 uses 'ios-appstore' with the monolithic appStoreReceipt
-                const txBody = this.useSK2 && transaction?.jwsRepresentation
-                    ? {
-                        type: 'apple-sk2' as const,
-                        id: transaction?.products?.[0]?.id,
-                        jwsRepresentation: transaction.jwsRepresentation,
+                if (this.useSK2) {
+                    if (!transaction?.jwsRepresentation) {
+                        this.log.warn('SK2 mode but no JWS on transaction, skipping validation');
+                        return undefined;
                     }
-                    : {
-                        type: 'ios-appstore' as const,
-                        id: transaction?.transactionId,
-                        appStoreReceipt: applicationReceipt.appStoreReceipt,
+                    return {
+                        id: applicationReceipt.bundleIdentifier,
+                        type: ProductType.APPLICATION,
+                        products,
+                        transaction: {
+                            type: 'apple-sk2' as const,
+                            id: transaction?.products?.[0]?.id,
+                            jwsRepresentation: transaction.jwsRepresentation,
+                        },
                     };
+                }
+
+                const txBody = {
+                    type: 'ios-appstore' as const,
+                    id: transaction?.transactionId,
+                    appStoreReceipt: applicationReceipt.appStoreReceipt,
+                };
 
                 return {
                     id: applicationReceipt.bundleIdentifier,
