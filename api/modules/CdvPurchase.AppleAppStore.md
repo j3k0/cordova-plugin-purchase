@@ -9,6 +9,7 @@ Apple AppStore adapter using StoreKit version 1
 ### Namespaces
 
 - [Bridge](CdvPurchase.AppleAppStore.Bridge.md)
+- [SK2Bridge](CdvPurchase.AppleAppStore.SK2Bridge.md)
 - [VerifyReceipt](CdvPurchase.AppleAppStore.VerifyReceipt.md)
 
 ### Classes
@@ -24,6 +25,7 @@ Apple AppStore adapter using StoreKit version 1
 - [AdapterOptions](../interfaces/CdvPurchase.AppleAppStore.AdapterOptions.md)
 - [AdditionalData](../interfaces/CdvPurchase.AppleAppStore.AdditionalData.md)
 - [ApplicationReceipt](../interfaces/CdvPurchase.AppleAppStore.ApplicationReceipt.md)
+- [CdvPurchaseStoreKit2](../interfaces/CdvPurchase.AppleAppStore.CdvPurchaseStoreKit2.md)
 - [DiscountEligibilityRequest](../interfaces/CdvPurchase.AppleAppStore.DiscountEligibilityRequest.md)
 - [PaymentDiscount](../interfaces/CdvPurchase.AppleAppStore.PaymentDiscount.md)
 

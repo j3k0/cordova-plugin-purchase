@@ -8,6 +8,8 @@
 
   ↳ [`BridgeOptions`](CdvPurchase.AppleAppStore.Bridge.BridgeOptions.md)
 
+  ↳ [`SK2BridgeCallbacks`](CdvPurchase.AppleAppStore.SK2Bridge.SK2BridgeCallbacks.md)
+
 ## Table of contents
 
 ### Properties

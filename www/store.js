@@ -2884,10 +2884,18 @@ var CdvPurchase;
                 /** List of functions waiting for the appStoreReceipt to be initialized */
                 this._appStoreReceiptCallbacks = [];
                 this.context = context;
-                this.bridge = new AppleAppStore.Bridge.Bridge();
                 this.log = context.log.child('AppleAppStore');
+                // Use SK2 if extension is installed
+                this.useSK2 = AppleAppStore.SK2Bridge.SK2NativeBridge.isAvailable();
+                if (this.useSK2) {
+                    this.log.info('StoreKit 2 extension detected, using SK2 bridge');
+                    this.bridge = new AppleAppStore.SK2Bridge.SK2NativeBridge();
+                }
+                else {
+                    this.bridge = new AppleAppStore.Bridge.Bridge();
+                }
                 this.discountEligibilityDeterminer = options.discountEligibilityDeterminer;
-                this.needAppReceipt = (_a = options.needAppReceipt) !== null && _a !== void 0 ? _a : true;
+                this.needAppReceipt = this.useSK2 ? false : ((_a = options.needAppReceipt) !== null && _a !== void 0 ? _a : true);
                 this.autoFinish = (_b = options.autoFinish) !== null && _b !== void 0 ? _b : false;
                 this.pseudoReceipt = new CdvPurchase.Receipt(CdvPurchase.Platform.APPLE_APPSTORE, this.context.apiDecorators);
                 this.receiptsUpdated = CdvPurchase.Utils.createDebouncer(() => {
@@ -3015,11 +3023,14 @@ var CdvPurchase;
                         ready: () => {
                             this.log.info('ready');
                         },
-                        purchased: (transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId) => __awaiter(this, void 0, void 0, function* () {
-                            this.log.info('purchase: id:' + transactionIdentifier + ' product:' + productId + ' originalTransaction:' + originalTransactionIdentifier + ' - date:' + transactionDate + ' - discount:' + discountId);
+                        purchased: (transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation) => __awaiter(this, void 0, void 0, function* () {
+                            this.log.info('purchase: id:' + transactionIdentifier + ' product:' + productId +
+                                ' originalTransaction:' + originalTransactionIdentifier +
+                                ' - date:' + transactionDate + ' - discount:' + discountId +
+                                (jwsRepresentation ? ' - jws:present' : ''));
                             // we can add the transaction to the receipt here
                             const transaction = yield this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.APPROVED);
-                            transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId);
+                            transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation);
                             this.removeTransactionInProgress(productId);
                             this.receiptsUpdated.call();
                             this.callPaymentMonitor('purchased');
@@ -3070,9 +3081,10 @@ var CdvPurchase;
                             yield this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.FINISHED);
                             this.receiptsUpdated.call();
                         }),
-                        restored: (transactionIdentifier, productId) => __awaiter(this, void 0, void 0, function* () {
+                        restored: (transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation) => __awaiter(this, void 0, void 0, function* () {
                             this.log.info('restore: ' + transactionIdentifier + ' - ' + productId);
-                            yield this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.APPROVED);
+                            const transaction = yield this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.APPROVED);
+                            transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation);
                             this.receiptsUpdated.call();
                         }),
                         receiptsRefreshed: (receipt) => {
@@ -3157,6 +3169,15 @@ var CdvPurchase;
                         });
                     };
                     if (!(nativeData === null || nativeData === void 0 ? void 0 : nativeData.appStoreReceipt)) {
+                        if (this.useSK2) {
+                            // SK2 doesn't use monolithic receipts — create receipt with empty data
+                            this.log.info('SK2 mode: no appStoreReceipt (expected), creating empty receipt');
+                            this._receipt = new AppleAppStore.SKApplicationReceipt(nativeData || { appStoreReceipt: '', bundleIdentifier: '',
+                                bundleShortVersion: '', bundleNumericVersion: 0, bundleSignature: '' }, this.needAppReceipt, this.context.apiDecorators);
+                            this._appStoreReceiptLoading = false;
+                            callCallbacks(undefined);
+                            return;
+                        }
                         this.log.warn('no appStoreReceipt');
                         this._appStoreReceiptLoading = false;
                         callCallbacks(appStoreError(CdvPurchase.ErrorCode.REFRESH, 'No appStoreReceipt', null));
@@ -3403,6 +3424,7 @@ var CdvPurchase;
                 });
             }
             receiptValidationBody(receipt) {
+                var _a, _b;
                 return __awaiter(this, void 0, void 0, function* () {
                     if (receipt.platform !== CdvPurchase.Platform.APPLE_APPSTORE)
                         return;
@@ -3418,7 +3440,8 @@ var CdvPurchase;
                             this.prepareReceipt(nativeData);
                         }
                     }
-                    if (!skReceipt.nativeData.appStoreReceipt) {
+                    // SK2 doesn't use monolithic receipts — skip the appStoreReceipt check
+                    if (!this.useSK2 && !skReceipt.nativeData.appStoreReceipt) {
                         this.log.info('Cannot prepare the receipt validation body, because appStoreReceipt is missing. Refreshing...');
                         const result = yield this.refreshReceipt();
                         if (!result || 'isError' in result) {
@@ -3431,16 +3454,35 @@ var CdvPurchase;
                         applicationReceipt = result;
                     }
                     const transaction = skReceipt.transactions.slice(-1)[0];
+                    const products = CdvPurchase.Utils.objectValues(this.validProducts).map(vp => new AppleAppStore.SKProduct(vp, vp, this.context.apiDecorators, { isEligible: () => true }));
+                    // SK2 uses a completely different transaction type ('apple-sk2') with JWS
+                    // SK1 uses 'ios-appstore' with the monolithic appStoreReceipt
+                    if (this.useSK2) {
+                        if (!(transaction === null || transaction === void 0 ? void 0 : transaction.jwsRepresentation)) {
+                            this.log.warn('SK2 mode but no JWS on transaction, skipping validation');
+                            return undefined;
+                        }
+                        return {
+                            id: applicationReceipt.bundleIdentifier,
+                            type: CdvPurchase.ProductType.APPLICATION,
+                            products,
+                            transaction: {
+                                type: 'apple-sk2',
+                                id: (_b = (_a = transaction === null || transaction === void 0 ? void 0 : transaction.products) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.id,
+                                jwsRepresentation: transaction.jwsRepresentation,
+                            },
+                        };
+                    }
+                    const txBody = {
+                        type: 'ios-appstore',
+                        id: transaction === null || transaction === void 0 ? void 0 : transaction.transactionId,
+                        appStoreReceipt: applicationReceipt.appStoreReceipt,
+                    };
                     return {
                         id: applicationReceipt.bundleIdentifier,
                         type: CdvPurchase.ProductType.APPLICATION,
-                        // send all products and offers so validator get pricing information
-                        products: CdvPurchase.Utils.objectValues(this.validProducts).map(vp => new AppleAppStore.SKProduct(vp, vp, this.context.apiDecorators, { isEligible: () => true })),
-                        transaction: {
-                            type: 'ios-appstore',
-                            id: transaction === null || transaction === void 0 ? void 0 : transaction.transactionId,
-                            appStoreReceipt: applicationReceipt.appStoreReceipt,
-                        }
+                        products,
+                        transaction: txBody,
                     };
                 });
             }
@@ -3451,7 +3493,8 @@ var CdvPurchase;
                     let localReceiptUpdated = false;
                     if (response.ok) {
                         const vTransaction = (_a = response.data) === null || _a === void 0 ? void 0 : _a.transaction;
-                        if ((vTransaction === null || vTransaction === void 0 ? void 0 : vTransaction.type) === 'ios-appstore' && 'original_application_version' in vTransaction) {
+                        const isApple = (vTransaction === null || vTransaction === void 0 ? void 0 : vTransaction.type) === 'ios-appstore' || (vTransaction === null || vTransaction === void 0 ? void 0 : vTransaction.type) === 'apple-sk2';
+                        if (isApple && vTransaction && 'original_application_version' in vTransaction) {
                             (_b = this._receipt) === null || _b === void 0 ? void 0 : _b.transactions.forEach(t => {
                                 if (t.transactionId === AppleAppStore.APPLICATION_VIRTUAL_TRANSACTION_ID) {
                                     if (vTransaction.original_purchase_date_ms) {
@@ -3515,6 +3558,270 @@ var CdvPurchase;
         function appStoreError(code, message, productId) {
             return CdvPurchase.storeError(code, message, CdvPurchase.Platform.APPLE_APPSTORE, productId);
         }
+    })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let AppleAppStore;
+    (function (AppleAppStore) {
+        let SK2Bridge;
+        (function (SK2Bridge) {
+            const noop = (args) => { };
+            let log = noop;
+            function exec(methodName, options, success, error) {
+                window.cordova.exec(success, error, "StoreKit2Plugin", methodName, options);
+            }
+            function protectCall(callback, context, ...args) {
+                if (!callback)
+                    return;
+                try {
+                    callback.apply(this, args);
+                }
+                catch (err) {
+                    log('exception in ' + context + ': "' + err + '"');
+                }
+            }
+            class SK2NativeBridge {
+                constructor() {
+                    this.transactionsForProduct = {};
+                    this.initialized = false;
+                    this.registeredProducts = [];
+                    this.needRestoreNotification = false;
+                    this.pendingUpdates = [];
+                    /** True when this bridge is active (SK2 extension installed + iOS 15+) */
+                    this.isSK2 = true;
+                    window.storekit2 = this;
+                    this.options = {
+                        error: noop,
+                        ready: noop,
+                        purchased: noop,
+                        purchaseEnqueued: noop,
+                        purchasing: noop,
+                        purchaseFailed: noop,
+                        deferred: noop,
+                        finished: noop,
+                        restored: noop,
+                        receiptsRefreshed: noop,
+                        restoreFailed: noop,
+                        restoreCompleted: noop,
+                    };
+                }
+                /** Check if the SK2 extension plugin is installed */
+                static isAvailable() {
+                    // Check marker from the extension plugin
+                    const marker = window.CdvPurchaseStoreKit2;
+                    return !!(marker && marker.installed);
+                }
+                init(options, success, error) {
+                    this.options = {
+                        error: options.error || noop,
+                        ready: options.ready || noop,
+                        purchased: options.purchased || noop,
+                        purchaseEnqueued: options.purchaseEnqueued || noop,
+                        purchasing: options.purchasing || noop,
+                        purchaseFailed: options.purchaseFailed || noop,
+                        deferred: options.deferred || noop,
+                        finished: options.finished || noop,
+                        restored: options.restored || noop,
+                        receiptsRefreshed: options.receiptsRefreshed || noop,
+                        restoreFailed: options.restoreFailed || noop,
+                        restoreCompleted: options.restoreCompleted || noop,
+                    };
+                    if (options.debug) {
+                        exec('debug', [], noop, noop);
+                        log = options.log || function (msg) {
+                            console.log("[CdvPurchase.AppleAppStore.SK2Bridge] " + msg);
+                        };
+                    }
+                    if (options.autoFinish) {
+                        exec('autoFinish', [], noop, noop);
+                    }
+                    const setupOk = () => {
+                        log('setup ok');
+                        protectCall(this.options.ready, 'options.ready');
+                        protectCall(success, 'init.success');
+                        this.initialized = true;
+                        setTimeout(() => this.processPendingTransactions(), 50);
+                    };
+                    const setupFailed = (err) => {
+                        log('setup failed');
+                        protectCall(error, 'init.error', CdvPurchase.ErrorCode.SETUP, 'Setup failed: ' + err);
+                    };
+                    exec('setup', [], setupOk, setupFailed);
+                }
+                processPendingTransactions() {
+                    log('processing pending transactions');
+                    exec('processPendingTransactions', [], () => {
+                        this.finalizeTransactionUpdates();
+                    }, undefined);
+                }
+                purchase(productId, quantity, applicationUsername, discount, success, error) {
+                    quantity = (quantity | 0) || 1;
+                    const options = this.options;
+                    if (this.registeredProducts.indexOf(productId) < 0) {
+                        const msg = 'Purchasing ' + productId + ' failed. Ensure the product was loaded first with load()!';
+                        log(msg);
+                        if (typeof options.error === 'function') {
+                            protectCall(options.error, 'options.error', CdvPurchase.ErrorCode.PURCHASE, 'Trying to purchase an unknown product.', { productId, quantity });
+                        }
+                        return;
+                    }
+                    const purchaseOk = () => {
+                        log('Purchase enqueued ' + productId);
+                        if (typeof options.purchaseEnqueued === 'function') {
+                            protectCall(options.purchaseEnqueued, 'options.purchaseEnqueued', productId, quantity);
+                        }
+                        protectCall(success, 'purchase.success');
+                    };
+                    const purchaseFailed = () => {
+                        const errMsg = 'Purchase failed: ' + productId;
+                        log(errMsg);
+                        if (typeof options.error === 'function') {
+                            protectCall(options.error, 'options.error', CdvPurchase.ErrorCode.PURCHASE, errMsg, { productId, quantity });
+                        }
+                        protectCall(error, 'purchase.error');
+                    };
+                    exec('purchase', [productId, quantity, applicationUsername, discount || {}], purchaseOk, purchaseFailed);
+                }
+                canMakePayments(success, error) {
+                    return exec("canMakePayments", [], success, error);
+                }
+                restore(callback) {
+                    this.needRestoreNotification = true;
+                    exec('restoreCompletedTransactions', [], callback, callback);
+                }
+                manageSubscriptions(callback) {
+                    exec('manageSubscriptions', [], callback, callback);
+                }
+                manageBilling(callback) {
+                    exec('manageBilling', [], callback, callback);
+                }
+                presentCodeRedemptionSheet(callback) {
+                    exec('presentCodeRedemptionSheet', [], callback, callback);
+                }
+                load(productIds, success, error) {
+                    const options = this.options;
+                    if (!productIds || !productIds.length) {
+                        protectCall(success, 'load.success', [], []);
+                        return;
+                    }
+                    log('load ' + JSON.stringify(productIds));
+                    const loadOk = (array) => {
+                        const valid = array[0];
+                        const invalid = array[1];
+                        log('load ok: { valid:' + JSON.stringify(valid) + ' invalid:' + JSON.stringify(invalid) + ' }');
+                        protectCall(success, 'load.success', valid, invalid);
+                    };
+                    const loadFailed = (errMessage) => {
+                        log('load failed: ' + errMessage);
+                        protectCall(options.error, 'options.error', CdvPurchase.ErrorCode.LOAD, 'Load failed: ' + errMessage);
+                        protectCall(error, 'load.error', CdvPurchase.ErrorCode.LOAD, 'Load failed: ' + errMessage);
+                    };
+                    this.registeredProducts = this.registeredProducts.concat(productIds);
+                    exec('load', [productIds], loadOk, loadFailed);
+                }
+                finish(transactionId, success, error) {
+                    exec('finishTransaction', [transactionId], success, error);
+                }
+                finalizeTransactionUpdates() {
+                    for (let i = 0; i < this.pendingUpdates.length; ++i) {
+                        const args = this.pendingUpdates[i];
+                        this.transactionUpdated(args.state, args.errorCode, args.errorText, args.transactionIdentifier, args.productId, args.transactionReceipt, args.originalTransactionIdentifier, args.transactionDate, args.discountId, args.expirationDate, args.jwsRepresentation);
+                    }
+                    this.pendingUpdates = [];
+                }
+                lastTransactionUpdated() {
+                    // no more pending transactions
+                }
+                /** Called from native. Same as SK1 but with extra SK2 fields. */
+                transactionUpdated(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation) {
+                    if (!this.initialized) {
+                        this.pendingUpdates.push({
+                            state, errorCode, errorText, transactionIdentifier,
+                            productId, transactionReceipt, originalTransactionIdentifier,
+                            transactionDate, discountId, expirationDate, jwsRepresentation
+                        });
+                        return;
+                    }
+                    log("transaction updated:" + transactionIdentifier +
+                        " state:" + state + " product:" + productId);
+                    if (productId && transactionIdentifier) {
+                        if (this.transactionsForProduct[productId]) {
+                            this.transactionsForProduct[productId].push(transactionIdentifier);
+                        }
+                        else {
+                            this.transactionsForProduct[productId] = [transactionIdentifier];
+                        }
+                    }
+                    switch (state) {
+                        case "PaymentTransactionStatePurchasing":
+                            protectCall(this.options.purchasing, 'options.purchasing', productId);
+                            return;
+                        case "PaymentTransactionStatePurchased":
+                            protectCall(this.options.purchased, 'options.purchased', transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation);
+                            return;
+                        case "PaymentTransactionStateDeferred":
+                            protectCall(this.options.deferred, 'options.deferred', productId);
+                            return;
+                        case "PaymentTransactionStateFailed":
+                            protectCall(this.options.purchaseFailed, 'options.purchaseFailed', productId, errorCode || CdvPurchase.ErrorCode.UNKNOWN, errorText || 'ERROR');
+                            protectCall(this.options.error, 'options.error', errorCode || CdvPurchase.ErrorCode.UNKNOWN, errorText || 'ERROR', { productId });
+                            return;
+                        case "PaymentTransactionStateRestored":
+                            protectCall(this.options.restored, 'options.restored', transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation);
+                            return;
+                        case "PaymentTransactionStateFinished":
+                            protectCall(this.options.finished, 'options.finished', transactionIdentifier, productId);
+                            return;
+                    }
+                }
+                restoreCompletedTransactionsFinished() {
+                    if (!this.needRestoreNotification)
+                        return;
+                    this.needRestoreNotification = false;
+                    protectCall(this.options.restoreCompleted, 'options.restoreCompleted');
+                }
+                restoreCompletedTransactionsFailed(errorCode) {
+                    if (!this.needRestoreNotification)
+                        return;
+                    this.needRestoreNotification = false;
+                    protectCall(this.options.restoreFailed, 'options.restoreFailed', errorCode);
+                }
+                parseReceiptArgs(args) {
+                    return {
+                        appStoreReceipt: args[0],
+                        bundleIdentifier: args[1],
+                        bundleShortVersion: args[2],
+                        bundleNumericVersion: args[3],
+                        bundleSignature: args[4],
+                    };
+                }
+                refreshReceipts(successCb, errorCb) {
+                    const loaded = (args) => {
+                        const data = this.parseReceiptArgs(args);
+                        this.appStoreReceipt = data;
+                        protectCall(this.options.receiptsRefreshed, 'options.receiptsRefreshed', data);
+                        protectCall(successCb, "refreshReceipts.success", data);
+                    };
+                    const error = (errMessage) => {
+                        log('refresh receipt failed: ' + errMessage);
+                        protectCall(errorCb, "refreshReceipts.error", CdvPurchase.ErrorCode.REFRESH_RECEIPTS, 'Failed to refresh receipt: ' + errMessage);
+                    };
+                    this.appStoreReceipt = null;
+                    exec('appStoreRefreshReceipt', [], loaded, error);
+                }
+                loadReceipts(callback, errorCb) {
+                    const loaded = (args) => {
+                        const data = this.parseReceiptArgs(args);
+                        this.appStoreReceipt = data;
+                        protectCall(callback, 'loadReceipts.callback', data);
+                    };
+                    log('loading appStoreReceipt (SK2)');
+                    exec('appStoreReceipt', [], loaded, undefined);
+                }
+            }
+            SK2Bridge.SK2NativeBridge = SK2NativeBridge;
+        })(SK2Bridge = AppleAppStore.SK2Bridge || (AppleAppStore.SK2Bridge = {}));
     })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -4086,13 +4393,17 @@ var CdvPurchase;
         AppleAppStore.SKApplicationReceipt = SKApplicationReceipt;
         /** StoreKit transaction */
         class SKTransaction extends CdvPurchase.Transaction {
-            refresh(productId, originalTransactionIdentifier, transactionDate, discountId) {
+            refresh(productId, originalTransactionIdentifier, transactionDate, discountId, expirationDateMs, jwsRepresentation) {
                 if (productId)
                     this.products = [{ id: productId, offerId: discountId }];
                 if (originalTransactionIdentifier)
                     this.originalTransactionId = originalTransactionIdentifier;
                 if (transactionDate)
                     this.purchaseDate = new Date(+transactionDate);
+                if (expirationDateMs)
+                    this.expirationDate = new Date(+expirationDateMs);
+                if (jwsRepresentation)
+                    this.jwsRepresentation = jwsRepresentation;
             }
         }
         AppleAppStore.SKTransaction = SKTransaction;

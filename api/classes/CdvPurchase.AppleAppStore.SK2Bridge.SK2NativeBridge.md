@@ -1,6 +1,6 @@
-# Class: Bridge
+# Class: SK2NativeBridge
 
-[AppleAppStore](../modules/CdvPurchase.AppleAppStore.md).[Bridge](../modules/CdvPurchase.AppleAppStore.Bridge.md).Bridge
+[AppleAppStore](../modules/CdvPurchase.AppleAppStore.md).[SK2Bridge](../modules/CdvPurchase.AppleAppStore.SK2Bridge.md).SK2NativeBridge
 
 Shared interface implemented by both the SK1 and SK2 bridges.
 The adapter programs against this interface, not a concrete class.
@@ -13,47 +13,46 @@ The adapter programs against this interface, not a concrete class.
 
 ### Constructors
 
-- [constructor](CdvPurchase.AppleAppStore.Bridge.Bridge.md#constructor)
+- [constructor](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#constructor)
 
 ### Properties
 
-- [appStoreReceipt](CdvPurchase.AppleAppStore.Bridge.Bridge.md#appstorereceipt)
-- [onFailed](CdvPurchase.AppleAppStore.Bridge.Bridge.md#onfailed)
-- [onPurchased](CdvPurchase.AppleAppStore.Bridge.Bridge.md#onpurchased)
-- [onRestored](CdvPurchase.AppleAppStore.Bridge.Bridge.md#onrestored)
-- [options](CdvPurchase.AppleAppStore.Bridge.Bridge.md#options)
-- [transactionsForProduct](CdvPurchase.AppleAppStore.Bridge.Bridge.md#transactionsforproduct)
+- [appStoreReceipt](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#appstorereceipt)
+- [isSK2](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#issk2)
+- [options](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#options)
+- [transactionsForProduct](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#transactionsforproduct)
 
 ### Methods
 
-- [canMakePayments](CdvPurchase.AppleAppStore.Bridge.Bridge.md#canmakepayments)
-- [finalizeTransactionUpdates](CdvPurchase.AppleAppStore.Bridge.Bridge.md#finalizetransactionupdates)
-- [finish](CdvPurchase.AppleAppStore.Bridge.Bridge.md#finish)
-- [init](CdvPurchase.AppleAppStore.Bridge.Bridge.md#init)
-- [lastTransactionUpdated](CdvPurchase.AppleAppStore.Bridge.Bridge.md#lasttransactionupdated)
-- [load](CdvPurchase.AppleAppStore.Bridge.Bridge.md#load)
-- [loadReceipts](CdvPurchase.AppleAppStore.Bridge.Bridge.md#loadreceipts)
-- [manageBilling](CdvPurchase.AppleAppStore.Bridge.Bridge.md#managebilling)
-- [manageSubscriptions](CdvPurchase.AppleAppStore.Bridge.Bridge.md#managesubscriptions)
-- [parseReceiptArgs](CdvPurchase.AppleAppStore.Bridge.Bridge.md#parsereceiptargs)
-- [presentCodeRedemptionSheet](CdvPurchase.AppleAppStore.Bridge.Bridge.md#presentcoderedemptionsheet)
-- [processPendingTransactions](CdvPurchase.AppleAppStore.Bridge.Bridge.md#processpendingtransactions)
-- [purchase](CdvPurchase.AppleAppStore.Bridge.Bridge.md#purchase)
-- [refreshReceipts](CdvPurchase.AppleAppStore.Bridge.Bridge.md#refreshreceipts)
-- [restore](CdvPurchase.AppleAppStore.Bridge.Bridge.md#restore)
-- [restoreCompletedTransactionsFailed](CdvPurchase.AppleAppStore.Bridge.Bridge.md#restorecompletedtransactionsfailed)
-- [restoreCompletedTransactionsFinished](CdvPurchase.AppleAppStore.Bridge.Bridge.md#restorecompletedtransactionsfinished)
-- [transactionUpdated](CdvPurchase.AppleAppStore.Bridge.Bridge.md#transactionupdated)
+- [canMakePayments](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#canmakepayments)
+- [finalizeTransactionUpdates](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#finalizetransactionupdates)
+- [finish](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#finish)
+- [init](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#init)
+- [lastTransactionUpdated](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#lasttransactionupdated)
+- [load](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#load)
+- [loadReceipts](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#loadreceipts)
+- [manageBilling](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#managebilling)
+- [manageSubscriptions](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#managesubscriptions)
+- [parseReceiptArgs](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#parsereceiptargs)
+- [presentCodeRedemptionSheet](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#presentcoderedemptionsheet)
+- [processPendingTransactions](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#processpendingtransactions)
+- [purchase](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#purchase)
+- [refreshReceipts](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#refreshreceipts)
+- [restore](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#restore)
+- [restoreCompletedTransactionsFailed](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#restorecompletedtransactionsfailed)
+- [restoreCompletedTransactionsFinished](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#restorecompletedtransactionsfinished)
+- [transactionUpdated](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#transactionupdated)
+- [isAvailable](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#isavailable)
 
 ## Constructors
 
 ### constructor
 
-• **new Bridge**(): [`Bridge`](CdvPurchase.AppleAppStore.Bridge.Bridge.md)
+• **new SK2NativeBridge**(): [`SK2NativeBridge`](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md)
 
 #### Returns
 
-[`Bridge`](CdvPurchase.AppleAppStore.Bridge.Bridge.md)
+[`SK2NativeBridge`](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md)
 
 ## Properties
 
@@ -61,7 +60,7 @@ The adapter programs against this interface, not a concrete class.
 
 • `Optional` **appStoreReceipt**: ``null`` \| [`ApplicationReceipt`](../interfaces/CdvPurchase.AppleAppStore.ApplicationReceipt.md)
 
-The application receipt from AppStore, cached in javascript
+Cached app store receipt
 
 #### Implementation of
 
@@ -69,35 +68,21 @@ The application receipt from AppStore, cached in javascript
 
 ___
 
-### onFailed
+### isSK2
 
-• **onFailed**: `boolean` = `false`
+• `Readonly` **isSK2**: ``true``
 
-**`Deprecated`**
+True when this bridge is active (SK2 extension installed + iOS 15+)
 
-___
+#### Implementation of
 
-### onPurchased
-
-• **onPurchased**: `boolean` = `false`
-
-**`Deprecated`**
-
-___
-
-### onRestored
-
-• **onRestored**: `boolean` = `false`
-
-**`Deprecated`**
+[BridgeInterface](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md).[isSK2](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#issk2)
 
 ___
 
 ### options
 
-• **options**: [`BridgeCallbacks`](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeCallbacks.md)
-
-Callbacks set by the adapter
+• **options**: [`SK2BridgeCallbacks`](../interfaces/CdvPurchase.AppleAppStore.SK2Bridge.SK2BridgeCallbacks.md)
 
 ___
 
@@ -105,7 +90,7 @@ ___
 
 • **transactionsForProduct**: `Object` = `{}`
 
-Transactions for a given product
+Transaction IDs grouped by product
 
 #### Index signature
 
@@ -120,8 +105,6 @@ Transactions for a given product
 ### canMakePayments
 
 ▸ **canMakePayments**(`success`, `error`): `void`
-
-Checks if device/user is allowed to make in-app purchases
 
 #### Parameters
 
@@ -176,17 +159,13 @@ ___
 
 ▸ **init**(`options`, `success`, `error`): `void`
 
-Initialize the AppStore bridge.
-
-This calls the native "setup" method from the "InAppPurchase" Objective-C class.
-
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `options` | `Partial`\<[`BridgeOptions`](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeOptions.md)\> | Options for the bridge |
-| `success` | () => `void` | Called when the bridge is ready |
-| `error` | (`code`: [`ErrorCode`](../enums/CdvPurchase.ErrorCode.md), `message`: `string`) => `void` | Called when the bridge failed to initialize |
+| Name | Type |
+| :------ | :------ |
+| `options` | `Partial`\<[`BridgeOptions`](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeOptions.md)\> |
+| `success` | () => `void` |
+| `error` | (`code`: [`ErrorCode`](../enums/CdvPurchase.ErrorCode.md), `message`: `string`) => `void` |
 
 #### Returns
 
@@ -212,16 +191,13 @@ ___
 
 ▸ **load**(`productIds`, `success`, `error`): `void`
 
-Retrieves localized product data, including price (as localized
-string), name, description of multiple products.
-
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `productIds` | `string`[] | An array of product identifier strings. |
-| `success` | (`validProducts`: [`ValidProduct`](../interfaces/CdvPurchase.AppleAppStore.Bridge.ValidProduct.md)[], `invalidProductIds`: `string`[]) => `void` | - |
-| `error` | (`code`: [`ErrorCode`](../enums/CdvPurchase.ErrorCode.md), `message`: `string`) => `void` | - |
+| Name | Type |
+| :------ | :------ |
+| `productIds` | `string`[] |
+| `success` | (`validProducts`: [`ValidProduct`](../interfaces/CdvPurchase.AppleAppStore.Bridge.ValidProduct.md)[], `invalidProductIds`: `string`[]) => `void` |
+| `error` | (`code`: [`ErrorCode`](../enums/CdvPurchase.ErrorCode.md), `message`: `string`) => `void` |
 
 #### Returns
 
@@ -302,7 +278,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `args` | `RawReceiptArgs` |
+| `args` | [`string`, `string`, `string`, `number`, `string`] |
 
 #### Returns
 
@@ -344,18 +320,16 @@ ___
 
 ▸ **purchase**(`productId`, `quantity`, `applicationUsername`, `discount`, `success`, `error`): `void`
 
-Makes an in-app purchase.
-
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `productId` | `string` | The product identifier. e.g. "com.example.MyApp.myproduct" |
-| `quantity` | `number` | Quantity of product to purchase |
-| `applicationUsername` | `undefined` \| `string` | - |
-| `discount` | `undefined` \| [`PaymentDiscount`](../interfaces/CdvPurchase.AppleAppStore.PaymentDiscount.md) | - |
-| `success` | () => `void` | - |
-| `error` | () => `void` | - |
+| Name | Type |
+| :------ | :------ |
+| `productId` | `string` |
+| `quantity` | `number` |
+| `applicationUsername` | `undefined` \| `string` |
+| `discount` | `undefined` \| [`PaymentDiscount`](../interfaces/CdvPurchase.AppleAppStore.PaymentDiscount.md) |
+| `success` | () => `void` |
+| `error` | () => `void` |
 
 #### Returns
 
@@ -391,10 +365,6 @@ ___
 ### restore
 
 ▸ **restore**(`callback?`): `void`
-
-Asks the payment queue to restore previously completed purchases.
-
-The restored transactions are passed to the onRestored callback, so make sure you define a handler for that first.
 
 #### Parameters
 
@@ -440,7 +410,9 @@ ___
 
 ### transactionUpdated
 
-▸ **transactionUpdated**(`state`, `errorCode`, `errorText`, `transactionIdentifier`, `productId`, `transactionReceipt`, `originalTransactionIdentifier`, `transactionDate`, `discountId`): `void`
+▸ **transactionUpdated**(`state`, `errorCode`, `errorText`, `transactionIdentifier`, `productId`, `transactionReceipt`, `originalTransactionIdentifier`, `transactionDate`, `discountId`, `expirationDate?`, `jwsRepresentation?`): `void`
+
+Called from native. Same as SK1 but with extra SK2 fields.
 
 #### Parameters
 
@@ -455,7 +427,21 @@ ___
 | `originalTransactionIdentifier` | `undefined` \| `string` |
 | `transactionDate` | `undefined` \| `string` |
 | `discountId` | `undefined` \| `string` |
+| `expirationDate?` | `string` |
+| `jwsRepresentation?` | `string` |
 
 #### Returns
 
 `void`
+
+___
+
+### isAvailable
+
+▸ **isAvailable**(): `boolean`
+
+Check if the SK2 extension plugin is installed
+
+#### Returns
+
+`boolean`

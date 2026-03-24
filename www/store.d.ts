@@ -817,7 +817,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.13.0";
+    const PLUGIN_VERSION = "13.13.1";
     /**
      * Entry class of the plugin.
      */
@@ -2570,7 +2570,9 @@ declare namespace CdvPurchase {
             get receipts(): Receipt[];
             private validProducts;
             addValidProducts(registerProducts: IRegisterProduct[], validProducts: Bridge.ValidProduct[]): void;
-            bridge: Bridge.Bridge;
+            bridge: Bridge.BridgeInterface;
+            /** True when the StoreKit 2 extension is active */
+            readonly useSK2: boolean;
             context: CdvPurchase.Internal.AdapterContext;
             log: Logger;
             /** Component that determine eligibility to a given discount offer */
@@ -2626,6 +2628,88 @@ declare namespace CdvPurchase {
             checkSupport(functionality: PlatformFunctionality): boolean;
             restorePurchases(): Promise<IError | undefined>;
             presentCodeRedemptionSheet(): Promise<void>;
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace AppleAppStore {
+        /** Global type for the SK2 extension plugin marker */
+        interface CdvPurchaseStoreKit2 {
+            installed?: boolean;
+            version?: string;
+        }
+        namespace Bridge {
+            /**
+             * Shared interface implemented by both the SK1 and SK2 bridges.
+             * The adapter programs against this interface, not a concrete class.
+             */
+            interface BridgeInterface {
+                /** Cached app store receipt */
+                appStoreReceipt?: ApplicationReceipt | null;
+                /** Transaction IDs grouped by product */
+                transactionsForProduct: {
+                    [productId: string]: string[];
+                };
+                /** Whether this bridge uses StoreKit 2 */
+                readonly isSK2?: boolean;
+                init(options: Partial<BridgeOptions>, success: () => void, error: (code: ErrorCode, message: string) => void): void;
+                load(productIds: string[], success: (validProducts: ValidProduct[], invalidProductIds: string[]) => void, error: (code: ErrorCode, message: string) => void): void;
+                purchase(productId: string, quantity: number, applicationUsername: string | undefined, discount: PaymentDiscount | undefined, success: () => void, error: () => void): void;
+                finish(transactionId: string, success: () => void, error: (msg: string) => void): void;
+                canMakePayments(success: () => void, error: (message: string) => void): void;
+                restore(callback?: Callback<any>): void;
+                manageSubscriptions(callback?: Callback<any>): void;
+                manageBilling(callback?: Callback<any>): void;
+                presentCodeRedemptionSheet(callback?: Callback<any>): void;
+                refreshReceipts(successCb: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
+                loadReceipts(callback: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
+            }
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace AppleAppStore {
+        namespace SK2Bridge {
+            /** Extended callbacks with SK2 fields */
+            interface SK2BridgeCallbacks extends Bridge.BridgeCallbacks {
+                purchased: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string) => void;
+                restored: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string) => void;
+            }
+            class SK2NativeBridge implements Bridge.BridgeInterface {
+                options: SK2BridgeCallbacks;
+                transactionsForProduct: {
+                    [productId: string]: string[];
+                };
+                private initialized;
+                appStoreReceipt?: AppleAppStore.ApplicationReceipt | null;
+                private registeredProducts;
+                private needRestoreNotification;
+                private pendingUpdates;
+                /** True when this bridge is active (SK2 extension installed + iOS 15+) */
+                readonly isSK2 = true;
+                constructor();
+                /** Check if the SK2 extension plugin is installed */
+                static isAvailable(): boolean;
+                init(options: Partial<Bridge.BridgeOptions>, success: () => void, error: (code: ErrorCode, message: string) => void): void;
+                processPendingTransactions(): void;
+                purchase(productId: string, quantity: number, applicationUsername: string | undefined, discount: PaymentDiscount | undefined, success: () => void, error: () => void): void;
+                canMakePayments(success: () => void, error: (message: string) => void): void;
+                restore(callback?: Callback<any>): void;
+                manageSubscriptions(callback?: Callback<any>): void;
+                manageBilling(callback?: Callback<any>): void;
+                presentCodeRedemptionSheet(callback?: Callback<any>): void;
+                load(productIds: string[], success: (validProducts: Bridge.ValidProduct[], invalidProductIds: string[]) => void, error: (code: ErrorCode, message: string) => void): void;
+                finish(transactionId: string, success: () => void, error: (msg: string) => void): void;
+                finalizeTransactionUpdates(): void;
+                lastTransactionUpdated(): void;
+                /** Called from native. Same as SK1 but with extra SK2 fields. */
+                transactionUpdated(state: Bridge.TransactionState, errorCode: ErrorCode | undefined, errorText: string | undefined, transactionIdentifier: string, productId: string, transactionReceipt: never, originalTransactionIdentifier: string | undefined, transactionDate: string | undefined, discountId: string | undefined, expirationDate?: string | undefined, jwsRepresentation?: string | undefined): void;
+                restoreCompletedTransactionsFinished(): void;
+                restoreCompletedTransactionsFailed(errorCode: ErrorCode): void;
+                parseReceiptArgs(args: [string, string, string, number, string]): ApplicationReceipt;
+                refreshReceipts(successCb: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
+                loadReceipts(callback: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
+            }
         }
     }
 }
@@ -2775,7 +2859,7 @@ declare namespace CdvPurchase {
                 /** Auto-finish transaction */
                 autoFinish: boolean;
             }
-            export class Bridge {
+            export class Bridge implements BridgeInterface {
                 /** Callbacks set by the adapter */
                 options: BridgeCallbacks;
                 /** Transactions for a given product */
@@ -2938,7 +3022,9 @@ declare namespace CdvPurchase {
         /** StoreKit transaction */
         class SKTransaction extends Transaction {
             originalTransactionId?: string;
-            refresh(productId?: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string): void;
+            /** JWS representation of the transaction (StoreKit 2 only) */
+            jwsRepresentation?: string;
+            refresh(productId?: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDateMs?: string, jwsRepresentation?: string): void;
         }
     }
 }
@@ -5865,7 +5951,7 @@ declare namespace CdvPurchase {
                     }[];
                 }[];
             }
-            type ApiValidatorBodyTransaction = ApiValidatorBodyTransactionApple | ApiValidatorBodyTransactionGoogle | ApiValidatorBodyTransactionWindows | ApiValidatorBodyTransactionBraintree | ApiValidatorBodyTransactionIaptic;
+            type ApiValidatorBodyTransaction = ApiValidatorBodyTransactionApple | ApiValidatorBodyTransactionAppleSK2 | ApiValidatorBodyTransactionGoogle | ApiValidatorBodyTransactionWindows | ApiValidatorBodyTransactionBraintree | ApiValidatorBodyTransactionIaptic;
             interface ApiValidatorBodyTransactionIaptic {
                 type: 'iaptic';
                 /** The backend adapter type (e.g., 'stripe') */
@@ -5887,6 +5973,15 @@ declare namespace CdvPurchase {
                  * @deprecated Use `appStoreReceipt`
                  */
                 transactionReceipt?: never;
+            }
+            /** Transaction type from an Apple device using StoreKit 2 */
+            interface ApiValidatorBodyTransactionAppleSK2 {
+                /** Value `"apple-sk2"` — distinct from `"ios-appstore"` (SK1) */
+                type: 'apple-sk2';
+                /** Product identifier (e.g. "com.example.premium"), NOT the numeric transaction ID */
+                id?: string;
+                /** JWS representation of the transaction from StoreKit 2 */
+                jwsRepresentation: string;
             }
             /** Transaction type from a google powered device  */
             interface ApiValidatorBodyTransactionGoogle {
@@ -6017,6 +6112,8 @@ declare namespace CdvPurchase {
             } & WindowsStore.WindowsSubscription) | ({
                 type: 'ios-appstore';
             } & (AppleAppStore.VerifyReceipt.AppleTransaction | AppleAppStore.VerifyReceipt.AppleVerifyReceiptResponseReceipt)) | ({
+                type: 'apple-sk2';
+            }) | ({
                 type: 'android-playstore';
             } & GooglePlay.PublisherAPI.GooglePurchase) | ({
                 type: 'test';

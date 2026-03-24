@@ -20,6 +20,7 @@ StoreKit transaction
 - [isAcknowledged](CdvPurchase.AppleAppStore.SKTransaction.md#isacknowledged)
 - [isConsumed](CdvPurchase.AppleAppStore.SKTransaction.md#isconsumed)
 - [isPending](CdvPurchase.AppleAppStore.SKTransaction.md#ispending)
+- [jwsRepresentation](CdvPurchase.AppleAppStore.SKTransaction.md#jwsrepresentation)
 - [lastRenewalDate](CdvPurchase.AppleAppStore.SKTransaction.md#lastrenewaldate)
 - [originalTransactionId](CdvPurchase.AppleAppStore.SKTransaction.md#originaltransactionid)
 - [platform](CdvPurchase.AppleAppStore.SKTransaction.md#platform)
@@ -113,6 +114,14 @@ True when the transaction is still pending payment.
 #### Inherited from
 
 [Transaction](CdvPurchase.Transaction.md).[isPending](CdvPurchase.Transaction.md#ispending)
+
+___
+
+### jwsRepresentation
+
+• `Optional` **jwsRepresentation**: `string`
+
+JWS representation of the transaction (StoreKit 2 only)
 
 ___
 
@@ -297,7 +306,7 @@ ___
 
 ### refresh
 
-▸ **refresh**(`productId?`, `originalTransactionIdentifier?`, `transactionDate?`, `discountId?`): `void`
+▸ **refresh**(`productId?`, `originalTransactionIdentifier?`, `transactionDate?`, `discountId?`, `expirationDateMs?`, `jwsRepresentation?`): `void`
 
 #### Parameters
 
@@ -307,6 +316,8 @@ ___
 | `originalTransactionIdentifier?` | `string` |
 | `transactionDate?` | `string` |
 | `discountId?` | `string` |
+| `expirationDateMs?` | `string` |
+| `jwsRepresentation?` | `string` |
 
 #### Returns
 

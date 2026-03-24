@@ -11,6 +11,7 @@
 ### Interfaces
 
 - [BridgeCallbacks](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeCallbacks.md)
+- [BridgeInterface](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md)
 - [BridgeOptions](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeOptions.md)
 - [Discount](../interfaces/CdvPurchase.AppleAppStore.Bridge.Discount.md)
 - [ValidProduct](../interfaces/CdvPurchase.AppleAppStore.Bridge.ValidProduct.md)
