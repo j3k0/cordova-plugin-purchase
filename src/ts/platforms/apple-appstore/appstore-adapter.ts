@@ -125,7 +125,10 @@ namespace CdvPurchase {
                 });
             }
 
-            bridge: Bridge.Bridge;
+            bridge: Bridge.BridgeInterface;
+
+            /** True when the StoreKit 2 extension is active */
+            readonly useSK2: boolean;
             context: CdvPurchase.Internal.AdapterContext;
             log: Logger;
 
@@ -146,10 +149,19 @@ namespace CdvPurchase {
 
             constructor(context: CdvPurchase.Internal.AdapterContext, options: AdapterOptions) {
                 this.context = context;
-                this.bridge = new Bridge.Bridge();
                 this.log = context.log.child('AppleAppStore');
+
+                // Use SK2 if extension is installed
+                this.useSK2 = SK2Bridge.SK2NativeBridge.isAvailable();
+                if (this.useSK2) {
+                    this.log.info('StoreKit 2 extension detected, using SK2 bridge');
+                    this.bridge = new SK2Bridge.SK2NativeBridge();
+                } else {
+                    this.bridge = new Bridge.Bridge();
+                }
+
                 this.discountEligibilityDeterminer = options.discountEligibilityDeterminer;
-                this.needAppReceipt = options.needAppReceipt ?? true;
+                this.needAppReceipt = this.useSK2 ? false : (options.needAppReceipt ?? true);
                 this.autoFinish = options.autoFinish ?? false;
                 this.pseudoReceipt = new Receipt(Platform.APPLE_APPSTORE, this.context.apiDecorators);
                 this.receiptsUpdated = Utils.createDebouncer(() => {
@@ -269,11 +281,17 @@ namespace CdvPurchase {
                             this.log.info('ready');
                         },
 
-                        purchased: async (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string) => {
-                            this.log.info('purchase: id:' + transactionIdentifier + ' product:' + productId + ' originalTransaction:' + originalTransactionIdentifier + ' - date:' + transactionDate + ' - discount:' + discountId);
+                        purchased: async (transactionIdentifier: string, productId: string,
+                            originalTransactionIdentifier?: string, transactionDate?: string,
+                            discountId?: string, expirationDate?: string, jwsRepresentation?: string) => {
+                            this.log.info('purchase: id:' + transactionIdentifier + ' product:' + productId +
+                                ' originalTransaction:' + originalTransactionIdentifier +
+                                ' - date:' + transactionDate + ' - discount:' + discountId +
+                                (jwsRepresentation ? ' - jws:present' : ''));
                             // we can add the transaction to the receipt here
                             const transaction = await this.upsertTransaction(productId, transactionIdentifier, TransactionState.APPROVED);
-                            transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId);
+                            transaction.refresh(productId, originalTransactionIdentifier, transactionDate,
+                                discountId, expirationDate, jwsRepresentation);
                             this.removeTransactionInProgress(productId);
                             this.receiptsUpdated.call();
                             this.callPaymentMonitor('purchased');
@@ -330,9 +348,13 @@ namespace CdvPurchase {
                             this.receiptsUpdated.call();
                         },
 
-                        restored: async (transactionIdentifier: string, productId: string) => {
+                        restored: async (transactionIdentifier: string, productId: string,
+                            originalTransactionIdentifier?: string, transactionDate?: string,
+                            discountId?: string, expirationDate?: string, jwsRepresentation?: string) => {
                             this.log.info('restore: ' + transactionIdentifier + ' - ' + productId);
-                            await this.upsertTransaction(productId, transactionIdentifier, TransactionState.APPROVED);
+                            const transaction = await this.upsertTransaction(productId, transactionIdentifier, TransactionState.APPROVED);
+                            transaction.refresh(productId, originalTransactionIdentifier, transactionDate,
+                                discountId, expirationDate, jwsRepresentation);
                             this.receiptsUpdated.call();
                         },
 
@@ -427,6 +449,17 @@ namespace CdvPurchase {
                     });
                 }
                 if (!nativeData?.appStoreReceipt) {
+                    if (this.useSK2) {
+                        // SK2 doesn't use monolithic receipts — create receipt with empty data
+                        this.log.info('SK2 mode: no appStoreReceipt (expected), creating empty receipt');
+                        this._receipt = new SKApplicationReceipt(
+                            nativeData || { appStoreReceipt: '', bundleIdentifier: '',
+                                bundleShortVersion: '', bundleNumericVersion: 0, bundleSignature: '' },
+                            this.needAppReceipt, this.context.apiDecorators);
+                        this._appStoreReceiptLoading = false;
+                        callCallbacks(undefined);
+                        return;
+                    }
                     this.log.warn('no appStoreReceipt');
                     this._appStoreReceiptLoading = false;
                     callCallbacks(appStoreError(ErrorCode.REFRESH, 'No appStoreReceipt', null));
@@ -635,13 +668,13 @@ namespace CdvPurchase {
                     if (transaction.transactionId === APPLICATION_VIRTUAL_TRANSACTION_ID || transaction.transactionId === virtualTransactionId(transaction.products[0].id)) {
                         // this is a virtual transaction, nothing to do.
                         transaction.state = TransactionState.FINISHED;
-                        this.context.listener.receiptsUpdated(Platform.APPLE_APPSTORE, [transaction.parentReceipt]);
+                        this.receiptsUpdated.call();
                         return resolve(undefined);
                     }
 
                     const success = () => {
                         transaction.state = TransactionState.FINISHED;
-                        this.context.listener.receiptsUpdated(Platform.APPLE_APPSTORE, [transaction.parentReceipt]);
+                        this.receiptsUpdated.call();
                         resolve(undefined);
                     }
                     const error = (msg: string) => {
@@ -683,7 +716,8 @@ namespace CdvPurchase {
                         this.prepareReceipt(nativeData);
                     }
                 }
-                if (!skReceipt.nativeData.appStoreReceipt) {
+                // SK2 doesn't use monolithic receipts — skip the appStoreReceipt check
+                if (!this.useSK2 && !skReceipt.nativeData.appStoreReceipt) {
                     this.log.info('Cannot prepare the receipt validation body, because appStoreReceipt is missing. Refreshing...');
                     const result = await this.refreshReceipt();
                     if (!result || 'isError' in result) {
@@ -695,16 +729,39 @@ namespace CdvPurchase {
                     applicationReceipt = result;
                 }
                 const transaction = skReceipt.transactions.slice(-1)[0] as (SKTransaction | undefined);
+                const products = Utils.objectValues(this.validProducts).map(vp =>
+                    new SKProduct(vp, vp, this.context.apiDecorators, { isEligible: () => true }));
+
+                // SK2 uses a completely different transaction type ('apple-sk2') with JWS
+                // SK1 uses 'ios-appstore' with the monolithic appStoreReceipt
+                if (this.useSK2) {
+                    if (!transaction?.jwsRepresentation) {
+                        this.log.warn('SK2 mode but no JWS on transaction, skipping validation');
+                        return undefined;
+                    }
+                    return {
+                        id: applicationReceipt.bundleIdentifier,
+                        type: ProductType.APPLICATION,
+                        products,
+                        transaction: {
+                            type: 'apple-sk2' as const,
+                            id: transaction?.products?.[0]?.id,
+                            jwsRepresentation: transaction.jwsRepresentation,
+                        },
+                    };
+                }
+
+                const txBody = {
+                    type: 'ios-appstore' as const,
+                    id: transaction?.transactionId,
+                    appStoreReceipt: applicationReceipt.appStoreReceipt,
+                };
+
                 return {
                     id: applicationReceipt.bundleIdentifier,
                     type: ProductType.APPLICATION,
-                    // send all products and offers so validator get pricing information
-                    products: Utils.objectValues(this.validProducts).map(vp => new SKProduct(vp, vp, this.context.apiDecorators, { isEligible: () => true })),
-                    transaction: {
-                        type: 'ios-appstore',
-                        id: transaction?.transactionId,
-                        appStoreReceipt: applicationReceipt.appStoreReceipt,
-                    }
+                    products,
+                    transaction: txBody,
                 }
             }
 
@@ -713,7 +770,8 @@ namespace CdvPurchase {
                 let localReceiptUpdated = false;
                 if (response.ok) {
                     const vTransaction = response.data?.transaction;
-                    if (vTransaction?.type === 'ios-appstore' && 'original_application_version' in vTransaction) {
+                    const isApple = vTransaction?.type === 'ios-appstore' || vTransaction?.type === 'apple-sk2';
+                    if (isApple && vTransaction && 'original_application_version' in vTransaction) {
                         this._receipt?.transactions.forEach(t => {
                             if (t.transactionId === APPLICATION_VIRTUAL_TRANSACTION_ID) {
                                 if (vTransaction.original_purchase_date_ms) {

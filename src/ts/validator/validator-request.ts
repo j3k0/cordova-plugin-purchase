@@ -107,6 +107,7 @@ namespace CdvPurchase {
 
             export type ApiValidatorBodyTransaction =
                 | ApiValidatorBodyTransactionApple
+                | ApiValidatorBodyTransactionAppleSK2
                 | ApiValidatorBodyTransactionGoogle
                 | ApiValidatorBodyTransactionWindows
                 | ApiValidatorBodyTransactionBraintree
@@ -138,6 +139,16 @@ namespace CdvPurchase {
                  * @deprecated Use `appStoreReceipt`
                  */
                 transactionReceipt?: never;
+            }
+
+            /** Transaction type from an Apple device using StoreKit 2 */
+            export interface ApiValidatorBodyTransactionAppleSK2 {
+                /** Value `"apple-sk2"` — distinct from `"ios-appstore"` (SK1) */
+                type: 'apple-sk2';
+                /** Product identifier (e.g. "com.example.premium"), NOT the numeric transaction ID */
+                id?: string;
+                /** JWS representation of the transaction from StoreKit 2 */
+                jwsRepresentation: string;
             }
 
             /** Transaction type from a google powered device  */
