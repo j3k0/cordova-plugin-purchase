@@ -244,6 +244,10 @@ For a more complete example with a backend integration, check:
 
 ### Extensions
 
+ - [StoreKit 2](https://github.com/j3k0/cordova-plugin-purchase-storekit2)
+   - Enable StoreKit 2 on iOS 15+. When installed, the Apple AppStore adapter automatically upgrades from StoreKit 1 to StoreKit 2 — no code changes needed.
+   - Requires cordova-ios 7+ (tested with cordova-ios 8).
+   - `cordova plugin add cordova-plugin-purchase-storekit2`
  - [Braintree SDK](https://github.com/j3k0/cordova-plugin-purchase-braintree)
    - Add the Braintree SDK to your application, enable Braintree on iOS and Android.
 
