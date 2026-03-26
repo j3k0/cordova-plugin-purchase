@@ -1,5 +1,34 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.14
+
+### 13.14.0
+
+#### (ios) StoreKit 2 support via extension plugin
+
+StoreKit 2 is now supported as an optional extension. When `cordova-plugin-purchase-storekit2` is installed, the Apple AppStore adapter automatically upgrades from StoreKit 1 to StoreKit 2 on iOS 15+ devices — no code changes needed.
+
+**Installation:**
+
+```sh
+cordova plugin add cordova-plugin-purchase-storekit2
+```
+
+**Requirements:** cordova-ios 7+ (tested with cordova-ios 8).
+
+**What changes with StoreKit 2:**
+
+- Per-transaction JWS (JSON Web Signature) tokens replace the monolithic `appStoreReceipt`
+- Receipt validation uses transaction type `apple-sk2` with `jwsRepresentation` field
+- Native async/await APIs for product loading, purchases, and transaction observation
+- Built-in support for manage subscriptions, offer code redemption sheets
+
+**Architecture:**
+
+- Main plugin gains a shared `BridgeInterface`, an SK2 TypeScript bridge, and adapter changes for runtime SK2 detection
+- Extension plugin (`cordova-plugin-purchase-storekit2`) contains only the Swift native code and a JS marker file
+- Falls back to StoreKit 1 when the extension is not installed or on iOS < 15
+
 ## 13.13
 
 ### 13.13.1
