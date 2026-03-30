@@ -985,15 +985,25 @@ public final class PurchasePlugin
       }
       Log.d(mTag, "Attempting to launch billing flow on UI thread.");
       cordova.setActivityResultCallback(this);
-      // Ensure the actual launch call is on the UI thread
+      // Run on the UI thread - required for launchBillingFlow to create a valid PendingIntent.
+      // Time may have passed since the outer activity/client checks, so we re-validate here.
       activity.runOnUiThread(() -> {
+        if (activity.isFinishing() || activity.isDestroyed()) {
+          Log.e(mTag, "Activity finished or destroyed before launchBillingFlow could execute.");
+          callError(Constants.ERR_COMMUNICATION, "Activity not available to launch billing flow.");
+          return;
+        }
+        if (mBillingClient == null || !mBillingClient.isReady()) {
+          Log.e(mTag, "Billing client not ready at time of launchBillingFlow execution.");
+          callError(Constants.ERR_COMMUNICATION, "Billing client disconnected before launch.");
+          return;
+        }
         Log.d(mTag, "launchBillingFlow happening now.");
         BillingResult billingResult = mBillingClient.launchBillingFlow(activity, params);
         // Log the immediate result (though the main result comes via listener)
         Log.d(mTag, "launchBillingFlow immediate result: " + format(billingResult));
         if (billingResult.getResponseCode() != BillingResponseCode.OK) {
-           Log.e(mTag, "launchBillingFlow failed immediately with code: " + format(billingResult));
-           // Potentially callError here if appropriate, though onPurchasesUpdated usually handles final state
+          Log.e(mTag, "launchBillingFlow failed immediately with code: " + format(billingResult));
         }
       });
     });
@@ -1360,14 +1370,20 @@ public final class PurchasePlugin
   }
 
   private void executeServiceRequest(final Runnable runnable) {
-    if (mIsServiceConnected) {
+    // Check both the cached flag and the actual client ready state. The billingClient can
+    // disconnect silently without calling onBillingServiceDisconnected, leaving
+    // mIsServiceConnected as true. Using isReady() catches that case.
+    if (mIsServiceConnected && mBillingClient != null && mBillingClient.isReady()) {
       Log.d(mTag, "executeServiceRequest() -> OK");
       resetLastResult(BillingResponseCode.OK);
       runnable.run();
     } else {
+      if (mIsServiceConnected) {
+        Log.w(mTag, "executeServiceRequest() -> mIsServiceConnected=true but billing client not ready - resetting and reconnecting.");
+        mIsServiceConnected = false;
+      }
       // If billing service was disconnected, we try to reconnect 1 time.
-      // (feel free to introduce your retry policy here).
-      Log.d(mTag, "executeServiceRequest() -> Failed (try again).");
+      Log.d(mTag, "executeServiceRequest() -> Not connected (try again).");
       startServiceConnection(runnable, () -> {
         Log.d(mTag, "executeServiceRequest() -> Failed to reconnect to billing server...");
       });
