@@ -497,7 +497,8 @@ namespace CdvPurchase {
                         this.bridge.subscribe(buySuccess, buyFailed, idAndToken, additionalData);
                     }
                     else {
-                        this.bridge.buy(buySuccess, buyFailed, offer.productId, additionalData);
+                        const idAndToken = 'token' in offer && offer.token ? offer.productId + '@' + offer.token : offer.productId;
+                        this.bridge.buy(buySuccess, buyFailed, idAndToken, additionalData);
                     }
                 });
             }

@@ -5689,7 +5689,8 @@ var CdvPurchase;
                             this.bridge.subscribe(buySuccess, buyFailed, idAndToken, additionalData);
                         }
                         else {
-                            this.bridge.buy(buySuccess, buyFailed, offer.productId, additionalData);
+                            const idAndToken = 'token' in offer && offer.token ? offer.productId + '@' + offer.token : offer.productId;
+                            this.bridge.buy(buySuccess, buyFailed, idAndToken, additionalData);
                         }
                     });
                 });
@@ -6088,9 +6089,10 @@ var CdvPurchase;
         }
         GooglePlay.GProduct = GProduct;
         class InAppOffer extends CdvPurchase.Offer {
-            constructor() {
-                super(...arguments);
+            constructor(options, decorator) {
+                super(options, decorator);
                 this.type = 'inapp';
+                this.token = options.token;
             }
         }
         GooglePlay.InAppOffer = InAppOffer;
@@ -6346,8 +6348,33 @@ var CdvPurchase;
             }
             */
             onInAppLoaded(p, vp) {
-                var _a, _b, _c, _d;
                 // console.log('iabInAppLoaded: ' + JSON.stringify(vp));
+                var _a, _b, _c, _d;
+                // v12.0 format: pricing is inside the offers array, not at the top level.
+                if (vp.offers && vp.offers.length > 0) {
+                    vp.offers.forEach((productOffer) => {
+                        const offerId = productOffer.offer_id
+                            ? vp.productId + '@' + productOffer.offer_id
+                            : vp.productId;
+                        const pricingPhases = [{
+                                price: productOffer.formatted_price,
+                                priceMicros: productOffer.price_amount_micros,
+                                currency: productOffer.price_currency_code,
+                                recurrenceMode: CdvPurchase.RecurrenceMode.NON_RECURRING,
+                            }];
+                        const existingOffer = this.getOffer(offerId);
+                        if (existingOffer) {
+                            existingOffer.pricingPhases = pricingPhases;
+                        }
+                        else {
+                            const offer = new InAppOffer({ id: offerId, product: p, pricingPhases, token: productOffer.offer_token }, this.decorator);
+                            this.offers.push(offer);
+                            p.addOffer(offer);
+                        }
+                    });
+                    return p;
+                }
+                // Legacy / v11.0 format: pricing at the top level, single offer.
                 const existingOffer = this.getOffer(vp.productId);
                 const pricingPhases = [{
                         price: (_b = (_a = vp.formatted_price) !== null && _a !== void 0 ? _a : vp.price) !== null && _b !== void 0 ? _b : `${((_c = vp.price_amount_micros) !== null && _c !== void 0 ? _c : 0) / 1000000} ${vp.price_currency_code}`,
@@ -6356,12 +6383,6 @@ var CdvPurchase;
                         recurrenceMode: CdvPurchase.RecurrenceMode.NON_RECURRING,
                     }];
                 if (existingOffer) {
-                    // state: store.VALID,
-                    // title: vp.name || trimTitle(vp.title),
-                    // description: vp.description,
-                    // currency: vp.price_currency_code || "",
-                    // price: vp.formatted_price || vp.price,
-                    // priceMicros: vp.price_amount_micros,
                     existingOffer.pricingPhases = pricingPhases;
                     p.offers = [existingOffer];
                 }
@@ -6370,15 +6391,6 @@ var CdvPurchase;
                     this.offers.push(newOffer);
                     p.offers = [newOffer];
                 }
-                // p.set({
-                //     state: store.VALID,
-                //     title: vp.name || trimTitle(vp.title),
-                //     description: vp.description,
-                //     currency: vp.price_currency_code || "",
-                //     price: vp.formatted_price || vp.price,
-                //     priceMicros: vp.price_amount_micros,
-                // });
-                // p.trigger("loaded");
                 return p;
             }
             toPaymentMode(phase) {
