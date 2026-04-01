@@ -274,6 +274,27 @@ static NSString *toTimestamp(NSDate *date) {
     g_autoFinishEnabled = YES;
 }
 
+-(void) getStorefront: (CDVInvokedUrlCommand*)command {
+    DLog(@"getStorefront");
+    if (@available(iOS 13.0, macOS 10.15, *)) {
+        SKStorefront *storefront = [[SKPaymentQueue defaultQueue] storefront];
+        if (storefront) {
+            NSString *countryCode = storefront.countryCode;
+            DLog(@"getStorefront: %@", countryCode);
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:countryCode];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        } else {
+            DLog(@"getStorefront: storefront not available");
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Storefront not available"];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        }
+    } else {
+        DLog(@"getStorefront: not available (requires iOS 13.0+)");
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Storefront requires iOS 13.0+"];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }
+}
+
 -(void) setup: (CDVInvokedUrlCommand*)command {
     CDVPluginResult* pluginResult = nil;
     g_initialized = YES;

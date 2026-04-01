@@ -263,6 +263,9 @@ public final class PurchasePlugin
         Intent browserIntent = new Intent(Intent.ACTION_VIEW,
             Uri.parse("http://play.google.com/store/account/subscriptions"));
         cordova.getActivity().startActivity(browserIntent);
+      } else if ("getStorefront".equals(action)) {
+        getStorefront(callbackContext);
+        return true;
       } else {
         // No handler for the action
         isValidAction = false;
@@ -275,6 +278,38 @@ public final class PurchasePlugin
 
     // Method not found
     return isValidAction;
+  }
+
+  /**
+   * Retrieves the user's Play Store billing country code.
+   *
+   * Uses BillingClient.getBillingConfigAsync() to obtain the country
+   * code as ISO 3166-1 alpha-2 (e.g., "US", "FR").
+   */
+  private void getStorefront(final CallbackContext callbackContext) {
+    Log.d(mTag, "getStorefront()");
+    executeServiceRequest(() -> {
+      com.android.billingclient.api.GetBillingConfigParams params =
+          com.android.billingclient.api.GetBillingConfigParams.newBuilder().build();
+      mBillingClient.getBillingConfigAsync(params,
+          new com.android.billingclient.api.BillingConfigResponseListener() {
+            @Override
+            public void onBillingConfigResponse(
+                BillingResult billingResult,
+                com.android.billingclient.api.BillingConfig billingConfig) {
+              if (billingResult.getResponseCode() == BillingResponseCode.OK
+                  && billingConfig != null) {
+                String countryCode = billingConfig.getCountryCode();
+                Log.d(mTag, "getStorefront() -> " + countryCode);
+                callbackContext.success(countryCode);
+              } else {
+                Log.d(mTag, "getStorefront() -> Failed: " + format(billingResult));
+                callbackContext.error("Failed to get billing config: "
+                    + format(billingResult));
+              }
+            }
+          });
+    });
   }
 
   private String getPublicKey() {

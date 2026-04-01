@@ -617,6 +617,17 @@ namespace CdvPurchase {
                     exec('appStoreRefreshReceipt', [], loaded, error);
                 }
 
+                /** Retrieve the storefront country code from StoreKit */
+                getStorefront(): Promise<string | undefined> {
+                    return new Promise((resolve) => {
+                        exec('getStorefront', [], (countryCode: string) => {
+                            resolve(countryCode || undefined);
+                        }, () => {
+                            resolve(undefined);
+                        });
+                    });
+                }
+
                 loadReceipts(callback: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void) {
 
                     const loaded = (args: RawReceiptArgs) => {

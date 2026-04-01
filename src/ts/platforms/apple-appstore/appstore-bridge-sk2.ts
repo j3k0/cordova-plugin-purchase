@@ -348,6 +348,18 @@ namespace CdvPurchase {
                     exec('appStoreRefreshReceipt', [], loaded, error);
                 }
 
+                /** Retrieve the storefront country code from StoreKit */
+                getStorefront(): Promise<string | undefined> {
+                    return new Promise((resolve) => {
+                        // SK2 uses the same native getStorefront action via InAppPurchase plugin
+                        window.cordova.exec((countryCode: string) => {
+                            resolve(countryCode || undefined);
+                        }, () => {
+                            resolve(undefined);
+                        }, "InAppPurchase", "getStorefront", []);
+                    });
+                }
+
                 loadReceipts(callback: (receipt: ApplicationReceipt) => void,
                              errorCb: (code: ErrorCode, message: string) => void) {
                     const loaded = (args: [string, string, string, number, string]) => {

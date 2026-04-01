@@ -44,6 +44,7 @@
 - (void) debug: (CDVInvokedUrlCommand*)command;
 - (void) autoFinish: (CDVInvokedUrlCommand*)command;
 - (void) finishTransaction: (CDVInvokedUrlCommand*)command;
+- (void) getStorefront: (CDVInvokedUrlCommand*)command;
 
 - (void) onReset;
 - (void) processPendingTransactionUpdates;

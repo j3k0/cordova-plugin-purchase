@@ -588,6 +588,17 @@ namespace CdvPurchase {
                 return;
             }
 
+            async getStorefront(): Promise<string | undefined> {
+                return new Promise((resolve) => {
+                    this.bridge.getStorefront((countryCode: string) => {
+                        resolve(countryCode || undefined);
+                    }, (message: string) => {
+                        this.log.warn('getStorefront failed: ' + message);
+                        resolve(undefined);
+                    });
+                });
+            }
+
             checkSupport(functionality: PlatformFunctionality): boolean {
                 const supported: PlatformFunctionality[] = [
                     'order', 'manageBilling', 'manageSubscriptions'
