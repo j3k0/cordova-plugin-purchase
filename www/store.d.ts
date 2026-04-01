@@ -4727,6 +4727,13 @@ declare namespace CdvPurchase {
         }
         class InAppOffer extends CdvPurchase.Offer {
             type: string;
+            token?: string;
+            constructor(options: {
+                id: string;
+                product: GProduct;
+                pricingPhases: PricingPhase[];
+                token?: string;
+            }, decorator: Internal.OfferDecorator);
         }
         class SubscriptionOffer extends CdvPurchase.Offer {
             type: string;

@@ -8,6 +8,11 @@ namespace CdvPurchase {
 
         export class InAppOffer extends CdvPurchase.Offer {
             type = 'inapp';
+            token?: string;
+            constructor(options: { id: string, product: GProduct, pricingPhases: PricingPhase[], token?: string }, decorator: Internal.OfferDecorator) {
+                super(options, decorator);
+                this.token = options.token;
+            }
         }
 
         export class SubscriptionOffer extends CdvPurchase.Offer {
@@ -283,20 +288,41 @@ namespace CdvPurchase {
 
             private onInAppLoaded(p: GProduct, vp: Bridge.InAppProduct): GProduct {
                 // console.log('iabInAppLoaded: ' + JSON.stringify(vp));
+
+                // v12.0 format: pricing is inside the offers array, not at the top level.
+                if (vp.offers && vp.offers.length > 0) {
+                    vp.offers.forEach((productOffer) => {
+                        const offerId = productOffer.offer_id
+                            ? vp.productId + '@' + productOffer.offer_id
+                            : vp.productId;
+                        const pricingPhases: PricingPhase[] = [{
+                            price: productOffer.formatted_price,
+                            priceMicros: productOffer.price_amount_micros,
+                            currency: productOffer.price_currency_code,
+                            recurrenceMode: RecurrenceMode.NON_RECURRING,
+                        }];
+                        const existingOffer = this.getOffer(offerId);
+                        if (existingOffer) {
+                            existingOffer.pricingPhases = pricingPhases;
+                        }
+                        else {
+                            const offer = new InAppOffer({ id: offerId, product: p, pricingPhases, token: productOffer.offer_token }, this.decorator);
+                            this.offers.push(offer);
+                            p.addOffer(offer);
+                        }
+                    });
+                    return p;
+                }
+
+                // Legacy / v11.0 format: pricing at the top level, single offer.
                 const existingOffer = this.getOffer(vp.productId);
-                const pricingPhases = [{
+                const pricingPhases: PricingPhase[] = [{
                     price: vp.formatted_price ?? vp.price ?? `${(vp.price_amount_micros ?? 0) / 1000000} ${vp.price_currency_code}`,
                     priceMicros: vp.price_amount_micros ?? 0,
                     currency: vp.price_currency_code,
                     recurrenceMode: RecurrenceMode.NON_RECURRING,
                 }];
                 if (existingOffer) {
-                    // state: store.VALID,
-                    // title: vp.name || trimTitle(vp.title),
-                    // description: vp.description,
-                    // currency: vp.price_currency_code || "",
-                    // price: vp.formatted_price || vp.price,
-                    // priceMicros: vp.price_amount_micros,
                     existingOffer.pricingPhases = pricingPhases;
                     p.offers = [existingOffer];
                 }
@@ -305,15 +331,6 @@ namespace CdvPurchase {
                     this.offers.push(newOffer);
                     p.offers = [newOffer];
                 }
-                // p.set({
-                //     state: store.VALID,
-                //     title: vp.name || trimTitle(vp.title),
-                //     description: vp.description,
-                //     currency: vp.price_currency_code || "",
-                //     price: vp.formatted_price || vp.price,
-                //     priceMicros: vp.price_amount_micros,
-                // });
-                // p.trigger("loaded");
                 return p;
             }
 
