@@ -175,7 +175,7 @@ namespace CdvPurchase {
                 ready: () => void;
 
                 /** Called when a transaction is in "Purchased" state */
-                purchased: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string) => void;
+                purchased: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string, quantity?: number) => void;
 
                 /** Called when a transaction has been enqueued */
                 purchaseEnqueued: (productId: string, quantity: number) => void;
@@ -199,7 +199,7 @@ namespace CdvPurchase {
                 finished: (transactionIdentifier: string, productId: string) => void;
 
                 /** Called when a transaction is in "restored" state */
-                restored: (transactionIdentifier: string, productId: string) => void;
+                restored: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string, quantity?: number) => void;
 
                 /** Called when the application receipt is refreshed */
                 receiptsRefreshed: (receipt: ApplicationReceipt) => void;
@@ -272,6 +272,7 @@ namespace CdvPurchase {
                     originalTransactionIdentifier: string | undefined;
                     transactionDate: string | undefined;
                     discountId: string | undefined;
+                    quantity: number | undefined;
                 }[] = [];
 
                 constructor() {
@@ -511,7 +512,7 @@ namespace CdvPurchase {
                 finalizeTransactionUpdates() {
                     for (let i = 0; i < this.pendingUpdates.length; ++i) {
                         const args = this.pendingUpdates[i];
-                        this.transactionUpdated(args.state, args.errorCode, args.errorText, args.transactionIdentifier, args.productId, args.transactionReceipt, args.originalTransactionIdentifier, args.transactionDate, args.discountId);
+                        this.transactionUpdated(args.state, args.errorCode, args.errorText, args.transactionIdentifier, args.productId, args.transactionReceipt, args.originalTransactionIdentifier, args.transactionDate, args.discountId, args.quantity);
                     }
                     this.pendingUpdates = [];
                 }
@@ -524,10 +525,10 @@ namespace CdvPurchase {
                 //
                 // Note that it may eventually be called before initialization... unfortunately.
                 // In this case, we'll just keep pending updates in a list for later processing.
-                transactionUpdated(state: TransactionState, errorCode: ErrorCode | undefined, errorText: string | undefined, transactionIdentifier: string, productId: string, transactionReceipt: never, originalTransactionIdentifier: string | undefined, transactionDate: string | undefined, discountId: string | undefined) {
+                transactionUpdated(state: TransactionState, errorCode: ErrorCode | undefined, errorText: string | undefined, transactionIdentifier: string, productId: string, transactionReceipt: never, originalTransactionIdentifier: string | undefined, transactionDate: string | undefined, discountId: string | undefined, quantity: number | undefined) {
 
                     if (!this.initialized) {
-                        this.pendingUpdates.push({ state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId });
+                        this.pendingUpdates.push({ state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId, quantity });
                         return;
                     }
                     log("transaction updated:" + transactionIdentifier + " state:" + state + " product:" + productId);
@@ -546,7 +547,7 @@ namespace CdvPurchase {
                             protectCall(this.options.purchasing, 'options.purchasing', productId);
                             return;
                         case "PaymentTransactionStatePurchased":
-                            protectCall(this.options.purchased, 'options.purchase', transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId);
+                            protectCall(this.options.purchased, 'options.purchase', transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, undefined, undefined, quantity);
                             return;
                         case "PaymentTransactionStateDeferred":
                             protectCall(this.options.deferred, 'options.deferred', productId);
@@ -556,7 +557,7 @@ namespace CdvPurchase {
                             protectCall(this.options.error, 'options.error', errorCode || ErrorCode.UNKNOWN, errorText || 'ERROR', {productId});
                             return;
                         case "PaymentTransactionStateRestored":
-                            protectCall(this.options.restored, 'options.restore', transactionIdentifier, productId);
+                            protectCall(this.options.restored, 'options.restore', transactionIdentifier, productId, undefined, undefined, undefined, undefined, undefined, quantity);
                             return;
                         case "PaymentTransactionStateFinished":
                             protectCall(this.options.finished, 'options.finish', transactionIdentifier, productId);

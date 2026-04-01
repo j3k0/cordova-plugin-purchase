@@ -571,6 +571,7 @@ static NSString *toTimestamp(NSDate *date) {
 #define PT_INDEX_ORIGINAL_TRANSACTION_IDENTIFIER 6
 #define PT_INDEX_TRANSACTION_DATE 7
 #define PT_INDEX_DISCOUNT_ID 8
+#define PT_INDEX_QUANTITY 9
         NSArray *callbackArgs = [NSArray arrayWithObjects:
             NILABLE(state),
             [NSNumber numberWithInteger:errorCode],
@@ -581,6 +582,7 @@ static NSString *toTimestamp(NSDate *date) {
             NILABLE(originalTransactionIdentifier),
             NILABLE(transactionDate),
             NILABLE(discountId),
+            [NSNumber numberWithInteger:transaction.payment.quantity],
             nil];
 
         if (g_initialized) {
@@ -635,6 +637,10 @@ static NSString *toTimestamp(NSDate *date) {
         NILABLE(transaction.transactionIdentifier),
         NILABLE(transaction.payment.productIdentifier),
         NILABLE(nil),
+        NILABLE(nil),
+        NILABLE(nil),
+        NILABLE(nil),
+        [NSNumber numberWithInteger:transaction.payment.quantity],
         nil];
     NSString *js = [NSString
         stringWithFormat:@"window.storekit.transactionUpdated.apply(window.storekit, %@)",
