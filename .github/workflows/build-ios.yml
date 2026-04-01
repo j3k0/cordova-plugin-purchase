@@ -51,7 +51,8 @@ jobs:
           xcodebuild build
           -workspace App.xcworkspace
           -scheme App
-          -sdk iphoneos
+          -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
           CODE_SIGN_IDENTITY=""
           CODE_SIGNING_REQUIRED=NO
           CODE_SIGNING_ALLOWED=NO
