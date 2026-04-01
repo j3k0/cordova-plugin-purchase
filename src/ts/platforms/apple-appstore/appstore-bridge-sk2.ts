@@ -27,11 +27,11 @@ namespace CdvPurchase {
                 purchased: (transactionIdentifier: string, productId: string,
                     originalTransactionIdentifier?: string, transactionDate?: string,
                     discountId?: string, expirationDate?: string,
-                    jwsRepresentation?: string) => void;
+                    jwsRepresentation?: string, quantity?: number) => void;
                 restored: (transactionIdentifier: string, productId: string,
                     originalTransactionIdentifier?: string, transactionDate?: string,
                     discountId?: string, expirationDate?: string,
-                    jwsRepresentation?: string) => void;
+                    jwsRepresentation?: string, quantity?: number) => void;
             }
 
             export class SK2NativeBridge implements Bridge.BridgeInterface {
@@ -54,6 +54,7 @@ namespace CdvPurchase {
                     discountId: string | undefined;
                     expirationDate: string | undefined;
                     jwsRepresentation: string | undefined;
+                    quantity: number | undefined;
                 }[] = [];
 
                 /** True when this bridge is active (SK2 extension installed + iOS 15+) */
@@ -234,7 +235,8 @@ namespace CdvPurchase {
                         this.transactionUpdated(args.state, args.errorCode, args.errorText,
                             args.transactionIdentifier, args.productId, args.transactionReceipt,
                             args.originalTransactionIdentifier, args.transactionDate,
-                            args.discountId, args.expirationDate, args.jwsRepresentation);
+                            args.discountId, args.expirationDate, args.jwsRepresentation,
+                            args.quantity);
                     }
                     this.pendingUpdates = [];
                 }
@@ -255,13 +257,15 @@ namespace CdvPurchase {
                     transactionDate: string | undefined,
                     discountId: string | undefined,
                     expirationDate?: string | undefined,
-                    jwsRepresentation?: string | undefined
+                    jwsRepresentation?: string | undefined,
+                    quantity?: number | undefined
                 ) {
                     if (!this.initialized) {
                         this.pendingUpdates.push({
                             state, errorCode, errorText, transactionIdentifier,
                             productId, transactionReceipt, originalTransactionIdentifier,
-                            transactionDate, discountId, expirationDate, jwsRepresentation
+                            transactionDate, discountId, expirationDate, jwsRepresentation,
+                            quantity
                         });
                         return;
                     }
@@ -284,7 +288,7 @@ namespace CdvPurchase {
                             protectCall(this.options.purchased, 'options.purchased',
                                 transactionIdentifier, productId,
                                 originalTransactionIdentifier, transactionDate,
-                                discountId, expirationDate, jwsRepresentation);
+                                discountId, expirationDate, jwsRepresentation, quantity);
                             return;
                         case "PaymentTransactionStateDeferred":
                             protectCall(this.options.deferred, 'options.deferred', productId);
@@ -299,7 +303,7 @@ namespace CdvPurchase {
                             protectCall(this.options.restored, 'options.restored',
                                 transactionIdentifier, productId,
                                 originalTransactionIdentifier, transactionDate,
-                                discountId, expirationDate, jwsRepresentation);
+                                discountId, expirationDate, jwsRepresentation, quantity);
                             return;
                         case "PaymentTransactionStateFinished":
                             protectCall(this.options.finished, 'options.finished',

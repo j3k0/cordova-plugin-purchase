@@ -19,6 +19,14 @@ namespace CdvPurchase {
 
             /** Information about the payment discount */
             discount?: PaymentDiscount;
+
+            /**
+             * Quantity of consumable products to purchase.
+             *
+             * Must be between 1 and 10 (Apple's limit). Defaults to 1.
+             * Only meaningful for consumable products.
+             */
+            quantity?: number;
         }
 
         /**
@@ -286,15 +294,17 @@ namespace CdvPurchase {
 
                         purchased: async (transactionIdentifier: string, productId: string,
                             originalTransactionIdentifier?: string, transactionDate?: string,
-                            discountId?: string, expirationDate?: string, jwsRepresentation?: string) => {
+                            discountId?: string, expirationDate?: string, jwsRepresentation?: string,
+                            quantity?: number) => {
                             this.log.info('purchase: id:' + transactionIdentifier + ' product:' + productId +
                                 ' originalTransaction:' + originalTransactionIdentifier +
                                 ' - date:' + transactionDate + ' - discount:' + discountId +
-                                (jwsRepresentation ? ' - jws:present' : ''));
+                                (jwsRepresentation ? ' - jws:present' : '') +
+                                (quantity && quantity > 1 ? ' - quantity:' + quantity : ''));
                             // we can add the transaction to the receipt here
                             const transaction = await this.upsertTransaction(productId, transactionIdentifier, TransactionState.APPROVED);
                             transaction.refresh(productId, originalTransactionIdentifier, transactionDate,
-                                discountId, expirationDate, jwsRepresentation);
+                                discountId, expirationDate, jwsRepresentation, quantity);
                             this.removeTransactionInProgress(productId);
                             this.receiptsUpdated.call();
                             this.callPaymentMonitor('purchased');
@@ -353,11 +363,12 @@ namespace CdvPurchase {
 
                         restored: async (transactionIdentifier: string, productId: string,
                             originalTransactionIdentifier?: string, transactionDate?: string,
-                            discountId?: string, expirationDate?: string, jwsRepresentation?: string) => {
+                            discountId?: string, expirationDate?: string, jwsRepresentation?: string,
+                            quantity?: number) => {
                             this.log.info('restore: ' + transactionIdentifier + ' - ' + productId);
                             const transaction = await this.upsertTransaction(productId, transactionIdentifier, TransactionState.APPROVED);
                             transaction.refresh(productId, originalTransactionIdentifier, transactionDate,
-                                discountId, expirationDate, jwsRepresentation);
+                                discountId, expirationDate, jwsRepresentation, quantity);
                             this.receiptsUpdated.call();
                         },
 
@@ -622,6 +633,10 @@ namespace CdvPurchase {
                         resolve(result);
                     }
                     this.log.info('order');
+                    const quantity = additionalData?.appStore?.quantity ?? 1;
+                    if (quantity < 1 || quantity > 10 || !Number.isInteger(quantity)) {
+                        return callResolve(appStoreError(ErrorCode.PURCHASE, 'Invalid quantity: must be an integer between 1 and 10', offer.productId));
+                    }
                     const discountId = offer.id !== DEFAULT_OFFER_ID ? offer.id : undefined;
                     const discount = additionalData?.appStore?.discount;
                     if (discountId && !discount) {
@@ -661,7 +676,7 @@ namespace CdvPurchase {
                     // When we switch AppStore user, the cached receipt isn't from the new user.
                     // so after a purchase, we want to make sure we're using the receipt from the logged in user.
                     this.forceReceiptReload = true;
-                    this.bridge.purchase(offer.productId, 1, this.context.getApplicationUsername(), discount, success, error);
+                    this.bridge.purchase(offer.productId, quantity, this.context.getApplicationUsername(), discount, success, error);
                 });
             }
 
