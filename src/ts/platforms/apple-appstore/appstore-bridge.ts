@@ -557,6 +557,9 @@ namespace CdvPurchase {
                             protectCall(this.options.error, 'options.error', errorCode || ErrorCode.UNKNOWN, errorText || 'ERROR', {productId});
                             return;
                         case "PaymentTransactionStateRestored":
+                            // Note: quantity is always irrelevant for restored transactions on iOS —
+                            // consumable products cannot be restored. Passed through to maintain
+                            // positional argument consistency with the purchased callback.
                             protectCall(this.options.restored, 'options.restore', transactionIdentifier, productId, undefined, undefined, undefined, undefined, undefined, quantity);
                             return;
                         case "PaymentTransactionStateFinished":
