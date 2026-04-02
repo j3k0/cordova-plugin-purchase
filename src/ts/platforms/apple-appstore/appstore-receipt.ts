@@ -53,7 +53,7 @@ namespace CdvPurchase {
             if (transactionDate) this.purchaseDate = new Date(+transactionDate);
             if (expirationDateMs) this.expirationDate = new Date(+expirationDateMs);
             if (jwsRepresentation) this.jwsRepresentation = jwsRepresentation;
-            if (quantity && quantity > 1) this.quantity = quantity;
+            if (quantity !== undefined) this.quantity = quantity;
         }
     }
   }
