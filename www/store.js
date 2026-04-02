@@ -4335,6 +4335,13 @@ var CdvPurchase;
                         offerType: 'Default',
                     }, decorator));
                 }
+                // Ensure the default offer is always first so that getOffer()
+                // without arguments returns it instead of a discount offer.
+                const defaultIndex = this.offers.findIndex(o => o.id === AppleAppStore.DEFAULT_OFFER_ID);
+                if (defaultIndex > 0) {
+                    const [defaultOffer] = this.offers.splice(defaultIndex, 1);
+                    this.offers.unshift(defaultOffer);
+                }
                 function hasIntroductoryOffer(product) {
                     return product.offers.filter(offer => {
                         const skOffer = offer;
