@@ -805,7 +805,7 @@ namespace CdvPurchase {
             checkSupport(functionality: PlatformFunctionality): boolean {
                 if (functionality === 'order') return this._canMakePayments;
                 const supported: PlatformFunctionality[] = [
-                    'order', 'manageBilling', 'manageSubscriptions'
+                    'order', 'manageBilling', 'manageSubscriptions', 'getStorefront'
                 ];
                 return supported.indexOf(functionality) >= 0;
             }
@@ -835,8 +835,9 @@ namespace CdvPurchase {
                 if (!this.bridge.getStorefront) return undefined;
                 const countryCode = await this.bridge.getStorefront();
                 if (!countryCode) return undefined;
-                // SKStorefront.countryCode returns ISO 3166-1 alpha-3 (e.g., "USA"),
-                // convert to alpha-2 (e.g., "US") for consistency with Google Play.
+                // SKStorefront.countryCode typically returns ISO 3166-1 alpha-3 (e.g., "USA").
+                // The fallback `|| countryCode` handles cases where Apple returns alpha-2 directly
+                // or uses a non-standard code (e.g., territories not in ISO 3166-1).
                 return isoAlpha3ToAlpha2(countryCode) || countryCode;
             }
         }

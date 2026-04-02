@@ -601,7 +601,7 @@ namespace CdvPurchase {
 
             checkSupport(functionality: PlatformFunctionality): boolean {
                 const supported: PlatformFunctionality[] = [
-                    'order', 'manageBilling', 'manageSubscriptions'
+                    'order', 'manageBilling', 'manageSubscriptions', 'getStorefront'
                 ];
                 return supported.indexOf(functionality) >= 0;
             }
