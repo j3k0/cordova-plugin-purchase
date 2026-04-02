@@ -622,7 +622,8 @@ namespace CdvPurchase {
                     return new Promise((resolve) => {
                         exec('getStorefront', [], (countryCode: string) => {
                             resolve(countryCode || undefined);
-                        }, () => {
+                        }, (err: string) => {
+                            log('getStorefront failed: ' + err);
                             resolve(undefined);
                         });
                     });

@@ -776,6 +776,14 @@ namespace CdvPurchase {
          * Returns an ISO 3166-1 alpha-2 country code (e.g., "US", "FR"),
          * or undefined if the storefront information is not available.
          *
+         * Returns `undefined` if called before `store.initialize()` completes,
+         * or if the platform does not support storefront queries.
+         *
+         * On iOS, requires iOS 13 or later.
+         *
+         * Note: may return a non-standard code for regions not covered by ISO 3166-1
+         * (the raw platform code is returned as fallback).
+         *
          * @param platform - The platform to get the storefront from. If not specified, uses the first ready adapter.
          *
          * @example

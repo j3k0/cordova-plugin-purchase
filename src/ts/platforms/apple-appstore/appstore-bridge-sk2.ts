@@ -354,7 +354,8 @@ namespace CdvPurchase {
                         // SK2 uses the same native getStorefront action via InAppPurchase plugin
                         window.cordova.exec((countryCode: string) => {
                             resolve(countryCode || undefined);
-                        }, () => {
+                        }, (err: string) => {
+                            log('getStorefront failed: ' + err);
                             resolve(undefined);
                         }, "InAppPurchase", "getStorefront", []);
                     });
