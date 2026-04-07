@@ -151,9 +151,12 @@ namespace CdvPurchase {
                 this.context = context;
                 this.log = context.log.child('AppleAppStore');
 
-                // Use SK2 if extension is installed
-                this.useSK2 = SK2Bridge.SK2NativeBridge.isAvailable();
-                if (this.useSK2) {
+                const useCapacitor = CapacitorBridge.CapacitorNativeBridge.isAvailable();
+                this.useSK2 = useCapacitor || SK2Bridge.SK2NativeBridge.isAvailable();
+                if (useCapacitor) {
+                    this.log.info('Capacitor plugin detected, using Capacitor SK2 bridge');
+                    this.bridge = new CapacitorBridge.CapacitorNativeBridge();
+                } else if (SK2Bridge.SK2NativeBridge.isAvailable()) {
                     this.log.info('StoreKit 2 extension detected, using SK2 bridge');
                     this.bridge = new SK2Bridge.SK2NativeBridge();
                 } else {

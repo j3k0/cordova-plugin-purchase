@@ -1,0 +1,5 @@
+node_modules/
+dist/
+www/store.js
+www/store.d.ts
+android/build/

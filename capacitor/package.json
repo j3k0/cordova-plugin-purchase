@@ -1,0 +1,56 @@
+{
+  "name": "capacitor-plugin-cdv-purchase",
+  "version": "13.14.0",
+  "description": "In-App Purchases for Capacitor — iOS (StoreKit 2) and Android (Google Play Billing)",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "capacitor": {
+    "ios": { "src": "ios" },
+    "android": { "src": "android" }
+  },
+  "peerDependencies": {
+    "@capacitor/core": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/core": "^6.0.0",
+    "rollup": "^4.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "build": "tsc && rollup -c rollup.config.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist/",
+    "types/",
+    "www/",
+    "build/",
+    "android/",
+    "ios/"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/j3k0/cordova-plugin-purchase.git"
+  },
+  "keywords": [
+    "capacitor",
+    "capacitor-plugin",
+    "in-app-purchase",
+    "billing",
+    "storekit",
+    "storekit2",
+    "google-play",
+    "ios",
+    "android"
+  ]
+}

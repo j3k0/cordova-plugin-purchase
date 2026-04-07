@@ -10,7 +10,13 @@ declare interface Window {
     // Iaptic: CdvPurchase;
     CdvPurchase: CdvPurchase;
 
+    CdvPurchaseCapacitor?: {
+        installed?: boolean;
+        version?: string;
+    }
+
     Capacitor?: {
         getPlatform(): 'ios' | 'android' | 'web';
+        Plugins?: { [key: string]: any };
     }
 }

@@ -1,0 +1,61 @@
+name: Capacitor Android Build
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses > /dev/null 2>&1 || true
+
+      - name: Install dependencies and build TypeScript
+        run: |
+          npm ci
+          npx tsc
+
+      - name: Install Capacitor CLI and create test app
+        run: |
+          npm install -g @capacitor/cli
+          npx @capacitor/create-app test-cap-app --name TestApp --app-id com.test.app
+          cd test-cap-app
+          npm install @capacitor/android
+          npx cap add android
+
+      - name: Install plugin
+        run: |
+          cd test-cap-app
+          # Create minimal web assets (required by cap sync)
+          mkdir -p dist
+          echo '<html><body></body></html>' > dist/index.html
+          # Remove default plugins to avoid version conflicts
+          npm uninstall @capacitor/camera @capacitor/splash-screen 2>/dev/null || true
+          # Copy compiled store.js into capacitor package
+          cp "$GITHUB_WORKSPACE/www/store.js" "$GITHUB_WORKSPACE/capacitor/www/store.js"
+          cp "$GITHUB_WORKSPACE/www/store.d.ts" "$GITHUB_WORKSPACE/capacitor/www/store.d.ts"
+          npm install "$GITHUB_WORKSPACE/capacitor"
+          npx cap sync android
+
+      - name: Build Android
+        run: |
+          cd test-cap-app/android
+          ./gradlew assembleDebug

@@ -122,7 +122,9 @@ namespace CdvPurchase {
             private _receipts: Receipt[] = [];
 
             /** The GooglePlay bridge */
-            bridge = new Bridge.Bridge();
+            bridge: Bridge.BridgeInterface = Bridge.CapacitorBridge.isAvailable()
+                ? new Bridge.CapacitorBridge()
+                : new Bridge.Bridge();
 
             /** Prevent double initialization */
             initialized = false;
