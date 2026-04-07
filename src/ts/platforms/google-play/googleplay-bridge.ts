@@ -189,7 +189,7 @@ namespace CdvPurchase {
                 data: { purchase: Purchase; }
             };
 
-            export class Bridge {
+            export class Bridge implements BridgeInterface {
 
                 options: Options = {};
 
