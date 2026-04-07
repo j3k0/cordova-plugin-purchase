@@ -1,6 +1,6 @@
 NODE_MODULES?=node_modules
 
-.PHONY: clean help all build compile typedoc typedoc-dev doc doc-contrib doc-api javalint todo
+.PHONY: clean help all build compile typedoc typedoc-dev doc doc-contrib doc-api javalint todo capacitor-package capacitor-publish check-versions
 
 help:
 	@echo ""
@@ -19,6 +19,9 @@ help:
 	@echo "    typedoc ........... Generate public API reference into api/"
 	@echo "    typedoc-dev ....... Generate developer API reference into api-dev/"
 	@echo "    compile ........... Just compile the typescript code into javascript"
+	@echo "    capacitor-package . Build Capacitor plugin package"
+	@echo "    capacitor-publish . Publish Capacitor plugin to npm"
+	@echo "    check-versions .... Verify all version numbers match"
 	@echo ""
 	@echo "(c)2014-, Jean-Christophe Hoelt <hoelt@fovea.cc>"
 	@echo ""
@@ -28,7 +31,7 @@ help:
 	@#echo "    test-js-coverage .. Test javascript with coverage information."
 	@#echo "    test-install ...... Test plugin installation on iOS and Android."
 
-all: build doc
+all: build doc capacitor-package
 
 build: compile
 	@make tests
@@ -64,6 +67,35 @@ typedoc-dev:
 	@npm run typedoc-dev
 
 doc: typedoc typedoc-dev
+
+# Capacitor plugin packaging
+capacitor-package: compile
+	@echo "Packaging Capacitor plugin..."
+	cp www/store.js capacitor/www/store.js
+	cp www/store.d.ts capacitor/www/store.d.ts
+	@ROOT_VERSION=$$(node -p "require('./package.json').version"); \
+	CAP_VERSION=$$(node -p "require('./capacitor/package.json').version"); \
+	if [ "$$ROOT_VERSION" != "$$CAP_VERSION" ]; then \
+		echo "ERROR: Version mismatch! root=$$ROOT_VERSION capacitor=$$CAP_VERSION"; \
+		exit 1; \
+	fi
+	@echo "Capacitor package ready (version $$(node -p "require('./capacitor/package.json').version"))"
+
+capacitor-publish: capacitor-package
+	cd capacitor && npm publish
+
+check-versions:
+	@ROOT_VERSION=$$(node -p "require('./package.json').version"); \
+	CAP_VERSION=$$(node -p "require('./capacitor/package.json').version"); \
+	XML_VERSION=$$(grep '^\s*version=' plugin.xml | head -1 | sed 's/.*version="\([^"]*\)".*/\1/'); \
+	echo "Root package.json: $$ROOT_VERSION"; \
+	echo "Capacitor package.json: $$CAP_VERSION"; \
+	echo "plugin.xml: $$XML_VERSION"; \
+	if [ "$$ROOT_VERSION" != "$$CAP_VERSION" ] || [ "$$ROOT_VERSION" != "$$XML_VERSION" ]; then \
+		echo "ERROR: Version mismatch!"; \
+		exit 1; \
+	fi; \
+	echo "All versions match: $$ROOT_VERSION"
 
 clean:
 	@find . -name '*~' -exec rm '{}' ';'

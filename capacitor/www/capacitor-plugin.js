@@ -1,0 +1,3 @@
+window.CdvPurchaseCapacitor = {
+  installed: true,
+};
