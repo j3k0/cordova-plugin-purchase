@@ -30,14 +30,35 @@ The plugin is designed to be easy to use and provides a consistent API across al
 
 ## Installation
 
-### Install the plugin (Cordova)
+### Capacitor
+
+```sh
+npm install capacitor-plugin-cdv-purchase
+npx cap sync
+```
+
+```ts
+import { store, ProductType, Platform } from 'capacitor-plugin-cdv-purchase';
+```
+
+The full `CdvPurchase` namespace and convenience exports are available:
+
+```ts
+import { CdvPurchase, store, Store, ProductType, Platform, LogLevel, ErrorCode, Iaptic } from 'capacitor-plugin-cdv-purchase';
+```
+
+### Cordova
 
 ```sh
 cordova plugin add "cordova-plugin-purchase"
 ```
 
+```ts
+// The CdvPurchase namespace is available globally after plugin install
+const store = CdvPurchase.store;
+```
 
-### Recommended plugins
+### Recommended Cordova plugins
 
 <details>
 <summary>
@@ -71,30 +92,6 @@ ionic 3 doesn't support recent typescript notations, but the plugin can be used 
 
 ```ts
 declare var CdvPurchase: any
-```
-
-### Note for Capacitor users
-
-Capacitor users can install the latest version of the plugin without the help of the awesome-cordova-plugins wrapper. Just install the `cordova-plugin-purchase` module and `import "cordova-plugin-purchase"` in files where it's needed. (some user reported using `import "cordova-plugin-purchase/www/store.d"` to get it working).
-
-As with other plugins, you should wait for Capacitor `this.platform.ready()` before using the plugin.
-
-```ts
-import 'cordova-plugin-purchase';
-
-@Injectable()
-export class AppStoreService {
-
-  // DO NOT initialize to CdvPurchase.store here
-  store?: CdvPurchase.Store;
-
-  constructor() {
-    this.platform.ready().then(() => {
-      // MUST WAIT for Cordova to initialize before referencing CdvPurchase namespace
-      this.store = CdvPurchase.store
-    });
-  }
-}
 ```
 
 ### Setup your Application
