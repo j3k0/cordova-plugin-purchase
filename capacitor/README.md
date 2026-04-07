@@ -14,10 +14,7 @@ npx cap sync
 ## Usage
 
 ```typescript
-import 'capacitor-plugin-cdv-purchase';
-
-const { Store, ProductType, Platform } = CdvPurchase;
-const store = new Store();
+import { store, ProductType, Platform } from 'capacitor-plugin-cdv-purchase';
 
 // Register products
 store.register([{
@@ -40,10 +37,10 @@ await store.initialize();
 
 If you're using `cordova-plugin-purchase` in a Capacitor app:
 
-1. `npm install capacitor-plugin-cdv-purchase`
-2. `npx cap sync`
-3. Your code stays the same — the `CdvPurchase.Store` API is identical
-4. Once confirmed working: `npm uninstall cordova-plugin-purchase`
+1. `npm uninstall cordova-plugin-purchase` (and `cordova-plugin-purchase-storekit2` if installed)
+2. `npm install capacitor-plugin-cdv-purchase`
+3. `npx cap sync`
+4. Update your import to `import { store, ProductType, Platform } from 'capacitor-plugin-cdv-purchase'` — the API is identical
 
 ## Platform Support
 
