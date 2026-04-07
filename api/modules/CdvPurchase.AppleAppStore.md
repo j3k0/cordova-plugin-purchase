@@ -9,6 +9,7 @@ Apple AppStore adapter using StoreKit version 1
 ### Namespaces
 
 - [Bridge](CdvPurchase.AppleAppStore.Bridge.md)
+- [CapacitorBridge](CdvPurchase.AppleAppStore.CapacitorBridge.md)
 - [SK2Bridge](CdvPurchase.AppleAppStore.SK2Bridge.md)
 - [VerifyReceipt](CdvPurchase.AppleAppStore.VerifyReceipt.md)
 

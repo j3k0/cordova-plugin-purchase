@@ -2885,9 +2885,13 @@ var CdvPurchase;
                 this._appStoreReceiptCallbacks = [];
                 this.context = context;
                 this.log = context.log.child('AppleAppStore');
-                // Use SK2 if extension is installed
-                this.useSK2 = AppleAppStore.SK2Bridge.SK2NativeBridge.isAvailable();
-                if (this.useSK2) {
+                const useCapacitor = AppleAppStore.CapacitorBridge.CapacitorNativeBridge.isAvailable();
+                this.useSK2 = useCapacitor || AppleAppStore.SK2Bridge.SK2NativeBridge.isAvailable();
+                if (useCapacitor) {
+                    this.log.info('Capacitor plugin detected, using Capacitor SK2 bridge');
+                    this.bridge = new AppleAppStore.CapacitorBridge.CapacitorNativeBridge();
+                }
+                else if (AppleAppStore.SK2Bridge.SK2NativeBridge.isAvailable()) {
                     this.log.info('StoreKit 2 extension detected, using SK2 bridge');
                     this.bridge = new AppleAppStore.SK2Bridge.SK2NativeBridge();
                 }
@@ -3558,6 +3562,237 @@ var CdvPurchase;
         function appStoreError(code, message, productId) {
             return CdvPurchase.storeError(code, message, CdvPurchase.Platform.APPLE_APPSTORE, productId);
         }
+    })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let AppleAppStore;
+    (function (AppleAppStore) {
+        let CapacitorBridge;
+        (function (CapacitorBridge) {
+            let log = function log(msg) {
+                console.log("StoreKit[capacitor]: " + msg);
+            };
+            /**
+             * Capacitor implementation of the Apple AppStore bridge.
+             * Uses Capacitor.Plugins.PurchasePlugin with StoreKit 2 (iOS 15+).
+             * Follows the same pattern as SK2NativeBridge but communicates
+             * via Capacitor's plugin API instead of cordova.exec().
+             */
+            const noop = (..._args) => { };
+            class CapacitorNativeBridge {
+                constructor() {
+                    this.appStoreReceipt = null;
+                    this.transactionsForProduct = {};
+                    this.isSK2 = true;
+                    this.pendingTransactionUpdates = [];
+                    this.initialized = false;
+                    this.needRestoreNotification = false;
+                    // Initialize all callbacks to noop (matching SK2NativeBridge pattern)
+                    this.options = {
+                        error: noop, ready: noop,
+                        purchased: noop, purchaseEnqueued: noop,
+                        purchasing: noop, purchaseFailed: noop,
+                        deferred: noop, finished: noop,
+                        restored: noop, receiptsRefreshed: noop,
+                        restoreCompleted: noop, restoreFailed: noop,
+                    };
+                }
+                /** Check if the Capacitor purchase plugin is available */
+                static isAvailable() {
+                    const marker = window.CdvPurchaseCapacitor;
+                    return !!(marker && marker.installed);
+                }
+                get plugin() {
+                    var _a, _b;
+                    return (_b = (_a = window.Capacitor) === null || _a === void 0 ? void 0 : _a.Plugins) === null || _b === void 0 ? void 0 : _b.PurchasePlugin;
+                }
+                init(options, success, error) {
+                    if (options.log)
+                        log = options.log;
+                    // Merge provided options over defaults (noop callbacks)
+                    this.options = Object.assign(Object.assign({}, this.options), options);
+                    const plugin = this.plugin;
+                    if (!plugin) {
+                        error(CdvPurchase.ErrorCode.SETUP, 'Capacitor PurchasePlugin not available');
+                        return;
+                    }
+                    // Listen for transaction updates from native
+                    plugin.addListener('transactionUpdated', (data) => {
+                        this.transactionUpdated(data.state, data.errorCode, data.errorText, data.transactionIdentifier, data.productId, data.transactionReceipt, data.originalTransactionIdentifier, data.transactionDate, data.discountId, data.expirationDate, data.jwsRepresentation);
+                    });
+                    plugin.addListener('restoreCompleted', () => {
+                        this.restoreCompletedTransactionsFinished();
+                    });
+                    plugin.addListener('restoreFailed', (data) => {
+                        this.restoreCompletedTransactionsFailed(data.errorCode);
+                    });
+                    // Initialize the native plugin
+                    const initOpts = {};
+                    if (options.autoFinish !== undefined)
+                        initOpts.autoFinish = options.autoFinish;
+                    if (options.debug !== undefined)
+                        initOpts.debug = options.debug;
+                    plugin.init(initOpts)
+                        .then(() => {
+                        this.initialized = true;
+                        // Flush pending transaction updates
+                        const pending = this.pendingTransactionUpdates;
+                        this.pendingTransactionUpdates = [];
+                        for (const args of pending) {
+                            this.transactionUpdated(args.state, args.errorCode, args.errorText, args.transactionIdentifier, args.productId, args.transactionReceipt, args.originalTransactionIdentifier, args.transactionDate, args.discountId, args.expirationDate, args.jwsRepresentation);
+                        }
+                        if (this.options.ready)
+                            this.options.ready();
+                        success();
+                    })
+                        .catch((err) => {
+                        error(CdvPurchase.ErrorCode.SETUP, (err === null || err === void 0 ? void 0 : err.message) || 'init failed');
+                    });
+                }
+                load(productIds, success, error) {
+                    this.plugin.load({ productIds })
+                        .then((result) => success(result.validProducts, result.invalidProductIds))
+                        .catch((err) => error(CdvPurchase.ErrorCode.LOAD, (err === null || err === void 0 ? void 0 : err.message) || 'load failed'));
+                }
+                purchase(productId, quantity, applicationUsername, discount, success, error) {
+                    this.plugin.purchase({ productId, quantity, applicationUsername, discount })
+                        .then(() => success())
+                        .catch(() => error());
+                }
+                finish(transactionId, success, error) {
+                    this.plugin.finish({ transactionId })
+                        .then(() => success())
+                        .catch((err) => error((err === null || err === void 0 ? void 0 : err.message) || 'finish failed'));
+                }
+                canMakePayments(success, error) {
+                    this.plugin.canMakePayments()
+                        .then((result) => {
+                        if (result.canMakePayments)
+                            success();
+                        else
+                            error('cannot make payments');
+                    })
+                        .catch((err) => error((err === null || err === void 0 ? void 0 : err.message) || 'canMakePayments failed'));
+                }
+                restore(callback) {
+                    this.needRestoreNotification = true;
+                    this.plugin.restore()
+                        .then(() => { if (callback)
+                        callback(true); })
+                        .catch(() => { if (callback)
+                        callback(false); });
+                }
+                manageSubscriptions(callback) {
+                    this.plugin.manageSubscriptions()
+                        .then(() => { if (callback)
+                        callback(true); })
+                        .catch(() => { if (callback)
+                        callback(false); });
+                }
+                manageBilling(callback) {
+                    this.plugin.manageBilling()
+                        .then(() => { if (callback)
+                        callback(true); })
+                        .catch(() => { if (callback)
+                        callback(false); });
+                }
+                presentCodeRedemptionSheet(callback) {
+                    this.plugin.presentCodeRedemptionSheet()
+                        .then(() => { if (callback)
+                        callback(true); })
+                        .catch(() => { if (callback)
+                        callback(false); });
+                }
+                refreshReceipts(successCb, errorCb) {
+                    this.plugin.refreshReceipts()
+                        .then((result) => {
+                        this.appStoreReceipt = result.receipt;
+                        if (this.options.receiptsRefreshed) {
+                            this.options.receiptsRefreshed(result.receipt);
+                        }
+                        successCb(result.receipt);
+                    })
+                        .catch((err) => errorCb(CdvPurchase.ErrorCode.REFRESH_RECEIPTS, (err === null || err === void 0 ? void 0 : err.message) || 'refreshReceipts failed'));
+                }
+                loadReceipts(callback, errorCb) {
+                    this.plugin.loadReceipts()
+                        .then((result) => {
+                        this.appStoreReceipt = result.receipt;
+                        callback(result.receipt);
+                    })
+                        .catch((err) => errorCb(CdvPurchase.ErrorCode.LOAD, (err === null || err === void 0 ? void 0 : err.message) || 'loadReceipts failed'));
+                }
+                // Called when the native side sends a transaction update
+                transactionUpdated(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation) {
+                    if (!this.initialized) {
+                        this.pendingTransactionUpdates.push({
+                            state, errorCode, errorText, transactionIdentifier,
+                            productId, transactionReceipt, originalTransactionIdentifier,
+                            transactionDate, discountId, expirationDate, jwsRepresentation,
+                        });
+                        return;
+                    }
+                    // Track transaction for product
+                    if (!this.transactionsForProduct[productId]) {
+                        this.transactionsForProduct[productId] = [];
+                    }
+                    if (transactionIdentifier &&
+                        this.transactionsForProduct[productId].indexOf(transactionIdentifier) < 0) {
+                        this.transactionsForProduct[productId].push(transactionIdentifier);
+                    }
+                    switch (state) {
+                        case 'PaymentTransactionStatePurchasing':
+                            if (this.options.purchasing) {
+                                this.options.purchasing(productId);
+                            }
+                            break;
+                        case 'PaymentTransactionStatePurchased':
+                            if (this.options.purchased) {
+                                this.options.purchased(transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation);
+                            }
+                            break;
+                        case 'PaymentTransactionStateFailed':
+                            if (this.options.purchaseFailed) {
+                                this.options.purchaseFailed(productId, errorCode || 0, errorText || 'Unknown error');
+                            }
+                            if (this.options.error) {
+                                this.options.error(errorCode || 0, errorText || 'Unknown error', { productId });
+                            }
+                            break;
+                        case 'PaymentTransactionStateRestored':
+                            if (this.options.restored) {
+                                this.options.restored(transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation);
+                            }
+                            break;
+                        case 'PaymentTransactionStateDeferred':
+                            if (this.options.deferred) {
+                                this.options.deferred(productId);
+                            }
+                            break;
+                        case 'PaymentTransactionStateFinished':
+                            if (this.options.finished) {
+                                this.options.finished(transactionIdentifier, productId);
+                            }
+                            break;
+                    }
+                }
+                restoreCompletedTransactionsFinished() {
+                    if (!this.needRestoreNotification)
+                        return;
+                    this.needRestoreNotification = false;
+                    if (this.options.restoreCompleted) {
+                        this.options.restoreCompleted();
+                    }
+                }
+                restoreCompletedTransactionsFailed(errorCode) {
+                    if (this.options.restoreFailed) {
+                        this.options.restoreFailed(errorCode);
+                    }
+                }
+            }
+            CapacitorBridge.CapacitorNativeBridge = CapacitorNativeBridge;
+        })(CapacitorBridge = AppleAppStore.CapacitorBridge || (AppleAppStore.CapacitorBridge = {}));
     })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -5374,7 +5609,9 @@ var CdvPurchase;
                 this.canSkipFinish = true;
                 this._receipts = [];
                 /** The GooglePlay bridge */
-                this.bridge = new GooglePlay.Bridge.Bridge();
+                this.bridge = GooglePlay.Bridge.CapacitorBridge.isAvailable()
+                    ? new GooglePlay.Bridge.CapacitorBridge()
+                    : new GooglePlay.Bridge.Bridge();
                 /** Prevent double initialization */
                 this.initialized = false;
                 /** Used to retry failed commands */
@@ -5816,6 +6053,167 @@ var CdvPurchase;
         function playStoreError(code, message, productId) {
             return CdvPurchase.storeError(code, message, CdvPurchase.Platform.GOOGLE_PLAY, productId);
         }
+    })(GooglePlay = CdvPurchase.GooglePlay || (CdvPurchase.GooglePlay = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let GooglePlay;
+    (function (GooglePlay) {
+        let Bridge;
+        (function (Bridge) {
+            let log = function log(msg) {
+                console.log("InAppBilling[capacitor]: " + msg);
+            };
+            /**
+             * Capacitor implementation of the Google Play bridge.
+             * Uses Capacitor.Plugins.PurchasePlugin instead of cordova.exec().
+             */
+            class CapacitorBridge {
+                constructor() {
+                    this.options = {};
+                }
+                /** Check if the Capacitor purchase plugin is available */
+                static isAvailable() {
+                    const marker = window.CdvPurchaseCapacitor;
+                    return !!(marker && marker.installed);
+                }
+                get plugin() {
+                    var _a, _b;
+                    return (_b = (_a = window.Capacitor) === null || _a === void 0 ? void 0 : _a.Plugins) === null || _b === void 0 ? void 0 : _b.PurchasePlugin;
+                }
+                init(success, fail, options) {
+                    if (!options)
+                        options = {};
+                    if (options.log)
+                        log = options.log;
+                    this.options = {
+                        showLog: options.showLog !== false,
+                        onPurchaseConsumed: options.onPurchaseConsumed,
+                        onPurchasesUpdated: options.onPurchasesUpdated,
+                        onSetPurchases: options.onSetPurchases,
+                        onPriceChangeConfirmationResult: options.onPriceChangeConfirmationResult,
+                    };
+                    if (this.options.showLog) {
+                        log('init');
+                    }
+                    // Register event listeners
+                    const plugin = this.plugin;
+                    if (!plugin) {
+                        fail('Capacitor PurchasePlugin not available');
+                        return;
+                    }
+                    plugin.addListener('setPurchases', (data) => {
+                        if (this.options.onSetPurchases) {
+                            this.options.onSetPurchases(data.purchases);
+                        }
+                    });
+                    plugin.addListener('purchasesUpdated', (data) => {
+                        if (this.options.onPurchasesUpdated) {
+                            this.options.onPurchasesUpdated(data.purchases);
+                        }
+                    });
+                    plugin.addListener('purchaseConsumed', (data) => {
+                        if (this.options.onPurchaseConsumed) {
+                            this.options.onPurchaseConsumed(data.purchase);
+                        }
+                    });
+                    plugin.addListener('priceChangeConfirmationResult', (data) => {
+                        if (this.options.onPriceChangeConfirmationResult) {
+                            this.options.onPriceChangeConfirmationResult(data.result);
+                        }
+                    });
+                    // Initialize the native billing client
+                    plugin.init()
+                        .then(() => success())
+                        .catch((err) => fail((err === null || err === void 0 ? void 0 : err.message) || 'init failed', err === null || err === void 0 ? void 0 : err.code));
+                }
+                load(success, fail, skus, inAppSkus, subsSkus) {
+                    if (this.options.showLog) {
+                        log('load ' + JSON.stringify(skus));
+                    }
+                    // Note: The adapter never calls load() directly — it uses
+                    // getAvailableProducts(). This implementation is for interface
+                    // completeness and passes all parameters through.
+                    this.plugin.getAvailableProducts({ inAppSkus, subsSkus })
+                        .then(() => success())
+                        .catch((err) => fail((err === null || err === void 0 ? void 0 : err.message) || 'load failed', err === null || err === void 0 ? void 0 : err.code));
+                }
+                getPurchases(success, fail) {
+                    if (this.options.showLog) {
+                        log('getPurchases()');
+                    }
+                    this.plugin.getPurchases()
+                        .then(() => success())
+                        .catch((err) => fail((err === null || err === void 0 ? void 0 : err.message) || 'getPurchases failed', err === null || err === void 0 ? void 0 : err.code));
+                }
+                buy(success, fail, productId, additionalData) {
+                    if (this.options.showLog) {
+                        log('buy()');
+                    }
+                    this.plugin.buy({
+                        productId,
+                        additionalData: extendAdditionalData(additionalData),
+                    })
+                        .then(() => success())
+                        .catch((err) => fail((err === null || err === void 0 ? void 0 : err.message) || 'buy failed', err === null || err === void 0 ? void 0 : err.code));
+                }
+                subscribe(success, fail, productId, additionalData) {
+                    if (this.options.showLog) {
+                        log('subscribe()');
+                    }
+                    this.plugin.subscribe({
+                        productId,
+                        additionalData: extendAdditionalData(additionalData),
+                    })
+                        .then(() => success())
+                        .catch((err) => fail((err === null || err === void 0 ? void 0 : err.message) || 'subscribe failed', err === null || err === void 0 ? void 0 : err.code));
+                }
+                consumePurchase(success, fail, purchaseToken) {
+                    if (this.options.showLog) {
+                        log('consumePurchase()');
+                    }
+                    this.plugin.consumePurchase({ purchaseToken })
+                        .then(() => success())
+                        .catch((err) => fail((err === null || err === void 0 ? void 0 : err.message) || 'consumePurchase failed', err === null || err === void 0 ? void 0 : err.code));
+                }
+                acknowledgePurchase(success, fail, purchaseToken) {
+                    if (this.options.showLog) {
+                        log('acknowledgePurchase()');
+                    }
+                    this.plugin.acknowledgePurchase({ purchaseToken })
+                        .then(() => success())
+                        .catch((err) => fail((err === null || err === void 0 ? void 0 : err.message) || 'acknowledgePurchase failed', err === null || err === void 0 ? void 0 : err.code));
+                }
+                getAvailableProducts(inAppSkus, subsSkus, success, fail) {
+                    if (this.options.showLog) {
+                        log('getAvailableProducts()');
+                    }
+                    this.plugin.getAvailableProducts({ inAppSkus, subsSkus })
+                        .then((result) => success(result.products))
+                        .catch((err) => fail((err === null || err === void 0 ? void 0 : err.message) || 'getAvailableProducts failed', err === null || err === void 0 ? void 0 : err.code));
+                }
+                manageSubscriptions() {
+                    this.plugin.manageSubscriptions();
+                }
+                manageBilling() {
+                    this.plugin.manageBilling();
+                }
+                launchPriceChangeConfirmationFlow(productId) {
+                    this.plugin.launchPriceChangeConfirmationFlow({ productId });
+                }
+            }
+            Bridge.CapacitorBridge = CapacitorBridge;
+            function ensureObject(obj) {
+                return !!obj && obj.constructor === Object ? obj : {};
+            }
+            function extendAdditionalData(ad) {
+                const additionalData = ensureObject(ad === null || ad === void 0 ? void 0 : ad.googlePlay);
+                if (!additionalData.accountId && (ad === null || ad === void 0 ? void 0 : ad.applicationUsername)) {
+                    additionalData.accountId = CdvPurchase.Utils.md5(ad.applicationUsername);
+                }
+                return additionalData;
+            }
+        })(Bridge = GooglePlay.Bridge || (GooglePlay.Bridge = {}));
     })(GooglePlay = CdvPurchase.GooglePlay || (CdvPurchase.GooglePlay = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;

@@ -2633,6 +2633,46 @@ declare namespace CdvPurchase {
 }
 declare namespace CdvPurchase {
     namespace AppleAppStore {
+        namespace CapacitorBridge {
+            /** Extended callbacks with SK2 fields (same as SK2BridgeCallbacks) */
+            interface CapacitorBridgeCallbacks extends Bridge.BridgeCallbacks {
+                purchased: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string) => void;
+                restored: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string) => void;
+            }
+            class CapacitorNativeBridge implements Bridge.BridgeInterface {
+                appStoreReceipt: ApplicationReceipt | null;
+                transactionsForProduct: {
+                    [productId: string]: string[];
+                };
+                readonly isSK2 = true;
+                private options;
+                private pendingTransactionUpdates;
+                private initialized;
+                private needRestoreNotification;
+                constructor();
+                /** Check if the Capacitor purchase plugin is available */
+                static isAvailable(): boolean;
+                private get plugin();
+                init(options: Partial<Bridge.BridgeOptions>, success: () => void, error: (code: ErrorCode, message: string) => void): void;
+                load(productIds: string[], success: (validProducts: Bridge.ValidProduct[], invalidProductIds: string[]) => void, error: (code: ErrorCode, message: string) => void): void;
+                purchase(productId: string, quantity: number, applicationUsername: string | undefined, discount: PaymentDiscount | undefined, success: () => void, error: () => void): void;
+                finish(transactionId: string, success: () => void, error: (msg: string) => void): void;
+                canMakePayments(success: () => void, error: (message: string) => void): void;
+                restore(callback?: Callback<any>): void;
+                manageSubscriptions(callback?: Callback<any>): void;
+                manageBilling(callback?: Callback<any>): void;
+                presentCodeRedemptionSheet(callback?: Callback<any>): void;
+                refreshReceipts(successCb: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
+                loadReceipts(callback: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
+                private transactionUpdated;
+                private restoreCompletedTransactionsFinished;
+                private restoreCompletedTransactionsFailed;
+            }
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace AppleAppStore {
         /** Global type for the SK2 extension plugin marker */
         interface CdvPurchaseStoreKit2 {
             installed?: boolean;
@@ -4405,7 +4445,7 @@ declare namespace CdvPurchase {
             get receipts(): Receipt[];
             private _receipts;
             /** The GooglePlay bridge */
-            bridge: Bridge.Bridge;
+            bridge: Bridge.BridgeInterface;
             /** Prevent double initialization */
             initialized: boolean;
             /** Used to retry failed commands */
@@ -4480,6 +4520,58 @@ declare namespace CdvPurchase {
             manageBilling(): Promise<IError | undefined>;
             checkSupport(functionality: PlatformFunctionality): boolean;
             restorePurchases(): Promise<IError | undefined>;
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace GooglePlay {
+        namespace Bridge {
+            /**
+             * Capacitor implementation of the Google Play bridge.
+             * Uses Capacitor.Plugins.PurchasePlugin instead of cordova.exec().
+             */
+            class CapacitorBridge implements BridgeInterface {
+                options: Options;
+                /** Check if the Capacitor purchase plugin is available */
+                static isAvailable(): boolean;
+                private get plugin();
+                init(success: () => void, fail: ErrorCallback, options: Options): void;
+                load(success: () => void, fail: ErrorCallback, skus: string[], inAppSkus: string[], subsSkus: string[]): void;
+                getPurchases(success: () => void, fail: ErrorCallback): void;
+                buy(success: () => void, fail: ErrorCallback, productId: string, additionalData: CdvPurchase.AdditionalData): void;
+                subscribe(success: () => void, fail: ErrorCallback, productId: string, additionalData: CdvPurchase.AdditionalData): void;
+                consumePurchase(success: () => void, fail: ErrorCallback, purchaseToken: string): void;
+                acknowledgePurchase(success: () => void, fail: ErrorCallback, purchaseToken: string): void;
+                getAvailableProducts(inAppSkus: string[], subsSkus: string[], success: (validProducts: (InAppProduct | Subscription)[]) => void, fail: ErrorCallback): void;
+                manageSubscriptions(): void;
+                manageBilling(): void;
+                launchPriceChangeConfirmationFlow(productId: string): void;
+            }
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace GooglePlay {
+        namespace Bridge {
+            /**
+             * Shared interface for Google Play bridge implementations.
+             * Both Cordova and Capacitor bridges implement this interface.
+             * The adapter programs against this interface, not a concrete class.
+             */
+            interface BridgeInterface {
+                options: Options;
+                init(success: () => void, fail: ErrorCallback, options: Options): void;
+                load(success: () => void, fail: ErrorCallback, skus: string[], inAppSkus: string[], subsSkus: string[]): void;
+                getPurchases(success: () => void, fail: ErrorCallback): void;
+                buy(success: () => void, fail: ErrorCallback, productId: string, additionalData: CdvPurchase.AdditionalData): void;
+                subscribe(success: () => void, fail: ErrorCallback, productId: string, additionalData: CdvPurchase.AdditionalData): void;
+                consumePurchase(success: () => void, fail: ErrorCallback, purchaseToken: string): void;
+                acknowledgePurchase(success: () => void, fail: ErrorCallback, purchaseToken: string): void;
+                getAvailableProducts(inAppSkus: string[], subsSkus: string[], success: (validProducts: (InAppProduct | Subscription)[]) => void, fail: ErrorCallback): void;
+                manageSubscriptions(): void;
+                manageBilling(): void;
+                launchPriceChangeConfirmationFlow(productId: string): void;
+            }
         }
     }
 }
@@ -4703,7 +4795,7 @@ declare namespace CdvPurchase {
                     purchase: Purchase;
                 };
             };
-            class Bridge {
+            class Bridge implements BridgeInterface {
                 options: Options;
                 init(success: () => void, fail: ErrorCallback, options: Options): void;
                 load(success: () => void, fail: ErrorCallback, skus: string[], inAppSkus: string[], subsSkus: string[]): void;

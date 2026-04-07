@@ -8,6 +8,7 @@ The adapter programs against this interface, not a concrete class.
 ## Implemented by
 
 - [`Bridge`](../classes/CdvPurchase.AppleAppStore.Bridge.Bridge.md)
+- [`CapacitorNativeBridge`](../classes/CdvPurchase.AppleAppStore.CapacitorBridge.CapacitorNativeBridge.md)
 - [`SK2NativeBridge`](../classes/CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md)
 
 ## Table of contents

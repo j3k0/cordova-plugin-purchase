@@ -12,10 +12,15 @@ One of the available offers to purchase a given product
 
 ## Table of contents
 
+### Constructors
+
+- [constructor](CdvPurchase.GooglePlay.InAppOffer.md#constructor)
+
 ### Properties
 
 - [id](CdvPurchase.GooglePlay.InAppOffer.md#id)
 - [pricingPhases](CdvPurchase.GooglePlay.InAppOffer.md#pricingphases)
+- [token](CdvPurchase.GooglePlay.InAppOffer.md#token)
 - [type](CdvPurchase.GooglePlay.InAppOffer.md#type)
 
 ### Accessors
@@ -29,6 +34,31 @@ One of the available offers to purchase a given product
 ### Methods
 
 - [order](CdvPurchase.GooglePlay.InAppOffer.md#order)
+
+## Constructors
+
+### constructor
+
+• **new InAppOffer**(`options`, `decorator`): [`InAppOffer`](CdvPurchase.GooglePlay.InAppOffer.md)
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `options` | `Object` |
+| `options.id` | `string` |
+| `options.pricingPhases` | [`PricingPhase`](../interfaces/CdvPurchase.PricingPhase.md)[] |
+| `options.product` | [`GProduct`](CdvPurchase.GooglePlay.GProduct.md) |
+| `options.token?` | `string` |
+| `decorator` | `OfferDecorator` |
+
+#### Returns
+
+[`InAppOffer`](CdvPurchase.GooglePlay.InAppOffer.md)
+
+#### Overrides
+
+CdvPurchase.Offer.constructor
 
 ## Properties
 
@@ -53,6 +83,12 @@ Pricing phases
 #### Inherited from
 
 [Offer](CdvPurchase.Offer.md).[pricingPhases](CdvPurchase.Offer.md#pricingphases)
+
+___
+
+### token
+
+• `Optional` **token**: `string`
 
 ___
 

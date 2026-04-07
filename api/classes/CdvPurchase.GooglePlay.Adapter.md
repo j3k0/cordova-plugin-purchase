@@ -83,7 +83,7 @@ ___
 
 ### bridge
 
-• **bridge**: [`Bridge`](CdvPurchase.GooglePlay.Bridge.Bridge.md)
+• **bridge**: [`BridgeInterface`](../interfaces/CdvPurchase.GooglePlay.Bridge.BridgeInterface.md)
 
 The GooglePlay bridge
 

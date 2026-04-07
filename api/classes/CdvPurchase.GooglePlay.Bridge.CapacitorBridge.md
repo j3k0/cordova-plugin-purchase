@@ -1,10 +1,9 @@
-# Class: Bridge
+# Class: CapacitorBridge
 
-[GooglePlay](../modules/CdvPurchase.GooglePlay.md).[Bridge](../modules/CdvPurchase.GooglePlay.Bridge.md).Bridge
+[GooglePlay](../modules/CdvPurchase.GooglePlay.md).[Bridge](../modules/CdvPurchase.GooglePlay.Bridge.md).CapacitorBridge
 
-Shared interface for Google Play bridge implementations.
-Both Cordova and Capacitor bridges implement this interface.
-The adapter programs against this interface, not a concrete class.
+Capacitor implementation of the Google Play bridge.
+Uses Capacitor.Plugins.PurchasePlugin instead of cordova.exec().
 
 ## Implements
 
@@ -14,36 +13,36 @@ The adapter programs against this interface, not a concrete class.
 
 ### Constructors
 
-- [constructor](CdvPurchase.GooglePlay.Bridge.Bridge.md#constructor)
+- [constructor](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#constructor)
 
 ### Properties
 
-- [options](CdvPurchase.GooglePlay.Bridge.Bridge.md#options)
+- [options](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#options)
 
 ### Methods
 
-- [acknowledgePurchase](CdvPurchase.GooglePlay.Bridge.Bridge.md#acknowledgepurchase)
-- [buy](CdvPurchase.GooglePlay.Bridge.Bridge.md#buy)
-- [consumePurchase](CdvPurchase.GooglePlay.Bridge.Bridge.md#consumepurchase)
-- [getAvailableProducts](CdvPurchase.GooglePlay.Bridge.Bridge.md#getavailableproducts)
-- [getPurchases](CdvPurchase.GooglePlay.Bridge.Bridge.md#getpurchases)
-- [init](CdvPurchase.GooglePlay.Bridge.Bridge.md#init)
-- [launchPriceChangeConfirmationFlow](CdvPurchase.GooglePlay.Bridge.Bridge.md#launchpricechangeconfirmationflow)
-- [listener](CdvPurchase.GooglePlay.Bridge.Bridge.md#listener)
-- [load](CdvPurchase.GooglePlay.Bridge.Bridge.md#load)
-- [manageBilling](CdvPurchase.GooglePlay.Bridge.Bridge.md#managebilling)
-- [manageSubscriptions](CdvPurchase.GooglePlay.Bridge.Bridge.md#managesubscriptions)
-- [subscribe](CdvPurchase.GooglePlay.Bridge.Bridge.md#subscribe)
+- [acknowledgePurchase](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#acknowledgepurchase)
+- [buy](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#buy)
+- [consumePurchase](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#consumepurchase)
+- [getAvailableProducts](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#getavailableproducts)
+- [getPurchases](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#getpurchases)
+- [init](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#init)
+- [launchPriceChangeConfirmationFlow](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#launchpricechangeconfirmationflow)
+- [load](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#load)
+- [manageBilling](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#managebilling)
+- [manageSubscriptions](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#managesubscriptions)
+- [subscribe](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#subscribe)
+- [isAvailable](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#isavailable)
 
 ## Constructors
 
 ### constructor
 
-• **new Bridge**(): [`Bridge`](CdvPurchase.GooglePlay.Bridge.Bridge.md)
+• **new CapacitorBridge**(): [`CapacitorBridge`](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md)
 
 #### Returns
 
-[`Bridge`](CdvPurchase.GooglePlay.Bridge.Bridge.md)
+[`CapacitorBridge`](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md)
 
 ## Properties
 
@@ -210,22 +209,6 @@ ___
 
 ___
 
-### listener
-
-▸ **listener**(`msg`): `void`
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `msg` | [`Message`](../modules/CdvPurchase.GooglePlay.Bridge.md#message) |
-
-#### Returns
-
-`void`
-
-___
-
 ### load
 
 ▸ **load**(`success`, `fail`, `skus`, `inAppSkus`, `subsSkus`): `void`
@@ -298,3 +281,15 @@ ___
 #### Implementation of
 
 [BridgeInterface](../interfaces/CdvPurchase.GooglePlay.Bridge.BridgeInterface.md).[subscribe](../interfaces/CdvPurchase.GooglePlay.Bridge.BridgeInterface.md#subscribe)
+
+___
+
+### isAvailable
+
+▸ **isAvailable**(): `boolean`
+
+Check if the Capacitor purchase plugin is available
+
+#### Returns
+
+`boolean`
