@@ -1,0 +1,86 @@
+name: Capacitor iOS Build
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - capacitor-version: '6'
+            xcode-version: '15.4'
+            runner: macos-14
+          - capacitor-version: '7'
+            xcode-version: '15.4'
+            runner: macos-14
+          - capacitor-version: '8'
+            xcode-version: '26.0'
+            runner: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode-version }}
+
+      - name: Install dependencies and build TypeScript
+        run: |
+          npm ci
+          npx tsc
+
+      - name: Create test app
+        run: |
+          mkdir test-cap-app && cd test-cap-app
+          npm init -y
+          npm install @capacitor/core@${{ matrix.capacitor-version }} @capacitor/ios@${{ matrix.capacitor-version }} @capacitor/cli@${{ matrix.capacitor-version }}
+          echo '{"appId":"com.test.app","appName":"TestApp","webDir":"dist"}' > capacitor.config.json
+          mkdir -p dist
+          echo '<html><body></body></html>' > dist/index.html
+          npx cap add ios
+          # Log which package manager was used
+          if [ -d ios/App/CapApp-SPM ]; then
+            echo "::notice::Capacitor ${{ matrix.capacitor-version }} uses SPM"
+          else
+            echo "::notice::Capacitor ${{ matrix.capacitor-version }} uses CocoaPods"
+          fi
+
+      - name: Install plugin
+        run: |
+          cd test-cap-app
+          # Plugin requires iOS 15.0 (StoreKit 2) — bump Podfile target if CocoaPods
+          if [ -f ios/App/Podfile ]; then
+            sed -i '' "s/platform :ios, '1[34].0'/platform :ios, '15.0'/" ios/App/Podfile
+          fi
+          cp "$GITHUB_WORKSPACE/www/store.js" "$GITHUB_WORKSPACE/capacitor/www/store.js"
+          cp "$GITHUB_WORKSPACE/www/store.d.ts" "$GITHUB_WORKSPACE/capacitor/www/store.d.ts"
+          npm install "$GITHUB_WORKSPACE/capacitor"
+          npx cap sync ios
+
+      - name: Build iOS
+        run: |
+          cd test-cap-app/ios/App
+          # Use workspace if CocoaPods (Podfile.lock exists), plain scheme if SPM
+          if [ -f Podfile.lock ]; then
+            BUILD_ARGS="-workspace App.xcworkspace"
+          else
+            BUILD_ARGS=""
+          fi
+          xcodebuild build \
+            $BUILD_ARGS \
+            -scheme App \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
