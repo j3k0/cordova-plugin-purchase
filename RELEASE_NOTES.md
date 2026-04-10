@@ -1,5 +1,9 @@
 # Release Notes - Cordova Plugin Purchase
 
+## cordova-plugin-purchase-storekit2 v1.0.1
+
+- **(fix)** Load `Transaction.currentEntitlements` at startup so existing subscriptions are visible immediately — previously required a manual restore or a renewal event
+
 ## 13.14
 
 ### 13.14.0
