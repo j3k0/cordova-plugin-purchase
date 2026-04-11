@@ -4,19 +4,23 @@ VP="$(cat package.json | grep '"version"' | head -1 | cut -d\" -f4)"
 VPL="$(cat package-lock.json | grep '"version"' | head -1 | cut -d\" -f4)"
 VPP="$(cat plugin.xml | grep -E '^[ ]+version="' | head -1 | cut -d \" -f2)"
 VJ="$(cat src/ts/store.ts | grep -E "PLUGIN_VERSION = '" | head -1 | cut -d \' -f2)"
+VCP="$(cat capacitor/package.json | grep '"version"' | head -1 | cut -d\" -f4)"
+VCPL="$(cat capacitor/package-lock.json | grep '"version"' | head -1 | cut -d\" -f4)"
 
 if [ "x$1" = "x--edit" ]; then
-  exec vim package.json package-lock.json plugin.xml src/ts/store.ts RELEASE_NOTES.md
+  exec vim package.json package-lock.json plugin.xml src/ts/store.ts capacitor/package.json capacitor/package-lock.json RELEASE_NOTES.md
 fi
 
 echo
-echo "    package.json:      $VP"
-echo "    package-lock.json: $VPL"
-echo "    plugin.xml:        $VPP"
-echo "    src/ts/store.ts:   $VJ"
+echo "    package.json:                $VP"
+echo "    package-lock.json:           $VPL"
+echo "    plugin.xml:                  $VPP"
+echo "    src/ts/store.ts:             $VJ"
+echo "    capacitor/package.json:      $VCP"
+echo "    capacitor/package-lock.json: $VCPL"
 echo
 
-if [ "x$VP" = "x$VPL" ] && [ "x$VP" = "x$VPP" ] && [ "x$VP" = "x$VJ" ]; then
+if [ "x$VP" = "x$VPL" ] && [ "x$VP" = "x$VPP" ] && [ "x$VP" = "x$VJ" ] && [ "x$VP" = "x$VCP" ] && [ "x$VP" = "x$VCPL" ]; then
   echo "All version numbers match: $VP"
 else
   echo "VERSION NUMBERS MISMATCH"
