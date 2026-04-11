@@ -167,6 +167,15 @@ namespace CdvPurchase {
                 launchPriceChangeConfirmationFlow(productId: string) {
                     this.plugin.launchPriceChangeConfirmationFlow({ productId });
                 }
+
+                getStorefront(success: (countryCode: string) => void, fail: ErrorCallback) {
+                    if (this.options.showLog) {
+                        log('getStorefront()');
+                    }
+                    this.plugin.getStorefront()
+                        .then((result: { countryCode: string }) => success(result.countryCode))
+                        .catch((err: any) => fail(err?.message || 'getStorefront failed', err?.code));
+                }
             }
 
             function ensureObject<T extends Object>(obj: any): T {

@@ -212,6 +212,14 @@ namespace CdvPurchase {
          * Might ask the user to login.
          */
         restorePurchases(): Promise<IError | undefined>;
+
+        /**
+         * Retrieve the billing country code from the platform's storefront.
+         *
+         * Returns an ISO 3166-1 alpha-2 country code (e.g., "US", "FR"),
+         * or undefined if the storefront information is not available.
+         */
+        getStorefront?(): Promise<string | undefined>;
     }
 
 
@@ -268,7 +276,7 @@ namespace CdvPurchase {
      *
      * @see {@link Store.checkSupport}
      */
-    export type PlatformFunctionality = 'requestPayment' | 'order' | 'manageSubscriptions' | 'manageBilling';
+    export type PlatformFunctionality = 'requestPayment' | 'order' | 'manageSubscriptions' | 'manageBilling' | 'getStorefront';
 
     /**
      * Possible states of a transaction.

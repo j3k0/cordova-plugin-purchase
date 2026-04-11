@@ -24,9 +24,12 @@ import com.android.billingclient.api.BillingClient.BillingResponseCode;
 import com.android.billingclient.api.BillingClient.FeatureType;
 import com.android.billingclient.api.BillingClient.ProductType;
 import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingConfig;
+import com.android.billingclient.api.BillingConfigResponseListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingFlowParams.ProductDetailsParams;
 import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.GetBillingConfigParams;
 import com.android.billingclient.api.ConsumeParams;
 import com.android.billingclient.api.ConsumeResponseListener;
 import com.android.billingclient.api.PendingPurchasesParams;
@@ -724,6 +727,35 @@ public class PurchasePlugin extends Plugin implements
                 Uri.parse("http://play.google.com/store/account/subscriptions"));
         getActivity().startActivity(browserIntent);
         call.resolve();
+    }
+
+    /**
+     * Retrieve the user's Play Store billing country code (ISO 3166-1 alpha-2).
+     */
+    @PluginMethod
+    public void getStorefront(final PluginCall call) {
+        Log.d(TAG, "getStorefront()");
+        executeServiceRequest(() -> {
+            GetBillingConfigParams params = GetBillingConfigParams.newBuilder().build();
+            mBillingClient.getBillingConfigAsync(params, new BillingConfigResponseListener() {
+                @Override
+                public void onBillingConfigResponse(
+                        BillingResult billingResult,
+                        BillingConfig billingConfig) {
+                    if (billingResult.getResponseCode() == BillingResponseCode.OK
+                            && billingConfig != null) {
+                        String countryCode = billingConfig.getCountryCode();
+                        Log.d(TAG, "getStorefront() -> " + countryCode);
+                        JSObject ret = new JSObject();
+                        ret.put("countryCode", countryCode);
+                        call.resolve(ret);
+                    } else {
+                        Log.d(TAG, "getStorefront() -> Failed: " + format(billingResult));
+                        call.reject("Failed to get billing config: " + format(billingResult));
+                    }
+                }
+            });
+        });
     }
 
     // -------------------------------------------------------------------------

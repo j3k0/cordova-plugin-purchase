@@ -39,6 +39,8 @@ namespace CdvPurchase {
                 manageBilling(): void;
 
                 launchPriceChangeConfirmationFlow(productId: string): void;
+
+                getStorefront(success: (countryCode: string) => void, fail: ErrorCallback): void;
             }
         }
     }

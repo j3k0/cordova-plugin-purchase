@@ -325,6 +325,13 @@ namespace CdvPurchase {
                     return window.cordova.exec(function () { }, function () { }, "InAppBillingPlugin", "manageBilling", []);
                 }
 
+                getStorefront(success: (countryCode: string) => void, fail: ErrorCallback) {
+                    if (this.options.showLog) {
+                        log('getStorefront()');
+                    }
+                    return window.cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getStorefront", []);
+                }
+
                 launchPriceChangeConfirmationFlow(productId: string) {
                     return window.cordova.exec(function () { }, function () { }, "InAppBillingPlugin", "launchPriceChangeConfirmationFlow", [productId]);
                 }

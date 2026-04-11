@@ -312,6 +312,24 @@ namespace CdvPurchase {
                         this.options.restoreFailed(errorCode);
                     }
                 }
+
+                /** Retrieve the storefront country code from StoreKit */
+                getStorefront(): Promise<string | undefined> {
+                    return new Promise((resolve) => {
+                        const plugin = this.plugin;
+                        if (!plugin) {
+                            log('getStorefront failed: plugin not available');
+                            resolve(undefined);
+                            return;
+                        }
+                        plugin.getStorefront()
+                            .then((result: { countryCode: string }) => resolve(result.countryCode || undefined))
+                            .catch((err: any) => {
+                                log('getStorefront failed: ' + (err?.message || err));
+                                resolve(undefined);
+                            });
+                    });
+                }
             }
         }
     }

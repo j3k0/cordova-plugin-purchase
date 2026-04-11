@@ -42,6 +42,8 @@ namespace CdvPurchase {
                                 errorCb: (code: ErrorCode, message: string) => void): void;
                 loadReceipts(callback: (receipt: ApplicationReceipt) => void,
                              errorCb: (code: ErrorCode, message: string) => void): void;
+                /** Retrieve the storefront country code (alpha-3 on iOS) */
+                getStorefront?(): Promise<string | undefined>;
             }
         }
     }
