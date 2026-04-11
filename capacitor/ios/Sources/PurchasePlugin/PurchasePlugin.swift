@@ -143,7 +143,8 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("productId is required")
             return
         }
-        debugLog("purchase: \(productId)")
+        let quantity = call.getInt("quantity") ?? 1
+        debugLog("purchase: \(productId) quantity:\(quantity)")
 
         guard let product = sk2.products[productId] else {
             call.reject("Product not loaded: \(productId)")
@@ -156,6 +157,9 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
                 if let username = call.getString("applicationUsername") {
                     options.insert(.appAccountToken(
                         UUID(uuidString: username) ?? UUID()))
+                }
+                if quantity > 1 {
+                    options.insert(.quantity(quantity))
                 }
 
                 let result = try await product.purchase(options: options)
@@ -218,6 +222,7 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
                     "state": "PaymentTransactionStateFinished",
                     "transactionIdentifier": transactionId,
                     "productId": transaction.productID,
+                    "quantity": transaction.purchasedQuantity,
                 ])
             }
             call.resolve()
@@ -339,6 +344,7 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
             "state": state,
             "transactionIdentifier": transactionId,
             "productId": transaction.productID,
+            "quantity": transaction.purchasedQuantity,
         ]
 
         if let errorCode = errorCode { data["errorCode"] = errorCode }
