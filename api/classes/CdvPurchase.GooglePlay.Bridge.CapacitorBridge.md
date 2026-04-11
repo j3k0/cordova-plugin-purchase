@@ -26,6 +26,7 @@ Uses Capacitor.Plugins.PurchasePlugin instead of cordova.exec().
 - [consumePurchase](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#consumepurchase)
 - [getAvailableProducts](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#getavailableproducts)
 - [getPurchases](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#getpurchases)
+- [getStorefront](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#getstorefront)
 - [init](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#init)
 - [launchPriceChangeConfirmationFlow](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#launchpricechangeconfirmationflow)
 - [load](CdvPurchase.GooglePlay.Bridge.CapacitorBridge.md#load)
@@ -164,6 +165,27 @@ ___
 #### Implementation of
 
 [BridgeInterface](../interfaces/CdvPurchase.GooglePlay.Bridge.BridgeInterface.md).[getPurchases](../interfaces/CdvPurchase.GooglePlay.Bridge.BridgeInterface.md#getpurchases)
+
+___
+
+### getStorefront
+
+▸ **getStorefront**(`success`, `fail`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `success` | (`countryCode`: `string`) => `void` |
+| `fail` | [`ErrorCallback`](../modules/CdvPurchase.GooglePlay.Bridge.md#errorcallback) |
+
+#### Returns
+
+`void`
+
+#### Implementation of
+
+[BridgeInterface](../interfaces/CdvPurchase.GooglePlay.Bridge.BridgeInterface.md).[getStorefront](../interfaces/CdvPurchase.GooglePlay.Bridge.BridgeInterface.md#getstorefront)
 
 ___
 

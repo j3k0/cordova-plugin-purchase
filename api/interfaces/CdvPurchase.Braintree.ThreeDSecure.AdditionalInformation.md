@@ -286,7 +286,7 @@ ___
 
 ### productCode
 
-• `Optional` **productCode**: ``"AIR"`` \| ``"GEN"`` \| ``"DIG"`` \| ``"SVC"`` \| ``"RES"`` \| ``"TRA"`` \| ``"DSP"`` \| ``"REN"`` \| ``"GAS"`` \| ``"LUX"`` \| ``"ACC"`` \| ``"TBD"``
+• `Optional` **productCode**: ``"LUX"`` \| ``"AIR"`` \| ``"GEN"`` \| ``"DIG"`` \| ``"SVC"`` \| ``"RES"`` \| ``"TRA"`` \| ``"DSP"`` \| ``"REN"`` \| ``"GAS"`` \| ``"ACC"`` \| ``"TBD"``
 
 The 3-letter string representing the merchant product code
 

@@ -47,6 +47,7 @@ Adapter for Apple AppStore using StoreKit version 1
 - [checkSupport](CdvPurchase.AppleAppStore.Adapter.md#checksupport)
 - [finish](CdvPurchase.AppleAppStore.Adapter.md#finish)
 - [getProduct](CdvPurchase.AppleAppStore.Adapter.md#getproduct)
+- [getStorefront](CdvPurchase.AppleAppStore.Adapter.md#getstorefront)
 - [handleReceiptValidationResponse](CdvPurchase.AppleAppStore.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.AppleAppStore.Adapter.md#initialize)
 - [loadProducts](CdvPurchase.AppleAppStore.Adapter.md#loadproducts)
@@ -376,6 +377,25 @@ Find a given product from ID
 #### Returns
 
 `undefined` \| [`SKProduct`](CdvPurchase.AppleAppStore.SKProduct.md)
+
+___
+
+### getStorefront
+
+▸ **getStorefront**(): `Promise`\<`undefined` \| `string`\>
+
+Retrieve the billing country code from the platform's storefront.
+
+Returns an ISO 3166-1 alpha-2 country code (e.g., "US", "FR"),
+or undefined if the storefront information is not available.
+
+#### Returns
+
+`Promise`\<`undefined` \| `string`\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[getStorefront](../interfaces/CdvPurchase.Adapter.md#getstorefront)
 
 ___
 

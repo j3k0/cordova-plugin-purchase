@@ -2112,6 +2112,34 @@ var CdvPurchase;
             });
         }
         /**
+         * Retrieve the billing country code from the platform's storefront.
+         *
+         * Returns an ISO 3166-1 alpha-2 country code (e.g., "US", "FR"),
+         * or undefined if the storefront information is not available.
+         *
+         * Returns `undefined` if called before `store.initialize()` completes,
+         * or if the platform does not support storefront queries.
+         *
+         * On iOS, requires iOS 13 or later.
+         *
+         * Note: may return a non-standard code for regions not covered by ISO 3166-1
+         * (the raw platform code is returned as fallback).
+         *
+         * @param platform - The platform to get the storefront from. If not specified, uses the first ready adapter.
+         *
+         * @example
+         * const country = await store.getStorefront();
+         * console.log('Billing country: ' + country); // e.g., "US"
+         */
+        getStorefront(platform) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const adapter = this.adapters.findReady(platform);
+                if (!(adapter === null || adapter === void 0 ? void 0 : adapter.getStorefront))
+                    return undefined;
+                return adapter.getStorefront();
+            });
+        }
+        /**
          * The default payment platform to use depending on the OS.
          *
          * - on iOS: `APPLE_APPSTORE`
@@ -3534,7 +3562,7 @@ var CdvPurchase;
                 if (functionality === 'order')
                     return this._canMakePayments;
                 const supported = [
-                    'order', 'manageBilling', 'manageSubscriptions'
+                    'order', 'manageBilling', 'manageSubscriptions', 'getStorefront'
                 ];
                 return supported.indexOf(functionality) >= 0;
             }
@@ -3557,8 +3585,83 @@ var CdvPurchase;
                     this.bridge.presentCodeRedemptionSheet(resolve);
                 });
             }
+            getStorefront() {
+                return __awaiter(this, void 0, void 0, function* () {
+                    if (!this.bridge.getStorefront)
+                        return undefined;
+                    const countryCode = yield this.bridge.getStorefront();
+                    if (!countryCode)
+                        return undefined;
+                    // SKStorefront.countryCode typically returns ISO 3166-1 alpha-3 (e.g., "USA").
+                    // The fallback `|| countryCode` handles cases where Apple returns alpha-2 directly
+                    // or uses a non-standard code (e.g., territories not in ISO 3166-1).
+                    return isoAlpha3ToAlpha2(countryCode) || countryCode;
+                });
+            }
         }
         AppleAppStore.Adapter = Adapter;
+        /**
+         * Convert ISO 3166-1 alpha-3 country code to alpha-2.
+         *
+         * Apple's SKStorefront.countryCode returns alpha-3 codes (e.g., "USA").
+         * This function converts them to the more common alpha-2 format (e.g., "US")
+         * for consistency with Google Play which already returns alpha-2.
+         */
+        const ISO_ALPHA3_TO_ALPHA2 = {
+            AFG: 'AF', ALB: 'AL', DZA: 'DZ', ASM: 'AS', AND: 'AD',
+            AGO: 'AO', AIA: 'AI', ATA: 'AQ', ATG: 'AG', ARG: 'AR',
+            ARM: 'AM', ABW: 'AW', AUS: 'AU', AUT: 'AT', AZE: 'AZ',
+            BHS: 'BS', BHR: 'BH', BGD: 'BD', BRB: 'BB', BLR: 'BY',
+            BEL: 'BE', BLZ: 'BZ', BEN: 'BJ', BMU: 'BM', BTN: 'BT',
+            BOL: 'BO', BES: 'BQ', BIH: 'BA', BWA: 'BW', BVT: 'BV',
+            BRA: 'BR', IOT: 'IO', BRN: 'BN', BGR: 'BG', BFA: 'BF',
+            BDI: 'BI', CPV: 'CV', KHM: 'KH', CMR: 'CM', CAN: 'CA',
+            CYM: 'KY', CAF: 'CF', TCD: 'TD', CHL: 'CL', CHN: 'CN',
+            CXR: 'CX', CCK: 'CC', COL: 'CO', COM: 'KM', COG: 'CG',
+            COD: 'CD', COK: 'CK', CRI: 'CR', CIV: 'CI', HRV: 'HR',
+            CUB: 'CU', CUW: 'CW', CYP: 'CY', CZE: 'CZ', DNK: 'DK',
+            DJI: 'DJ', DMA: 'DM', DOM: 'DO', ECU: 'EC', EGY: 'EG',
+            SLV: 'SV', GNQ: 'GQ', ERI: 'ER', EST: 'EE', SWZ: 'SZ',
+            ETH: 'ET', FLK: 'FK', FRO: 'FO', FJI: 'FJ', FIN: 'FI',
+            FRA: 'FR', GUF: 'GF', PYF: 'PF', ATF: 'TF', GAB: 'GA',
+            GMB: 'GM', GEO: 'GE', DEU: 'DE', GHA: 'GH', GIB: 'GI',
+            GRC: 'GR', GRL: 'GL', GRD: 'GD', GLP: 'GP', GUM: 'GU',
+            GTM: 'GT', GGY: 'GG', GIN: 'GN', GNB: 'GW', GUY: 'GY',
+            HTI: 'HT', HMD: 'HM', VAT: 'VA', HND: 'HN', HKG: 'HK',
+            HUN: 'HU', ISL: 'IS', IND: 'IN', IDN: 'ID', IRN: 'IR',
+            IRQ: 'IQ', IRL: 'IE', IMN: 'IM', ISR: 'IL', ITA: 'IT',
+            JAM: 'JM', JPN: 'JP', JEY: 'JE', JOR: 'JO', KAZ: 'KZ',
+            KEN: 'KE', KIR: 'KI', PRK: 'KP', KOR: 'KR', KWT: 'KW',
+            KGZ: 'KG', LAO: 'LA', LVA: 'LV', LBN: 'LB', LSO: 'LS',
+            LBR: 'LR', LBY: 'LY', LIE: 'LI', LTU: 'LT', LUX: 'LU',
+            MAC: 'MO', MDG: 'MG', MWI: 'MW', MYS: 'MY', MDV: 'MV',
+            MLI: 'ML', MLT: 'MT', MHL: 'MH', MTQ: 'MQ', MRT: 'MR',
+            MUS: 'MU', MYT: 'YT', MEX: 'MX', FSM: 'FM', MDA: 'MD',
+            MCO: 'MC', MNG: 'MN', MNE: 'ME', MSR: 'MS', MAR: 'MA',
+            MOZ: 'MZ', MMR: 'MM', NAM: 'NA', NRU: 'NR', NPL: 'NP',
+            NLD: 'NL', NCL: 'NC', NZL: 'NZ', NIC: 'NI', NER: 'NE',
+            NGA: 'NG', NIU: 'NU', NFK: 'NF', MKD: 'MK', MNP: 'MP',
+            NOR: 'NO', OMN: 'OM', PAK: 'PK', PLW: 'PW', PSE: 'PS',
+            PAN: 'PA', PNG: 'PG', PRY: 'PY', PER: 'PE', PHL: 'PH',
+            PCN: 'PN', POL: 'PL', PRT: 'PT', PRI: 'PR', QAT: 'QA',
+            REU: 'RE', ROU: 'RO', RUS: 'RU', RWA: 'RW', BLM: 'BL',
+            SHN: 'SH', KNA: 'KN', LCA: 'LC', MAF: 'MF', SPM: 'PM',
+            VCT: 'VC', WSM: 'WS', SMR: 'SM', STP: 'ST', SAU: 'SA',
+            SEN: 'SN', SRB: 'RS', SYC: 'SC', SLE: 'SL', SGP: 'SG',
+            SXM: 'SX', SVK: 'SK', SVN: 'SI', SLB: 'SB', SOM: 'SO',
+            ZAF: 'ZA', SGS: 'GS', SSD: 'SS', ESP: 'ES', LKA: 'LK',
+            SDN: 'SD', SUR: 'SR', SJM: 'SJ', SWE: 'SE', CHE: 'CH',
+            SYR: 'SY', TWN: 'TW', TJK: 'TJ', TZA: 'TZ', THA: 'TH',
+            TLS: 'TL', TGO: 'TG', TKL: 'TK', TON: 'TO', TTO: 'TT',
+            TUN: 'TN', TUR: 'TR', TKM: 'TM', TCA: 'TC', TUV: 'TV',
+            UGA: 'UG', UKR: 'UA', ARE: 'AE', GBR: 'GB', USA: 'US',
+            UMI: 'UM', URY: 'UY', UZB: 'UZ', VUT: 'VU', VEN: 'VE',
+            VNM: 'VN', VGB: 'VG', VIR: 'VI', WLF: 'WF', ESH: 'EH',
+            YEM: 'YE', ZMB: 'ZM', ZWE: 'ZW',
+        };
+        function isoAlpha3ToAlpha2(alpha3) {
+            return ISO_ALPHA3_TO_ALPHA2[alpha3.toUpperCase()];
+        }
         function appStoreError(code, message, productId) {
             return CdvPurchase.storeError(code, message, CdvPurchase.Platform.APPLE_APPSTORE, productId);
         }
@@ -3789,6 +3892,23 @@ var CdvPurchase;
                     if (this.options.restoreFailed) {
                         this.options.restoreFailed(errorCode);
                     }
+                }
+                /** Retrieve the storefront country code from StoreKit */
+                getStorefront() {
+                    return new Promise((resolve) => {
+                        const plugin = this.plugin;
+                        if (!plugin) {
+                            log('getStorefront failed: plugin not available');
+                            resolve(undefined);
+                            return;
+                        }
+                        plugin.getStorefront()
+                            .then((result) => resolve(result.countryCode || undefined))
+                            .catch((err) => {
+                            log('getStorefront failed: ' + ((err === null || err === void 0 ? void 0 : err.message) || err));
+                            resolve(undefined);
+                        });
+                    });
                 }
             }
             CapacitorBridge.CapacitorNativeBridge = CapacitorNativeBridge;
@@ -4044,6 +4164,18 @@ var CdvPurchase;
                     };
                     this.appStoreReceipt = null;
                     exec('appStoreRefreshReceipt', [], loaded, error);
+                }
+                /** Retrieve the storefront country code from StoreKit */
+                getStorefront() {
+                    return new Promise((resolve) => {
+                        // SK2 uses the same native getStorefront action via InAppPurchase plugin
+                        window.cordova.exec((countryCode) => {
+                            resolve(countryCode || undefined);
+                        }, (err) => {
+                            log('getStorefront failed: ' + err);
+                            resolve(undefined);
+                        }, "InAppPurchase", "getStorefront", []);
+                    });
                 }
                 loadReceipts(callback, errorCb) {
                     const loaded = (args) => {
@@ -4427,6 +4559,17 @@ var CdvPurchase;
                     this.appStoreReceipt = null;
                     log('refreshing appStoreReceipt');
                     exec('appStoreRefreshReceipt', [], loaded, error);
+                }
+                /** Retrieve the storefront country code from StoreKit */
+                getStorefront() {
+                    return new Promise((resolve) => {
+                        exec('getStorefront', [], (countryCode) => {
+                            resolve(countryCode || undefined);
+                        }, (err) => {
+                            log('getStorefront failed: ' + err);
+                            resolve(undefined);
+                        });
+                    });
                 }
                 loadReceipts(callback, errorCb) {
                     const loaded = (args) => {
@@ -6028,9 +6171,21 @@ var CdvPurchase;
                     return;
                 });
             }
+            getStorefront() {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return new Promise((resolve) => {
+                        this.bridge.getStorefront((countryCode) => {
+                            resolve(countryCode || undefined);
+                        }, (message) => {
+                            this.log.warn('getStorefront failed: ' + message);
+                            resolve(undefined);
+                        });
+                    });
+                });
+            }
             checkSupport(functionality) {
                 const supported = [
-                    'order', 'manageBilling', 'manageSubscriptions'
+                    'order', 'manageBilling', 'manageSubscriptions', 'getStorefront'
                 ];
                 return supported.indexOf(functionality) >= 0;
             }
@@ -6200,6 +6355,14 @@ var CdvPurchase;
                 }
                 launchPriceChangeConfirmationFlow(productId) {
                     this.plugin.launchPriceChangeConfirmationFlow({ productId });
+                }
+                getStorefront(success, fail) {
+                    if (this.options.showLog) {
+                        log('getStorefront()');
+                    }
+                    this.plugin.getStorefront()
+                        .then((result) => success(result.countryCode))
+                        .catch((err) => fail((err === null || err === void 0 ? void 0 : err.message) || 'getStorefront failed', err === null || err === void 0 ? void 0 : err.code));
                 }
             }
             Bridge.CapacitorBridge = CapacitorBridge;
@@ -6436,6 +6599,12 @@ var CdvPurchase;
                 }
                 manageBilling() {
                     return window.cordova.exec(function () { }, function () { }, "InAppBillingPlugin", "manageBilling", []);
+                }
+                getStorefront(success, fail) {
+                    if (this.options.showLog) {
+                        log('getStorefront()');
+                    }
+                    return window.cordova.exec(success, errorCb(fail), "InAppBillingPlugin", "getStorefront", []);
                 }
                 launchPriceChangeConfirmationFlow(productId) {
                     return window.cordova.exec(function () { }, function () { }, "InAppBillingPlugin", "launchPriceChangeConfirmationFlow", [productId]);

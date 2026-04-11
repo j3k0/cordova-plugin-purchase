@@ -27,6 +27,7 @@ The adapter programs against this interface, not a concrete class.
 - [consumePurchase](CdvPurchase.GooglePlay.Bridge.Bridge.md#consumepurchase)
 - [getAvailableProducts](CdvPurchase.GooglePlay.Bridge.Bridge.md#getavailableproducts)
 - [getPurchases](CdvPurchase.GooglePlay.Bridge.Bridge.md#getpurchases)
+- [getStorefront](CdvPurchase.GooglePlay.Bridge.Bridge.md#getstorefront)
 - [init](CdvPurchase.GooglePlay.Bridge.Bridge.md#init)
 - [launchPriceChangeConfirmationFlow](CdvPurchase.GooglePlay.Bridge.Bridge.md#launchpricechangeconfirmationflow)
 - [listener](CdvPurchase.GooglePlay.Bridge.Bridge.md#listener)
@@ -165,6 +166,27 @@ ___
 #### Implementation of
 
 [BridgeInterface](../interfaces/CdvPurchase.GooglePlay.Bridge.BridgeInterface.md).[getPurchases](../interfaces/CdvPurchase.GooglePlay.Bridge.BridgeInterface.md#getpurchases)
+
+___
+
+### getStorefront
+
+▸ **getStorefront**(`success`, `fail`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `success` | (`countryCode`: `string`) => `void` |
+| `fail` | [`ErrorCallback`](../modules/CdvPurchase.GooglePlay.Bridge.md#errorcallback) |
+
+#### Returns
+
+`void`
+
+#### Implementation of
+
+[BridgeInterface](../interfaces/CdvPurchase.GooglePlay.Bridge.BridgeInterface.md).[getStorefront](../interfaces/CdvPurchase.GooglePlay.Bridge.BridgeInterface.md#getstorefront)
 
 ___
 

@@ -25,6 +25,7 @@ The adapter programs against this interface, not a concrete class.
 
 - [canMakePayments](CdvPurchase.AppleAppStore.CapacitorBridge.CapacitorNativeBridge.md#canmakepayments)
 - [finish](CdvPurchase.AppleAppStore.CapacitorBridge.CapacitorNativeBridge.md#finish)
+- [getStorefront](CdvPurchase.AppleAppStore.CapacitorBridge.CapacitorNativeBridge.md#getstorefront)
 - [init](CdvPurchase.AppleAppStore.CapacitorBridge.CapacitorNativeBridge.md#init)
 - [load](CdvPurchase.AppleAppStore.CapacitorBridge.CapacitorNativeBridge.md#load)
 - [loadReceipts](CdvPurchase.AppleAppStore.CapacitorBridge.CapacitorNativeBridge.md#loadreceipts)
@@ -128,6 +129,22 @@ ___
 #### Implementation of
 
 [BridgeInterface](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md).[finish](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#finish)
+
+___
+
+### getStorefront
+
+▸ **getStorefront**(): `Promise`\<`undefined` \| `string`\>
+
+Retrieve the storefront country code from StoreKit
+
+#### Returns
+
+`Promise`\<`undefined` \| `string`\>
+
+#### Implementation of
+
+[BridgeInterface](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md).[getStorefront](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#getstorefront)
 
 ___
 

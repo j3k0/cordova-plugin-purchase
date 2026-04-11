@@ -27,6 +27,7 @@ The adapter programs against this interface, not a concrete class.
 - [canMakePayments](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#canmakepayments)
 - [finalizeTransactionUpdates](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#finalizetransactionupdates)
 - [finish](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#finish)
+- [getStorefront](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#getstorefront)
 - [init](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#init)
 - [lastTransactionUpdated](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#lasttransactionupdated)
 - [load](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#load)
@@ -152,6 +153,22 @@ ___
 #### Implementation of
 
 [BridgeInterface](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md).[finish](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#finish)
+
+___
+
+### getStorefront
+
+▸ **getStorefront**(): `Promise`\<`undefined` \| `string`\>
+
+Retrieve the storefront country code from StoreKit
+
+#### Returns
+
+`Promise`\<`undefined` \| `string`\>
+
+#### Implementation of
+
+[BridgeInterface](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md).[getStorefront](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#getstorefront)
 
 ___
 

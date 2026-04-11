@@ -23,6 +23,7 @@ The adapter programs against this interface, not a concrete class.
 
 - [canMakePayments](CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#canmakepayments)
 - [finish](CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#finish)
+- [getStorefront](CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#getstorefront)
 - [init](CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#init)
 - [load](CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#load)
 - [loadReceipts](CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#loadreceipts)
@@ -95,6 +96,18 @@ ___
 #### Returns
 
 `void`
+
+___
+
+### getStorefront
+
+▸ **getStorefront**(): `Promise`\<`undefined` \| `string`\>
+
+Retrieve the storefront country code (alpha-3 on iOS)
+
+#### Returns
+
+`Promise`\<`undefined` \| `string`\>
 
 ___
 

@@ -41,6 +41,7 @@ Adapter for a payment or in-app purchase platform
 - [finish](CdvPurchase.GooglePlay.Adapter.md#finish)
 - [getPurchases](CdvPurchase.GooglePlay.Adapter.md#getpurchases)
 - [getSkusOf](CdvPurchase.GooglePlay.Adapter.md#getskusof)
+- [getStorefront](CdvPurchase.GooglePlay.Adapter.md#getstorefront)
 - [handleReceiptValidationResponse](CdvPurchase.GooglePlay.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.GooglePlay.Adapter.md#initialize)
 - [loadProducts](CdvPurchase.GooglePlay.Adapter.md#loadproducts)
@@ -328,6 +329,25 @@ Prepare the list of SKUs sorted by type
 | :------ | :------ |
 | `inAppSkus` | `string`[] |
 | `subsSkus` | `string`[] |
+
+___
+
+### getStorefront
+
+▸ **getStorefront**(): `Promise`\<`undefined` \| `string`\>
+
+Retrieve the billing country code from the platform's storefront.
+
+Returns an ISO 3166-1 alpha-2 country code (e.g., "US", "FR"),
+or undefined if the storefront information is not available.
+
+#### Returns
+
+`Promise`\<`undefined` \| `string`\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[getStorefront](../interfaces/CdvPurchase.Adapter.md#getstorefront)
 
 ___
 

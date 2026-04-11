@@ -1169,6 +1169,27 @@ declare namespace CdvPurchase {
          */
         manageBilling(platform?: Platform): Promise<IError | undefined>;
         /**
+         * Retrieve the billing country code from the platform's storefront.
+         *
+         * Returns an ISO 3166-1 alpha-2 country code (e.g., "US", "FR"),
+         * or undefined if the storefront information is not available.
+         *
+         * Returns `undefined` if called before `store.initialize()` completes,
+         * or if the platform does not support storefront queries.
+         *
+         * On iOS, requires iOS 13 or later.
+         *
+         * Note: may return a non-standard code for regions not covered by ISO 3166-1
+         * (the raw platform code is returned as fallback).
+         *
+         * @param platform - The platform to get the storefront from. If not specified, uses the first ready adapter.
+         *
+         * @example
+         * const country = await store.getStorefront();
+         * console.log('Billing country: ' + country); // e.g., "US"
+         */
+        getStorefront(platform?: Platform): Promise<string | undefined>;
+        /**
          * The default payment platform to use depending on the OS.
          *
          * - on iOS: `APPLE_APPSTORE`
@@ -1385,6 +1406,13 @@ declare namespace CdvPurchase {
          * Might ask the user to login.
          */
         restorePurchases(): Promise<IError | undefined>;
+        /**
+         * Retrieve the billing country code from the platform's storefront.
+         *
+         * Returns an ISO 3166-1 alpha-2 country code (e.g., "US", "FR"),
+         * or undefined if the storefront information is not available.
+         */
+        getStorefront?(): Promise<string | undefined>;
     }
     /**
      * Data to attach to a transaction.
@@ -1424,7 +1452,7 @@ declare namespace CdvPurchase {
      *
      * @see {@link Store.checkSupport}
      */
-    type PlatformFunctionality = 'requestPayment' | 'order' | 'manageSubscriptions' | 'manageBilling';
+    type PlatformFunctionality = 'requestPayment' | 'order' | 'manageSubscriptions' | 'manageBilling' | 'getStorefront';
     /**
      * Possible states of a transaction.
      *
@@ -2628,6 +2656,7 @@ declare namespace CdvPurchase {
             checkSupport(functionality: PlatformFunctionality): boolean;
             restorePurchases(): Promise<IError | undefined>;
             presentCodeRedemptionSheet(): Promise<void>;
+            getStorefront(): Promise<string | undefined>;
         }
     }
 }
@@ -2667,6 +2696,8 @@ declare namespace CdvPurchase {
                 private transactionUpdated;
                 private restoreCompletedTransactionsFinished;
                 private restoreCompletedTransactionsFailed;
+                /** Retrieve the storefront country code from StoreKit */
+                getStorefront(): Promise<string | undefined>;
             }
         }
     }
@@ -2703,6 +2734,8 @@ declare namespace CdvPurchase {
                 presentCodeRedemptionSheet(callback?: Callback<any>): void;
                 refreshReceipts(successCb: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
                 loadReceipts(callback: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
+                /** Retrieve the storefront country code (alpha-3 on iOS) */
+                getStorefront?(): Promise<string | undefined>;
             }
         }
     }
@@ -2748,6 +2781,8 @@ declare namespace CdvPurchase {
                 restoreCompletedTransactionsFailed(errorCode: ErrorCode): void;
                 parseReceiptArgs(args: [string, string, string, number, string]): ApplicationReceipt;
                 refreshReceipts(successCb: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
+                /** Retrieve the storefront country code from StoreKit */
+                getStorefront(): Promise<string | undefined>;
                 loadReceipts(callback: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
             }
         }
@@ -2981,6 +3016,8 @@ declare namespace CdvPurchase {
                 restoreCompletedTransactionsFailed(errorCode: ErrorCode): void;
                 parseReceiptArgs(args: RawReceiptArgs): ApplicationReceipt;
                 refreshReceipts(successCb: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
+                /** Retrieve the storefront country code from StoreKit */
+                getStorefront(): Promise<string | undefined>;
                 loadReceipts(callback: (receipt: ApplicationReceipt) => void, errorCb: (code: ErrorCode, message: string) => void): void;
                 /** @deprecated */
                 onPurchased: boolean;
@@ -4518,6 +4555,7 @@ declare namespace CdvPurchase {
             requestPayment(payment: PaymentRequest, additionalData?: CdvPurchase.AdditionalData): Promise<IError | Transaction | undefined>;
             manageSubscriptions(): Promise<IError | undefined>;
             manageBilling(): Promise<IError | undefined>;
+            getStorefront(): Promise<string | undefined>;
             checkSupport(functionality: PlatformFunctionality): boolean;
             restorePurchases(): Promise<IError | undefined>;
         }
@@ -4546,6 +4584,7 @@ declare namespace CdvPurchase {
                 manageSubscriptions(): void;
                 manageBilling(): void;
                 launchPriceChangeConfirmationFlow(productId: string): void;
+                getStorefront(success: (countryCode: string) => void, fail: ErrorCallback): void;
             }
         }
     }
@@ -4571,6 +4610,7 @@ declare namespace CdvPurchase {
                 manageSubscriptions(): void;
                 manageBilling(): void;
                 launchPriceChangeConfirmationFlow(productId: string): void;
+                getStorefront(success: (countryCode: string) => void, fail: ErrorCallback): void;
             }
         }
     }
@@ -4808,6 +4848,7 @@ declare namespace CdvPurchase {
                 getAvailableProducts(inAppSkus: string[], subsSkus: string[], success: (validProducts: (InAppProduct | Subscription)[]) => void, fail: ErrorCallback): void;
                 manageSubscriptions(): void;
                 manageBilling(): void;
+                getStorefront(success: (countryCode: string) => void, fail: ErrorCallback): void;
                 launchPriceChangeConfirmationFlow(productId: string): void;
             }
         }

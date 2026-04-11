@@ -137,7 +137,7 @@ ___
 
 ### PlatformFunctionality
 
-Ƭ **PlatformFunctionality**: ``"requestPayment"`` \| ``"order"`` \| ``"manageSubscriptions"`` \| ``"manageBilling"``
+Ƭ **PlatformFunctionality**: ``"requestPayment"`` \| ``"order"`` \| ``"manageSubscriptions"`` \| ``"manageBilling"`` \| ``"getStorefront"``
 
 Functionality optionality provided by a given platform.
 
