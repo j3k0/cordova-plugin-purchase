@@ -2692,6 +2692,8 @@ declare namespace CdvPurchase {
                 };
                 /** Whether this bridge uses StoreKit 2 */
                 readonly isSK2?: boolean;
+                /** Resolves when pending transactions from the native queue have been processed */
+                pendingTransactionsReady?: Promise<void>;
                 init(options: Partial<BridgeOptions>, success: () => void, error: (code: ErrorCode, message: string) => void): void;
                 load(productIds: string[], success: (validProducts: ValidProduct[], invalidProductIds: string[]) => void, error: (code: ErrorCode, message: string) => void): void;
                 purchase(productId: string, quantity: number, applicationUsername: string | undefined, discount: PaymentDiscount | undefined, success: () => void, error: () => void): void;
@@ -2724,6 +2726,8 @@ declare namespace CdvPurchase {
                 appStoreReceipt?: AppleAppStore.ApplicationReceipt | null;
                 private registeredProducts;
                 private needRestoreNotification;
+                pendingTransactionsReady?: Promise<void>;
+                private _pendingTransactionsResolve?;
                 private pendingUpdates;
                 /** True when this bridge is active (SK2 extension installed + iOS 15+) */
                 readonly isSK2 = true;
@@ -2914,6 +2918,9 @@ declare namespace CdvPurchase {
                 private registeredProducts;
                 /** True if "restoreCompleted" or "restoreFailed" should be called when restore is done */
                 private needRestoreNotification;
+                /** Resolves when pending transactions from the native queue have been processed */
+                pendingTransactionsReady?: Promise<void>;
+                private _pendingTransactionsResolve?;
                 /** List of transaction updates to process */
                 private pendingUpdates;
                 constructor();

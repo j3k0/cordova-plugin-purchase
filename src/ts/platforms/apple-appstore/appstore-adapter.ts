@@ -208,9 +208,16 @@ namespace CdvPurchase {
                 return new Promise(resolve => {
                     this.initializeAppReceipt(() => {
                         if (!this._receipt) {
-                            // this should not happen
-                            this.log.warn('Failed to load the application receipt, cannot proceed with handling the purchase');
-                            return;
+                            // Receipt failed to load — create a minimal receipt so the
+                            // transaction can still be tracked and finished.  Without this
+                            // fallback the Promise would never resolve, leaving the native
+                            // transaction unfinished (causing the purchase dialog to loop on
+                            // iOS — see #1568).
+                            this.log.warn('Application receipt unavailable, creating a fallback receipt to avoid blocking transactions');
+                            this._receipt = new SKApplicationReceipt(
+                                { appStoreReceipt: '', bundleIdentifier: '',
+                                  bundleShortVersion: '', bundleNumericVersion: 0, bundleSignature: '' },
+                                false, this.context.apiDecorators);
                         }
                         const existing = this._receipt?.transactions.find(t => t.transactionId === transactionId) as SKTransaction | undefined;
                         if (existing) {
@@ -394,19 +401,24 @@ namespace CdvPurchase {
 
             supportsParallelLoading = true;
 
-            loadReceipts(): Promise<Receipt[]> {
+            async loadReceipts(): Promise<Receipt[]> {
+                // Wait for native pending transactions to be processed before
+                // initializing the receipt.  Previously used a fixed 300ms delay
+                // which was unreliable and could miss transactions that arrived
+                // from the native queue (see #1529).
+                if (this.bridge.pendingTransactionsReady) {
+                    await this.bridge.pendingTransactionsReady;
+                }
                 return new Promise((resolve) => {
-                    setTimeout(() => {
-                        this.initializeAppReceipt(() => {
-                            this.receiptsUpdated.call();
-                            if (this._receipt) {
-                                resolve([this._receipt, this.pseudoReceipt]);
-                            }
-                            else {
-                                resolve([this.pseudoReceipt]);
-                            }
-                        });
-                    }, 300);
+                    this.initializeAppReceipt(() => {
+                        this.receiptsUpdated.call();
+                        if (this._receipt) {
+                            resolve([this._receipt, this.pseudoReceipt]);
+                        }
+                        else {
+                            resolve([this.pseudoReceipt]);
+                        }
+                    });
                 });
             }
 
@@ -469,6 +481,7 @@ namespace CdvPurchase {
                     return;
                 }
                 this._receipt = new SKApplicationReceipt(nativeData, this.needAppReceipt, this.context.apiDecorators);
+                this._appStoreReceiptLoading = false;
                 callCallbacks(undefined);
             }
 

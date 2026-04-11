@@ -2958,9 +2958,14 @@ var CdvPurchase;
                         this.initializeAppReceipt(() => {
                             var _a;
                             if (!this._receipt) {
-                                // this should not happen
-                                this.log.warn('Failed to load the application receipt, cannot proceed with handling the purchase');
-                                return;
+                                // Receipt failed to load — create a minimal receipt so the
+                                // transaction can still be tracked and finished.  Without this
+                                // fallback the Promise would never resolve, leaving the native
+                                // transaction unfinished (causing the purchase dialog to loop on
+                                // iOS — see #1568).
+                                this.log.warn('Application receipt unavailable, creating a fallback receipt to avoid blocking transactions');
+                                this._receipt = new AppleAppStore.SKApplicationReceipt({ appStoreReceipt: '', bundleIdentifier: '',
+                                    bundleShortVersion: '', bundleNumericVersion: 0, bundleSignature: '' }, false, this.context.apiDecorators);
                             }
                             const existing = (_a = this._receipt) === null || _a === void 0 ? void 0 : _a.transactions.find(t => t.transactionId === transactionId);
                             if (existing) {
@@ -3121,8 +3126,15 @@ var CdvPurchase;
                 });
             }
             loadReceipts() {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
+                return __awaiter(this, void 0, void 0, function* () {
+                    // Wait for native pending transactions to be processed before
+                    // initializing the receipt.  Previously used a fixed 300ms delay
+                    // which was unreliable and could miss transactions that arrived
+                    // from the native queue (see #1529).
+                    if (this.bridge.pendingTransactionsReady) {
+                        yield this.bridge.pendingTransactionsReady;
+                    }
+                    return new Promise((resolve) => {
                         this.initializeAppReceipt(() => {
                             this.receiptsUpdated.call();
                             if (this._receipt) {
@@ -3132,7 +3144,7 @@ var CdvPurchase;
                                 resolve([this.pseudoReceipt]);
                             }
                         });
-                    }, 300);
+                    });
                 });
             }
             canMakePayments() {
@@ -3188,6 +3200,7 @@ var CdvPurchase;
                         return;
                     }
                     this._receipt = new AppleAppStore.SKApplicationReceipt(nativeData, this.needAppReceipt, this.context.apiDecorators);
+                    this._appStoreReceiptLoading = false;
                     callCallbacks(undefined);
                 });
             }
@@ -3876,6 +3889,9 @@ var CdvPurchase;
                         protectCall(this.options.ready, 'options.ready');
                         protectCall(success, 'init.success');
                         this.initialized = true;
+                        this.pendingTransactionsReady = new Promise(resolve => {
+                            this._pendingTransactionsResolve = resolve;
+                        });
                         setTimeout(() => this.processPendingTransactions(), 50);
                     };
                     const setupFailed = (err) => {
@@ -3888,6 +3904,10 @@ var CdvPurchase;
                     log('processing pending transactions');
                     exec('processPendingTransactions', [], () => {
                         this.finalizeTransactionUpdates();
+                        if (this._pendingTransactionsResolve) {
+                            this._pendingTransactionsResolve();
+                            this._pendingTransactionsResolve = undefined;
+                        }
                     }, undefined);
                 }
                 purchase(productId, quantity, applicationUsername, discount, success, error) {
@@ -4182,6 +4202,9 @@ var CdvPurchase;
                         protectCall(this.options.ready, 'options.ready');
                         protectCall(success, 'init.success');
                         this.initialized = true;
+                        this.pendingTransactionsReady = new Promise(resolve => {
+                            this._pendingTransactionsResolve = resolve;
+                        });
                         setTimeout(() => this.processPendingTransactions(), 50);
                     };
                     const setupFailed = (err) => {
@@ -4195,6 +4218,10 @@ var CdvPurchase;
                     log('processing pending transactions');
                     exec('processPendingTransactions', [], () => {
                         this.finalizeTransactionUpdates();
+                        if (this._pendingTransactionsResolve) {
+                            this._pendingTransactionsResolve();
+                            this._pendingTransactionsResolve = undefined;
+                        }
                     }, undefined);
                 }
                 /**
