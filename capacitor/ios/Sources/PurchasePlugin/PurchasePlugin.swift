@@ -26,6 +26,7 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "presentCodeRedemptionSheet", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "refreshReceipts", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "loadReceipts", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getStorefront", returnType: CAPPluginReturnPromise),
     ]
 
     private var _sk2State: AnyObject?
@@ -311,6 +312,18 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
     @objc func loadReceipts(_ call: CAPPluginCall) {
         // Same as refreshReceipts for SK2
         refreshReceipts(call)
+    }
+
+    @objc func getStorefront(_ call: CAPPluginCall) {
+        // SKPaymentQueue.storefront is a StoreKit 1 API available from iOS 13,
+        // which matches the plugin's minimum deployment target.
+        if let storefront = SKPaymentQueue.default().storefront {
+            debugLog("getStorefront: \(storefront.countryCode)")
+            call.resolve(["countryCode": storefront.countryCode])
+        } else {
+            debugLog("getStorefront: storefront not available")
+            call.reject("Storefront not available")
+        }
     }
 
     // MARK: - Helpers

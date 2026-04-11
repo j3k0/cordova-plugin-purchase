@@ -39,6 +39,15 @@ export interface PurchasePluginPlugin {
   /** Open billing management UI */
   manageBilling(): Promise<void>;
 
+  /**
+   * Retrieve the user's storefront country code.
+   *
+   * iOS returns an ISO 3166-1 alpha-3 code (e.g., "USA"); Android returns
+   * an alpha-2 code (e.g., "US"). The TypeScript adapter normalizes iOS
+   * responses to alpha-2.
+   */
+  getStorefront(): Promise<{ countryCode: string }>;
+
   // ===== Android-specific =====
 
   /** Consume a purchase (Android) */
