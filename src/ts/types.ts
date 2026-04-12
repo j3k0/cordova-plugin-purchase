@@ -222,6 +222,24 @@ namespace CdvPurchase {
         getStorefront?(): Promise<string | undefined>;
     }
 
+    /**
+     * A storefront country code, scoped to a specific payment platform.
+     *
+     * Returned from {@link Store.getStorefront} and passed to
+     * `when().storefrontUpdated()` listeners.
+     */
+    export interface Storefront {
+        /** The platform this storefront belongs to. */
+        readonly platform: Platform;
+        /**
+         * ISO 3166-1 alpha-2 country code (e.g., "US", "FR").
+         *
+         * Undefined if the value has not been fetched yet, or if the fetch
+         * failed. Never set to a falsy value once populated — a later failed
+         * refresh will preserve the previously-known country code.
+         */
+        readonly countryCode?: string;
+    }
 
     /**
      * Data to attach to a transaction.

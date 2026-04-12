@@ -284,6 +284,10 @@ namespace CdvPurchase {
             async restorePurchases(): Promise<IError | undefined> {
                 return undefined;
             }
+
+            async getStorefront(): Promise<string | undefined> {
+                return 'US';
+            }
         }
 
         function testStoreError(code: ErrorCode, message: string, productId: string | null) {
