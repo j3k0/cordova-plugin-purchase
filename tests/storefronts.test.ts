@@ -228,4 +228,29 @@ describe('Internal.Storefronts', () => {
             });
         });
     });
+
+    describe('listener management', () => {
+        beforeEach(() => { jest.useFakeTimers(); });
+        afterEach(() => { jest.useRealTimers(); });
+
+        test('off(cb) removes a previously registered listener', async () => {
+            const store = new CdvPurchase.Internal.Storefronts(makeLogger());
+            let country = 'US';
+            const adapter = makeAdapter(CdvPurchase.Platform.TEST, async () => country);
+            const events: CdvPurchase.Storefront[] = [];
+            const cb = (s: CdvPurchase.Storefront) => events.push(s);
+
+            store.listen(cb, 'off-test');
+            await store.refreshWith(adapter);
+            jest.runAllTimers();
+            expect(events).toHaveLength(1);
+
+            store.off(cb);
+            country = 'FR';
+            await store.refreshWith(adapter);
+            jest.runAllTimers();
+
+            expect(events).toHaveLength(1); // still just the first event
+        });
+    });
 });

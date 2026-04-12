@@ -76,6 +76,11 @@ namespace CdvPurchase {
                 this.callbacks.push(cb, callbackName);
             }
 
+            /** Remove a previously registered listener. */
+            off(cb: Callback<Storefront>): void {
+                this.callbacks.remove(cb);
+            }
+
             /** Update the cache and notify listeners on change. */
             private setValue(platform: Platform, countryCode: string): void {
                 if (this.values[platform] === countryCode) return;
