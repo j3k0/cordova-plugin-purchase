@@ -372,6 +372,17 @@ namespace CdvPurchase {
          * If no platforms have any receipts (user made no purchase), this will also get called.
          */
         receiptsVerified(cb: Callback<void>, callbackName?: string): When;
+
+        /**
+         * Register a function called when a platform's storefront country code changes.
+         *
+         * Fires when a platform's cached value transitions to a different non-empty
+         * string. Does not fire for no-op refreshes, failed refreshes, or transitions
+         * to undefined (the cache preserves the last-known value).
+         *
+         * @param cb - Callback invoked with the updated {@link Storefront}
+         */
+        storefrontUpdated(cb: Callback<Storefront>, callbackName?: string): When;
     }
 
     /** Whether or not the user intends to let the subscription auto-renew. */

@@ -429,6 +429,8 @@ namespace CdvPurchase {
                 unverified: (cb: Callback<UnverifiedReceipt>, callbackName?: string) => (this.unverifiedCallbacks.push(cb, callbackName), ret),
                 receiptsReady: (cb: Callback<void>, callbackName?: string) => (this.receiptsReadyCallbacks.push(cb, callbackName), ret),
                 receiptsVerified: (cb: Callback<void>, callbackName?: string) => (this.receiptsVerifiedCallbacks.push(cb, callbackName), ret),
+                storefrontUpdated: (cb: Callback<Storefront>, callbackName?: string) =>
+                    (this._storefronts.listen(cb, callbackName), ret),
             };
             return ret;
         }
@@ -448,6 +450,7 @@ namespace CdvPurchase {
             this.receiptsVerifiedCallbacks.remove(callback as any);
             this.errorCallbacks.remove(callback as any);
             this._readyCallbacks.remove(callback as any);
+            this._storefronts.off(callback as any);
         }
 
         /**
