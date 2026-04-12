@@ -46,12 +46,14 @@ namespace CdvPurchase {
 
         refresh(productId?: string, originalTransactionIdentifier?: string,
                 transactionDate?: string, discountId?: string,
-                expirationDateMs?: string, jwsRepresentation?: string) {
+                expirationDateMs?: string, jwsRepresentation?: string,
+                quantity?: number) {
             if (productId) this.products = [{ id: productId, offerId: discountId }];
             if (originalTransactionIdentifier) this.originalTransactionId = originalTransactionIdentifier;
             if (transactionDate) this.purchaseDate = new Date(+transactionDate);
             if (expirationDateMs) this.expirationDate = new Date(+expirationDateMs);
             if (jwsRepresentation) this.jwsRepresentation = jwsRepresentation;
+            if (quantity !== undefined) this.quantity = quantity;
         }
     }
   }
