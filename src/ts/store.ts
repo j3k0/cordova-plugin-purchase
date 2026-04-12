@@ -4,6 +4,7 @@
 /// <reference path="validator/validator.ts" />
 /// <reference path="log.ts" />
 /// <reference path="internal/adapters.ts" />
+/// <reference path="internal/storefronts.ts" />
 /// <reference path="internal/adapter-listener.ts" />
 /// <reference path="internal/callbacks.ts" />
 /// <reference path="internal/ready.ts" />
@@ -194,6 +195,9 @@ namespace CdvPurchase {
         /** Callbacks for errors */
         private errorCallbacks = new Internal.Callbacks<IError>(this.log, 'error()');
 
+        /** Per-platform storefront cache and change notifications. */
+        private _storefronts = new Internal.Storefronts(this.log.child('Storefronts'));
+
         /** Internal implementation of the receipt validation service integration */
         private _validator: Internal.Validator;
 
@@ -320,6 +324,7 @@ namespace CdvPurchase {
                 get listener() { return store.listener; },
                 get log() { return store.log; },
                 get registeredProducts() { return store.registeredProducts; },
+                get storefronts() { return store._storefronts; },
                 apiDecorators: {
                     canPurchase: this.canPurchase.bind(this),
                     owned: this.owned.bind(this),

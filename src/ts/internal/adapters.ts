@@ -68,6 +68,9 @@ namespace CdvPurchase
 
             /** Functions used to decorate the API */
             apiDecorators: ProductDecorator & TransactionDecorator & OfferDecorator & ReceiptDecorator;
+
+            /** Collection of per-platform storefront values. */
+            readonly storefronts: Storefronts;
         }
 
 
@@ -189,25 +192,33 @@ namespace CdvPurchase
                     log.info(`${adapter.name} initialized. ${initResult ? JSON.stringify(initResult) : ''}`);
                     if (initResult?.code) return initResult;
                     log.info(`${adapter.name} products: ${JSON.stringify(platformProducts)}`);
-                    if (platformProducts.length === 0) return;
+
+                    // Storefront refresh runs in parallel with product / receipt loading.
+                    // Failure or timeout is absorbed so it never blocks store readiness.
+                    const storefrontRefresh = context.storefronts.refreshWith(adapter).catch(() => { /* tolerated */ });
+
                     let loadProductsResult: (IError|Product)[] = [];
                     let loadReceiptsResult: Receipt[] = [];
-                    if (adapter.supportsParallelLoading) {
-                        [loadProductsResult, loadReceiptsResult] = await Promise.all([
-                            adapter.loadProducts(platformProducts),
-                            adapter.loadReceipts()
-                        ]);
+                    if (platformProducts.length > 0) {
+                        if (adapter.supportsParallelLoading) {
+                            [loadProductsResult, loadReceiptsResult] = await Promise.all([
+                                adapter.loadProducts(platformProducts),
+                                adapter.loadReceipts()
+                            ]);
+                        }
+                        else {
+                            loadProductsResult = await adapter.loadProducts(platformProducts);
+                            loadReceiptsResult = await adapter.loadReceipts();
+                        }
+                        log.info(`${adapter.name} products loaded: ${JSON.stringify(loadProductsResult)}`);
+                        const loadedProducts = loadProductsResult.filter(p => p instanceof Product) as Product[];
+                        context.listener.productsUpdated(platformToInit.platform, loadedProducts);
+                        log.info(`${adapter.name} receipts loaded: ${JSON.stringify(loadReceiptsResult)}`);
                     }
-                    else {
-                        loadProductsResult = await adapter.loadProducts(platformProducts);
-                        loadReceiptsResult = await adapter.loadReceipts();
-                    }
-                    // const loadProductsResult = await adapter.loadProducts(platformProducts);
-                    log.info(`${adapter.name} products loaded: ${JSON.stringify(loadProductsResult)}`);
-                    const loadedProducts = loadProductsResult.filter(p => p instanceof Product) as Product[];
-                    context.listener.productsUpdated(platformToInit.platform, loadedProducts);
-                    // const loadReceiptsResult = await adapter.loadReceipts();
-                    log.info(`${adapter.name} receipts loaded: ${JSON.stringify(loadReceiptsResult)}`);
+
+                    // Wait for the storefront refresh (or its timeout) before returning.
+                    await storefrontRefresh;
+
                     return loadProductsResult.filter(lr => 'code' in lr && 'message' in lr)[0] as (IError | undefined);
                 }));
                 return result.filter(err => err) as IError[];
