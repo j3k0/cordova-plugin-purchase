@@ -311,5 +311,32 @@ describe('CDVPurchase', () => {
       expect(regularPhase?.recurrenceMode).toBe(CdvPurchase.RecurrenceMode.INFINITE_RECURRING);
       expect(regularPhase?.billingPeriod).toBe('P1M');
     });
+
+        test('should expose a synchronous getStorefront backed by the Test adapter', async () => {
+            CdvPurchase.store.register({
+                id: 'storefront-test-product',
+                type: CdvPurchase.ProductType.CONSUMABLE,
+                platform: CdvPurchase.Platform.TEST,
+            });
+
+            const errors = await CdvPurchase.store.initialize([CdvPurchase.Platform.TEST]);
+            expect(errors.length).toBe(0);
+
+            await new Promise<void>(resolve => {
+                CdvPurchase.store.ready(() => resolve());
+            });
+
+            const storefront = CdvPurchase.store.getStorefront();
+            expect(storefront).toEqual({
+                platform: CdvPurchase.Platform.TEST,
+                countryCode: 'US',
+            });
+
+            const explicit = CdvPurchase.store.getStorefront(CdvPurchase.Platform.TEST);
+            expect(explicit).toEqual({
+                platform: CdvPurchase.Platform.TEST,
+                countryCode: 'US',
+            });
+        });
   });
 });
