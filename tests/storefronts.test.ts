@@ -112,4 +112,57 @@ describe('Internal.Storefronts', () => {
             expect(events).toEqual([{ platform: CdvPurchase.Platform.TEST, countryCode: 'FR' }]);
         });
     });
+
+    describe('failure modes', () => {
+        beforeEach(() => { jest.useFakeTimers(); });
+        afterEach(() => { jest.useRealTimers(); });
+
+        test('does not overwrite cached value when adapter returns undefined', async () => {
+            const store = new CdvPurchase.Internal.Storefronts(makeLogger());
+            let value: string | undefined = 'US';
+            const adapter = makeAdapter(CdvPurchase.Platform.TEST, async () => value);
+            await store.refreshWith(adapter);
+            jest.runAllTimers();
+
+            value = undefined;
+            await store.refreshWith(adapter);
+            jest.runAllTimers();
+
+            expect(store.getValueFor(CdvPurchase.Platform.TEST)).toEqual({
+                platform: CdvPurchase.Platform.TEST,
+                countryCode: 'US',
+            });
+        });
+
+        test('does not overwrite cached value when adapter throws', async () => {
+            const store = new CdvPurchase.Internal.Storefronts(makeLogger());
+            let shouldThrow = false;
+            const adapter = makeAdapter(CdvPurchase.Platform.TEST, async () => {
+                if (shouldThrow) throw new Error('native failure');
+                return 'US';
+            });
+            await store.refreshWith(adapter);
+            jest.runAllTimers();
+
+            shouldThrow = true;
+            await expect(store.refreshWith(adapter)).resolves.toBeUndefined();
+
+            expect(store.getValueFor(CdvPurchase.Platform.TEST)).toEqual({
+                platform: CdvPurchase.Platform.TEST,
+                countryCode: 'US',
+            });
+        });
+
+        test('does nothing when adapter does not implement getStorefront', async () => {
+            const store = new CdvPurchase.Internal.Storefronts(makeLogger());
+            const adapter = makeAdapter(CdvPurchase.Platform.TEST); // no getStorefront
+
+            await expect(store.refreshWith(adapter)).resolves.toBeUndefined();
+
+            expect(store.getValueFor(CdvPurchase.Platform.TEST)).toEqual({
+                platform: CdvPurchase.Platform.TEST,
+                countryCode: undefined,
+            });
+        });
+    });
 });

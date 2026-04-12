@@ -29,8 +29,12 @@ namespace CdvPurchase {
              */
             async refreshWith(adapter: Adapter): Promise<void> {
                 if (!adapter.getStorefront) return;
-                const code = await adapter.getStorefront();
-                if (code) this.setValue(adapter.id, code);
+                try {
+                    const code = await adapter.getStorefront();
+                    if (code) this.setValue(adapter.id, code);
+                } catch {
+                    // Adapter logs its own failures. Preserve the cached value.
+                }
             }
 
             /**
