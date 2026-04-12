@@ -60,6 +60,7 @@ namespace CdvPurchase {
 
             /** Update the cache and notify listeners on change. */
             private setValue(platform: Platform, countryCode: string): void {
+                if (this.values[platform] === countryCode) return;
                 this.values[platform] = countryCode;
                 this.callbacks.trigger({ platform, countryCode }, 'storefront_changed');
             }

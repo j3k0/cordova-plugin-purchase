@@ -80,4 +80,36 @@ describe('Internal.Storefronts', () => {
             });
         });
     });
+
+    describe('change detection', () => {
+        test('does not notify listeners when the refreshed value is the same as cached', async () => {
+            const store = new CdvPurchase.Internal.Storefronts(makeLogger());
+            const adapter = makeAdapter(CdvPurchase.Platform.TEST, async () => 'US');
+            await store.refreshWith(adapter);
+            jest.runAllTimers(); // flush the first event
+            const events: CdvPurchase.Storefront[] = [];
+            store.listen(s => events.push(s), 'test-change');
+
+            await store.refreshWith(adapter); // same value — no event
+            jest.runAllTimers();
+
+            expect(events).toEqual([]);
+        });
+
+        test('notifies listeners when the refreshed value is different', async () => {
+            const store = new CdvPurchase.Internal.Storefronts(makeLogger());
+            let country = 'US';
+            const adapter = makeAdapter(CdvPurchase.Platform.TEST, async () => country);
+            await store.refreshWith(adapter);
+            jest.runAllTimers(); // flush the first event
+            const events: CdvPurchase.Storefront[] = [];
+            store.listen(s => events.push(s), 'test-change');
+
+            country = 'FR';
+            await store.refreshWith(adapter);
+            jest.runAllTimers();
+
+            expect(events).toEqual([{ platform: CdvPurchase.Platform.TEST, countryCode: 'FR' }]);
+        });
+    });
 });
