@@ -113,6 +113,69 @@ describe('Internal.Storefronts', () => {
         });
     });
 
+    describe('timeout', () => {
+        beforeEach(() => { jest.useFakeTimers(); });
+        afterEach(() => { jest.useRealTimers(); });
+
+        test('rejects when adapter does not respond within timeoutMs', async () => {
+            const store = new CdvPurchase.Internal.Storefronts(makeLogger());
+            let resolveAdapter!: (value: string | undefined) => void;
+            const adapter = makeAdapter(CdvPurchase.Platform.TEST,
+                () => new Promise<string | undefined>(r => { resolveAdapter = r; }));
+
+            const refresh = store.refreshWith(adapter, 100);
+            jest.advanceTimersByTime(100);
+
+            await expect(refresh).rejects.toThrow(/timeout/);
+
+            // Cleanup
+            resolveAdapter('US');
+            await Promise.resolve();
+            await Promise.resolve();
+            jest.runAllTimers();
+        });
+
+        test('silently updates cache when adapter resolves after timeout', async () => {
+            const store = new CdvPurchase.Internal.Storefronts(makeLogger());
+            const events: CdvPurchase.Storefront[] = [];
+            store.listen(s => events.push(s), 'timeout-late');
+
+            let resolveAdapter!: (value: string | undefined) => void;
+            const adapter = makeAdapter(CdvPurchase.Platform.TEST,
+                () => new Promise<string | undefined>(r => { resolveAdapter = r; }));
+
+            const refresh = store.refreshWith(adapter, 100).catch(() => { /* expected timeout */ });
+            jest.advanceTimersByTime(100);
+            await refresh;
+
+            // Still nothing cached at this point.
+            expect(store.getValueFor(CdvPurchase.Platform.TEST)?.countryCode).toBeUndefined();
+
+            // Now the underlying fetch finishes. Cache should update silently.
+            resolveAdapter('US');
+            // Flush microtasks so the .then() chain runs
+            await Promise.resolve();
+            await Promise.resolve();
+            // Flush the setTimeout(0) from safeCall
+            jest.runAllTimers();
+
+            expect(store.getValueFor(CdvPurchase.Platform.TEST)).toEqual({
+                platform: CdvPurchase.Platform.TEST,
+                countryCode: 'US',
+            });
+            expect(events).toEqual([{ platform: CdvPurchase.Platform.TEST, countryCode: 'US' }]);
+        });
+
+        test('resolves normally when adapter responds within timeoutMs', async () => {
+            const store = new CdvPurchase.Internal.Storefronts(makeLogger());
+            const adapter = makeAdapter(CdvPurchase.Platform.TEST, async () => 'US');
+
+            await expect(store.refreshWith(adapter, 100)).resolves.toBeUndefined();
+            jest.runAllTimers();
+            expect(store.getValueFor(CdvPurchase.Platform.TEST)?.countryCode).toBe('US');
+        });
+    });
+
     describe('failure modes', () => {
         beforeEach(() => { jest.useFakeTimers(); });
         afterEach(() => { jest.useRealTimers(); });

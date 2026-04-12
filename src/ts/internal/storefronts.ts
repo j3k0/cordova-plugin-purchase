@@ -2,6 +2,9 @@ namespace CdvPurchase {
 
     export namespace Internal {
 
+        /** Default timeout for a storefront refresh call, in milliseconds. */
+        const DEFAULT_STOREFRONT_REFRESH_TIMEOUT_MS = 2000;
+
         /**
          * Collection of per-platform storefront country codes.
          *
@@ -24,17 +27,28 @@ namespace CdvPurchase {
             /**
              * Refresh the cached value for a given adapter.
              *
-             * Resolves after `adapter.getStorefront()` settles. Failure and
-             * timeout handling are added in later tasks.
+             * The returned promise:
+             *   - resolves when the adapter responds within `timeoutMs`
+             *   - rejects with a timeout error otherwise
+             *
+             * Regardless of timeout, if the adapter eventually yields a value,
+             * the cache is silently updated and listeners are notified.
+             * A failed or empty response never overwrites the cache.
              */
-            async refreshWith(adapter: Adapter): Promise<void> {
+            async refreshWith(adapter: Adapter, timeoutMs: number = DEFAULT_STOREFRONT_REFRESH_TIMEOUT_MS): Promise<void> {
                 if (!adapter.getStorefront) return;
-                try {
-                    const code = await adapter.getStorefront();
-                    if (code) this.setValue(adapter.id, code);
-                } catch {
-                    // Adapter logs its own failures. Preserve the cached value.
-                }
+                const platform = adapter.id;
+
+                // Start the fetch; handle result + errors independently of the race.
+                const fetch = adapter.getStorefront()
+                    .then(code => { if (code) this.setValue(platform, code); })
+                    .catch(() => { /* adapter logs; preserve cached value */ });
+
+                await Promise.race([
+                    fetch,
+                    new Promise<void>((_, reject) =>
+                        setTimeout(() => reject(new Error('storefront refresh timeout')), timeoutMs)),
+                ]);
             }
 
             /**
