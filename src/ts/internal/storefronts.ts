@@ -44,11 +44,16 @@ namespace CdvPurchase {
                     .then(code => { if (code) this.setValue(platform, code); })
                     .catch(() => { /* adapter logs; preserve cached value */ });
 
-                await Promise.race([
-                    fetch,
-                    new Promise<void>((_, reject) =>
-                        setTimeout(() => reject(new Error('storefront refresh timeout')), timeoutMs)),
-                ]);
+                let timerId: ReturnType<typeof setTimeout>;
+                const timeout = new Promise<void>((_, reject) => {
+                    timerId = setTimeout(() => reject(new Error('storefront refresh timeout')), timeoutMs);
+                });
+
+                try {
+                    await Promise.race([fetch, timeout]);
+                } finally {
+                    clearTimeout(timerId!);
+                }
             }
 
             /**

@@ -217,6 +217,8 @@ namespace CdvPurchase
                     }
 
                     // Wait for the storefront refresh (or its timeout) before returning.
+                    // This intentionally delays storeReady by up to the timeout duration
+                    // so that store.getStorefront() has a value once the store is ready.
                     await storefrontRefresh;
 
                     return loadProductsResult.filter(lr => 'code' in lr && 'message' in lr)[0] as (IError | undefined);
