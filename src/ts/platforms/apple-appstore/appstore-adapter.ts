@@ -20,13 +20,6 @@ namespace CdvPurchase {
             /** Information about the payment discount */
             discount?: PaymentDiscount;
 
-            /**
-             * Quantity of consumable products to purchase.
-             *
-             * Must be between 1 and 10 (Apple's limit). Defaults to 1.
-             * Only meaningful for consumable products.
-             */
-            quantity?: number;
         }
 
         /**
@@ -633,7 +626,7 @@ namespace CdvPurchase {
                         resolve(result);
                     }
                     this.log.info('order');
-                    const quantity = additionalData?.appStore?.quantity ?? 1;
+                    const quantity = additionalData?.quantity ?? 1;
                     if (quantity < 1 || quantity > 10 || !Number.isInteger(quantity)) {
                         return callResolve(appStoreError(ErrorCode.PURCHASE, 'Invalid quantity: must be an integer between 1 and 10', offer.productId));
                     }
@@ -820,7 +813,7 @@ namespace CdvPurchase {
             checkSupport(functionality: PlatformFunctionality): boolean {
                 if (functionality === 'order') return this._canMakePayments;
                 const supported: PlatformFunctionality[] = [
-                    'order', 'manageBilling', 'manageSubscriptions', 'getStorefront'
+                    'order', 'orderQuantity', 'manageBilling', 'manageSubscriptions', 'getStorefront'
                 ];
                 return supported.indexOf(functionality) >= 0;
             }

@@ -76,8 +76,8 @@ namespace CdvPurchase
          * For non-consumable products and subscriptions, this value is always 1.
          *
          * Supported on Android (Google Play) and iOS (Apple AppStore).
-         * On iOS, use `additionalData.appStore.quantity` when placing an order
-         * to purchase multiple units (1-10) in a single transaction.
+         * Use `additionalData.quantity` when placing an order
+         * to purchase multiple units in a single transaction.
          */
         quantity?: number;
 
