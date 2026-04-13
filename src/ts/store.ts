@@ -4,6 +4,7 @@
 /// <reference path="validator/validator.ts" />
 /// <reference path="log.ts" />
 /// <reference path="internal/adapters.ts" />
+/// <reference path="internal/storefronts.ts" />
 /// <reference path="internal/adapter-listener.ts" />
 /// <reference path="internal/callbacks.ts" />
 /// <reference path="internal/ready.ts" />
@@ -194,6 +195,9 @@ namespace CdvPurchase {
         /** Callbacks for errors */
         private errorCallbacks = new Internal.Callbacks<IError>(this.log, 'error()');
 
+        /** Per-platform storefront cache and change notifications. */
+        private _storefronts = new Internal.Storefronts(this.log.child('Storefronts'));
+
         /** Internal implementation of the receipt validation service integration */
         private _validator: Internal.Validator;
 
@@ -320,6 +324,7 @@ namespace CdvPurchase {
                 get listener() { return store.listener; },
                 get log() { return store.log; },
                 get registeredProducts() { return store.registeredProducts; },
+                get storefronts() { return store._storefronts; },
                 apiDecorators: {
                     canPurchase: this.canPurchase.bind(this),
                     owned: this.owned.bind(this),
@@ -367,10 +372,14 @@ namespace CdvPurchase {
             this.lastUpdate = now;
             // Load products metadata
             for (const registration of this.registeredProducts.byPlatform()) {
-                const products = await this.adapters.findReady(registration.platform)?.loadProducts(registration.products);
+                const adapter = this.adapters.findReady(registration.platform);
+                const products = await adapter?.loadProducts(registration.products);
                 products?.forEach(p => {
                     if (p instanceof Product) this.updatedCallbacks.trigger(p, 'update_has_loaded_products');
                 });
+                if (adapter) {
+                    this._storefronts.refreshWith(adapter).catch(() => { /* tolerated */ });
+                }
             }
         }
 
@@ -424,6 +433,8 @@ namespace CdvPurchase {
                 unverified: (cb: Callback<UnverifiedReceipt>, callbackName?: string) => (this.unverifiedCallbacks.push(cb, callbackName), ret),
                 receiptsReady: (cb: Callback<void>, callbackName?: string) => (this.receiptsReadyCallbacks.push(cb, callbackName), ret),
                 receiptsVerified: (cb: Callback<void>, callbackName?: string) => (this.receiptsVerifiedCallbacks.push(cb, callbackName), ret),
+                storefrontUpdated: (cb: Callback<Storefront>, callbackName?: string) =>
+                    (this._storefronts.listen(cb, callbackName), ret),
             };
             return ret;
         }
@@ -443,6 +454,7 @@ namespace CdvPurchase {
             this.receiptsVerifiedCallbacks.remove(callback as any);
             this.errorCallbacks.remove(callback as any);
             this._readyCallbacks.remove(callback as any);
+            this._storefronts.off(callback as any);
         }
 
         /**
@@ -567,6 +579,8 @@ namespace CdvPurchase {
             if (!adapter) return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + offer.platform + ')', offer.platform, null);
             const ret = await adapter.order(offer, additionalData || {});
             if (ret && 'isError' in ret) store.triggerError(ret);
+            // Account may have switched during checkout — refresh storefront in the background.
+            this._storefronts.refreshWith(adapter).catch(() => { /* tolerated */ });
             return ret;
         }
 
@@ -626,6 +640,7 @@ namespace CdvPurchase {
 
             const promise = new PaymentRequestPromise();
             adapter.requestPayment(paymentRequest, additionalData).then(result => {
+                this._storefronts.refreshWith(adapter).catch(() => { /* tolerated */ });
                 promise.trigger(result);
                 if (result instanceof Transaction) {
                     const onStateChange = (state: TransactionState) => {
@@ -731,6 +746,8 @@ namespace CdvPurchase {
             for (const adapter of this.adapters.list) {
                 if (adapter.ready) {
                     error = error ?? await adapter.restorePurchases();
+                    // Restore often implies a login or account switch — refresh storefront.
+                    this._storefronts.refreshWith(adapter).catch(() => { /* tolerated */ });
                 }
             }
             return error;
@@ -773,27 +790,36 @@ namespace CdvPurchase {
         /**
          * Retrieve the billing country code from the platform's storefront.
          *
-         * Returns an ISO 3166-1 alpha-2 country code (e.g., "US", "FR"),
-         * or undefined if the storefront information is not available.
+         * Returns a `Storefront` object with the platform and its ISO 3166-1
+         * alpha-2 country code (e.g., "US", "FR"). The country code may be
+         * undefined if the underlying fetch has not yet completed or failed —
+         * the platform is still reported. Returns `undefined` only when no
+         * matching adapter is ready.
          *
-         * Returns `undefined` if called before `store.initialize()` completes,
-         * or if the platform does not support storefront queries.
+         * The cache is populated before the `storeReady` event fires (with a
+         * best-effort timeout), and refreshed after orders and `restorePurchases()`.
          *
-         * On iOS, requires iOS 13 or later.
-         *
-         * Note: may return a non-standard code for regions not covered by ISO 3166-1
-         * (the raw platform code is returned as fallback).
-         *
-         * @param platform - The platform to get the storefront from. If not specified, uses the first ready adapter.
+         * @param platform - Optional platform. If omitted, returns the first
+         *                   cached non-empty storefront, or a `{ platform, countryCode: undefined }`
+         *                   object for the first ready adapter.
          *
          * @example
-         * const country = await store.getStorefront();
-         * console.log('Billing country: ' + country); // e.g., "US"
+         * const storefront = store.getStorefront();
+         * if (storefront?.countryCode) {
+         *     console.log(`Billing country: ${storefront.countryCode}`);
+         * }
          */
-        async getStorefront(platform?: Platform): Promise<string | undefined> {
-            const adapter = this.adapters.findReady(platform);
-            if (!adapter?.getStorefront) return undefined;
-            return adapter.getStorefront();
+        getStorefront(platform?: Platform): Storefront | undefined {
+            if (platform) {
+                const adapter = this.adapters.findReady(platform);
+                if (!adapter) return undefined;
+                return this._storefronts.getValueFor(platform);
+            }
+            const cached = this._storefronts.getValueFor();
+            if (cached) return cached;
+            const firstReady = this.adapters.findReady();
+            if (!firstReady) return undefined;
+            return { platform: firstReady.id, countryCode: undefined };
         }
 
         /**

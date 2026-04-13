@@ -100,6 +100,7 @@ describe('CDVPurchase', () => {
         }),
         error: (error: CdvPurchase.IError) => {},
         registeredProducts: new CdvPurchase.Internal.RegisteredProducts(),
+        storefronts: new CdvPurchase.Internal.Storefronts(new CdvPurchase.Logger({ verbosity: CdvPurchase.LogLevel.WARNING })),
       }, {
         discountEligibilityDeterminer: Object.assign((applicationReceipt: CdvPurchase.AppleAppStore.ApplicationReceipt, requests: CdvPurchase.AppleAppStore.DiscountEligibilityRequest[], callback: (response: boolean[]) => void): void => {
           // console.log('Calling the determiner: ' + JSON.stringify(requests));
