@@ -372,10 +372,14 @@ namespace CdvPurchase {
             this.lastUpdate = now;
             // Load products metadata
             for (const registration of this.registeredProducts.byPlatform()) {
-                const products = await this.adapters.findReady(registration.platform)?.loadProducts(registration.products);
+                const adapter = this.adapters.findReady(registration.platform);
+                const products = await adapter?.loadProducts(registration.products);
                 products?.forEach(p => {
                     if (p instanceof Product) this.updatedCallbacks.trigger(p, 'update_has_loaded_products');
                 });
+                if (adapter) {
+                    this._storefronts.refreshWith(adapter).catch(() => { /* tolerated */ });
+                }
             }
         }
 
@@ -575,6 +579,8 @@ namespace CdvPurchase {
             if (!adapter) return storeError(ErrorCode.PAYMENT_NOT_ALLOWED, 'Adapter not found or not ready (' + offer.platform + ')', offer.platform, null);
             const ret = await adapter.order(offer, additionalData || {});
             if (ret && 'isError' in ret) store.triggerError(ret);
+            // Account may have switched during checkout — refresh storefront in the background.
+            this._storefronts.refreshWith(adapter).catch(() => { /* tolerated */ });
             return ret;
         }
 
@@ -634,6 +640,7 @@ namespace CdvPurchase {
 
             const promise = new PaymentRequestPromise();
             adapter.requestPayment(paymentRequest, additionalData).then(result => {
+                this._storefronts.refreshWith(adapter).catch(() => { /* tolerated */ });
                 promise.trigger(result);
                 if (result instanceof Transaction) {
                     const onStateChange = (state: TransactionState) => {
@@ -739,6 +746,8 @@ namespace CdvPurchase {
             for (const adapter of this.adapters.list) {
                 if (adapter.ready) {
                     error = error ?? await adapter.restorePurchases();
+                    // Restore often implies a login or account switch — refresh storefront.
+                    this._storefronts.refreshWith(adapter).catch(() => { /* tolerated */ });
                 }
             }
             return error;
