@@ -1578,7 +1578,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.14.0';
+    CdvPurchase.PLUGIN_VERSION = '13.15.0';
     /**
      * Entry class of the plugin.
      */

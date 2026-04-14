@@ -4,6 +4,60 @@
 
 - **(fix)** Load `Transaction.currentEntitlements` at startup so existing subscriptions are visible immediately — previously required a manual restore or a renewal event
 
+## 13.15
+
+### 13.15.0
+
+#### Native Capacitor plugin
+
+The plugin now ships a native Capacitor adapter alongside the Cordova one. Capacitor apps can install `capacitor-plugin-cdv-purchase` directly instead of going through the Cordova compatibility layer. Full native bridges are provided for iOS (StoreKit 1 + StoreKit 2) and Android (Google Play Billing).
+
+**Installation (Capacitor):**
+
+```sh
+npm install capacitor-plugin-cdv-purchase
+npx cap sync
+```
+
+See [capacitor/README.md](./capacitor/README.md) for setup and usage.
+
+CI matrix now covers Capacitor 6, 7, and 8 for iOS, plus Capacitor for Android.
+
+#### (ios) Multi-quantity consumable purchases
+
+Multi-quantity purchases are now supported on iOS in addition to Android. Pass a `quantity` value (1–10, Apple's limit) when calling `store.order()`:
+
+```javascript
+const error = await store.order(offer, { quantity: 3 });
+```
+
+The field lives at the top level of `AdditionalData`, and platforms advertise support via a new `orderQuantity` capability:
+
+```javascript
+if (store.checkSupport(CdvPurchase.Platform.APPLE_APPSTORE, 'orderQuantity')) {
+  // show the quantity picker
+}
+```
+
+See [doc/multi-quantity-purchases.md](./doc/multi-quantity-purchases.md) for details, including the client-side extraction pattern from `VerifiedPurchase` (which gained an optional `quantity` field too).
+
+#### Storefront / country code API
+
+A new `store.getStorefront()` (synchronous accessor) returns the user's billing country — useful for pricing, regional product filtering, or legal prompts. A `storefrontUpdated` event fires when the value changes (cached, fires only on actual change). Values refresh automatically after order, restore, and update flows.
+
+```javascript
+const storefront = store.getStorefront();
+// { countryCode: 'US' }
+
+store.when().storefrontUpdated(s => { /* ... */ });
+```
+
+Supported platforms advertise it via the new `getStorefront` capability. Available on the Apple AppStore adapter (SK1 + SK2), Google Play, and through the native Capacitor plugin.
+
+#### (googleplay) Fix price macros returning zeros for multi-offer in-app products
+
+When a one-time product had multiple offers (v12.0 format), price and currency macros returned zeros because the wrong offer was picked for macro resolution. Now the first available offer with pricing data is used.
+
 ## 13.14
 
 ### 13.14.0

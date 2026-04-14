@@ -85,17 +85,7 @@ capacitor-publish: capacitor-package
 	cd capacitor && npm publish
 
 check-versions:
-	@ROOT_VERSION=$$(node -p "require('./package.json').version"); \
-	CAP_VERSION=$$(node -p "require('./capacitor/package.json').version"); \
-	XML_VERSION=$$(grep '^\s*version=' plugin.xml | head -1 | sed 's/.*version="\([^"]*\)".*/\1/'); \
-	echo "Root package.json: $$ROOT_VERSION"; \
-	echo "Capacitor package.json: $$CAP_VERSION"; \
-	echo "plugin.xml: $$XML_VERSION"; \
-	if [ "$$ROOT_VERSION" != "$$CAP_VERSION" ] || [ "$$ROOT_VERSION" != "$$XML_VERSION" ]; then \
-		echo "ERROR: Version mismatch!"; \
-		exit 1; \
-	fi; \
-	echo "All versions match: $$ROOT_VERSION"
+	@./versions
 
 clean:
 	@find . -name '*~' -exec rm '{}' ';'
