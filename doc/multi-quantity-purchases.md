@@ -88,3 +88,30 @@ function addItemsToUserInventory(productId, quantity) {
 If you're using a receipt validation service (such as [iaptic](https://www.iaptic.com)), make sure it properly handles the `quantity` field when validating receipts. The service should interpret the quantity value and apply the appropriate business logic when crediting the user's account.
 
 Call `transaction.verify()` and only credit the user when the transaction has been verified.
+
+### Extracting Quantity After Verification
+
+`VerifiedPurchase` exposes an optional `quantity` field that validators can populate. Not all validators report it today, so the safest pattern is to read it from the validator first and fall back to the native transaction:
+
+```javascript
+store.when()
+  .verified(receipt => {
+    function findQuantity(purchase) {
+      // The validator returned the quantity — prefer that.
+      if (purchase.quantity) return purchase.quantity;
+      if (!purchase.transactionId) return 1;
+      // Otherwise, use the quantity reported by the native SDK.
+      const t = receipt.sourceReceipt.transactions.find(t => t.transactionId === purchase.transactionId);
+      return t?.quantity || 1;
+    }
+
+    for (const purchase of receipt.collection) {
+      if (!ENV.consumableIds.includes(purchase.id)) continue;
+      const quantity = findQuantity(purchase);
+      creditUserAccount(purchase.id, quantity);
+    }
+    receipt.finish();
+  });
+```
+
+In production, the recommended flow is to have your backend receive a webhook from the validation service (iaptic, or your own) containing the verified quantity — the client-side fallback above is useful for demos or as an additional layer alongside server-side validation.
