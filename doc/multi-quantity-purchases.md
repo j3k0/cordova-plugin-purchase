@@ -13,7 +13,7 @@ For example, a user might want to purchase 5 coins at once, instead of making 5 
 The two platforms work differently:
 
 - **Android (Google Play)**: The user sets the quantity in the Google Play purchase dialog. The developer has no control over quantity at order time — it is always set by the user.
-- **iOS (App Store)**: The developer sets the quantity via `additionalData.appStore.quantity` when calling `store.order()`. The value must be an integer between 1 and 10 (Apple's limit).
+- **iOS (App Store)**: The developer sets the quantity via `additionalData.quantity` when calling `store.order()`. The value must be an integer between 1 and 10 (Apple's limit). Check `store.checkSupport(platform, 'orderQuantity')` to know if the platform supports this.
 
 ## Usage
 
@@ -33,12 +33,12 @@ store.when()
 
 ### Ordering with Quantity on iOS
 
-Pass `additionalData.appStore.quantity` when calling `store.order()`:
+Pass `additionalData.quantity` when calling `store.order()`:
 
 ```javascript
 // Purchase 3 units in a single transaction (iOS only)
 const error = await store.order(offer, {
-  appStore: { quantity: 3 }
+  quantity: 3
 });
 if (error) {
   console.error('Purchase failed:', error);
