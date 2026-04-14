@@ -442,6 +442,8 @@ declare namespace CdvPurchase {
             getApplicationUsername: () => string | undefined;
             /** Functions used to decorate the API */
             apiDecorators: ProductDecorator & TransactionDecorator & OfferDecorator & ReceiptDecorator;
+            /** Collection of per-platform storefront values. */
+            readonly storefronts: Storefronts;
         }
         /**
          * The list of active platform adapters
@@ -504,6 +506,51 @@ declare namespace CdvPurchase {
              * on the only active adapter or on the one selected by the user, if it's ready.
              */
             findReady(platform?: Platform): Adapter | undefined;
+        }
+    }
+}
+declare namespace CdvPurchase {
+    namespace Internal {
+        /**
+         * Collection of per-platform storefront country codes.
+         *
+         * Maintains the cached value for each platform that exposes one and
+         * notifies listeners when a value changes. Adapter-agnostic — callers
+         * are responsible for validating that a platform has a ready adapter.
+         */
+        class Storefronts {
+            /** Cached country code per platform. */
+            private values;
+            /** Registered change listeners. */
+            private callbacks;
+            constructor(logger: Logger);
+            /**
+             * Refresh the cached value for a given adapter.
+             *
+             * The returned promise:
+             *   - resolves when the adapter responds within `timeoutMs`
+             *   - rejects with a timeout error otherwise
+             *
+             * Regardless of timeout, if the adapter eventually yields a value,
+             * the cache is silently updated and listeners are notified.
+             * A failed or empty response never overwrites the cache.
+             */
+            refreshWith(adapter: Adapter, timeoutMs?: number): Promise<void>;
+            /**
+             * Retrieve a storefront value.
+             *
+             * - With a platform: always returns `{ platform, countryCode }`,
+             *   where `countryCode` may be undefined if nothing is cached.
+             * - Without a platform: returns the first cached non-empty
+             *   storefront, or `undefined` if nothing is cached.
+             */
+            getValueFor(platform?: Platform): Storefront | undefined;
+            /** Register a change listener. */
+            listen(cb: Callback<Storefront>, callbackName?: string): void;
+            /** Remove a previously registered listener. */
+            off(cb: Callback<Storefront>): void;
+            /** Update the cache and notify listeners on change. */
+            private setValue;
         }
     }
 }
@@ -935,6 +982,8 @@ declare namespace CdvPurchase {
         private receiptsVerifiedCallbacks;
         /** Callbacks for errors */
         private errorCallbacks;
+        /** Per-platform storefront cache and change notifications. */
+        private _storefronts;
         /** Internal implementation of the receipt validation service integration */
         private _validator;
         /** Monitor state changes for transactions */
@@ -1171,24 +1220,26 @@ declare namespace CdvPurchase {
         /**
          * Retrieve the billing country code from the platform's storefront.
          *
-         * Returns an ISO 3166-1 alpha-2 country code (e.g., "US", "FR"),
-         * or undefined if the storefront information is not available.
+         * Returns a `Storefront` object with the platform and its ISO 3166-1
+         * alpha-2 country code (e.g., "US", "FR"). The country code may be
+         * undefined if the underlying fetch has not yet completed or failed —
+         * the platform is still reported. Returns `undefined` only when no
+         * matching adapter is ready.
          *
-         * Returns `undefined` if called before `store.initialize()` completes,
-         * or if the platform does not support storefront queries.
+         * The cache is populated before the `storeReady` event fires (with a
+         * best-effort timeout), and refreshed after orders and `restorePurchases()`.
          *
-         * On iOS, requires iOS 13 or later.
-         *
-         * Note: may return a non-standard code for regions not covered by ISO 3166-1
-         * (the raw platform code is returned as fallback).
-         *
-         * @param platform - The platform to get the storefront from. If not specified, uses the first ready adapter.
+         * @param platform - Optional platform. If omitted, returns the first
+         *                   cached non-empty storefront, or a `{ platform, countryCode: undefined }`
+         *                   object for the first ready adapter.
          *
          * @example
-         * const country = await store.getStorefront();
-         * console.log('Billing country: ' + country); // e.g., "US"
+         * const storefront = store.getStorefront();
+         * if (storefront?.countryCode) {
+         *     console.log(`Billing country: ${storefront.countryCode}`);
+         * }
          */
-        getStorefront(platform?: Platform): Promise<string | undefined>;
+        getStorefront(platform?: Platform): Storefront | undefined;
         /**
          * The default payment platform to use depending on the OS.
          *
@@ -1415,6 +1466,24 @@ declare namespace CdvPurchase {
         getStorefront?(): Promise<string | undefined>;
     }
     /**
+     * A storefront country code, scoped to a specific payment platform.
+     *
+     * Returned from {@link Store.getStorefront} and passed to
+     * `when().storefrontUpdated()` listeners.
+     */
+    interface Storefront {
+        /** The platform this storefront belongs to. */
+        readonly platform: Platform;
+        /**
+         * ISO 3166-1 alpha-2 country code (e.g., "US", "FR").
+         *
+         * Undefined if the value has not been fetched yet, or if the fetch
+         * failed. Never set to a falsy value once populated — a later failed
+         * refresh will preserve the previously-known country code.
+         */
+        readonly countryCode?: string;
+    }
+    /**
      * Data to attach to a transaction.
      *
      * @see {@link Offer.order}
@@ -1423,6 +1492,15 @@ declare namespace CdvPurchase {
     interface AdditionalData {
         /** The application's user identifier, will be obfuscated with md5 to fill `accountId` if necessary */
         applicationUsername?: string;
+        /**
+         * Quantity of items to purchase.
+         *
+         * Only supported on platforms that report the `'orderQuantity'` capability.
+         * Platforms without support will ignore this field.
+         *
+         * @see {@link Store.checkSupport}
+         */
+        quantity?: number;
         /** GooglePlay specific additional data */
         googlePlay?: GooglePlay.AdditionalData;
         /** Braintree specific additional data */
@@ -1452,7 +1530,7 @@ declare namespace CdvPurchase {
      *
      * @see {@link Store.checkSupport}
      */
-    type PlatformFunctionality = 'requestPayment' | 'order' | 'manageSubscriptions' | 'manageBilling' | 'getStorefront';
+    type PlatformFunctionality = 'requestPayment' | 'order' | 'orderQuantity' | 'manageSubscriptions' | 'manageBilling' | 'getStorefront';
     /**
      * Possible states of a transaction.
      *
@@ -1510,6 +1588,16 @@ declare namespace CdvPurchase {
          * If no platforms have any receipts (user made no purchase), this will also get called.
          */
         receiptsVerified(cb: Callback<void>, callbackName?: string): When;
+        /**
+         * Register a function called when a platform's storefront country code changes.
+         *
+         * Fires when a platform's cached value transitions to a different non-empty
+         * string. Does not fire for no-op refreshes, failed refreshes, or transitions
+         * to undefined (the cache preserves the last-known value).
+         *
+         * @param cb - Callback invoked with the updated {@link Storefront}
+         */
+        storefrontUpdated(cb: Callback<Storefront>, callbackName?: string): When;
     }
     /** Whether or not the user intends to let the subscription auto-renew. */
     enum RenewalIntent {
@@ -1862,8 +1950,9 @@ declare namespace CdvPurchase {
          * For consumable products, this value represents the number of items purchased.
          * For non-consumable products and subscriptions, this value is always 1.
          *
-         * This is only supported on Android (Google Play) platform when using the multi-quantity purchase feature.
-         * On other platforms, the quantity is always 1.
+         * Supported on Android (Google Play) and iOS (Apple AppStore).
+         * Use `additionalData.quantity` when placing an order
+         * to purchase multiple units in a single transaction.
          */
         quantity?: number;
         /** Purchased products */
@@ -2665,8 +2754,8 @@ declare namespace CdvPurchase {
         namespace CapacitorBridge {
             /** Extended callbacks with SK2 fields (same as SK2BridgeCallbacks) */
             interface CapacitorBridgeCallbacks extends Bridge.BridgeCallbacks {
-                purchased: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string) => void;
-                restored: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string) => void;
+                purchased: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string, quantity?: number) => void;
+                restored: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string, quantity?: number) => void;
             }
             class CapacitorNativeBridge implements Bridge.BridgeInterface {
                 appStoreReceipt: ApplicationReceipt | null;
@@ -2745,8 +2834,8 @@ declare namespace CdvPurchase {
         namespace SK2Bridge {
             /** Extended callbacks with SK2 fields */
             interface SK2BridgeCallbacks extends Bridge.BridgeCallbacks {
-                purchased: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string) => void;
-                restored: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string) => void;
+                purchased: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string, quantity?: number) => void;
+                restored: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string, quantity?: number) => void;
             }
             class SK2NativeBridge implements Bridge.BridgeInterface {
                 options: SK2BridgeCallbacks;
@@ -2776,7 +2865,7 @@ declare namespace CdvPurchase {
                 finalizeTransactionUpdates(): void;
                 lastTransactionUpdated(): void;
                 /** Called from native. Same as SK1 but with extra SK2 fields. */
-                transactionUpdated(state: Bridge.TransactionState, errorCode: ErrorCode | undefined, errorText: string | undefined, transactionIdentifier: string, productId: string, transactionReceipt: never, originalTransactionIdentifier: string | undefined, transactionDate: string | undefined, discountId: string | undefined, expirationDate?: string | undefined, jwsRepresentation?: string | undefined): void;
+                transactionUpdated(state: Bridge.TransactionState, errorCode: ErrorCode | undefined, errorText: string | undefined, transactionIdentifier: string, productId: string, transactionReceipt: never, originalTransactionIdentifier: string | undefined, transactionDate: string | undefined, discountId: string | undefined, expirationDate?: string | undefined, jwsRepresentation?: string | undefined, quantity?: number | undefined): void;
                 restoreCompletedTransactionsFinished(): void;
                 restoreCompletedTransactionsFailed(errorCode: ErrorCode): void;
                 parseReceiptArgs(args: [string, string, string, number, string]): ApplicationReceipt;
@@ -2900,7 +2989,7 @@ declare namespace CdvPurchase {
                 /** Called when the bridge is ready (after setup) */
                 ready: () => void;
                 /** Called when a transaction is in "Purchased" state */
-                purchased: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string) => void;
+                purchased: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string, quantity?: number) => void;
                 /** Called when a transaction has been enqueued */
                 purchaseEnqueued: (productId: string, quantity: number) => void;
                 /**
@@ -2918,7 +3007,7 @@ declare namespace CdvPurchase {
                 /** Called when a transaction is in "finished" state */
                 finished: (transactionIdentifier: string, productId: string) => void;
                 /** Called when a transaction is in "restored" state */
-                restored: (transactionIdentifier: string, productId: string) => void;
+                restored: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string, quantity?: number) => void;
                 /** Called when the application receipt is refreshed */
                 receiptsRefreshed: (receipt: ApplicationReceipt) => void;
                 /** Called when a call to "restore" failed */
@@ -3011,7 +3100,7 @@ declare namespace CdvPurchase {
                 finish(transactionId: string, success: () => void, error: (msg: string) => void): void;
                 finalizeTransactionUpdates(): void;
                 lastTransactionUpdated(): void;
-                transactionUpdated(state: TransactionState, errorCode: ErrorCode | undefined, errorText: string | undefined, transactionIdentifier: string, productId: string, transactionReceipt: never, originalTransactionIdentifier: string | undefined, transactionDate: string | undefined, discountId: string | undefined): void;
+                transactionUpdated(state: TransactionState, errorCode: ErrorCode | undefined, errorText: string | undefined, transactionIdentifier: string, productId: string, transactionReceipt: never, originalTransactionIdentifier: string | undefined, transactionDate: string | undefined, discountId: string | undefined, quantity: number | undefined): void;
                 restoreCompletedTransactionsFinished(): void;
                 restoreCompletedTransactionsFailed(errorCode: ErrorCode): void;
                 parseReceiptArgs(args: RawReceiptArgs): ApplicationReceipt;
@@ -3101,7 +3190,7 @@ declare namespace CdvPurchase {
             originalTransactionId?: string;
             /** JWS representation of the transaction (StoreKit 2 only) */
             jwsRepresentation?: string;
-            refresh(productId?: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDateMs?: string, jwsRepresentation?: string): void;
+            refresh(productId?: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDateMs?: string, jwsRepresentation?: string, quantity?: number): void;
         }
     }
 }
@@ -5534,6 +5623,7 @@ declare namespace CdvPurchase {
             static verify(receipt: Receipt, callback: Callback<Internal.ReceiptResponse>): void;
             checkSupport(functionality: PlatformFunctionality): boolean;
             restorePurchases(): Promise<IError | undefined>;
+            getStorefront(): Promise<string | undefined>;
         }
     }
 }
@@ -6407,5 +6497,12 @@ declare namespace CdvPurchase {
         priceConsentStatus?: PriceConsentStatus;
         /** Last time a subscription was renewed. */
         lastRenewalDate?: number;
+        /**
+         * Quantity of items purchased in a single transaction.
+         *
+         * For consumable products, this value represents the number of items purchased.
+         * For non-consumable products and subscriptions, this value is always 1.
+         */
+        quantity?: number;
     }
 }

@@ -414,36 +414,36 @@ ___
 
 ### getStorefront
 
-▸ **getStorefront**(`platform?`): `Promise`\<`undefined` \| `string`\>
+▸ **getStorefront**(`platform?`): `undefined` \| [`Storefront`](../interfaces/CdvPurchase.Storefront.md)
 
 Retrieve the billing country code from the platform's storefront.
 
-Returns an ISO 3166-1 alpha-2 country code (e.g., "US", "FR"),
-or undefined if the storefront information is not available.
+Returns a `Storefront` object with the platform and its ISO 3166-1
+alpha-2 country code (e.g., "US", "FR"). The country code may be
+undefined if the underlying fetch has not yet completed or failed —
+the platform is still reported. Returns `undefined` only when no
+matching adapter is ready.
 
-Returns `undefined` if called before `store.initialize()` completes,
-or if the platform does not support storefront queries.
-
-On iOS, requires iOS 13 or later.
-
-Note: may return a non-standard code for regions not covered by ISO 3166-1
-(the raw platform code is returned as fallback).
+The cache is populated before the `storeReady` event fires (with a
+best-effort timeout), and refreshed after orders and `restorePurchases()`.
 
 #### Parameters
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `platform?` | [`Platform`](../enums/CdvPurchase.Platform.md) | The platform to get the storefront from. If not specified, uses the first ready adapter. |
+| `platform?` | [`Platform`](../enums/CdvPurchase.Platform.md) | Optional platform. If omitted, returns the first cached non-empty storefront, or a `{ platform, countryCode: undefined }` object for the first ready adapter. |
 
 #### Returns
 
-`Promise`\<`undefined` \| `string`\>
+`undefined` \| [`Storefront`](../interfaces/CdvPurchase.Storefront.md)
 
 **`Example`**
 
 ```ts
-const country = await store.getStorefront();
-console.log('Billing country: ' + country); // e.g., "US"
+const storefront = store.getStorefront();
+if (storefront?.countryCode) {
+    console.log(`Billing country: ${storefront.countryCode}`);
+}
 ```
 
 ___

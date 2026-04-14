@@ -39,6 +39,7 @@ Test.TEST_PRODUCTS
 
 - [checkSupport](CdvPurchase.Test.Adapter.md#checksupport)
 - [finish](CdvPurchase.Test.Adapter.md#finish)
+- [getStorefront](CdvPurchase.Test.Adapter.md#getstorefront)
 - [handleReceiptValidationResponse](CdvPurchase.Test.Adapter.md#handlereceiptvalidationresponse)
 - [initialize](CdvPurchase.Test.Adapter.md#initialize)
 - [loadProducts](CdvPurchase.Test.Adapter.md#loadproducts)
@@ -203,6 +204,25 @@ For consumable, this will acknowledge and consume the purchase.
 #### Implementation of
 
 [Adapter](../interfaces/CdvPurchase.Adapter.md).[finish](../interfaces/CdvPurchase.Adapter.md#finish)
+
+___
+
+### getStorefront
+
+▸ **getStorefront**(): `Promise`\<`undefined` \| `string`\>
+
+Retrieve the billing country code from the platform's storefront.
+
+Returns an ISO 3166-1 alpha-2 country code (e.g., "US", "FR"),
+or undefined if the storefront information is not available.
+
+#### Returns
+
+`Promise`\<`undefined` \| `string`\>
+
+#### Implementation of
+
+[Adapter](../interfaces/CdvPurchase.Adapter.md).[getStorefront](../interfaces/CdvPurchase.Adapter.md#getstorefront)
 
 ___
 

@@ -23,6 +23,7 @@ A purchase object returned by the receipt validator
 - [priceConsentStatus](CdvPurchase.VerifiedPurchase.md#priceconsentstatus)
 - [purchaseDate](CdvPurchase.VerifiedPurchase.md#purchasedate)
 - [purchaseId](CdvPurchase.VerifiedPurchase.md#purchaseid)
+- [quantity](CdvPurchase.VerifiedPurchase.md#quantity)
 - [renewalIntent](CdvPurchase.VerifiedPurchase.md#renewalintent)
 - [renewalIntentChangeDate](CdvPurchase.VerifiedPurchase.md#renewalintentchangedate)
 - [transactionId](CdvPurchase.VerifiedPurchase.md#transactionid)
@@ -148,6 +149,17 @@ ___
 • `Optional` **purchaseId**: `string`
 
 Purchase identifier (optional)
+
+___
+
+### quantity
+
+• `Optional` **quantity**: `number`
+
+Quantity of items purchased in a single transaction.
+
+For consumable products, this value represents the number of items purchased.
+For non-consumable products and subscriptions, this value is always 1.
 
 ___
 

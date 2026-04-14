@@ -884,26 +884,31 @@ var CdvPurchase;
                         if (initResult === null || initResult === void 0 ? void 0 : initResult.code)
                             return initResult;
                         log.info(`${adapter.name} products: ${JSON.stringify(platformProducts)}`);
-                        if (platformProducts.length === 0)
-                            return;
+                        // Storefront refresh runs in parallel with product / receipt loading.
+                        // Failure or timeout is absorbed so it never blocks store readiness.
+                        const storefrontRefresh = context.storefronts.refreshWith(adapter).catch(() => { });
                         let loadProductsResult = [];
                         let loadReceiptsResult = [];
-                        if (adapter.supportsParallelLoading) {
-                            [loadProductsResult, loadReceiptsResult] = yield Promise.all([
-                                adapter.loadProducts(platformProducts),
-                                adapter.loadReceipts()
-                            ]);
+                        if (platformProducts.length > 0) {
+                            if (adapter.supportsParallelLoading) {
+                                [loadProductsResult, loadReceiptsResult] = yield Promise.all([
+                                    adapter.loadProducts(platformProducts),
+                                    adapter.loadReceipts()
+                                ]);
+                            }
+                            else {
+                                loadProductsResult = yield adapter.loadProducts(platformProducts);
+                                loadReceiptsResult = yield adapter.loadReceipts();
+                            }
+                            log.info(`${adapter.name} products loaded: ${JSON.stringify(loadProductsResult)}`);
+                            const loadedProducts = loadProductsResult.filter(p => p instanceof CdvPurchase.Product);
+                            context.listener.productsUpdated(platformToInit.platform, loadedProducts);
+                            log.info(`${adapter.name} receipts loaded: ${JSON.stringify(loadReceiptsResult)}`);
                         }
-                        else {
-                            loadProductsResult = yield adapter.loadProducts(platformProducts);
-                            loadReceiptsResult = yield adapter.loadReceipts();
-                        }
-                        // const loadProductsResult = await adapter.loadProducts(platformProducts);
-                        log.info(`${adapter.name} products loaded: ${JSON.stringify(loadProductsResult)}`);
-                        const loadedProducts = loadProductsResult.filter(p => p instanceof CdvPurchase.Product);
-                        context.listener.productsUpdated(platformToInit.platform, loadedProducts);
-                        // const loadReceiptsResult = await adapter.loadReceipts();
-                        log.info(`${adapter.name} receipts loaded: ${JSON.stringify(loadReceiptsResult)}`);
+                        // Wait for the storefront refresh (or its timeout) before returning.
+                        // This intentionally delays storeReady by up to the timeout duration
+                        // so that store.getStorefront() has a value once the store is ready.
+                        yield storefrontRefresh;
                         return loadProductsResult.filter(lr => 'code' in lr && 'message' in lr)[0];
                     })));
                     return result.filter(err => err);
@@ -934,6 +939,96 @@ var CdvPurchase;
          */
         Adapters.adapterFactories = {};
         Internal.Adapters = Adapters;
+    })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
+})(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Internal;
+    (function (Internal) {
+        /** Default timeout for a storefront refresh call, in milliseconds. */
+        const DEFAULT_STOREFRONT_REFRESH_TIMEOUT_MS = 2000;
+        /**
+         * Collection of per-platform storefront country codes.
+         *
+         * Maintains the cached value for each platform that exposes one and
+         * notifies listeners when a value changes. Adapter-agnostic — callers
+         * are responsible for validating that a platform has a ready adapter.
+         */
+        class Storefronts {
+            constructor(logger) {
+                /** Cached country code per platform. */
+                this.values = {};
+                this.callbacks = new Internal.Callbacks(logger, 'storefrontUpdated()');
+            }
+            /**
+             * Refresh the cached value for a given adapter.
+             *
+             * The returned promise:
+             *   - resolves when the adapter responds within `timeoutMs`
+             *   - rejects with a timeout error otherwise
+             *
+             * Regardless of timeout, if the adapter eventually yields a value,
+             * the cache is silently updated and listeners are notified.
+             * A failed or empty response never overwrites the cache.
+             */
+            refreshWith(adapter, timeoutMs = DEFAULT_STOREFRONT_REFRESH_TIMEOUT_MS) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    if (!adapter.getStorefront)
+                        return;
+                    const platform = adapter.id;
+                    // Start the fetch; handle result + errors independently of the race.
+                    const fetch = adapter.getStorefront()
+                        .then(code => { if (code)
+                        this.setValue(platform, code); })
+                        .catch(() => { });
+                    let timerId;
+                    const timeout = new Promise((_, reject) => {
+                        timerId = setTimeout(() => reject(new Error('storefront refresh timeout')), timeoutMs);
+                    });
+                    try {
+                        yield Promise.race([fetch, timeout]);
+                    }
+                    finally {
+                        clearTimeout(timerId);
+                    }
+                });
+            }
+            /**
+             * Retrieve a storefront value.
+             *
+             * - With a platform: always returns `{ platform, countryCode }`,
+             *   where `countryCode` may be undefined if nothing is cached.
+             * - Without a platform: returns the first cached non-empty
+             *   storefront, or `undefined` if nothing is cached.
+             */
+            getValueFor(platform) {
+                if (platform) {
+                    return { platform, countryCode: this.values[platform] };
+                }
+                for (const p of Object.keys(this.values)) {
+                    if (this.values[p]) {
+                        return { platform: p, countryCode: this.values[p] };
+                    }
+                }
+                return undefined;
+            }
+            /** Register a change listener. */
+            listen(cb, callbackName) {
+                this.callbacks.push(cb, callbackName);
+            }
+            /** Remove a previously registered listener. */
+            off(cb) {
+                this.callbacks.remove(cb);
+            }
+            /** Update the cache and notify listeners on change. */
+            setValue(platform, countryCode) {
+                if (this.values[platform] === countryCode)
+                    return;
+                this.values[platform] = countryCode;
+                this.callbacks.trigger({ platform, countryCode }, 'storefront_changed');
+            }
+        }
+        Internal.Storefronts = Storefronts;
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
@@ -1442,6 +1537,7 @@ var CdvPurchase;
 /// <reference path="validator/validator.ts" />
 /// <reference path="log.ts" />
 /// <reference path="internal/adapters.ts" />
+/// <reference path="internal/storefronts.ts" />
 /// <reference path="internal/adapter-listener.ts" />
 /// <reference path="internal/callbacks.ts" />
 /// <reference path="internal/ready.ts" />
@@ -1540,6 +1636,8 @@ var CdvPurchase;
             this.receiptsVerifiedCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'receiptsVerified()', true);
             /** Callbacks for errors */
             this.errorCallbacks = new CdvPurchase.Internal.Callbacks(this.log, 'error()');
+            /** Per-platform storefront cache and change notifications. */
+            this._storefronts = new CdvPurchase.Internal.Storefronts(this.log.child('Storefronts'));
             this.initializedHasBeenCalled = false;
             /** Stores the last time the store was updated (or initialized), to skip calls in quick succession. */
             this.lastUpdate = 0;
@@ -1683,6 +1781,7 @@ var CdvPurchase;
                     get listener() { return store.listener; },
                     get log() { return store.log; },
                     get registeredProducts() { return store.registeredProducts; },
+                    get storefronts() { return store._storefronts; },
                     apiDecorators: {
                         canPurchase: this.canPurchase.bind(this),
                         owned: this.owned.bind(this),
@@ -1708,7 +1807,6 @@ var CdvPurchase;
          * Call to refresh the price of products and status of purchases.
          */
         update() {
-            var _a;
             return __awaiter(this, void 0, void 0, function* () {
                 this.log.info('update()');
                 if (!this._readyCallbacks.isReady) {
@@ -1723,11 +1821,15 @@ var CdvPurchase;
                 this.lastUpdate = now;
                 // Load products metadata
                 for (const registration of this.registeredProducts.byPlatform()) {
-                    const products = yield ((_a = this.adapters.findReady(registration.platform)) === null || _a === void 0 ? void 0 : _a.loadProducts(registration.products));
+                    const adapter = this.adapters.findReady(registration.platform);
+                    const products = yield (adapter === null || adapter === void 0 ? void 0 : adapter.loadProducts(registration.products));
                     products === null || products === void 0 ? void 0 : products.forEach(p => {
                         if (p instanceof CdvPurchase.Product)
                             this.updatedCallbacks.trigger(p, 'update_has_loaded_products');
                     });
+                    if (adapter) {
+                        this._storefronts.refreshWith(adapter).catch(() => { });
+                    }
                 }
             });
         }
@@ -1779,6 +1881,7 @@ var CdvPurchase;
                 unverified: (cb, callbackName) => (this.unverifiedCallbacks.push(cb, callbackName), ret),
                 receiptsReady: (cb, callbackName) => (this.receiptsReadyCallbacks.push(cb, callbackName), ret),
                 receiptsVerified: (cb, callbackName) => (this.receiptsVerifiedCallbacks.push(cb, callbackName), ret),
+                storefrontUpdated: (cb, callbackName) => (this._storefronts.listen(cb, callbackName), ret),
             };
             return ret;
         }
@@ -1797,6 +1900,7 @@ var CdvPurchase;
             this.receiptsVerifiedCallbacks.remove(callback);
             this.errorCallbacks.remove(callback);
             this._readyCallbacks.remove(callback);
+            this._storefronts.off(callback);
         }
         /**
          * Setup a function to be notified of changes to a transaction state.
@@ -1912,6 +2016,8 @@ var CdvPurchase;
                 const ret = yield adapter.order(offer, additionalData || {});
                 if (ret && 'isError' in ret)
                     CdvPurchase.store.triggerError(ret);
+                // Account may have switched during checkout — refresh storefront in the background.
+                this._storefronts.refreshWith(adapter).catch(() => { });
                 return ret;
             });
         }
@@ -1968,6 +2074,7 @@ var CdvPurchase;
             }
             const promise = new CdvPurchase.PaymentRequestPromise();
             adapter.requestPayment(paymentRequest, additionalData).then(result => {
+                this._storefronts.refreshWith(adapter).catch(() => { });
                 promise.trigger(result);
                 if (result instanceof CdvPurchase.Transaction) {
                     const onStateChange = (state) => {
@@ -2068,6 +2175,8 @@ var CdvPurchase;
                 for (const adapter of this.adapters.list) {
                     if (adapter.ready) {
                         error = error !== null && error !== void 0 ? error : yield adapter.restorePurchases();
+                        // Restore often implies a login or account switch — refresh storefront.
+                        this._storefronts.refreshWith(adapter).catch(() => { });
                     }
                 }
                 return error;
@@ -2114,30 +2223,39 @@ var CdvPurchase;
         /**
          * Retrieve the billing country code from the platform's storefront.
          *
-         * Returns an ISO 3166-1 alpha-2 country code (e.g., "US", "FR"),
-         * or undefined if the storefront information is not available.
+         * Returns a `Storefront` object with the platform and its ISO 3166-1
+         * alpha-2 country code (e.g., "US", "FR"). The country code may be
+         * undefined if the underlying fetch has not yet completed or failed —
+         * the platform is still reported. Returns `undefined` only when no
+         * matching adapter is ready.
          *
-         * Returns `undefined` if called before `store.initialize()` completes,
-         * or if the platform does not support storefront queries.
+         * The cache is populated before the `storeReady` event fires (with a
+         * best-effort timeout), and refreshed after orders and `restorePurchases()`.
          *
-         * On iOS, requires iOS 13 or later.
-         *
-         * Note: may return a non-standard code for regions not covered by ISO 3166-1
-         * (the raw platform code is returned as fallback).
-         *
-         * @param platform - The platform to get the storefront from. If not specified, uses the first ready adapter.
+         * @param platform - Optional platform. If omitted, returns the first
+         *                   cached non-empty storefront, or a `{ platform, countryCode: undefined }`
+         *                   object for the first ready adapter.
          *
          * @example
-         * const country = await store.getStorefront();
-         * console.log('Billing country: ' + country); // e.g., "US"
+         * const storefront = store.getStorefront();
+         * if (storefront?.countryCode) {
+         *     console.log(`Billing country: ${storefront.countryCode}`);
+         * }
          */
         getStorefront(platform) {
-            return __awaiter(this, void 0, void 0, function* () {
+            if (platform) {
                 const adapter = this.adapters.findReady(platform);
-                if (!(adapter === null || adapter === void 0 ? void 0 : adapter.getStorefront))
+                if (!adapter)
                     return undefined;
-                return adapter.getStorefront();
-            });
+                return this._storefronts.getValueFor(platform);
+            }
+            const cached = this._storefronts.getValueFor();
+            if (cached)
+                return cached;
+            const firstReady = this.adapters.findReady();
+            if (!firstReady)
+                return undefined;
+            return { platform: firstReady.id, countryCode: undefined };
         }
         /**
          * The default payment platform to use depending on the OS.
@@ -3055,14 +3173,15 @@ var CdvPurchase;
                         ready: () => {
                             this.log.info('ready');
                         },
-                        purchased: (transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation) => __awaiter(this, void 0, void 0, function* () {
+                        purchased: (transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity) => __awaiter(this, void 0, void 0, function* () {
                             this.log.info('purchase: id:' + transactionIdentifier + ' product:' + productId +
                                 ' originalTransaction:' + originalTransactionIdentifier +
                                 ' - date:' + transactionDate + ' - discount:' + discountId +
-                                (jwsRepresentation ? ' - jws:present' : ''));
+                                (jwsRepresentation ? ' - jws:present' : '') +
+                                (quantity && quantity > 1 ? ' - quantity:' + quantity : ''));
                             // we can add the transaction to the receipt here
                             const transaction = yield this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.APPROVED);
-                            transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation);
+                            transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity);
                             this.removeTransactionInProgress(productId);
                             this.receiptsUpdated.call();
                             this.callPaymentMonitor('purchased');
@@ -3113,10 +3232,10 @@ var CdvPurchase;
                             yield this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.FINISHED);
                             this.receiptsUpdated.call();
                         }),
-                        restored: (transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation) => __awaiter(this, void 0, void 0, function* () {
+                        restored: (transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity) => __awaiter(this, void 0, void 0, function* () {
                             this.log.info('restore: ' + transactionIdentifier + ' - ' + productId);
                             const transaction = yield this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.APPROVED);
-                            transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation);
+                            transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity);
                             this.receiptsUpdated.call();
                         }),
                         receiptsRefreshed: (receipt) => {
@@ -3363,7 +3482,7 @@ var CdvPurchase;
                 return __awaiter(this, void 0, void 0, function* () {
                     let resolved = false;
                     return new Promise(resolve => {
-                        var _a;
+                        var _a, _b;
                         const callResolve = (result) => {
                             if (resolved)
                                 return;
@@ -3372,8 +3491,12 @@ var CdvPurchase;
                             resolve(result);
                         };
                         this.log.info('order');
+                        const quantity = (_a = additionalData === null || additionalData === void 0 ? void 0 : additionalData.quantity) !== null && _a !== void 0 ? _a : 1;
+                        if (quantity < 1 || quantity > 10 || !Number.isInteger(quantity)) {
+                            return callResolve(appStoreError(CdvPurchase.ErrorCode.PURCHASE, 'Invalid quantity: must be an integer between 1 and 10', offer.productId));
+                        }
                         const discountId = offer.id !== AppleAppStore.DEFAULT_OFFER_ID ? offer.id : undefined;
-                        const discount = (_a = additionalData === null || additionalData === void 0 ? void 0 : additionalData.appStore) === null || _a === void 0 ? void 0 : _a.discount;
+                        const discount = (_b = additionalData === null || additionalData === void 0 ? void 0 : additionalData.appStore) === null || _b === void 0 ? void 0 : _b.discount;
                         if (discountId && !discount) {
                             return callResolve(appStoreError(CdvPurchase.ErrorCode.MISSING_OFFER_PARAMS, 'Missing additionalData.appStore.discount when ordering a discount offer', offer.productId));
                         }
@@ -3412,7 +3535,7 @@ var CdvPurchase;
                         // When we switch AppStore user, the cached receipt isn't from the new user.
                         // so after a purchase, we want to make sure we're using the receipt from the logged in user.
                         this.forceReceiptReload = true;
-                        this.bridge.purchase(offer.productId, 1, this.context.getApplicationUsername(), discount, success, error);
+                        this.bridge.purchase(offer.productId, quantity, this.context.getApplicationUsername(), discount, success, error);
                     });
                 });
             }
@@ -3562,7 +3685,7 @@ var CdvPurchase;
                 if (functionality === 'order')
                     return this._canMakePayments;
                 const supported = [
-                    'order', 'manageBilling', 'manageSubscriptions', 'getStorefront'
+                    'order', 'orderQuantity', 'manageBilling', 'manageSubscriptions', 'getStorefront'
                 ];
                 return supported.indexOf(functionality) >= 0;
             }
@@ -3722,7 +3845,7 @@ var CdvPurchase;
                     }
                     // Listen for transaction updates from native
                     plugin.addListener('transactionUpdated', (data) => {
-                        this.transactionUpdated(data.state, data.errorCode, data.errorText, data.transactionIdentifier, data.productId, data.transactionReceipt, data.originalTransactionIdentifier, data.transactionDate, data.discountId, data.expirationDate, data.jwsRepresentation);
+                        this.transactionUpdated(data.state, data.errorCode, data.errorText, data.transactionIdentifier, data.productId, data.transactionReceipt, data.originalTransactionIdentifier, data.transactionDate, data.discountId, data.expirationDate, data.jwsRepresentation, data.quantity);
                     });
                     plugin.addListener('restoreCompleted', () => {
                         this.restoreCompletedTransactionsFinished();
@@ -3743,7 +3866,7 @@ var CdvPurchase;
                         const pending = this.pendingTransactionUpdates;
                         this.pendingTransactionUpdates = [];
                         for (const args of pending) {
-                            this.transactionUpdated(args.state, args.errorCode, args.errorText, args.transactionIdentifier, args.productId, args.transactionReceipt, args.originalTransactionIdentifier, args.transactionDate, args.discountId, args.expirationDate, args.jwsRepresentation);
+                            this.transactionUpdated(args.state, args.errorCode, args.errorText, args.transactionIdentifier, args.productId, args.transactionReceipt, args.originalTransactionIdentifier, args.transactionDate, args.discountId, args.expirationDate, args.jwsRepresentation, args.quantity);
                         }
                         if (this.options.ready)
                             this.options.ready();
@@ -3827,12 +3950,13 @@ var CdvPurchase;
                         .catch((err) => errorCb(CdvPurchase.ErrorCode.LOAD, (err === null || err === void 0 ? void 0 : err.message) || 'loadReceipts failed'));
                 }
                 // Called when the native side sends a transaction update
-                transactionUpdated(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation) {
+                transactionUpdated(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity) {
                     if (!this.initialized) {
                         this.pendingTransactionUpdates.push({
                             state, errorCode, errorText, transactionIdentifier,
                             productId, transactionReceipt, originalTransactionIdentifier,
                             transactionDate, discountId, expirationDate, jwsRepresentation,
+                            quantity,
                         });
                         return;
                     }
@@ -3852,7 +3976,7 @@ var CdvPurchase;
                             break;
                         case 'PaymentTransactionStatePurchased':
                             if (this.options.purchased) {
-                                this.options.purchased(transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation);
+                                this.options.purchased(transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity);
                             }
                             break;
                         case 'PaymentTransactionStateFailed':
@@ -3864,8 +3988,11 @@ var CdvPurchase;
                             }
                             break;
                         case 'PaymentTransactionStateRestored':
+                            // quantity is passed through for positional consistency with
+                            // purchased, but is meaningless here: consumables cannot be
+                            // restored, so restored transactions are always quantity 1.
                             if (this.options.restored) {
-                                this.options.restored(transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation);
+                                this.options.restored(transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity);
                             }
                             break;
                         case 'PaymentTransactionStateDeferred':
@@ -4081,7 +4208,7 @@ var CdvPurchase;
                 finalizeTransactionUpdates() {
                     for (let i = 0; i < this.pendingUpdates.length; ++i) {
                         const args = this.pendingUpdates[i];
-                        this.transactionUpdated(args.state, args.errorCode, args.errorText, args.transactionIdentifier, args.productId, args.transactionReceipt, args.originalTransactionIdentifier, args.transactionDate, args.discountId, args.expirationDate, args.jwsRepresentation);
+                        this.transactionUpdated(args.state, args.errorCode, args.errorText, args.transactionIdentifier, args.productId, args.transactionReceipt, args.originalTransactionIdentifier, args.transactionDate, args.discountId, args.expirationDate, args.jwsRepresentation, args.quantity);
                     }
                     this.pendingUpdates = [];
                 }
@@ -4089,12 +4216,13 @@ var CdvPurchase;
                     // no more pending transactions
                 }
                 /** Called from native. Same as SK1 but with extra SK2 fields. */
-                transactionUpdated(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation) {
+                transactionUpdated(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity) {
                     if (!this.initialized) {
                         this.pendingUpdates.push({
                             state, errorCode, errorText, transactionIdentifier,
                             productId, transactionReceipt, originalTransactionIdentifier,
-                            transactionDate, discountId, expirationDate, jwsRepresentation
+                            transactionDate, discountId, expirationDate, jwsRepresentation,
+                            quantity
                         });
                         return;
                     }
@@ -4113,7 +4241,7 @@ var CdvPurchase;
                             protectCall(this.options.purchasing, 'options.purchasing', productId);
                             return;
                         case "PaymentTransactionStatePurchased":
-                            protectCall(this.options.purchased, 'options.purchased', transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation);
+                            protectCall(this.options.purchased, 'options.purchased', transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity);
                             return;
                         case "PaymentTransactionStateDeferred":
                             protectCall(this.options.deferred, 'options.deferred', productId);
@@ -4123,7 +4251,10 @@ var CdvPurchase;
                             protectCall(this.options.error, 'options.error', errorCode || CdvPurchase.ErrorCode.UNKNOWN, errorText || 'ERROR', { productId });
                             return;
                         case "PaymentTransactionStateRestored":
-                            protectCall(this.options.restored, 'options.restored', transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation);
+                            // Note: quantity is always irrelevant for restored transactions on iOS —
+                            // consumable products cannot be restored. Passed through to maintain
+                            // positional argument consistency with the purchased callback.
+                            protectCall(this.options.restored, 'options.restored', transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity);
                             return;
                         case "PaymentTransactionStateFinished":
                             protectCall(this.options.finished, 'options.finished', transactionIdentifier, productId);
@@ -4467,7 +4598,7 @@ var CdvPurchase;
                 finalizeTransactionUpdates() {
                     for (let i = 0; i < this.pendingUpdates.length; ++i) {
                         const args = this.pendingUpdates[i];
-                        this.transactionUpdated(args.state, args.errorCode, args.errorText, args.transactionIdentifier, args.productId, args.transactionReceipt, args.originalTransactionIdentifier, args.transactionDate, args.discountId);
+                        this.transactionUpdated(args.state, args.errorCode, args.errorText, args.transactionIdentifier, args.productId, args.transactionReceipt, args.originalTransactionIdentifier, args.transactionDate, args.discountId, args.quantity);
                     }
                     this.pendingUpdates = [];
                 }
@@ -4478,9 +4609,9 @@ var CdvPurchase;
                 //
                 // Note that it may eventually be called before initialization... unfortunately.
                 // In this case, we'll just keep pending updates in a list for later processing.
-                transactionUpdated(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId) {
+                transactionUpdated(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId, quantity) {
                     if (!this.initialized) {
-                        this.pendingUpdates.push({ state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId });
+                        this.pendingUpdates.push({ state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId, quantity });
                         return;
                     }
                     log("transaction updated:" + transactionIdentifier + " state:" + state + " product:" + productId);
@@ -4497,7 +4628,7 @@ var CdvPurchase;
                             protectCall(this.options.purchasing, 'options.purchasing', productId);
                             return;
                         case "PaymentTransactionStatePurchased":
-                            protectCall(this.options.purchased, 'options.purchase', transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId);
+                            protectCall(this.options.purchased, 'options.purchase', transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, undefined, undefined, quantity);
                             return;
                         case "PaymentTransactionStateDeferred":
                             protectCall(this.options.deferred, 'options.deferred', productId);
@@ -4507,7 +4638,10 @@ var CdvPurchase;
                             protectCall(this.options.error, 'options.error', errorCode || CdvPurchase.ErrorCode.UNKNOWN, errorText || 'ERROR', { productId });
                             return;
                         case "PaymentTransactionStateRestored":
-                            protectCall(this.options.restored, 'options.restore', transactionIdentifier, productId);
+                            // Note: quantity is always irrelevant for restored transactions on iOS —
+                            // consumable products cannot be restored. Passed through to maintain
+                            // positional argument consistency with the purchased callback.
+                            protectCall(this.options.restored, 'options.restore', transactionIdentifier, productId, undefined, undefined, undefined, undefined, undefined, quantity);
                             return;
                         case "PaymentTransactionStateFinished":
                             protectCall(this.options.finished, 'options.finish', transactionIdentifier, productId);
@@ -4771,7 +4905,7 @@ var CdvPurchase;
         AppleAppStore.SKApplicationReceipt = SKApplicationReceipt;
         /** StoreKit transaction */
         class SKTransaction extends CdvPurchase.Transaction {
-            refresh(productId, originalTransactionIdentifier, transactionDate, discountId, expirationDateMs, jwsRepresentation) {
+            refresh(productId, originalTransactionIdentifier, transactionDate, discountId, expirationDateMs, jwsRepresentation, quantity) {
                 if (productId)
                     this.products = [{ id: productId, offerId: discountId }];
                 if (originalTransactionIdentifier)
@@ -4782,6 +4916,8 @@ var CdvPurchase;
                     this.expirationDate = new Date(+expirationDateMs);
                 if (jwsRepresentation)
                     this.jwsRepresentation = jwsRepresentation;
+                if (quantity !== undefined)
+                    this.quantity = quantity;
             }
         }
         AppleAppStore.SKTransaction = SKTransaction;
@@ -7884,6 +8020,11 @@ var CdvPurchase;
             restorePurchases() {
                 return __awaiter(this, void 0, void 0, function* () {
                     return undefined;
+                });
+            }
+            getStorefront() {
+                return __awaiter(this, void 0, void 0, function* () {
+                    return 'US';
                 });
             }
         }
