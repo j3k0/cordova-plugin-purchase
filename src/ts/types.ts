@@ -252,6 +252,16 @@ namespace CdvPurchase {
         /** The application's user identifier, will be obfuscated with md5 to fill `accountId` if necessary */
         applicationUsername?: string;
 
+        /**
+         * Quantity of items to purchase.
+         *
+         * Only supported on platforms that report the `'orderQuantity'` capability.
+         * Platforms without support will ignore this field.
+         *
+         * @see {@link Store.checkSupport}
+         */
+        quantity?: number;
+
         /** GooglePlay specific additional data */
         googlePlay?: GooglePlay.AdditionalData;
 
@@ -294,7 +304,7 @@ namespace CdvPurchase {
      *
      * @see {@link Store.checkSupport}
      */
-    export type PlatformFunctionality = 'requestPayment' | 'order' | 'manageSubscriptions' | 'manageBilling' | 'getStorefront';
+    export type PlatformFunctionality = 'requestPayment' | 'order' | 'orderQuantity' | 'manageSubscriptions' | 'manageBilling' | 'getStorefront';
 
     /**
      * Possible states of a transaction.

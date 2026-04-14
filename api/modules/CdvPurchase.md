@@ -79,6 +79,7 @@ const { store, ProductType, Platform, LogLevel } = CdvPurchase;
 - [PaymentRequestItem](../interfaces/CdvPurchase.PaymentRequestItem.md)
 - [PostalAddress](../interfaces/CdvPurchase.PostalAddress.md)
 - [PricingPhase](../interfaces/CdvPurchase.PricingPhase.md)
+- [Storefront](../interfaces/CdvPurchase.Storefront.md)
 - [TransactionMonitor](../interfaces/CdvPurchase.TransactionMonitor.md)
 - [UnverifiedReceipt](../interfaces/CdvPurchase.UnverifiedReceipt.md)
 - [VerifiedPurchase](../interfaces/CdvPurchase.VerifiedPurchase.md)
@@ -137,7 +138,7 @@ ___
 
 ### PlatformFunctionality
 
-Ƭ **PlatformFunctionality**: ``"requestPayment"`` \| ``"order"`` \| ``"manageSubscriptions"`` \| ``"manageBilling"`` \| ``"getStorefront"``
+Ƭ **PlatformFunctionality**: ``"requestPayment"`` \| ``"order"`` \| ``"orderQuantity"`` \| ``"manageSubscriptions"`` \| ``"manageBilling"`` \| ``"getStorefront"``
 
 Functionality optionality provided by a given platform.
 

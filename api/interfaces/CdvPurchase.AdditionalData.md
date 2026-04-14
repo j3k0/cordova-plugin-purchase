@@ -17,6 +17,7 @@ Data to attach to a transaction.
 - [applicationUsername](CdvPurchase.AdditionalData.md#applicationusername)
 - [braintree](CdvPurchase.AdditionalData.md#braintree)
 - [googlePlay](CdvPurchase.AdditionalData.md#googleplay)
+- [quantity](CdvPurchase.AdditionalData.md#quantity)
 
 ## Properties
 
@@ -49,3 +50,18 @@ ___
 • `Optional` **googlePlay**: [`AdditionalData`](CdvPurchase.GooglePlay.AdditionalData.md)
 
 GooglePlay specific additional data
+
+___
+
+### quantity
+
+• `Optional` **quantity**: `number`
+
+Quantity of items to purchase.
+
+Only supported on platforms that report the `'orderQuantity'` capability.
+Platforms without support will ignore this field.
+
+**`See`**
+
+[Store.checkSupport](../classes/CdvPurchase.Store.md#checksupport)

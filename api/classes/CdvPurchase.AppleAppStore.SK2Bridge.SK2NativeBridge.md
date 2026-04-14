@@ -427,7 +427,7 @@ ___
 
 ### transactionUpdated
 
-▸ **transactionUpdated**(`state`, `errorCode`, `errorText`, `transactionIdentifier`, `productId`, `transactionReceipt`, `originalTransactionIdentifier`, `transactionDate`, `discountId`, `expirationDate?`, `jwsRepresentation?`): `void`
+▸ **transactionUpdated**(`state`, `errorCode`, `errorText`, `transactionIdentifier`, `productId`, `transactionReceipt`, `originalTransactionIdentifier`, `transactionDate`, `discountId`, `expirationDate?`, `jwsRepresentation?`, `quantity?`): `void`
 
 Called from native. Same as SK1 but with extra SK2 fields.
 
@@ -446,6 +446,7 @@ Called from native. Same as SK1 but with extra SK2 fields.
 | `discountId` | `undefined` \| `string` |
 | `expirationDate?` | `string` |
 | `jwsRepresentation?` | `string` |
+| `quantity?` | `number` |
 
 #### Returns
 

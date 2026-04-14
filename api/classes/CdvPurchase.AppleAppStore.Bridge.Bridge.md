@@ -457,7 +457,7 @@ ___
 
 ### transactionUpdated
 
-▸ **transactionUpdated**(`state`, `errorCode`, `errorText`, `transactionIdentifier`, `productId`, `transactionReceipt`, `originalTransactionIdentifier`, `transactionDate`, `discountId`): `void`
+▸ **transactionUpdated**(`state`, `errorCode`, `errorText`, `transactionIdentifier`, `productId`, `transactionReceipt`, `originalTransactionIdentifier`, `transactionDate`, `discountId`, `quantity`): `void`
 
 #### Parameters
 
@@ -472,6 +472,7 @@ ___
 | `originalTransactionIdentifier` | `undefined` \| `string` |
 | `transactionDate` | `undefined` \| `string` |
 | `discountId` | `undefined` \| `string` |
+| `quantity` | `undefined` \| `number` |
 
 #### Returns
 

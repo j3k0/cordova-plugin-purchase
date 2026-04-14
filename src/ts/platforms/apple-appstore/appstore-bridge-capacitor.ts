@@ -19,11 +19,11 @@ namespace CdvPurchase {
                 purchased: (transactionIdentifier: string, productId: string,
                     originalTransactionIdentifier?: string, transactionDate?: string,
                     discountId?: string, expirationDate?: string,
-                    jwsRepresentation?: string) => void;
+                    jwsRepresentation?: string, quantity?: number) => void;
                 restored: (transactionIdentifier: string, productId: string,
                     originalTransactionIdentifier?: string, transactionDate?: string,
                     discountId?: string, expirationDate?: string,
-                    jwsRepresentation?: string) => void;
+                    jwsRepresentation?: string, quantity?: number) => void;
             }
 
             export class CapacitorNativeBridge implements Bridge.BridgeInterface {
@@ -45,6 +45,7 @@ namespace CdvPurchase {
                     discountId: string | undefined;
                     expirationDate: string | undefined;
                     jwsRepresentation: string | undefined;
+                    quantity: number | undefined;
                 }[] = [];
                 private initialized = false;
                 private needRestoreNotification = false;
@@ -99,6 +100,7 @@ namespace CdvPurchase {
                             data.discountId,
                             data.expirationDate,
                             data.jwsRepresentation,
+                            data.quantity,
                         );
                     });
 
@@ -127,7 +129,8 @@ namespace CdvPurchase {
                                     args.transactionIdentifier, args.productId,
                                     args.transactionReceipt, args.originalTransactionIdentifier,
                                     args.transactionDate, args.discountId,
-                                    args.expirationDate, args.jwsRepresentation);
+                                    args.expirationDate, args.jwsRepresentation,
+                                    args.quantity);
                             }
                             if (this.options.ready) this.options.ready();
                             success();
@@ -233,12 +236,14 @@ namespace CdvPurchase {
                     discountId: string | undefined,
                     expirationDate?: string,
                     jwsRepresentation?: string,
+                    quantity?: number,
                 ): void {
                     if (!this.initialized) {
                         this.pendingTransactionUpdates.push({
                             state, errorCode, errorText, transactionIdentifier,
                             productId, transactionReceipt, originalTransactionIdentifier,
                             transactionDate, discountId, expirationDate, jwsRepresentation,
+                            quantity,
                         });
                         return;
                     }
@@ -264,7 +269,7 @@ namespace CdvPurchase {
                                     transactionIdentifier, productId,
                                     originalTransactionIdentifier,
                                     transactionDate, discountId,
-                                    expirationDate, jwsRepresentation);
+                                    expirationDate, jwsRepresentation, quantity);
                             }
                             break;
                         case 'PaymentTransactionStateFailed':
@@ -278,12 +283,15 @@ namespace CdvPurchase {
                             }
                             break;
                         case 'PaymentTransactionStateRestored':
+                            // quantity is passed through for positional consistency with
+                            // purchased, but is meaningless here: consumables cannot be
+                            // restored, so restored transactions are always quantity 1.
                             if (this.options.restored) {
                                 this.options.restored(
                                     transactionIdentifier, productId,
                                     originalTransactionIdentifier,
                                     transactionDate, discountId,
-                                    expirationDate, jwsRepresentation);
+                                    expirationDate, jwsRepresentation, quantity);
                             }
                             break;
                         case 'PaymentTransactionStateDeferred':

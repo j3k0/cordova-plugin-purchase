@@ -1,81 +1,82 @@
 # Multi-Quantity Purchases
 
-Starting with version 13.11.1, cordova-plugin-purchase provides support for multi-quantity consumable purchases on Android (Google Play).
+Starting with version 13.11.1, cordova-plugin-purchase supports multi-quantity consumable purchases on Android (Google Play). Support for iOS (App Store) was added in version 13.14.1.
 
 ## Overview
 
-The Google Play Billing Library allows users to purchase multiple quantities of a consumable product in a single transaction. This feature is useful for apps that sell virtual goods or currencies that users might want to buy in bulk.
+Both Google Play and the App Store allow users to purchase multiple quantities of a consumable product in a single transaction. This is useful for apps that sell virtual goods or currencies that users might want to buy in bulk.
 
-For example, a user might want to purchase 5 coins or 10 gems at once, instead of making separate transactions for each item.
+For example, a user might want to purchase 5 coins at once, instead of making 5 separate transactions.
 
-## How It Works
+## Platform Differences
 
-When a purchase is completed, the plugin will now expose the `quantity` field from Google Play in the transaction object. This allows your app to know how many items were purchased in a single transaction.
+The two platforms work differently:
+
+- **Android (Google Play)**: The user sets the quantity in the Google Play purchase dialog. The developer has no control over quantity at order time — it is always set by the user.
+- **iOS (App Store)**: The developer sets the quantity via `additionalData.quantity` when calling `store.order()`. The value must be an integer between 1 and 10 (Apple's limit). Check `store.checkSupport(platform, 'orderQuantity')` to know if the platform supports this.
 
 ## Usage
 
-### Checking Quantity in Transactions
+### Reading Quantity in Transactions
 
-When processing a transaction, you can check the `quantity` field to determine how many items were purchased:
+On both platforms, use `transaction.quantity` to know how many items were purchased:
 
 ```javascript
 store.when()
   .approved(transaction => {
-    // Get the quantity from the transaction
     const quantity = transaction.quantity || 1;
-
-    // Process the transaction based on quantity
     console.log(`User purchased ${quantity} items`);
-
-    // You can credit the user's account accordingly
     creditUserAccount(transaction.products[0].id, quantity);
-
-    // Finish the transaction
     transaction.finish();
   });
 ```
 
-### Important Notes
+### Ordering with Quantity on iOS
 
-1. **Platform Support**: Multi-quantity purchases are only supported on Android (Google Play). On other platforms like iOS, the quantity value will always be 1.
+Pass `additionalData.quantity` when calling `store.order()`:
 
-2. **Product Types**: Multi-quantity purchases only apply to consumable products. For non-consumable products and subscriptions, the quantity will always be 1.
+```javascript
+// Purchase 3 units in a single transaction (iOS only)
+const error = await store.order(offer, {
+  quantity: 3
+});
+if (error) {
+  console.error('Purchase failed:', error);
+}
+```
 
-3. **Default Value**: Always provide a fallback (e.g., `quantity || 1`) when using this field, as it might not be available on all platforms or in older plugin versions.
+## Important Notes
 
-4. **Consumption**: When a multi-quantity purchase is consumed, all quantities are consumed at once. The Google Play Billing Library doesn't support partial consumption of multi-quantity purchases.
+1. **Product Types**: Multi-quantity purchases only apply to consumable products. For non-consumable products and subscriptions, the quantity is always 1.
+
+2. **Default Value**: Always provide a fallback (e.g., `quantity || 1`) when using this field, as it might not be available on all platforms or in older plugin versions.
+
+3. **Consumption**: When a multi-quantity purchase is consumed, all quantities are consumed at once. Neither Google Play nor the App Store supports partial consumption of multi-quantity purchases.
+
+4. **iOS range**: Apple enforces a maximum quantity of 10. Values outside 1–10 will return an error before reaching the payment sheet.
+
+5. **Restored transactions**: On iOS, consumable products cannot be restored. Quantity is therefore never meaningful in a restored transaction.
 
 ## Example Implementation
 
-Here's a complete example of handling multi-quantity purchases:
-
 ```javascript
-// Set up the store
 document.addEventListener('deviceready', function() {
-  // Register your consumable product
   store.register({
     id: 'my_consumable',
-    type: store.CONSUMABLE
+    type: CdvPurchase.ProductType.CONSUMABLE,
+    platform: CdvPurchase.Platform.GOOGLE_PLAY, // or APPLE_APPSTORE
   });
 
-  // Set up the purchase flow
-  store.when('my_consumable')
+  store.when()
     .approved(transaction => {
-      // Get the quantity (default to 1 if not specified)
       const quantity = transaction.quantity || 1;
-
-      // Credit the user's account with the appropriate quantity
-      addItemsToUserInventory('my_consumable', quantity);
-
-      // Finish the transaction
+      addItemsToUserInventory(transaction.products[0].id, quantity);
       transaction.finish();
     });
 
-  // Initialize the store
-  store.refresh();
+  store.initialize();
 }, false);
 
-// Function to add items to user inventory
 function addItemsToUserInventory(productId, quantity) {
   console.log(`Adding ${quantity} of ${productId} to user inventory`);
   // Your implementation here
@@ -84,7 +85,32 @@ function addItemsToUserInventory(productId, quantity) {
 
 ## Notes for Receipt Validation Services
 
-If you're using a receipt validation service, make sure it properly handles the quantity field when validating receipts. The validation service should interpret the quantity value and apply the appropriate business logic when crediting the user's account.
+If you're using a receipt validation service (such as [iaptic](https://www.iaptic.com)), make sure it properly handles the `quantity` field when validating receipts. The service should interpret the quantity value and apply the appropriate business logic when crediting the user's account.
 
 Call `transaction.verify()` and only credit the user when the transaction has been verified.
 
+### Extracting Quantity After Verification
+
+`VerifiedPurchase` exposes an optional `quantity` field that validators can populate. Not all validators report it today, so the safest pattern is to read it from the validator first and fall back to the native transaction:
+
+```javascript
+store.when()
+  .verified(receipt => {
+    function findQuantity(purchase) {
+      // The validator returned the quantity — prefer that.
+      if (purchase.quantity) return purchase.quantity;
+      // Otherwise, find the quantity reported by the native SDK for that product.
+      const t = receipt.sourceReceipt.transactions.find(t => t.products.some(p => p.id === purchase.id));
+      return t?.quantity || 1;
+    }
+
+    for (const purchase of receipt.collection) {
+      if (!ENV.consumableIds.includes(purchase.id)) continue;
+      const quantity = findQuantity(purchase);
+      creditUserAccount(purchase.id, quantity);
+    }
+    receipt.finish();
+  });
+```
+
+In production, the recommended flow is to have your backend receive a webhook from the validation service (iaptic, or your own) containing the verified quantity — the client-side fallback above is useful for demos or as an additional layer alongside server-side validation.

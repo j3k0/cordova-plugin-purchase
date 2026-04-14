@@ -151,13 +151,13 @@ ___
 
 ### purchased
 
-• **purchased**: (`transactionIdentifier`: `string`, `productId`: `string`, `originalTransactionIdentifier?`: `string`, `transactionDate?`: `string`, `discountId?`: `string`) => `void`
+• **purchased**: (`transactionIdentifier`: `string`, `productId`: `string`, `originalTransactionIdentifier?`: `string`, `transactionDate?`: `string`, `discountId?`: `string`, `expirationDate?`: `string`, `jwsRepresentation?`: `string`, `quantity?`: `number`) => `void`
 
 Called when a transaction is in "Purchased" state
 
 #### Type declaration
 
-▸ (`transactionIdentifier`, `productId`, `originalTransactionIdentifier?`, `transactionDate?`, `discountId?`): `void`
+▸ (`transactionIdentifier`, `productId`, `originalTransactionIdentifier?`, `transactionDate?`, `discountId?`, `expirationDate?`, `jwsRepresentation?`, `quantity?`): `void`
 
 ##### Parameters
 
@@ -168,6 +168,9 @@ Called when a transaction is in "Purchased" state
 | `originalTransactionIdentifier?` | `string` |
 | `transactionDate?` | `string` |
 | `discountId?` | `string` |
+| `expirationDate?` | `string` |
+| `jwsRepresentation?` | `string` |
+| `quantity?` | `number` |
 
 ##### Returns
 
@@ -275,13 +278,13 @@ ___
 
 ### restored
 
-• **restored**: (`transactionIdentifier`: `string`, `productId`: `string`) => `void`
+• **restored**: (`transactionIdentifier`: `string`, `productId`: `string`, `originalTransactionIdentifier?`: `string`, `transactionDate?`: `string`, `discountId?`: `string`, `expirationDate?`: `string`, `jwsRepresentation?`: `string`, `quantity?`: `number`) => `void`
 
 Called when a transaction is in "restored" state
 
 #### Type declaration
 
-▸ (`transactionIdentifier`, `productId`): `void`
+▸ (`transactionIdentifier`, `productId`, `originalTransactionIdentifier?`, `transactionDate?`, `discountId?`, `expirationDate?`, `jwsRepresentation?`, `quantity?`): `void`
 
 ##### Parameters
 
@@ -289,6 +292,12 @@ Called when a transaction is in "restored" state
 | :------ | :------ |
 | `transactionIdentifier` | `string` |
 | `productId` | `string` |
+| `originalTransactionIdentifier?` | `string` |
+| `transactionDate?` | `string` |
+| `discountId?` | `string` |
+| `expirationDate?` | `string` |
+| `jwsRepresentation?` | `string` |
+| `quantity?` | `number` |
 
 ##### Returns
 

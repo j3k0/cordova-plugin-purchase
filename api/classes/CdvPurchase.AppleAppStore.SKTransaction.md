@@ -203,8 +203,9 @@ Quantity of items purchased in a single transaction.
 For consumable products, this value represents the number of items purchased.
 For non-consumable products and subscriptions, this value is always 1.
 
-This is only supported on Android (Google Play) platform when using the multi-quantity purchase feature.
-On other platforms, the quantity is always 1.
+Supported on Android (Google Play) and iOS (Apple AppStore).
+Use `additionalData.quantity` when placing an order
+to purchase multiple units in a single transaction.
 
 #### Inherited from
 
@@ -306,7 +307,7 @@ ___
 
 ### refresh
 
-▸ **refresh**(`productId?`, `originalTransactionIdentifier?`, `transactionDate?`, `discountId?`, `expirationDateMs?`, `jwsRepresentation?`): `void`
+▸ **refresh**(`productId?`, `originalTransactionIdentifier?`, `transactionDate?`, `discountId?`, `expirationDateMs?`, `jwsRepresentation?`, `quantity?`): `void`
 
 #### Parameters
 
@@ -318,6 +319,7 @@ ___
 | `discountId?` | `string` |
 | `expirationDateMs?` | `string` |
 | `jwsRepresentation?` | `string` |
+| `quantity?` | `number` |
 
 #### Returns
 

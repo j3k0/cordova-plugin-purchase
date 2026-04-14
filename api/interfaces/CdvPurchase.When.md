@@ -16,6 +16,7 @@ Store events listener
 - [receiptUpdated](CdvPurchase.When.md#receiptupdated)
 - [receiptsReady](CdvPurchase.When.md#receiptsready)
 - [receiptsVerified](CdvPurchase.When.md#receiptsverified)
+- [storefrontUpdated](CdvPurchase.When.md#storefrontupdated)
 - [unverified](CdvPurchase.When.md#unverified)
 - [updated](CdvPurchase.When.md#updated)
 - [verified](CdvPurchase.When.md#verified)
@@ -176,6 +177,29 @@ If no platforms have any receipts (user made no purchase), this will also get ca
 | :------ | :------ |
 | `cb` | [`Callback`](../modules/CdvPurchase.md#callback)\<`void`\> |
 | `callbackName?` | `string` |
+
+#### Returns
+
+[`When`](CdvPurchase.When.md)
+
+___
+
+### storefrontUpdated
+
+▸ **storefrontUpdated**(`cb`, `callbackName?`): [`When`](CdvPurchase.When.md)
+
+Register a function called when a platform's storefront country code changes.
+
+Fires when a platform's cached value transitions to a different non-empty
+string. Does not fire for no-op refreshes, failed refreshes, or transitions
+to undefined (the cache preserves the last-known value).
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `cb` | [`Callback`](../modules/CdvPurchase.md#callback)\<[`Storefront`](CdvPurchase.Storefront.md)\> | Callback invoked with the updated [Storefront](CdvPurchase.Storefront.md) |
+| `callbackName?` | `string` | - |
 
 #### Returns
 

@@ -19,8 +19,8 @@ jobs:
 
       - run: npm ci
 
-      - name: TypeScript type check
-        run: npx tsc --noEmit
+      - name: Compile TypeScript
+        run: make compile
 
       - name: Run tests
         run: npm test
