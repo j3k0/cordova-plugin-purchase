@@ -99,9 +99,8 @@ store.when()
     function findQuantity(purchase) {
       // The validator returned the quantity — prefer that.
       if (purchase.quantity) return purchase.quantity;
-      if (!purchase.transactionId) return 1;
-      // Otherwise, use the quantity reported by the native SDK.
-      const t = receipt.sourceReceipt.transactions.find(t => t.transactionId === purchase.transactionId);
+      // Otherwise, find the quantity reported by the native SDK for that product.
+      const t = receipt.sourceReceipt.transactions.find(t => t.products.some(p => p.id === purchase.id));
       return t?.quantity || 1;
     }
 
