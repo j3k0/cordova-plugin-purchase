@@ -358,13 +358,14 @@ namespace CdvPurchase {
                 /** Retrieve the storefront country code from StoreKit */
                 getStorefront(): Promise<string | undefined> {
                     return new Promise((resolve) => {
-                        // SK2 uses the same native getStorefront action via InAppPurchase plugin
+                        // Use StoreKit 2's Storefront.current via the SK2 plugin,
+                        // which works on Mac Catalyst where SK1's storefront is nil.
                         window.cordova.exec((countryCode: string) => {
                             resolve(countryCode || undefined);
                         }, (err: string) => {
                             log('getStorefront failed: ' + err);
                             resolve(undefined);
-                        }, "InAppPurchase", "getStorefront", []);
+                        }, "StoreKit2Plugin", "getStorefront", []);
                     });
                 }
 

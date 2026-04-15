@@ -320,15 +320,28 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func getStorefront(_ call: CAPPluginCall) {
-        // SKPaymentQueue.storefront is a StoreKit 1 API available from iOS 13,
-        // which matches the plugin's minimum deployment target.
+        // Try StoreKit 1 first (available from iOS 13).
         if let storefront = SKPaymentQueue.default().storefront {
             debugLog("getStorefront: \(storefront.countryCode)")
             call.resolve(["countryCode": storefront.countryCode])
-        } else {
-            debugLog("getStorefront: storefront not available")
-            call.reject("Storefront not available")
+            return
         }
+        // Fallback to StoreKit 2's Storefront.current (available iOS 15+).
+        // This works on Mac Catalyst where SK1's storefront is nil.
+        if #available(iOS 15.0, macOS 12.0, *) {
+            Task {
+                if let storefront = await Storefront.current {
+                    debugLog("getStorefront (SK2 fallback): \(storefront.countryCode)")
+                    call.resolve(["countryCode": storefront.countryCode])
+                } else {
+                    debugLog("getStorefront: storefront not available")
+                    call.reject("Storefront not available")
+                }
+            }
+            return
+        }
+        debugLog("getStorefront: storefront not available")
+        call.reject("Storefront not available")
     }
 
     // MARK: - Helpers
