@@ -1,10 +1,18 @@
 # Release Notes - Cordova Plugin Purchase
 
+## cordova-plugin-purchase-storekit2 v1.0.3
+
+- **(fix)** Add native `getStorefront` using `Storefront.current` (StoreKit 2). Previously the SK2 bridge routed `getStorefront` through the SK1 ObjC plugin, whose `SKPaymentQueue.storefront` returns nil on Mac Catalyst — causing `store.getStorefront()` to reject with "Storefront not available"
+
 ## cordova-plugin-purchase-storekit2 v1.0.1
 
 - **(fix)** Load `Transaction.currentEntitlements` at startup so existing subscriptions are visible immediately — previously required a manual restore or a renewal event
 
 ## 13.15
+
+### 13.15.1
+
+- **(fix)** `store.getStorefront()` now works on Mac Catalyst (including Capacitor's "Designed for iPad" mode, which runs as a Catalyst AppKit process). The Capacitor plugin falls back to SK2's `Storefront.current` when SK1's `SKPaymentQueue.storefront` is nil, and the SK2 bridge routes through the `StoreKit2Plugin` (requires `cordova-plugin-purchase-storekit2` v1.0.3). See [#1691](https://github.com/j3k0/cordova-plugin-purchase/issues/1691)
 
 ### 13.15.0
 

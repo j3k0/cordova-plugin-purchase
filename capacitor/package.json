@@ -1,6 +1,6 @@
 {
   "name": "capacitor-plugin-cdv-purchase",
-  "version": "13.15.0",
+  "version": "13.15.1",
   "description": "In-App Purchases for Capacitor — iOS (StoreKit 2) and Android (Google Play Billing)",
   "main": "dist/index.js",
   "module": "dist/index.js",
