@@ -39,6 +39,27 @@ namespace CdvPurchase
                 return transaction.platform + '|' + transaction.transactionId;
             }
 
+            /**
+             * Create a subscription dedup key from a transaction.
+             *
+             * StoreKit 2 can deliver the same subscription purchase event twice with
+             * different `transactionId` but identical `originalTransactionId` and
+             * `purchaseDate`. This key groups those duplicates together so only one
+             * `approved`/`finished` event is surfaced per billing period.
+             *
+             * Returns `undefined` for non-subscription transactions (no `originalTransactionId`).
+             */
+            static makeSubscriptionKey(transaction: Transaction): string | undefined {
+                if (transaction.platform !== Platform.APPLE_APPSTORE) return undefined;
+                const skTransaction = transaction as AppleAppStore.SKTransaction;
+                if (!skTransaction.originalTransactionId) return undefined;
+                if (!transaction.purchaseDate) return undefined;
+                return transaction.platform + '|' + skTransaction.originalTransactionId + '|' + transaction.purchaseDate.getTime();
+            }
+
+            /** Remember the first transactionId for each subscription dedup key */
+            subscriptionFirstTransactionId: { [subscriptionKey: string]: string } = {};
+
             /** Store the listener's latest calling time (in ms) for a given transaction at a given state */
             lastCallTimeForState: { [transactionTokenWithState: string]: number } = {};
 
@@ -127,16 +148,33 @@ namespace CdvPurchase
                         const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
                         const tokenWithState = transactionToken + '@' + transaction.state;
                         const lastState = this.lastTransactionState[transactionToken];
+                        const subscriptionKey = StoreAdapterListener.makeSubscriptionKey(transaction);
+                        const isSubscriptionDuplicate = !!subscriptionKey
+                            && !!this.subscriptionFirstTransactionId[subscriptionKey]
+                            && this.subscriptionFirstTransactionId[subscriptionKey] !== transaction.transactionId;
+
+                        // Remember the first transactionId for this subscription key
+                        if (subscriptionKey && !this.subscriptionFirstTransactionId[subscriptionKey]) {
+                            this.subscriptionFirstTransactionId[subscriptionKey] = transaction.transactionId;
+                        }
+
                         // Retrigger "approved", so validation is rerun on potential update.
                         if (transaction.state === TransactionState.APPROVED) {
-                            // prevent calling approved twice in a very short period (60 seconds).
-                            const lastCalled = this.lastCallTimeForState[tokenWithState] ?? 0;
-                            if (now - lastCalled > 60000) {
-                                this.lastCallTimeForState[tokenWithState] = now;
-                                this.delegate.approvedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_approved');
+                            if (isSubscriptionDuplicate) {
+                                // Skip duplicate subscription transaction (different transactionId, same billing period)
+                                this.log.debug(`Skipping subscription duplicate ${transactionToken}, already processed as ${this.subscriptionFirstTransactionId[subscriptionKey!]}`);
                             }
                             else {
-                                this.log.debug(`Skipping ${tokenWithState}, because it has been last called ${lastCalled > 0 ? Math.round(now - lastCalled) + 'ms ago (' + now + '-' + lastCalled + ')' : 'never'}`);
+                                // Use subscription key for dedup when available, otherwise fall back to transactionToken
+                                const dedupKey = subscriptionKey ? subscriptionKey + '@' + transaction.state : tokenWithState;
+                                const lastCalled = this.lastCallTimeForState[dedupKey] ?? 0;
+                                if (now - lastCalled > 60000) {
+                                    this.lastCallTimeForState[dedupKey] = now;
+                                    this.delegate.approvedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_approved');
+                                }
+                                else {
+                                    this.log.debug(`Skipping ${tokenWithState}, because it has been last called ${lastCalled > 0 ? Math.round(now - lastCalled) + 'ms ago (' + now + '-' + lastCalled + ')' : 'never'}`);
+                                }
                             }
                         }
                         else if (lastState !== transaction.state) {
@@ -145,8 +183,21 @@ namespace CdvPurchase
                                 this.delegate.initiatedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_initiated');
                             }
                             else if (transaction.state === TransactionState.FINISHED) {
-                                this.lastCallTimeForState[tokenWithState] = now;
-                                this.delegate.finishedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_finished');
+                                if (isSubscriptionDuplicate) {
+                                    this.log.debug(`Skipping subscription duplicate ${transactionToken}, already processed as ${this.subscriptionFirstTransactionId[subscriptionKey!]}`);
+                                }
+                                else {
+                                    // Use subscription key for dedup when available
+                                    const dedupKey = subscriptionKey ? subscriptionKey + '@' + transaction.state : tokenWithState;
+                                    const lastCalled = this.lastCallTimeForState[dedupKey] ?? 0;
+                                    if (now - lastCalled > 60000) {
+                                        this.lastCallTimeForState[dedupKey] = now;
+                                        this.delegate.finishedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_finished');
+                                    }
+                                    else {
+                                        this.log.debug(`Skipping finished ${tokenWithState}, already called for this subscription`);
+                                    }
+                                }
                             }
                             else if (transaction.state === TransactionState.PENDING) {
                                 this.lastCallTimeForState[tokenWithState] = now;
