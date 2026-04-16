@@ -683,15 +683,20 @@ namespace CdvPurchase {
                         return resolve(undefined);
                     }
 
+                    const wasAlreadyFinished = transaction.state === TransactionState.FINISHED;
+
                     const success = () => {
                         transaction.state = TransactionState.FINISHED;
-                        this.receiptsUpdated.call();
+                        if (!wasAlreadyFinished) {
+                            this.receiptsUpdated.call();
+                        }
                         resolve(undefined);
                     }
                     const error = (msg: string) => {
                         if (msg?.includes('[#CdvPurchase:100]')) {
-                            // already finished
-                            success();
+                            // already finished at the native level
+                            transaction.state = TransactionState.FINISHED;
+                            resolve(undefined);
                         }
                         else {
                             resolve(appStoreError(ErrorCode.FINISH, 'Failed to finish transaction', transaction.products[0]?.id ?? null));

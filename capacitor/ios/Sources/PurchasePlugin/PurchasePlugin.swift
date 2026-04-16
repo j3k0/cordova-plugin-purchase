@@ -7,6 +7,10 @@ private class SK2State {
     var products: [String: Product] = [:]
     var unfinishedTransactions: [String: Transaction] = [:]
     var transactionObserverTask: Task<Void, Never>?
+    /// Transaction IDs already emitted to JS. Prevents duplicate delivery when
+    /// both init() (via currentEntitlements) and Transaction.updates deliver
+    /// the same transaction. Access must be serialized on the main thread.
+    var processedTransactionIds: Set<UInt64> = []
 }
 
 @objc(PurchasePlugin)
@@ -69,6 +73,18 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
         let jwsRepresentation = result.jwsRepresentation
         switch result {
         case .verified(let transaction):
+            // Serialize access to processedTransactionIds on the main thread
+            // since this method runs from a detached Task while init()/purchase()
+            // also mutate the set.
+            let shouldEmit: Bool = await MainActor.run {
+                if sk2.processedTransactionIds.contains(transaction.id) {
+                    debugLog("Transaction.updates: skipping duplicate id=\(transaction.id)")
+                    return false
+                }
+                sk2.processedTransactionIds.insert(transaction.id)
+                return true
+            }
+            guard shouldEmit else { return }
             await emitTransactionUpdate(transaction, state: "PaymentTransactionStatePurchased",
                                         jwsRepresentation: jwsRepresentation)
         case .unverified(let transaction, _):
@@ -88,11 +104,27 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
         debugEnabled = call.getBool("debug", false)
         debugLog("init")
 
-        // Process any pending transactions
+        // Load current entitlements and emit to JS so existing subscriptions
+        // are visible immediately on app launch (without requiring a manual restore).
         Task {
             for await result in Transaction.currentEntitlements {
-                if case .verified(let transaction) = result {
+                switch result {
+                case .verified(let transaction):
+                    if transaction.isUpgraded {
+                        debugLog("init: skipping upgraded entitlement id=\(transaction.id) product=\(transaction.productID)")
+                        continue
+                    }
+                    if self.sk2.processedTransactionIds.contains(transaction.id) {
+                        debugLog("init: skipping already-processed entitlement id=\(transaction.id)")
+                        continue
+                    }
+                    self.sk2.processedTransactionIds.insert(transaction.id)
                     self.sk2.unfinishedTransactions[String(transaction.id)] = transaction
+                    await self.emitTransactionUpdate(transaction,
+                        state: "PaymentTransactionStateRestored",
+                        jwsRepresentation: result.jwsRepresentation)
+                case .unverified(let transaction, let error):
+                    debugLog("init: unverified entitlement id=\(transaction.id) product=\(transaction.productID) error=\(error)")
                 }
             }
             call.resolve()
@@ -171,6 +203,7 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
                     let jwsRepresentation = verification.jwsRepresentation
                     switch verification {
                     case .verified(let transaction):
+                        sk2.processedTransactionIds.insert(transaction.id)
                         await emitTransactionUpdate(transaction,
                                                     state: "PaymentTransactionStatePurchased",
                                                     jwsRepresentation: jwsRepresentation)
@@ -221,6 +254,10 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
             if let transaction = sk2.unfinishedTransactions[transactionId] {
                 await transaction.finish()
                 sk2.unfinishedTransactions.removeValue(forKey: transactionId)
+                // Note: do NOT remove from processedTransactionIds here.
+                // Once a transaction ID has been emitted to JS, it must stay in the set
+                // for the lifetime of the session to prevent Transaction.updates from
+                // re-delivering it.
                 notifyListeners("transactionUpdated", data: [
                     "state": "PaymentTransactionStateFinished",
                     "transactionIdentifier": transactionId,
@@ -250,10 +287,18 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
             do {
                 try await AppStore.sync()
                 for await result in Transaction.currentEntitlements {
-                    if case .verified(let transaction) = result {
+                    switch result {
+                    case .verified(let transaction):
+                        if transaction.isUpgraded {
+                            debugLog("restore: skipping upgraded entitlement id=\(transaction.id) product=\(transaction.productID)")
+                            continue
+                        }
+                        sk2.processedTransactionIds.insert(transaction.id)
                         await emitTransactionUpdate(transaction,
                                                     state: "PaymentTransactionStateRestored",
                                                     jwsRepresentation: result.jwsRepresentation)
+                    case .unverified(let transaction, let error):
+                        debugLog("restore: unverified entitlement id=\(transaction.id) product=\(transaction.productID) error=\(error)")
                     }
                 }
                 notifyListeners("restoreCompleted", data: [:])
@@ -360,6 +405,8 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
                 debugLog("clearExpired: finishing expired transaction id=\(transaction.id) product=\(transaction.productID) expired=\(expirationDate)")
                 await transaction.finish()
                 sk2.unfinishedTransactions.removeValue(forKey: String(transaction.id))
+                // Note: do NOT remove from processedTransactionIds.
+                // The set must grow monotonically to prevent re-delivery via Transaction.updates.
             }
         }
     }
