@@ -89,8 +89,8 @@ namespace CdvPurchase {
                 /** Metadata about the user's device */
                 device?: CdvPurchase.Validator.DeviceInfo;
 
-                /** List of products available in the store */
-                products: {
+                /** List of products available in the store. Included at most once per day. */
+                products?: {
                     /** Type of product (subscription, consumable, etc.) */
                     type: ProductType;
 

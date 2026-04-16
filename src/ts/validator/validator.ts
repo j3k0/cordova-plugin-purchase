@@ -242,7 +242,37 @@ namespace CdvPurchase {
                     }
                 }
 
+                // Only include the products array once per day to reduce request size.
+                // The products array is used by the validator for analytics (price history,
+                // transaction amounts) but not for the validation flow itself.
+                // The top-level price/currency fields serve as fallback when products is omitted.
+                if (!this.shouldSendProducts()) {
+                    delete body.products;
+                }
+
                 return body;
+            }
+
+            /** Check if the products array should be included in the validation request.
+             *  Returns true at most once per day, tracked via localStorage. */
+            private shouldSendProducts(): boolean {
+                const STORAGE_KEY = 'cdvpurchase_has_sent_products_in_validation';
+                const ONE_DAY_MS = 86400000;
+                try {
+                    const stored = window.localStorage?.getItem(STORAGE_KEY);
+                    if (stored) {
+                        const lastSent = parseInt(stored, 10);
+                        if (!isNaN(lastSent) && (Date.now() - lastSent) < ONE_DAY_MS) {
+                            return false;
+                        }
+                    }
+                    // Send products this time and record the date
+                    window.localStorage?.setItem(STORAGE_KEY, String(Date.now()));
+                    return true;
+                } catch (_e) {
+                    // localStorage not available (e.g. private browsing)
+                    return true;
+                }
             }
 
             /**
