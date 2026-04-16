@@ -162,6 +162,9 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
                     options.insert(.quantity(quantity))
                 }
 
+                // Clear expired unfinished transactions that could block the purchase
+                await clearExpiredUnfinishedTransactions()
+
                 let result = try await product.purchase(options: options)
                 switch result {
                 case .success(let verification):
@@ -345,6 +348,21 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     // MARK: - Helpers
+
+    /// Finish any unfinished transactions whose subscription has already expired.
+    /// Stale unfinished transactions can block product.purchase() from initiating
+    /// a new purchase flow (confirmed on Apple Developer Forums).
+    @available(iOS 15.0, *)
+    private func clearExpiredUnfinishedTransactions() async {
+        for await result in Transaction.unfinished {
+            guard case .verified(let transaction) = result else { continue }
+            if let expirationDate = transaction.expirationDate, expirationDate < Date() {
+                debugLog("clearExpired: finishing expired transaction id=\(transaction.id) product=\(transaction.productID) expired=\(expirationDate)")
+                await transaction.finish()
+                sk2.unfinishedTransactions.removeValue(forKey: String(transaction.id))
+            }
+        }
+    }
 
     @available(iOS 15.0, *)
     private func emitTransactionUpdate(_ transaction: Transaction, state: String,

@@ -192,16 +192,8 @@ namespace CdvPurchase
                                     this.delegate.finishDuplicate(transaction);
                                 }
                                 else {
-                                    // Use subscription key for dedup when available
-                                    const dedupKey = subscriptionKey ? subscriptionKey + '@' + transaction.state : tokenWithState;
-                                    const lastCalled = this.lastCallTimeForState[dedupKey] ?? 0;
-                                    if (now - lastCalled > 60000) {
-                                        this.lastCallTimeForState[dedupKey] = now;
-                                        this.delegate.finishedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_finished');
-                                    }
-                                    else {
-                                        this.log.debug(`Skipping finished ${tokenWithState}, already called for this subscription`);
-                                    }
+                                    this.lastCallTimeForState[tokenWithState] = now;
+                                    this.delegate.finishedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_finished');
                                 }
                             }
                             else if (transaction.state === TransactionState.PENDING) {
