@@ -76,6 +76,89 @@ describe('CDVPurchase', () => {
 
   describe('AppleAppStore', () => {
 
+    describe('SKProduct.getOffer()', () => {
+      const noOpDecorators = {
+        canPurchase: (product: CdvPurchase.Product | CdvPurchase.Offer): boolean => true,
+        finish: (receipt: CdvPurchase.Receipt | CdvPurchase.Transaction): Promise<void> => new Promise<void>(resolve => resolve()),
+        order: (offer: CdvPurchase.Offer, additionalData?: CdvPurchase.AdditionalData): Promise<CdvPurchase.IError | undefined> =>
+          new Promise<undefined>(resolve => resolve(undefined)),
+        owned: (product: CdvPurchase.Product): boolean => false,
+        verify: (receipt: CdvPurchase.Receipt | CdvPurchase.Transaction): Promise<void> => new Promise<void>(resolve => resolve()),
+      };
+
+      const alwaysEligible: CdvPurchase.AppleAppStore.Internal.IDiscountEligibilities = {
+        isEligible: () => true,
+      };
+
+      test('getOffer() returns the default offer when discount offers exist', () => {
+        const validProduct: CdvPurchase.AppleAppStore.Bridge.ValidProduct = {
+          id: 'com.test.sub',
+          countryCode: 'US',
+          currency: 'USD',
+          description: 'Test subscription',
+          price: '$9.99',
+          priceMicros: 9990000,
+          title: 'Test Sub',
+          billingPeriod: 1,
+          billingPeriodUnit: 'Month',
+          discounts: [{
+            id: 'summer-sale',
+            type: 'Subscription' as CdvPurchase.AppleAppStore.DiscountType,
+            price: '$4.99',
+            priceMicros: 4990000,
+            period: 1,
+            periodUnit: 'Month',
+            paymentMode: CdvPurchase.PaymentMode.PAY_AS_YOU_GO,
+          }],
+        };
+
+        const product = new CdvPurchase.AppleAppStore.SKProduct(
+          validProduct,
+          { id: 'com.test.sub', platform: CdvPurchase.Platform.APPLE_APPSTORE, type: CdvPurchase.ProductType.PAID_SUBSCRIPTION },
+          noOpDecorators,
+          alwaysEligible,
+        );
+
+        // getOffer() with no args should return the default offer (id '$'), not the discount offer
+        const defaultOffer = product.getOffer();
+        expect(defaultOffer).toBeDefined();
+        expect(defaultOffer!.id).toBe('$');
+
+        // The discount offer should still be accessible by id
+        const discountOffer = product.getOffer('summer-sale');
+        expect(discountOffer).toBeDefined();
+        expect(discountOffer!.id).toBe('summer-sale');
+
+        // Default offer should be at index 0 of offers array
+        expect(product.offers[0].id).toBe('$');
+      });
+
+      test('getOffer() returns default offer when product has no discounts', () => {
+        const validProduct: CdvPurchase.AppleAppStore.Bridge.ValidProduct = {
+          id: 'com.test.sub2',
+          countryCode: 'US',
+          currency: 'USD',
+          description: 'Test subscription',
+          price: '$9.99',
+          priceMicros: 9990000,
+          title: 'Test Sub 2',
+          billingPeriod: 1,
+          billingPeriodUnit: 'Month',
+        };
+
+        const product = new CdvPurchase.AppleAppStore.SKProduct(
+          validProduct,
+          { id: 'com.test.sub2', platform: CdvPurchase.Platform.APPLE_APPSTORE, type: CdvPurchase.ProductType.PAID_SUBSCRIPTION },
+          noOpDecorators,
+          alwaysEligible,
+        );
+
+        const defaultOffer = product.getOffer();
+        expect(defaultOffer).toBeDefined();
+        expect(defaultOffer!.id).toBe('$');
+      });
+    });
+
     // Test that the AppStore adapter uses the discountEligibilityDeterminer to remove unavailable discounts
     test('Filter out available products according to the appStoreDiscountEligibilityDeterminer', (done) => {
       let determinerRequests: CdvPurchase.AppleAppStore.DiscountEligibilityRequest[] = [];
