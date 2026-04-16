@@ -217,6 +217,12 @@ namespace CdvPurchase {
                 finishedCallbacks: this.finishedCallbacks,
                 pendingCallbacks: this.pendingCallbacks,
                 receiptsReadyCallbacks: this.receiptsReadyCallbacks,
+                finishDuplicate: (transaction: Transaction) => {
+                    const adapter = this.adapters.findReady(transaction.platform);
+                    if (adapter) {
+                        adapter.finish(transaction);
+                    }
+                },
             }, this.log);
             this.transactionStateMonitors = new Internal.TransactionStateMonitors(this.when());
             this._validator = new Internal.Validator({

@@ -10,6 +10,8 @@ namespace CdvPurchase
             updatedCallbacks: Callbacks<Product>;
             updatedReceiptCallbacks: Callbacks<Receipt>;
             receiptsReadyCallbacks: Callbacks<void>;
+            /** Finish a duplicate subscription transaction at the native level so StoreKit won't re-deliver it */
+            finishDuplicate(transaction: Transaction): void;
         }
 
         /**
@@ -161,8 +163,9 @@ namespace CdvPurchase
                         // Retrigger "approved", so validation is rerun on potential update.
                         if (transaction.state === TransactionState.APPROVED) {
                             if (isSubscriptionDuplicate) {
-                                // Skip duplicate subscription transaction (different transactionId, same billing period)
-                                this.log.debug(`Skipping subscription duplicate ${transactionToken}, already processed as ${this.subscriptionFirstTransactionId[subscriptionKey!]}`);
+                                // Finish the duplicate at the native level so StoreKit won't re-deliver it
+                                this.log.debug(`Auto-finishing subscription duplicate ${transactionToken}, already processed as ${this.subscriptionFirstTransactionId[subscriptionKey!]}`);
+                                this.delegate.finishDuplicate(transaction);
                             }
                             else {
                                 // Use subscription key for dedup when available, otherwise fall back to transactionToken
@@ -184,7 +187,9 @@ namespace CdvPurchase
                             }
                             else if (transaction.state === TransactionState.FINISHED) {
                                 if (isSubscriptionDuplicate) {
-                                    this.log.debug(`Skipping subscription duplicate ${transactionToken}, already processed as ${this.subscriptionFirstTransactionId[subscriptionKey!]}`);
+                                    // Finish the duplicate at the native level so StoreKit won't re-deliver it
+                                    this.log.debug(`Auto-finishing subscription duplicate ${transactionToken}, already processed as ${this.subscriptionFirstTransactionId[subscriptionKey!]}`);
+                                    this.delegate.finishDuplicate(transaction);
                                 }
                                 else {
                                     // Use subscription key for dedup when available
@@ -204,7 +209,16 @@ namespace CdvPurchase
                                 this.delegate.pendingCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_pending');
                             }
                         }
-                        this.lastTransactionState[transactionToken] = transaction.state;
+                        // Mark subscription duplicates as FINISHED so the re-processing triggered
+                        // by finishDuplicate()'s receiptsUpdated.call() won't enter the FINISHED
+                        // handler and call finishDuplicate() a second time on an already-finished
+                        // native transaction.
+                        if (isSubscriptionDuplicate) {
+                            this.lastTransactionState[transactionToken] = TransactionState.FINISHED;
+                        }
+                        else {
+                            this.lastTransactionState[transactionToken] = transaction.state;
+                        }
                     });
                 });
             }
