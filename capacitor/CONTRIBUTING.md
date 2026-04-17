@@ -10,9 +10,8 @@ npm: capacitor-plugin-cdv-purchase → pod: CapacitorPluginCdvPurchase
 
 The podspec filename and `s.name` must match this derived name exactly. A mismatch causes "No podspec found" during `pod install`.
 
-There are two podspecs:
-- `CapacitorPluginCdvPurchase.podspec` — root-level, used by Capacitor CLI (paths relative to package root)
-- `ios/CapacitorPluginPurchase.podspec` — legacy (paths relative to `ios/`)
+The plugin ships a single podspec at the package root:
+- `CapacitorPluginCdvPurchase.podspec` — used by Capacitor CLI (paths relative to package root)
 
 ## iOS availability guards
 

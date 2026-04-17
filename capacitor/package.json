@@ -17,7 +17,7 @@
     "android": { "src": "android" }
   },
   "peerDependencies": {
-    "@capacitor/core": "^6.0.0"
+    "@capacitor/core": "^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "devDependencies": {
     "@capacitor/core": "^6.0.0",
@@ -35,7 +35,9 @@
     "www/",
     "android/",
     "!android/build",
-    "ios/"
+    "ios/",
+    "Package.swift",
+    "CapacitorPluginCdvPurchase.podspec"
   ],
   "license": "MIT",
   "repository": {
