@@ -15,6 +15,12 @@ static BOOL g_initialized = NO;
 static BOOL g_debugEnabled = NO;
 static BOOL g_autoFinishEnabled = NO;
 
+// YES once pluginInitialize detected StoreKit2Plugin on iOS 15+ and skipped SK1 init.
+static BOOL g_stoodDown = NO;
+
+// YES once _ensureInitialized has run (either eagerly from pluginInitialize or lazily from setup:).
+static BOOL g_lazyInitialized = NO;
+
 /*
  * Helpers
  */
@@ -246,19 +252,40 @@ static NSString *toTimestamp(NSDate *date) {
 @synthesize unfinishedTransactions;
 @synthesize pendingTransactionUpdates;
 
-// Initialize the plugin state
--(void) pluginInitialize {
+// Idempotent initialization of plugin state + SK1 transaction observer.
+// Called eagerly from pluginInitialize, or lazily from setup: if pluginInitialize
+// chose to stand down because StoreKit2Plugin was detected.
+-(void) _ensureInitialized {
+    if (g_lazyInitialized) return;
     self.retainer = [[NSMutableDictionary alloc] init];
     self.products = [[NSMutableDictionary alloc] init];
     self.pendingTransactionUpdates = [[NSMutableArray alloc] init];
     self.unfinishedTransactions = [[NSMutableDictionary alloc] init];
     if ([SKPaymentQueue canMakePayments]) {
         [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
-        NSLog(@"[CdvPurchase.AppleAppStore.objc] Initialized.");
+        NSLog(@"[CdvPurchase.AppleAppStore.objc] Initialized%@.",
+              g_stoodDown ? @" (lazy, after SK2 stand-down)" : @"");
     }
     else {
         NSLog(@"[CdvPurchase.AppleAppStore.objc] Initialization failed: payments are disabled.");
     }
+    g_lazyInitialized = YES;
+}
+
+// Initialize the plugin state.
+// Stands down if the StoreKit2Plugin Swift plugin is installed and the device
+// runs iOS 15+: the SK2 bridge will own SKPaymentQueue interaction, and a
+// second SK1 observer would cause duplicate transaction delivery and conflicting
+// auto-finish behavior.
+-(void) pluginInitialize {
+    if (NSClassFromString(@"StoreKit2Plugin") != nil) {
+        if (@available(iOS 15.0, *)) {
+            g_stoodDown = YES;
+            NSLog(@"[CdvPurchase.AppleAppStore.objc] StoreKit2Plugin detected on iOS 15+, SK1 standing down.");
+            return;
+        }
+    }
+    [self _ensureInitialized];
 }
 
 // Reset the plugin state
@@ -296,6 +323,7 @@ static NSString *toTimestamp(NSDate *date) {
 }
 
 -(void) setup: (CDVInvokedUrlCommand*)command {
+    [self _ensureInitialized];
     CDVPluginResult* pluginResult = nil;
     g_initialized = YES;
 
