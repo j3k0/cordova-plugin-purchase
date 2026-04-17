@@ -65,7 +65,11 @@ jobs:
           fi
           cp "$GITHUB_WORKSPACE/www/store.js" "$GITHUB_WORKSPACE/capacitor/www/store.js"
           cp "$GITHUB_WORKSPACE/www/store.d.ts" "$GITHUB_WORKSPACE/capacitor/www/store.d.ts"
-          npm install "$GITHUB_WORKSPACE/capacitor"
+          # Install from a packed tarball so CI exercises the exact artifact
+          # that `npm publish` ships (the `files` field is only applied at pack
+          # time, and peer-dep resolution is stricter than for directory installs).
+          TARBALL=$(cd "$GITHUB_WORKSPACE/capacitor" && npm pack --silent)
+          npm install "$GITHUB_WORKSPACE/capacitor/$TARBALL"
           npx cap sync ios
 
       - name: Build iOS
