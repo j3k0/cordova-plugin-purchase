@@ -376,6 +376,9 @@ declare namespace CdvPurchase {
             private runOnReceipt;
             private runValidatorFunction;
             private buildRequestBody;
+            /** Check if the products array should be included in the validation request.
+             *  Returns true at most once per day, tracked via localStorage. */
+            private shouldSendProducts;
             /**
              * For each md5-hashed values of the validator request's ".transaction" field,
              * store the response from the server.
@@ -564,6 +567,8 @@ declare namespace CdvPurchase {
             updatedCallbacks: Callbacks<Product>;
             updatedReceiptCallbacks: Callbacks<Receipt>;
             receiptsReadyCallbacks: Callbacks<void>;
+            /** Finish a duplicate subscription transaction at the native level so StoreKit won't re-deliver it */
+            finishDuplicate(transaction: Transaction): void;
         }
         /**
          * Monitor the updates for products and receipt.
@@ -582,6 +587,21 @@ declare namespace CdvPurchase {
                 [transactionToken: string]: TransactionState;
             };
             static makeTransactionToken(transaction: Transaction): string;
+            /**
+             * Create a subscription dedup key from a transaction.
+             *
+             * StoreKit 2 can deliver the same subscription purchase event twice with
+             * different `transactionId` but identical `originalTransactionId` and
+             * `purchaseDate`. This key groups those duplicates together so only one
+             * `approved`/`finished` event is surfaced per billing period.
+             *
+             * Returns `undefined` for non-subscription transactions (no `originalTransactionId`).
+             */
+            static makeSubscriptionKey(transaction: Transaction): string | undefined;
+            /** Remember the first transactionId for each subscription dedup key */
+            subscriptionFirstTransactionId: {
+                [subscriptionKey: string]: string;
+            };
             /** Store the listener's latest calling time (in ms) for a given transaction at a given state */
             lastCallTimeForState: {
                 [transactionTokenWithState: string]: number;
@@ -864,7 +884,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.15.1";
+    const PLUGIN_VERSION = "13.15.2";
     /**
      * Entry class of the plugin.
      */
@@ -6168,8 +6188,8 @@ declare namespace CdvPurchase {
                 trialPeriodUnit?: SubscriptionPeriodUnit;
                 /** Metadata about the user's device */
                 device?: CdvPurchase.Validator.DeviceInfo;
-                /** List of products available in the store */
-                products: {
+                /** List of products available in the store. Included at most once per day. */
+                products?: {
                     /** Type of product (subscription, consumable, etc.) */
                     type: ProductType;
                     /** Product identifier on the store (unique per platform) */

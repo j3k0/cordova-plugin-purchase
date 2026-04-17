@@ -688,8 +688,38 @@ var CdvPurchase;
                             body.introPriceMicros = intro.priceMicros;
                         }
                     }
+                    // Only include the products array once per day to reduce request size.
+                    // The products array is used by the validator for analytics (price history,
+                    // transaction amounts) but not for the validation flow itself.
+                    // The top-level price/currency fields serve as fallback when products is omitted.
+                    if (!this.shouldSendProducts()) {
+                        delete body.products;
+                    }
                     return body;
                 });
+            }
+            /** Check if the products array should be included in the validation request.
+             *  Returns true at most once per day, tracked via localStorage. */
+            shouldSendProducts() {
+                var _a, _b;
+                const STORAGE_KEY = 'cdvpurchase_has_sent_products_in_validation';
+                const ONE_DAY_MS = 86400000;
+                try {
+                    const stored = (_a = window.localStorage) === null || _a === void 0 ? void 0 : _a.getItem(STORAGE_KEY);
+                    if (stored) {
+                        const lastSent = parseInt(stored, 10);
+                        if (!isNaN(lastSent) && (Date.now() - lastSent) < ONE_DAY_MS) {
+                            return false;
+                        }
+                    }
+                    // Send products this time and record the date
+                    (_b = window.localStorage) === null || _b === void 0 ? void 0 : _b.setItem(STORAGE_KEY, String(Date.now()));
+                    return true;
+                }
+                catch (_e) {
+                    // localStorage not available (e.g. private browsing)
+                    return true;
+                }
             }
             removeExpiredCache() {
                 const now = +new Date();
@@ -1047,6 +1077,8 @@ var CdvPurchase;
                 /** Those platforms have reported that their receipts are ready */
                 this.platformWithReceiptsReady = [];
                 this.lastTransactionState = {};
+                /** Remember the first transactionId for each subscription dedup key */
+                this.subscriptionFirstTransactionId = {};
                 /** Store the listener's latest calling time (in ms) for a given transaction at a given state */
                 this.lastCallTimeForState = {};
                 this.updatedReceiptsToProcess = [];
@@ -1055,6 +1087,26 @@ var CdvPurchase;
             }
             static makeTransactionToken(transaction) {
                 return transaction.platform + '|' + transaction.transactionId;
+            }
+            /**
+             * Create a subscription dedup key from a transaction.
+             *
+             * StoreKit 2 can deliver the same subscription purchase event twice with
+             * different `transactionId` but identical `originalTransactionId` and
+             * `purchaseDate`. This key groups those duplicates together so only one
+             * `approved`/`finished` event is surfaced per billing period.
+             *
+             * Returns `undefined` for non-subscription transactions (no `originalTransactionId`).
+             */
+            static makeSubscriptionKey(transaction) {
+                if (transaction.platform !== CdvPurchase.Platform.APPLE_APPSTORE)
+                    return undefined;
+                const skTransaction = transaction;
+                if (!skTransaction.originalTransactionId)
+                    return undefined;
+                if (!transaction.purchaseDate)
+                    return undefined;
+                return transaction.platform + '|' + skTransaction.originalTransactionId + '|' + transaction.purchaseDate.getTime();
             }
             /**
              * Set the list of supported platforms.
@@ -1135,16 +1187,32 @@ var CdvPurchase;
                         const transactionToken = StoreAdapterListener.makeTransactionToken(transaction);
                         const tokenWithState = transactionToken + '@' + transaction.state;
                         const lastState = this.lastTransactionState[transactionToken];
+                        const subscriptionKey = StoreAdapterListener.makeSubscriptionKey(transaction);
+                        const isSubscriptionDuplicate = !!subscriptionKey
+                            && !!this.subscriptionFirstTransactionId[subscriptionKey]
+                            && this.subscriptionFirstTransactionId[subscriptionKey] !== transaction.transactionId;
+                        // Remember the first transactionId for this subscription key
+                        if (subscriptionKey && !this.subscriptionFirstTransactionId[subscriptionKey]) {
+                            this.subscriptionFirstTransactionId[subscriptionKey] = transaction.transactionId;
+                        }
                         // Retrigger "approved", so validation is rerun on potential update.
                         if (transaction.state === CdvPurchase.TransactionState.APPROVED) {
-                            // prevent calling approved twice in a very short period (60 seconds).
-                            const lastCalled = (_a = this.lastCallTimeForState[tokenWithState]) !== null && _a !== void 0 ? _a : 0;
-                            if (now - lastCalled > 60000) {
-                                this.lastCallTimeForState[tokenWithState] = now;
-                                this.delegate.approvedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_approved');
+                            if (isSubscriptionDuplicate) {
+                                // Finish the duplicate at the native level so StoreKit won't re-deliver it
+                                this.log.debug(`Auto-finishing subscription duplicate ${transactionToken}, already processed as ${this.subscriptionFirstTransactionId[subscriptionKey]}`);
+                                this.delegate.finishDuplicate(transaction);
                             }
                             else {
-                                this.log.debug(`Skipping ${tokenWithState}, because it has been last called ${lastCalled > 0 ? Math.round(now - lastCalled) + 'ms ago (' + now + '-' + lastCalled + ')' : 'never'}`);
+                                // Use subscription key for dedup when available, otherwise fall back to transactionToken
+                                const dedupKey = subscriptionKey ? subscriptionKey + '@' + transaction.state : tokenWithState;
+                                const lastCalled = (_a = this.lastCallTimeForState[dedupKey]) !== null && _a !== void 0 ? _a : 0;
+                                if (now - lastCalled > 60000) {
+                                    this.lastCallTimeForState[dedupKey] = now;
+                                    this.delegate.approvedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_approved');
+                                }
+                                else {
+                                    this.log.debug(`Skipping ${tokenWithState}, because it has been last called ${lastCalled > 0 ? Math.round(now - lastCalled) + 'ms ago (' + now + '-' + lastCalled + ')' : 'never'}`);
+                                }
                             }
                         }
                         else if (lastState !== transaction.state) {
@@ -1153,15 +1221,31 @@ var CdvPurchase;
                                 this.delegate.initiatedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_initiated');
                             }
                             else if (transaction.state === CdvPurchase.TransactionState.FINISHED) {
-                                this.lastCallTimeForState[tokenWithState] = now;
-                                this.delegate.finishedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_finished');
+                                if (isSubscriptionDuplicate) {
+                                    // Finish the duplicate at the native level so StoreKit won't re-deliver it
+                                    this.log.debug(`Auto-finishing subscription duplicate ${transactionToken}, already processed as ${this.subscriptionFirstTransactionId[subscriptionKey]}`);
+                                    this.delegate.finishDuplicate(transaction);
+                                }
+                                else {
+                                    this.lastCallTimeForState[tokenWithState] = now;
+                                    this.delegate.finishedCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_finished');
+                                }
                             }
                             else if (transaction.state === CdvPurchase.TransactionState.PENDING) {
                                 this.lastCallTimeForState[tokenWithState] = now;
                                 this.delegate.pendingCallbacks.trigger(transaction, 'adapterListener_receiptsUpdated_pending');
                             }
                         }
-                        this.lastTransactionState[transactionToken] = transaction.state;
+                        // Mark subscription duplicates as FINISHED so the re-processing triggered
+                        // by finishDuplicate()'s receiptsUpdated.call() won't enter the FINISHED
+                        // handler and call finishDuplicate() a second time on an already-finished
+                        // native transaction.
+                        if (isSubscriptionDuplicate) {
+                            this.lastTransactionState[transactionToken] = CdvPurchase.TransactionState.FINISHED;
+                        }
+                        else {
+                            this.lastTransactionState[transactionToken] = transaction.state;
+                        }
                     });
                 });
             }
@@ -1578,7 +1662,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.15.1';
+    CdvPurchase.PLUGIN_VERSION = '13.15.2';
     /**
      * Entry class of the plugin.
      */
@@ -1658,6 +1742,12 @@ var CdvPurchase;
                 finishedCallbacks: this.finishedCallbacks,
                 pendingCallbacks: this.pendingCallbacks,
                 receiptsReadyCallbacks: this.receiptsReadyCallbacks,
+                finishDuplicate: (transaction) => {
+                    const adapter = this.adapters.findReady(transaction.platform);
+                    if (adapter) {
+                        adapter.finish(transaction);
+                    }
+                },
             }, this.log);
             this.transactionStateMonitors = new CdvPurchase.Internal.TransactionStateMonitors(this.when());
             this._validator = new CdvPurchase.Internal.Validator({
@@ -3548,16 +3638,20 @@ var CdvPurchase;
                         this.receiptsUpdated.call();
                         return resolve(undefined);
                     }
+                    const wasAlreadyFinished = transaction.state === CdvPurchase.TransactionState.FINISHED;
                     const success = () => {
                         transaction.state = CdvPurchase.TransactionState.FINISHED;
-                        this.receiptsUpdated.call();
+                        if (!wasAlreadyFinished) {
+                            this.receiptsUpdated.call();
+                        }
                         resolve(undefined);
                     };
                     const error = (msg) => {
                         var _a, _b;
                         if (msg === null || msg === void 0 ? void 0 : msg.includes('[#CdvPurchase:100]')) {
-                            // already finished
-                            success();
+                            // already finished at the native level
+                            transaction.state = CdvPurchase.TransactionState.FINISHED;
+                            resolve(undefined);
                         }
                         else {
                             resolve(appStoreError(CdvPurchase.ErrorCode.FINISH, 'Failed to finish transaction', (_b = (_a = transaction.products[0]) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : null));

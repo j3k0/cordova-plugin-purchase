@@ -1,18 +1,39 @@
 # Release Notes - Cordova Plugin Purchase
 
-## cordova-plugin-purchase-storekit2 v1.0.3
-
-- **(fix)** Add native `getStorefront` using `Storefront.current` (StoreKit 2). Previously the SK2 bridge routed `getStorefront` through the SK1 ObjC plugin, whose `SKPaymentQueue.storefront` returns nil on Mac Catalyst — causing `store.getStorefront()` to reject with "Storefront not available"
-
-## cordova-plugin-purchase-storekit2 v1.0.1
-
-- **(fix)** Load `Transaction.currentEntitlements` at startup so existing subscriptions are visible immediately — previously required a manual restore or a renewal event
-
 ## 13.15
+
+### 13.15.2
+
+#### (capacitor) Capacitor 7 and 8 compatibility
+
+`capacitor-plugin-cdv-purchase` now installs cleanly on Capacitor 7 and 8 projects. The `@capacitor/core` peer dependency has been widened from `^6.0.0` to `^6.0.0 || ^7.0.0 || ^8.0.0`, and the SPM manifest (`Package.swift`) plus the root podspec (`CapacitorPluginCdvPurchase.podspec`) are now included in the published npm tarball — previously they were omitted, so Capacitor 8 (SPM) and Capacitor 6/7 (CocoaPods) both failed during `npx cap sync ios`. See [#1692](https://github.com/j3k0/cordova-plugin-purchase/issues/1692).
+
+#### (ios) StoreKit 2 reliability fixes
+
+- **Stand down SK1 when StoreKit2Plugin is installed.** When both `cordova-plugin-purchase` and `cordova-plugin-purchase-storekit2` are installed on iOS 15+, SK1 no longer registers an `SKPaymentQueue` observer at launch. This eliminates duplicate transaction delivery and conflicting auto-finish behavior between SK1 and SK2's `Transaction.updates` stream. Requires `cordova-plugin-purchase-storekit2` for detection.
+- **Surface existing subscriptions on Capacitor app relaunch.** The Capacitor SK2 plugin now emits current entitlements as `PaymentTransactionStateRestored` on `init()` so existing subscriptions are visible immediately — no manual restore required. Transaction deduplication via `processedTransactionIds` prevents double-emission from `Transaction.updates`.
+- **Prevent `finish()` cascade on verified receipts.** The adapter's `finish()` now skips `receiptsUpdated` when the transaction is already FINISHED, avoiding cascading receipt update cycles when `finish(VerifiedReceipt)` is called multiple times. Native `finish()` is still called so the StoreKit queue stays clean.
+- **Clear expired SK2 transactions before purchase.** Stale unfinished transactions were blocking SK2 from initiating a new purchase flow. The Capacitor iOS plugin now clears expired unfinished transactions before `product.purchase()`, matching the Cordova SK2 plugin behavior.
+- **Restore FINISHED callback for subscriptions.** Removed a 60-second cooldown on the FINISHED state that was suppressing `finished()` callbacks and leaving the store in an inconsistent state (blocking new purchases). The subscription duplicate-transaction check is kept.
+- **Auto-finish SK2 subscription duplicate transactions at the native level.** When SK2 delivers the same subscription purchase via both `product.purchase()` and `Transaction.updates` (different `transactionId`, same `originalTransactionId` + `purchaseDate`), the duplicate is now finished at the native level. Apple requires `Transaction.finish()` on every transaction — unfinished duplicates were being re-delivered by `Transaction.updates` on every app launch indefinitely.
+- **Deduplicate SK2 subscription transactions in the adapter listener.** Only one of the duplicate events triggers `approved()` and a validation request. Previously both fired, causing two validation calls per purchase.
+- **(ios) `getOffer()` now returns the default offer when discount offers exist.** Previously the method returned the first discount instead of the default offer. Discounts remain accessible by id.
+
+#### (perf) Smaller validation requests
+
+The `products` array (full catalog with offers and pricing phases) is now sent with receipt validation requests at most once per 24 hours instead of on every call, significantly reducing request payload size.
+
+#### StoreKit 2 Plugin
+
+- **cordova-plugin-purchase-storekit2 v1.0.4** — unify native log tag to `CdvPurchase.AppleAppStore.swift` so SK2 output is easier to filter in device logs alongside the rest of the Apple adapter.
 
 ### 13.15.1
 
 - **(fix)** `store.getStorefront()` now works on Mac Catalyst (including Capacitor's "Designed for iPad" mode, which runs as a Catalyst AppKit process). The Capacitor plugin falls back to SK2's `Storefront.current` when SK1's `SKPaymentQueue.storefront` is nil, and the SK2 bridge routes through the `StoreKit2Plugin` (requires `cordova-plugin-purchase-storekit2` v1.0.3). See [#1691](https://github.com/j3k0/cordova-plugin-purchase/issues/1691)
+
+#### StoreKit 2 Plugin
+
+- **cordova-plugin-purchase-storekit2 v1.0.3** — add native `getStorefront` using `Storefront.current` (StoreKit 2). Previously the SK2 bridge routed `getStorefront` through the SK1 ObjC plugin, whose `SKPaymentQueue.storefront` returns nil on Mac Catalyst — causing `store.getStorefront()` to reject with "Storefront not available".
 
 ### 13.15.0
 
@@ -66,6 +87,10 @@ Supported platforms advertise it via the new `getStorefront` capability. Availab
 
 When a one-time product had multiple offers (v12.0 format), price and currency macros returned zeros because the wrong offer was picked for macro resolution. Now the first available offer with pricing data is used.
 
+#### StoreKit 2 Plugin
+
+- **cordova-plugin-purchase-storekit2 v1.0.1** — load `Transaction.currentEntitlements` at startup so existing subscriptions are visible immediately, instead of requiring a manual restore or a renewal event to surface them.
+
 ## 13.14
 
 ### 13.14.0
@@ -94,6 +119,10 @@ cordova plugin add cordova-plugin-purchase-storekit2
 - Main plugin gains a shared `BridgeInterface`, an SK2 TypeScript bridge, and adapter changes for runtime SK2 detection
 - Extension plugin (`cordova-plugin-purchase-storekit2`) contains only the Swift native code and a JS marker file
 - Falls back to StoreKit 1 when the extension is not installed or on iOS < 15
+
+#### StoreKit 2 Plugin
+
+- **cordova-plugin-purchase-storekit2 v1.0.0** — initial release. Ships the native StoreKit 2 Swift bridge used by the main plugin when the extension is present on iOS 15+.
 
 ## 13.13
 

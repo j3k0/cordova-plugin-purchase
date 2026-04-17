@@ -157,9 +157,9 @@ ___
 
 ### products
 
-• **products**: \{ `id`: `string` ; `offers`: \{ `id`: `string` ; `pricingPhases`: [`PricingPhase`](CdvPurchase.PricingPhase.md)[]  }[] ; `type`: [`ProductType`](../enums/CdvPurchase.ProductType.md)  }[]
+• `Optional` **products**: \{ `id`: `string` ; `offers`: \{ `id`: `string` ; `pricingPhases`: [`PricingPhase`](CdvPurchase.PricingPhase.md)[]  }[] ; `type`: [`ProductType`](../enums/CdvPurchase.ProductType.md)  }[]
 
-List of products available in the store
+List of products available in the store. Included at most once per day.
 
 ___
 
