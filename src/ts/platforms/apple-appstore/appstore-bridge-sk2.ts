@@ -42,6 +42,8 @@ namespace CdvPurchase {
                 appStoreReceipt?: AppleAppStore.ApplicationReceipt | null;
                 private registeredProducts: string[] = [];
                 private needRestoreNotification = false;
+                pendingTransactionsReady?: Promise<void>;
+                private _pendingTransactionsResolve?: () => void;
                 private pendingUpdates: {
                     state: Bridge.TransactionState;
                     errorCode: ErrorCode | undefined;
@@ -120,6 +122,9 @@ namespace CdvPurchase {
                         protectCall(this.options.ready, 'options.ready');
                         protectCall(success, 'init.success');
                         this.initialized = true;
+                        this.pendingTransactionsReady = new Promise<void>(resolve => {
+                            this._pendingTransactionsResolve = resolve;
+                        });
                         setTimeout(() => this.processPendingTransactions(), 50);
                     };
 
@@ -135,6 +140,10 @@ namespace CdvPurchase {
                     log('processing pending transactions');
                     exec('processPendingTransactions', [], () => {
                         this.finalizeTransactionUpdates();
+                        if (this._pendingTransactionsResolve) {
+                            this._pendingTransactionsResolve();
+                            this._pendingTransactionsResolve = undefined;
+                        }
                     }, undefined);
                 }
 

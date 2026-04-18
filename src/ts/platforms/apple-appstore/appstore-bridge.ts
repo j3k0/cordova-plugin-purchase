@@ -243,6 +243,10 @@ namespace CdvPurchase {
                 /** True if "restoreCompleted" or "restoreFailed" should be called when restore is done */
                 private needRestoreNotification = false;
 
+                /** Resolves when pending transactions from the native queue have been processed */
+                pendingTransactionsReady?: Promise<void>;
+                private _pendingTransactionsResolve?: () => void;
+
                 /*
                 private eventQueue: {
                     state: TransactionState;
@@ -343,6 +347,9 @@ namespace CdvPurchase {
                         protectCall(this.options.ready, 'options.ready');
                         protectCall(success, 'init.success');
                         this.initialized = true;
+                        this.pendingTransactionsReady = new Promise<void>(resolve => {
+                            this._pendingTransactionsResolve = resolve;
+                        });
                         setTimeout(() => this.processPendingTransactions(), 50);
                     };
 
@@ -359,6 +366,10 @@ namespace CdvPurchase {
                     log('processing pending transactions');
                     exec('processPendingTransactions', [], () => {
                         this.finalizeTransactionUpdates();
+                        if (this._pendingTransactionsResolve) {
+                            this._pendingTransactionsResolve();
+                            this._pendingTransactionsResolve = undefined;
+                        }
                     }, undefined);
                 }
 

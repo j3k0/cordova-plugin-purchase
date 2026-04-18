@@ -20,6 +20,8 @@ namespace CdvPurchase {
                 transactionsForProduct: { [productId: string]: string[] };
                 /** Whether this bridge uses StoreKit 2 */
                 readonly isSK2?: boolean;
+                /** Resolves when pending transactions from the native queue have been processed */
+                pendingTransactionsReady?: Promise<void>;
 
                 init(options: Partial<BridgeOptions>, success: () => void,
                      error: (code: ErrorCode, message: string) => void): void;
