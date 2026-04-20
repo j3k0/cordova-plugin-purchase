@@ -499,6 +499,7 @@ public class PurchasePlugin extends Plugin implements
                                 .enableOneTimeProducts()
                                 .enablePrepaidPlans()
                                 .build())
+                .enableAutoServiceReconnection()
                 .setListener(this)
                 .build();
 
@@ -795,8 +796,8 @@ public class PurchasePlugin extends Plugin implements
                     mPendingBuyCall = null;
                 }
             }
-        } catch (JSONException e) {
-            Log.w(TAG, "onPurchasesUpdated() -> JSONException "
+        } catch (Exception e) {
+            Log.w(TAG, "onPurchasesUpdated() -> Exception "
                     + e.getMessage());
         }
     }

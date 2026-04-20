@@ -376,9 +376,8 @@ public final class PurchasePlugin
           final List<Purchase> purchases) {
     try {
       if (result.getResponseCode() == BillingResponseCode.OK) {
-        for (Purchase p : purchases) {
-          mPurchases.add(0, p);
-        }
+        mPurchases.clear();
+        mPurchases.addAll(purchases);
         sendToListener("setPurchases", new JSONObject()
             .put("purchases", toJSON(purchases)));
         callSuccess(toJSON(purchases));
@@ -411,8 +410,10 @@ public final class PurchasePlugin
       .put("developerPayload", p.getDeveloperPayload())
       .put("acknowledged", p.isAcknowledged())
       .put("autoRenewing", p.isAutoRenewing())
-      .put("accountId", p.getAccountIdentifiers().getObfuscatedAccountId())
-      .put("profileId", p.getAccountIdentifiers().getObfuscatedProfileId())
+      .put("accountId", p.getAccountIdentifiers() != null
+          ? p.getAccountIdentifiers().getObfuscatedAccountId() : null)
+      .put("profileId", p.getAccountIdentifiers() != null
+          ? p.getAccountIdentifiers().getObfuscatedProfileId() : null)
       .put("signature", p.getSignature())
       .put("receipt", p.getOriginalJson().toString())
       .put("quantity", p.getQuantity());
@@ -700,8 +701,8 @@ public final class PurchasePlugin
             + "Failed: " + format(result));
         callError(Constants.ERR_PURCHASE, codeToString(code));
       }
-    } catch (JSONException e) {
-      Log.w(mTag, "onPurchasesUpdated() -> JSONException "
+    } catch (Exception e) {
+      Log.w(mTag, "onPurchasesUpdated() -> Exception "
           + e.getMessage());
       callError(Constants.ERR_PURCHASE, e.getMessage());
     }
