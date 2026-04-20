@@ -22,6 +22,7 @@ The adapter programs against this interface, not a concrete class.
 - [onPurchased](CdvPurchase.AppleAppStore.Bridge.Bridge.md#onpurchased)
 - [onRestored](CdvPurchase.AppleAppStore.Bridge.Bridge.md#onrestored)
 - [options](CdvPurchase.AppleAppStore.Bridge.Bridge.md#options)
+- [pendingTransactionsReady](CdvPurchase.AppleAppStore.Bridge.Bridge.md#pendingtransactionsready)
 - [transactionsForProduct](CdvPurchase.AppleAppStore.Bridge.Bridge.md#transactionsforproduct)
 
 ### Methods
@@ -99,6 +100,18 @@ ___
 • **options**: [`BridgeCallbacks`](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeCallbacks.md)
 
 Callbacks set by the adapter
+
+___
+
+### pendingTransactionsReady
+
+• `Optional` **pendingTransactionsReady**: `Promise`\<`void`\>
+
+Resolves when pending transactions from the native queue have been processed
+
+#### Implementation of
+
+[BridgeInterface](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md).[pendingTransactionsReady](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#pendingtransactionsready)
 
 ___
 

@@ -21,7 +21,9 @@ Data provided to store.register()
 
 Name of the group your subscription product is a member of.
 
-If you don't set anything, all subscription will be members of the same group.
+When set, purchasing a subscription in a group will replace the currently
+owned one (on Google Play, this triggers the subscription replacement flow).
+When not set, subscriptions are independent — no automatic replacement.
 
 ___
 

@@ -20,6 +20,7 @@ The adapter programs against this interface, not a concrete class.
 - [appStoreReceipt](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#appstorereceipt)
 - [isSK2](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#issk2)
 - [options](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#options)
+- [pendingTransactionsReady](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#pendingtransactionsready)
 - [transactionsForProduct](CdvPurchase.AppleAppStore.SK2Bridge.SK2NativeBridge.md#transactionsforproduct)
 
 ### Methods
@@ -84,6 +85,18 @@ ___
 ### options
 
 • **options**: [`SK2BridgeCallbacks`](../interfaces/CdvPurchase.AppleAppStore.SK2Bridge.SK2BridgeCallbacks.md)
+
+___
+
+### pendingTransactionsReady
+
+• `Optional` **pendingTransactionsReady**: `Promise`\<`void`\>
+
+Resolves when pending transactions from the native queue have been processed
+
+#### Implementation of
+
+[BridgeInterface](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md).[pendingTransactionsReady](../interfaces/CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#pendingtransactionsready)
 
 ___
 

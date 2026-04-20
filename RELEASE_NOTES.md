@@ -2,6 +2,26 @@
 
 ## 13.15
 
+### 13.15.3
+
+#### (android) Harden purchase serialization against null AccountIdentifiers
+
+Google's Play Billing Library declares `Purchase.getAccountIdentifiers()` as `@Nullable`, but the Cordova Android bridge was dereferencing it unconditionally in `toJSON()`. When Play Store returns `null` for a purchase made without `setObfuscatedAccountId()`, this throws an NPE that silently breaks the purchase-to-JS pipeline — matching the "Product Owned never fires" symptom reported in [#1690](https://github.com/j3k0/cordova-plugin-purchase/issues/1690). The Cordova plugin now matches the Capacitor plugin's existing null-guard.
+
+Additional Android hardening shipped alongside:
+
+- **Wider exception handling in `onPurchasesUpdated`** (Cordova and Capacitor). The catch block now handles `Exception` instead of only `JSONException`, so any unexpected serialization failure during a live purchase is surfaced through the normal error path instead of crashing the purchase listener.
+- **(capacitor) `enableAutoServiceReconnection()` on the BillingClient.** The Capacitor Android plugin now enables PBL 8's automatic reconnection when Google Play Services disconnects (parity with the Cordova plugin).
+- **(cordova) Deduplicate `mPurchases` in `onQueryPurchasesFinished`.** The internal purchase list is now cleared before re-populating, so repeated `store.restorePurchases()` or `queryPurchases()` calls don't accumulate stale duplicates.
+
+#### (ios) Prevent sandbox dialog loop and stale ownership at app start
+
+Contributed by @giacomoballi in [#1689](https://github.com/j3k0/cordova-plugin-purchase/pull/1689):
+
+- **Sandbox dialog loop when the app receipt fails to load.** `upsertTransaction` now falls back to a synthetic `SKApplicationReceipt` so the promise resolves and the native transaction gets finished instead of looping the sandbox sign-in dialog indefinitely ([#1568](https://github.com/j3k0/cordova-plugin-purchase/issues/1568)).
+- **Stale ownership at startup.** `loadReceipts()` now awaits `bridge.pendingTransactionsReady` (plus one task yield so async `upsertTransaction` chains can settle) instead of relying on a fixed 300 ms timeout. Transactions drained from the native queue are now guaranteed to be present in the returned receipt ([#1529](https://github.com/j3k0/cordova-plugin-purchase/issues/1529), [#1363](https://github.com/j3k0/cordova-plugin-purchase/issues/1363)).
+- `initializeAppReceipt` now clears `_appStoreReceiptLoading` on the success path so subsequent loads are not blocked.
+
 ### 13.15.2
 
 #### (capacitor) Capacitor 7 and 8 compatibility

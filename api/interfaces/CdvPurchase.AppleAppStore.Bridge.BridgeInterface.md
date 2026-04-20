@@ -17,6 +17,7 @@ The adapter programs against this interface, not a concrete class.
 
 - [appStoreReceipt](CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#appstorereceipt)
 - [isSK2](CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#issk2)
+- [pendingTransactionsReady](CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#pendingtransactionsready)
 - [transactionsForProduct](CdvPurchase.AppleAppStore.Bridge.BridgeInterface.md#transactionsforproduct)
 
 ### Methods
@@ -49,6 +50,14 @@ ___
 • `Optional` `Readonly` **isSK2**: `boolean`
 
 Whether this bridge uses StoreKit 2
+
+___
+
+### pendingTransactionsReady
+
+• `Optional` **pendingTransactionsReady**: `Promise`\<`void`\>
+
+Resolves when pending transactions from the native queue have been processed
 
 ___
 
