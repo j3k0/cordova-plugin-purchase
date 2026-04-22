@@ -70,6 +70,7 @@ jobs:
           # time, and peer-dep resolution is stricter than for directory installs).
           TARBALL=$(cd "$GITHUB_WORKSPACE/capacitor" && npm pack --silent)
           npm install "$GITHUB_WORKSPACE/capacitor/$TARBALL"
+          node -e "console.log(require.resolve('capacitor-plugin-cdv-purchase/package.json'))"
           npx cap sync ios
 
       - name: Build iOS
