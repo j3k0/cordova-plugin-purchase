@@ -17,6 +17,7 @@ Product as loaded from AppStore
 - [group](CdvPurchase.AppleAppStore.Bridge.ValidProduct.md#group)
 - [id](CdvPurchase.AppleAppStore.Bridge.ValidProduct.md#id)
 - [introPrice](CdvPurchase.AppleAppStore.Bridge.ValidProduct.md#introprice)
+- [introPriceEligible](CdvPurchase.AppleAppStore.Bridge.ValidProduct.md#intropriceeligible)
 - [introPriceMicros](CdvPurchase.AppleAppStore.Bridge.ValidProduct.md#intropricemicros)
 - [introPricePaymentMode](CdvPurchase.AppleAppStore.Bridge.ValidProduct.md#intropricepaymentmode)
 - [introPricePeriod](CdvPurchase.AppleAppStore.Bridge.ValidProduct.md#intropriceperiod)
@@ -96,6 +97,19 @@ ___
 • `Optional` **introPrice**: `string`
 
 Localized price for introductory period
+
+___
+
+### introPriceEligible
+
+• `Optional` **introPriceEligible**: `boolean`
+
+Whether the user is eligible for the introductory price.
+
+Populated from StoreKit 2's `Product.SubscriptionInfo.isEligibleForIntroOffer`
+when running on SK2 (iOS 15+). Absent on SK1 and on older native builds that
+don't surface it — in which case the discount eligibility determiner is used
+as before.
 
 ___
 

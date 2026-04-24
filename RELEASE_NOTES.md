@@ -1,5 +1,23 @@
 # Release Notes - Cordova Plugin Purchase
 
+## Unreleased
+
+#### (ios) Honor StoreKit 2 `isEligibleForIntroOffer` for intro price eligibility
+
+Under StoreKit 2, the app store receipt is always empty — so the adapter's eligibility
+path was short-circuiting and reporting every user as eligible for the introductory
+price, even after they had already redeemed the free trial ([#1694](https://github.com/j3k0/cordova-plugin-purchase/issues/1694)). The native iOS plugin
+(Capacitor and the StoreKit 2 Plugin) now surfaces `Product.SubscriptionInfo.isEligibleForIntroOffer`
+on each loaded product, and the adapter seeds that authoritative answer into the
+eligibility response. When the native answer is available, the receipt-based
+`appStoreDiscountEligibilityDeterminer` is skipped entirely; when only some answers
+are available (e.g. promotional offers), the native answer overlays the determiner's
+response (native wins).
+
+Requires the **StoreKit 2 Plugin** v1.0.5+ on Cordova, or the updated Capacitor plugin
+bundled in this release. Older native builds that don't surface `introPriceEligible`
+continue to work unchanged — eligibility falls back to the existing determiner path.
+
 ## 13.15
 
 ### 13.15.3

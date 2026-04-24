@@ -150,7 +150,7 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
 
                 for product in storeProducts {
                     sk2.products[product.id] = product
-                    validProducts.append(productToDict(product))
+                    validProducts.append(await productToDict(product))
                     validIds.insert(product.id)
                 }
 
@@ -445,7 +445,7 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @available(iOS 15.0, *)
-    private func productToDict(_ product: Product) -> [String: Any] {
+    private func productToDict(_ product: Product) async -> [String: Any] {
         var dict: [String: Any] = [
             "id": product.id,
             "title": product.displayName,
@@ -478,6 +478,10 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
                 dict["introPricePeriod"] = intro.period.value
                 dict["introPricePeriodUnit"] = periodUnitToString(intro.period.unit)
                 dict["introPricePaymentMode"] = paymentModeToString(intro.paymentMode)
+                // StoreKit 2 eligibility — honors the user's prior subscription/trial history.
+                // Only meaningful when an intro offer exists; omitted otherwise so older TS
+                // builds that don't know about this field keep their SK1-era behavior.
+                dict["introPriceEligible"] = await subscription.isEligibleForIntroOffer
             }
 
             // Promotional offers (discounts)
