@@ -543,47 +543,50 @@ namespace CdvPurchase {
 
             private async loadEligibility(validProducts: Bridge.ValidProduct[]): Promise<Internal.DiscountEligibilities> {
                 this.log.debug('load eligibility: ' + JSON.stringify(validProducts));
-                if (!this.discountEligibilityDeterminer) {
-                    this.log.debug('No discount eligibility determiner, skipping...');
+
+                // Collect eligibility requests alongside native-provided answers (from
+                // StoreKit 2's isEligibleForIntroOffer, when available).
+                const { requests, nativeAnswers } = Internal.collectEligibilityRequests(validProducts);
+
+                if (requests.length === 0) {
                     return new Internal.DiscountEligibilities([], []);
                 }
 
-                const eligibilityRequests: DiscountEligibilityRequest[] = [];
-                validProducts.forEach(valid => {
-                    valid.discounts?.forEach(discount => {
-                        eligibilityRequests.push({
-                            productId: valid.id,
-                            discountId: discount.id,
-                            discountType: discount.type,
-                        });
-                    });
-                    if ((valid.discounts?.length ?? 0) === 0 && valid.introPrice) {
-                        // sometime apple returns the discounts in the deprecated "introductory" info
-                        // we create a special "discount" with the id "intro" to check for eligibility.
-                        eligibilityRequests.push({
-                            productId: valid.id,
-                            discountId: 'intro',
-                            discountType: 'Introductory',
-                        });
-                    }
-                });
+                // Fast path — if every eligibility answer came from native, we can skip
+                // the receipt fetch and the determiner entirely. This is the common case
+                // for StoreKit 2 where the app store receipt is always empty.
+                const allNative = nativeAnswers.every(a => a !== undefined);
+                if (allNative) {
+                    this.log.debug('native eligibility answers cover all requests, skipping determiner.');
+                    return new Internal.DiscountEligibilities(requests, nativeAnswers as boolean[]);
+                }
 
-                if (eligibilityRequests.length > 0) {
-                    const applicationReceipt = await this.loadAppStoreReceipt();
-                    if (!applicationReceipt || !applicationReceipt.appStoreReceipt) {
-                        this.log.debug('no receipt, assuming introductory price are available.');
-                        return new Internal.DiscountEligibilities(eligibilityRequests, eligibilityRequests.map(r => r.discountType === "Introductory"));
-                    }
-                    else {
-                        this.log.debug('calling discount eligibility determiner.');
-                        const response = await this.callDiscountEligibilityDeterminer(applicationReceipt, eligibilityRequests);
-                        this.log.debug('response: ' + JSON.stringify(response));
-                        return new Internal.DiscountEligibilities(eligibilityRequests, response);
-                    }
+                // Otherwise fall back to the receipt + determiner path, then overlay any
+                // native answers we do have (native wins on conflict — it's authoritative).
+                if (!this.discountEligibilityDeterminer) {
+                    this.log.debug('No discount eligibility determiner; using native answers only where available.');
+                    const defaultForMissing = requests.map(r => r.discountType === 'Introductory');
+                    return new Internal.DiscountEligibilities(
+                        requests,
+                        Internal.mergeNativeEligibility(defaultForMissing, nativeAnswers),
+                    );
+                }
+
+                const applicationReceipt = await this.loadAppStoreReceipt();
+                let response: boolean[];
+                if (!applicationReceipt || !applicationReceipt.appStoreReceipt) {
+                    this.log.debug('no receipt, assuming introductory price are available.');
+                    response = requests.map(r => r.discountType === 'Introductory');
                 }
                 else {
-                    return new Internal.DiscountEligibilities([], []);
+                    this.log.debug('calling discount eligibility determiner.');
+                    response = await this.callDiscountEligibilityDeterminer(applicationReceipt, requests);
+                    this.log.debug('response: ' + JSON.stringify(response));
                 }
+                return new Internal.DiscountEligibilities(
+                    requests,
+                    Internal.mergeNativeEligibility(response, nativeAnswers),
+                );
             }
 
             private callDiscountEligibilityDeterminer(applicationReceipt: ApplicationReceipt, eligibilityRequests: DiscountEligibilityRequest[]): Promise<boolean[]> {

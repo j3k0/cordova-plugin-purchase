@@ -84,6 +84,16 @@ namespace CdvPurchase {
                 /** Payment mode for introductory price */
                 introPricePaymentMode?: PaymentMode;
 
+                /**
+                 * Whether the user is eligible for the introductory price.
+                 *
+                 * Populated from StoreKit 2's `Product.SubscriptionInfo.isEligibleForIntroOffer`
+                 * when running on SK2 (iOS 15+). Absent on SK1 and on older native builds that
+                 * don't surface it — in which case the discount eligibility determiner is used
+                 * as before.
+                 */
+                introPriceEligible?: boolean;
+
                 /** Available discount offers */
                 discounts?: Discount[];
 
