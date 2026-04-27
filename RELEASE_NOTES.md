@@ -1,6 +1,8 @@
 # Release Notes - Cordova Plugin Purchase
 
-## Unreleased
+## 13.15
+
+### 13.15.4
 
 #### (ios) Honor StoreKit 2 `isEligibleForIntroOffer` for intro price eligibility
 
@@ -18,7 +20,9 @@ Requires the **StoreKit 2 Plugin** v1.0.5+ on Cordova, or the updated Capacitor 
 bundled in this release. Older native builds that don't surface `introPriceEligible`
 continue to work unchanged — eligibility falls back to the existing determiner path.
 
-## 13.15
+#### (capacitor) Export `package.json` for Capacitor CLI plugin discovery
+
+`capacitor-plugin-cdv-purchase` now exports `./package.json` so `npx cap sync` can resolve the plugin manifest under modern package-exports resolution. Without this entry, Capacitor 7+ projects could fail to discover the plugin during sync. Contributed by @kstruempf in [#1696](https://github.com/j3k0/cordova-plugin-purchase/pull/1696).
 
 ### 13.15.3
 

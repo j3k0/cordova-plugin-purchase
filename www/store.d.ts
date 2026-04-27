@@ -886,7 +886,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.15.3";
+    const PLUGIN_VERSION = "13.15.4";
     /**
      * Entry class of the plugin.
      */
@@ -2970,6 +2970,15 @@ declare namespace CdvPurchase {
                 introPricePeriodUnit?: IPeriodUnit;
                 /** Payment mode for introductory price */
                 introPricePaymentMode?: PaymentMode;
+                /**
+                 * Whether the user is eligible for the introductory price.
+                 *
+                 * Populated from StoreKit 2's `Product.SubscriptionInfo.isEligibleForIntroOffer`
+                 * when running on SK2 (iOS 15+). Absent on SK1 and on older native builds that
+                 * don't surface it — in which case the discount eligibility determiner is used
+                 * as before.
+                 */
+                introPriceEligible?: boolean;
                 /** Available discount offers */
                 discounts?: Discount[];
                 /** Group this product is member of */
@@ -3170,6 +3179,28 @@ declare namespace CdvPurchase {
                 constructor(request: DiscountEligibilityRequest[], response: boolean[]);
                 isEligible(productId: string, discountType: DiscountType, discountId: string): boolean;
             }
+            /**
+             * Build the pair of (requests, native-provided answers) for every valid product.
+             *
+             * The two arrays are parallel: for each request, the matching `nativeAnswers` entry
+             * is either the native eligibility (from StoreKit 2's `isEligibleForIntroOffer`)
+             * or `undefined` if native did not provide one (SK1 / older native plugin).
+             *
+             * Only Introductory requests can carry a native answer — SK2 does not answer
+             * promotional offer eligibility at the adapter level.
+             */
+            function collectEligibilityRequests(validProducts: Bridge.ValidProduct[]): {
+                requests: DiscountEligibilityRequest[];
+                nativeAnswers: (boolean | undefined)[];
+            };
+            /**
+             * Overlay native-provided eligibility answers on top of a determiner response.
+             *
+             * Native wins on conflict — it's the authoritative source for StoreKit 2.
+             * Determiner response is used where native did not provide an answer (SK1
+             * or older native builds).
+             */
+            function mergeNativeEligibility(determinerResponse: boolean[], nativeAnswers: (boolean | undefined)[]): boolean[];
         }
     }
 }

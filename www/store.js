@@ -1662,7 +1662,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.15.3';
+    CdvPurchase.PLUGIN_VERSION = '13.15.4';
     /**
      * Entry class of the plugin.
      */
@@ -3500,46 +3500,39 @@ var CdvPurchase;
             loadEligibility(validProducts) {
                 return __awaiter(this, void 0, void 0, function* () {
                     this.log.debug('load eligibility: ' + JSON.stringify(validProducts));
-                    if (!this.discountEligibilityDeterminer) {
-                        this.log.debug('No discount eligibility determiner, skipping...');
+                    // Collect eligibility requests alongside native-provided answers (from
+                    // StoreKit 2's isEligibleForIntroOffer, when available).
+                    const { requests, nativeAnswers } = AppleAppStore.Internal.collectEligibilityRequests(validProducts);
+                    if (requests.length === 0) {
                         return new AppleAppStore.Internal.DiscountEligibilities([], []);
                     }
-                    const eligibilityRequests = [];
-                    validProducts.forEach(valid => {
-                        var _a, _b, _c;
-                        (_a = valid.discounts) === null || _a === void 0 ? void 0 : _a.forEach(discount => {
-                            eligibilityRequests.push({
-                                productId: valid.id,
-                                discountId: discount.id,
-                                discountType: discount.type,
-                            });
-                        });
-                        if (((_c = (_b = valid.discounts) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 0) === 0 && valid.introPrice) {
-                            // sometime apple returns the discounts in the deprecated "introductory" info
-                            // we create a special "discount" with the id "intro" to check for eligibility.
-                            eligibilityRequests.push({
-                                productId: valid.id,
-                                discountId: 'intro',
-                                discountType: 'Introductory',
-                            });
-                        }
-                    });
-                    if (eligibilityRequests.length > 0) {
-                        const applicationReceipt = yield this.loadAppStoreReceipt();
-                        if (!applicationReceipt || !applicationReceipt.appStoreReceipt) {
-                            this.log.debug('no receipt, assuming introductory price are available.');
-                            return new AppleAppStore.Internal.DiscountEligibilities(eligibilityRequests, eligibilityRequests.map(r => r.discountType === "Introductory"));
-                        }
-                        else {
-                            this.log.debug('calling discount eligibility determiner.');
-                            const response = yield this.callDiscountEligibilityDeterminer(applicationReceipt, eligibilityRequests);
-                            this.log.debug('response: ' + JSON.stringify(response));
-                            return new AppleAppStore.Internal.DiscountEligibilities(eligibilityRequests, response);
-                        }
+                    // Fast path — if every eligibility answer came from native, we can skip
+                    // the receipt fetch and the determiner entirely. This is the common case
+                    // for StoreKit 2 where the app store receipt is always empty.
+                    const allNative = nativeAnswers.every(a => a !== undefined);
+                    if (allNative) {
+                        this.log.debug('native eligibility answers cover all requests, skipping determiner.');
+                        return new AppleAppStore.Internal.DiscountEligibilities(requests, nativeAnswers);
+                    }
+                    // Otherwise fall back to the receipt + determiner path, then overlay any
+                    // native answers we do have (native wins on conflict — it's authoritative).
+                    if (!this.discountEligibilityDeterminer) {
+                        this.log.debug('No discount eligibility determiner; using native answers only where available.');
+                        const defaultForMissing = requests.map(r => r.discountType === 'Introductory');
+                        return new AppleAppStore.Internal.DiscountEligibilities(requests, AppleAppStore.Internal.mergeNativeEligibility(defaultForMissing, nativeAnswers));
+                    }
+                    const applicationReceipt = yield this.loadAppStoreReceipt();
+                    let response;
+                    if (!applicationReceipt || !applicationReceipt.appStoreReceipt) {
+                        this.log.debug('no receipt, assuming introductory price are available.');
+                        response = requests.map(r => r.discountType === 'Introductory');
                     }
                     else {
-                        return new AppleAppStore.Internal.DiscountEligibilities([], []);
+                        this.log.debug('calling discount eligibility determiner.');
+                        response = yield this.callDiscountEligibilityDeterminer(applicationReceipt, requests);
+                        this.log.debug('response: ' + JSON.stringify(response));
                     }
+                    return new AppleAppStore.Internal.DiscountEligibilities(requests, AppleAppStore.Internal.mergeNativeEligibility(response, nativeAnswers));
                 });
             }
             callDiscountEligibilityDeterminer(applicationReceipt, eligibilityRequests) {
@@ -4882,6 +4875,52 @@ var CdvPurchase;
                 }
             }
             Internal.DiscountEligibilities = DiscountEligibilities;
+            /**
+             * Build the pair of (requests, native-provided answers) for every valid product.
+             *
+             * The two arrays are parallel: for each request, the matching `nativeAnswers` entry
+             * is either the native eligibility (from StoreKit 2's `isEligibleForIntroOffer`)
+             * or `undefined` if native did not provide one (SK1 / older native plugin).
+             *
+             * Only Introductory requests can carry a native answer — SK2 does not answer
+             * promotional offer eligibility at the adapter level.
+             */
+            function collectEligibilityRequests(validProducts) {
+                const requests = [];
+                const nativeAnswers = [];
+                validProducts.forEach(valid => {
+                    var _a, _b, _c;
+                    (_a = valid.discounts) === null || _a === void 0 ? void 0 : _a.forEach(discount => {
+                        requests.push({
+                            productId: valid.id,
+                            discountId: discount.id,
+                            discountType: discount.type,
+                        });
+                        nativeAnswers.push(discount.type === 'Introductory' ? valid.introPriceEligible : undefined);
+                    });
+                    if (((_c = (_b = valid.discounts) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 0) === 0 && valid.introPrice) {
+                        requests.push({
+                            productId: valid.id,
+                            discountId: 'intro',
+                            discountType: 'Introductory',
+                        });
+                        nativeAnswers.push(valid.introPriceEligible);
+                    }
+                });
+                return { requests, nativeAnswers };
+            }
+            Internal.collectEligibilityRequests = collectEligibilityRequests;
+            /**
+             * Overlay native-provided eligibility answers on top of a determiner response.
+             *
+             * Native wins on conflict — it's the authoritative source for StoreKit 2.
+             * Determiner response is used where native did not provide an answer (SK1
+             * or older native builds).
+             */
+            function mergeNativeEligibility(determinerResponse, nativeAnswers) {
+                return determinerResponse.map((r, i) => nativeAnswers[i] !== undefined ? nativeAnswers[i] : r);
+            }
+            Internal.mergeNativeEligibility = mergeNativeEligibility;
         })(Internal = AppleAppStore.Internal || (AppleAppStore.Internal = {}));
     })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
 })(CdvPurchase || (CdvPurchase = {}));
