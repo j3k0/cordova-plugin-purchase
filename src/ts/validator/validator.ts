@@ -357,13 +357,32 @@ namespace CdvPurchase {
 
         /**
          * Check if a payload looks like a valid validator response.
+         *
+         * When `ok` is `true`, validates that `data` exists and contains the
+         * required fields (`id`, `latest_receipt`, `transaction`).
+         * When `ok` is `false`, the `data` field is optional per ErrorPayload.
+         *
+         * Returns a TypeScript type guard (`boolean`). Callers should use the
+         * `if (!isValidatorResponsePayload(response))` pattern at the call site.
          */
-        function isValidatorResponsePayload(payload: unknown): payload is Validator.Response.Payload {
-            // TODO: could be made more robust.
-            return (!!payload)
-                && (typeof payload === 'object')
-                && ('ok' in payload)
-                && (typeof (payload as any).ok === 'boolean');
+        export function isValidatorResponsePayload(payload: unknown): payload is Validator.Response.Payload {
+            if (!payload || typeof payload !== 'object')
+                return false;
+            const p = payload as any;
+            if (typeof p.ok !== 'boolean')
+                return false;
+            if (p.ok === true) {
+                const data = p.data;
+                if (!data || typeof data !== 'object')
+                    return false;
+                if (typeof data.id !== 'string')
+                    return false;
+                if (typeof data.latest_receipt !== 'boolean')
+                    return false;
+                if (!data.transaction || typeof data.transaction !== 'object')
+                    return false;
+            }
+            return true;
         }
     }
 }

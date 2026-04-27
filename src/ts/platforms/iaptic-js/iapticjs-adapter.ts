@@ -345,8 +345,8 @@ namespace CdvPurchase {
             async handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void> {
                 this.log.info('handleReceiptValidationResponse for IapticJS');
                 if (response.ok) {
-                    const validatedData = response.data.transaction;
-                    const collection = response.data.collection;
+                    const validatedData = response.data?.transaction;
+                    const collection = response.data?.collection;
 
                     // Update receipt based on validated collection
                     if (collection) {
