@@ -371,11 +371,13 @@ namespace CdvPurchase {
                 return;
             }
             const now = +new Date();
-            if (this.lastUpdate > now - this.minTimeBetweenUpdates) {
+            const prevLastUpdate = this.lastUpdate;
+            this.lastUpdate = now;
+            if (prevLastUpdate > now - this.minTimeBetweenUpdates) {
+                this.lastUpdate = prevLastUpdate;
                 this.log.info('Skipping store.update() as the last call occurred less than store.minTimeBetweenUpdates millis ago.');
                 return;
             }
-            this.lastUpdate = now;
             // Load products metadata
             for (const registration of this.registeredProducts.byPlatform()) {
                 const adapter = this.adapters.findReady(registration.platform);
