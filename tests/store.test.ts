@@ -168,6 +168,118 @@ describe('CDVPurchase', () => {
     });
   });
 
+  describe('store.update() throttle', () => {
+    beforeEach(() => {
+      if (CdvPurchase.store.getAdapter(CdvPurchase.Platform.TEST)) {
+        // @ts-ignore - accessing private property for testing
+        CdvPurchase.store.adapters = new CdvPurchase.Internal.Adapters();
+        // @ts-ignore - reset the initialized flag
+        CdvPurchase.store.initializedHasBeenCalled = false;
+      }
+      // @ts-ignore - reset the storefront cache
+      CdvPurchase.store._storefronts = new CdvPurchase.Internal.Storefronts(CdvPurchase.store.log.child('Storefronts'));
+    });
+
+    test('should block concurrent update() calls within throttle window', async () => {
+      CdvPurchase.store.register({
+        id: 'throttle-test-product',
+        type: CdvPurchase.ProductType.CONSUMABLE,
+        platform: CdvPurchase.Platform.TEST,
+      });
+
+      await CdvPurchase.store.initialize([CdvPurchase.Platform.TEST]);
+      await new Promise<void>(resolve => CdvPurchase.store.ready(() => resolve()));
+
+      // @ts-ignore - accessing private property for testing
+      CdvPurchase.store.minTimeBetweenUpdates = 600000;
+
+      const infoLogs: string[] = [];
+      const originalInfo = CdvPurchase.store.log.info.bind(CdvPurchase.store.log);
+      // @ts-ignore - monkey-patching log for testing
+      CdvPurchase.store.log.info = (msg: string) => {
+        infoLogs.push(msg);
+        originalInfo(msg);
+      };
+
+      const [result1, result2] = await Promise.all([
+        CdvPurchase.store.update(),
+        CdvPurchase.store.update(),
+      ]);
+
+      // @ts-ignore
+      CdvPurchase.store.log.info = originalInfo;
+
+      const updateSkipped = infoLogs.filter(msg => msg.includes('Skipping store.update()')).length;
+      expect(updateSkipped).toBeGreaterThanOrEqual(1);
+    });
+
+    test('should allow update() after throttle window expires', async () => {
+      CdvPurchase.store.register({
+        id: 'throttle-window-product',
+        type: CdvPurchase.ProductType.CONSUMABLE,
+        platform: CdvPurchase.Platform.TEST,
+      });
+
+      await CdvPurchase.store.initialize([CdvPurchase.Platform.TEST]);
+      await new Promise<void>(resolve => CdvPurchase.store.ready(() => resolve()));
+
+      // @ts-ignore - accessing private property for testing
+      CdvPurchase.store.minTimeBetweenUpdates = 50;
+
+      await CdvPurchase.store.update();
+
+      await new Promise(resolve => setTimeout(resolve, 60));
+
+      const infoLogs: string[] = [];
+      const originalInfo = CdvPurchase.store.log.info.bind(CdvPurchase.store.log);
+      // @ts-ignore - monkey-patching log for testing
+      CdvPurchase.store.log.info = (msg: string) => {
+        infoLogs.push(msg);
+        originalInfo(msg);
+      };
+
+      await CdvPurchase.store.update();
+
+      // @ts-ignore
+      CdvPurchase.store.log.info = originalInfo;
+
+      const updateSkipped = infoLogs.filter(msg => msg.includes('Skipping store.update()')).length;
+      expect(updateSkipped).toBe(0);
+    });
+
+    test('should block sequential update() calls within throttle window', async () => {
+      CdvPurchase.store.register({
+        id: 'throttle-sequential-product',
+        type: CdvPurchase.ProductType.CONSUMABLE,
+        platform: CdvPurchase.Platform.TEST,
+      });
+
+      await CdvPurchase.store.initialize([CdvPurchase.Platform.TEST]);
+      await new Promise<void>(resolve => CdvPurchase.store.ready(() => resolve()));
+
+      // @ts-ignore - accessing private property for testing
+      CdvPurchase.store.minTimeBetweenUpdates = 600000;
+
+      await CdvPurchase.store.update();
+
+      const infoLogs: string[] = [];
+      const originalInfo = CdvPurchase.store.log.info.bind(CdvPurchase.store.log);
+      // @ts-ignore - monkey-patching log for testing
+      CdvPurchase.store.log.info = (msg: string) => {
+        infoLogs.push(msg);
+        originalInfo(msg);
+      };
+
+      await CdvPurchase.store.update();
+
+      // @ts-ignore
+      CdvPurchase.store.log.info = originalInfo;
+
+      const updateSkipped = infoLogs.filter(msg => msg.includes('Skipping store.update()')).length;
+      expect(updateSkipped).toBe(1);
+    });
+  });
+
   describe('Integration Tests', () => {
     // Reset the store before each test
     beforeEach(() => {
