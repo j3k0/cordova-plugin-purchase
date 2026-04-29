@@ -1,125 +1,167 @@
 import '../www/store';
 
-describe('isValidatorResponsePayload', () => {
-  describe('when ok is true', () => {
-    test('rejects payload missing data field', () => {
-      const payload = { ok: true };
-      expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(false);
-    });
+// These tests drive Validator end-to-end through runValidatorRequest with a
+// stubbed Utils.ajax. They exercise the isValidatorResponsePayload guard via
+// its only caller, so the helper can stay module-private.
 
-    test('rejects payload with data missing id', () => {
-      const payload = { ok: true, data: { latest_receipt: true, transaction: { type: 'test' } } };
-      expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(false);
-    });
+function makeLogger(): CdvPurchase.Logger {
+  const noop = () => {};
+  return {
+    verbosity: CdvPurchase.LogLevel.QUIET,
+    error: noop,
+    warn: noop,
+    info: noop,
+    debug: noop,
+    child: () => makeLogger(),
+    logger: { log: noop },
+  } as unknown as CdvPurchase.Logger;
+}
 
-    test('rejects payload with data missing latest_receipt', () => {
-      const payload = { ok: true, data: { id: 'com.test.product', transaction: { type: 'test' } } };
-      expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(false);
-    });
+function makeAdapter(platform: CdvPurchase.Platform): CdvPurchase.Adapter {
+  return {
+    id: platform,
+    name: `adapter-${platform}`,
+    ready: true,
+    products: [],
+    receipts: [],
+    isSupported: true,
+    receiptValidationBody: async () => ({
+      id: 'com.test.product',
+      type: CdvPurchase.ProductType.CONSUMABLE,
+      transaction: { type: 'test', id: 't1' },
+    }),
+    handleReceiptValidationResponse: async () => {},
+  } as unknown as CdvPurchase.Adapter;
+}
 
-    test('rejects payload with data missing transaction', () => {
-      const payload = { ok: true, data: { id: 'com.test.product', latest_receipt: true } };
-      expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(false);
-    });
-
-    test('rejects payload with data.id not a string', () => {
-      const payload = { ok: true, data: { id: 123, latest_receipt: true, transaction: { type: 'test' } } };
-      expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(false);
-    });
-
-    test('rejects payload with data.latest_receipt not a boolean', () => {
-      const payload = { ok: true, data: { id: 'com.test.product', latest_receipt: 'yes', transaction: { type: 'test' } } };
-      expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(false);
-    });
-
-    test('rejects payload with data.transaction not an object', () => {
-      const payload = { ok: true, data: { id: 'com.test.product', latest_receipt: true, transaction: 'invalid' } };
-      expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(false);
-    });
+function makeReceipt(platform: CdvPurchase.Platform): CdvPurchase.Receipt {
+  return new CdvPurchase.Receipt(platform, {
+    verify: async () => {},
+    finish: async () => {},
   });
+}
 
-  describe('when ok is false', () => {
-    test('accepts payload without data', () => {
-      const payload = { ok: false, code: CdvPurchase.ErrorCode.BAD_RESPONSE, message: 'Invalid' };
-      expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(true);
-    });
+interface RunResult {
+  verified: CdvPurchase.VerifiedReceipt[];
+  unverified: { receipt: CdvPurchase.Receipt; payload: CdvPurchase.Validator.Response.Payload }[];
+}
 
-    test('accepts payload with data', () => {
-      const payload = { ok: false, code: CdvPurchase.ErrorCode.BAD_RESPONSE, message: 'Invalid', data: { latest_receipt: true } };
-      expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(true);
-    });
-  });
+async function runValidator(payload: unknown): Promise<RunResult> {
+  const platform = CdvPurchase.Platform.GOOGLE_PLAY;
+  const adapter = makeAdapter(platform);
+  const verifiedCallbacks = new CdvPurchase.Internal.Callbacks<CdvPurchase.VerifiedReceipt>(makeLogger(), 'verified');
+  const unverifiedCallbacks = new CdvPurchase.Internal.Callbacks<CdvPurchase.UnverifiedReceipt>(makeLogger(), 'unverified');
 
-  describe('invalid payloads', () => {
-    test('rejects null', () => {
-      expect(CdvPurchase.Internal.isValidatorResponsePayload(null)).toBe(false);
-    });
+  const verified: CdvPurchase.VerifiedReceipt[] = [];
+  const unverified: { receipt: CdvPurchase.Receipt; payload: CdvPurchase.Validator.Response.Payload }[] = [];
+  verifiedCallbacks.push(vr => { verified.push(vr); }, 'recorder');
+  unverifiedCallbacks.push(uv => { unverified.push(uv); }, 'recorder');
 
-    test('rejects undefined', () => {
-      expect(CdvPurchase.Internal.isValidatorResponsePayload(undefined)).toBe(false);
-    });
+  const controller: CdvPurchase.Internal.ValidatorController = {
+    validator: 'https://example.test/validate',
+    localReceipts: [],
+    adapters: { find: () => adapter } as unknown as CdvPurchase.Internal.Adapters,
+    validator_privacy_policy: undefined,
+    getApplicationUsername: () => undefined,
+    verifiedCallbacks,
+    unverifiedCallbacks,
+    finish: async () => {},
+  };
 
-    test('rejects string', () => {
-      expect(CdvPurchase.Internal.isValidatorResponsePayload('ok')).toBe(false);
-    });
+  const originalAjax = CdvPurchase.Utils.ajax;
+  (CdvPurchase.Utils as any).ajax = (_log: CdvPurchase.Logger, opts: any) => {
+    setTimeout(() => opts.success(payload), 0);
+    return { done: () => {} };
+  };
 
-    test('rejects object without ok field', () => {
-      expect(CdvPurchase.Internal.isValidatorResponsePayload({ data: {} })).toBe(false);
-    });
-  });
+  try {
+    const validator = new CdvPurchase.Internal.Validator(controller, makeLogger());
+    const receipt = makeReceipt(platform);
+    validator.add(receipt);
+    validator.run();
 
-  describe('valid success payloads', () => {
-    test('accepts well-formed success payload', () => {
-      const payload = {
-        ok: true,
-        data: {
-          id: 'com.test.product',
-          latest_receipt: true,
-          transaction: { type: 'test' },
-        },
-      };
-      expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(true);
-    });
+    // Flush the async buildRequestBody chain and the setTimeout(0) ajax callback.
+    // The Validator.run() → buildRequestBody → ajax → success → onResponse →
+    // handleReceiptValidationResponse chain has multiple awaits, so wait
+    // generously for it to settle.
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    await new Promise(r => setTimeout(r, 50));
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+  } finally {
+    (CdvPurchase.Utils as any).ajax = originalAjax;
+  }
 
-    test('accepts success payload with optional collection field', () => {
-      const payload = {
-        ok: true,
-        data: {
-          id: 'com.test.product',
-          latest_receipt: true,
-          transaction: { type: 'test' },
-          collection: [{ id: 'com.test.product', transactionId: 'txn1' }],
-        },
-      };
-      expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(true);
-    });
+  return { verified, unverified };
+}
+
+describe('Validator integration — invalid responses trigger BAD_RESPONSE', () => {
+  test.each([
+    ['ok:true with no data', { ok: true }],
+    ['ok:true with data missing id', { ok: true, data: { latest_receipt: true, transaction: {} } }],
+    ['ok:true with data missing latest_receipt', { ok: true, data: { id: 'x', transaction: {} } }],
+    ['ok:true with data missing transaction', { ok: true, data: { id: 'x', latest_receipt: true } }],
+    ['ok:true with non-string id', { ok: true, data: { id: 1, latest_receipt: true, transaction: {} } }],
+    ['ok:true with non-boolean latest_receipt', { ok: true, data: { id: 'x', latest_receipt: 'yes', transaction: {} } }],
+    ['ok:true with non-object transaction', { ok: true, data: { id: 'x', latest_receipt: true, transaction: 'no' } }],
+    ['null', null],
+    ['undefined', undefined],
+    ['string', 'oops'],
+    ['object without ok', { data: {} }],
+  ])('rejects %s as BAD_RESPONSE', async (_label, payload) => {
+    const { verified, unverified } = await runValidator(payload);
+    expect(verified).toHaveLength(0);
+    expect(unverified).toHaveLength(1);
+    const p = unverified[0].payload as CdvPurchase.Validator.Response.ErrorPayload;
+    expect(p.ok).toBe(false);
+    expect(p.code).toBe(CdvPurchase.ErrorCode.BAD_RESPONSE);
   });
 });
 
-describe('Validator.runValidatorRequest invalid response handling', () => {
-  test('isValidatorResponsePayload returns false for ok:true with missing data', () => {
-    const payload = { ok: true } as unknown;
-    expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(false);
-  });
-
-  test('isValidatorResponsePayload returns true for valid success payload', () => {
+describe('Validator integration — valid success payloads', () => {
+  test('well-formed success payload triggers verifiedCallbacks', async () => {
     const payload = {
       ok: true,
       data: {
-        id: 'com.example.product',
+        id: 'com.test.product',
         latest_receipt: true,
         transaction: { type: 'android-playstore', purchaseToken: 'token' },
       },
     };
-    expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(true);
+    const { verified, unverified } = await runValidator(payload);
+    expect(unverified).toHaveLength(0);
+    expect(verified).toHaveLength(1);
+    expect(verified[0].id).toBe('com.test.product');
   });
 
-  test('isValidatorResponsePayload returns true for error payload without data', () => {
+  test('success payload with optional collection field triggers verifiedCallbacks', async () => {
+    const payload = {
+      ok: true,
+      data: {
+        id: 'com.test.product',
+        latest_receipt: true,
+        transaction: { type: 'test' },
+        collection: [{ id: 'com.test.product', transactionId: 'txn1' }],
+      },
+    };
+    const { verified, unverified } = await runValidator(payload);
+    expect(unverified).toHaveLength(0);
+    expect(verified).toHaveLength(1);
+  });
+});
+
+describe('Validator integration — valid error payloads', () => {
+  // Pin down that legitimate ok:false responses are NOT coerced to BAD_RESPONSE.
+  test('ok:false without data passes through to unverifiedCallbacks with original code', async () => {
     const payload = {
       ok: false,
-      code: CdvPurchase.ErrorCode.BAD_RESPONSE,
-      message: 'Something went wrong',
+      code: CdvPurchase.ErrorCode.VERIFICATION_FAILED,
+      message: 'boom',
     };
-    expect(CdvPurchase.Internal.isValidatorResponsePayload(payload)).toBe(true);
+    const { verified, unverified } = await runValidator(payload);
+    expect(verified).toHaveLength(0);
+    expect(unverified).toHaveLength(1);
+    const p = unverified[0].payload as CdvPurchase.Validator.Response.ErrorPayload;
+    expect(p.ok).toBe(false);
+    expect(p.code).toBe(CdvPurchase.ErrorCode.VERIFICATION_FAILED);
   });
 });

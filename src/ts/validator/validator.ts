@@ -365,7 +365,7 @@ namespace CdvPurchase {
          * Returns a TypeScript type guard (`boolean`). Callers should use the
          * `if (!isValidatorResponsePayload(response))` pattern at the call site.
          */
-        export function isValidatorResponsePayload(payload: unknown): payload is Validator.Response.Payload {
+        function isValidatorResponsePayload(payload: unknown): payload is Validator.Response.Payload {
             if (!payload || typeof payload !== 'object')
                 return false;
             const p = payload as any;
