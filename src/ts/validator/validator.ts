@@ -357,13 +357,32 @@ namespace CdvPurchase {
 
         /**
          * Check if a payload looks like a valid validator response.
+         *
+         * When `ok` is `true`, validates that `data` exists and contains the
+         * fields the rest of the pipeline reads unconditionally: `id` (used to
+         * key the verified-receipt cache) and `transaction` (stored as the
+         * native transaction). Optional fields like `latest_receipt`,
+         * `collection`, `warning`, `date` are not required — a validator that
+         * omits them produces a usable VerifiedReceipt all the same.
+         *
+         * When `ok` is `false`, the `data` field is optional per ErrorPayload.
          */
         function isValidatorResponsePayload(payload: unknown): payload is Validator.Response.Payload {
-            // TODO: could be made more robust.
-            return (!!payload)
-                && (typeof payload === 'object')
-                && ('ok' in payload)
-                && (typeof (payload as any).ok === 'boolean');
+            if (!payload || typeof payload !== 'object')
+                return false;
+            const p = payload as any;
+            if (typeof p.ok !== 'boolean')
+                return false;
+            if (p.ok === true) {
+                const data = p.data;
+                if (!data || typeof data !== 'object')
+                    return false;
+                if (typeof data.id !== 'string')
+                    return false;
+                if (!data.transaction || typeof data.transaction !== 'object')
+                    return false;
+            }
+            return true;
         }
     }
 }
