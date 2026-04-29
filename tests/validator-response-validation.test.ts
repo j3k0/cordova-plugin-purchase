@@ -98,10 +98,8 @@ describe('Validator integration — invalid responses trigger BAD_RESPONSE', () 
   test.each([
     ['ok:true with no data', { ok: true }],
     ['ok:true with data missing id', { ok: true, data: { latest_receipt: true, transaction: {} } }],
-    ['ok:true with data missing latest_receipt', { ok: true, data: { id: 'x', transaction: {} } }],
     ['ok:true with data missing transaction', { ok: true, data: { id: 'x', latest_receipt: true } }],
     ['ok:true with non-string id', { ok: true, data: { id: 1, latest_receipt: true, transaction: {} } }],
-    ['ok:true with non-boolean latest_receipt', { ok: true, data: { id: 'x', latest_receipt: 'yes', transaction: {} } }],
     ['ok:true with non-object transaction', { ok: true, data: { id: 'x', latest_receipt: true, transaction: 'no' } }],
     ['null', null],
     ['undefined', undefined],
@@ -141,6 +139,22 @@ describe('Validator integration — valid success payloads', () => {
         latest_receipt: true,
         transaction: { type: 'test' },
         collection: [{ id: 'com.test.product', transactionId: 'txn1' }],
+      },
+    };
+    const { verified, unverified } = await runValidator(payload);
+    expect(unverified).toHaveLength(0);
+    expect(verified).toHaveLength(1);
+  });
+
+  // latest_receipt is documented as required in SuccessPayload, but in
+  // practice it's only metadata stored on VerifiedReceipt.latestReceipt and
+  // never branched on. Older validators may omit it; treat it as optional.
+  test('success payload omitting latest_receipt is accepted', async () => {
+    const payload = {
+      ok: true,
+      data: {
+        id: 'com.test.product',
+        transaction: { type: 'test' },
       },
     };
     const { verified, unverified } = await runValidator(payload);
