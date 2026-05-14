@@ -296,8 +296,10 @@ namespace CdvPurchase {
      *
      * - `'legacy'` (default) — Preserves backward compatibility:
      *   - Google Play: raw MD5 hash (32 hex chars)
-     *   - Apple SK2: MD5 hash formatted as UUIDv3 (36 chars with dashes)
-     *   - Apple SK1: raw value (no transformation)
+     *   - Apple AppStore: MD5 hash formatted as UUIDv3 (36 chars with dashes)
+     *   - Other platforms: MD5 hash formatted as UUIDv3
+     *   - Note: for Apple SK1 transactions, the adapter passes the raw username instead
+     *     of the obfuscated value (backward compatibility).
      *   - **Deprecated**: will be replaced by `'uuid'` in a future major version.
      *
      * - `'uuid'` — MD5 hash formatted as UUIDv3 on all platforms.

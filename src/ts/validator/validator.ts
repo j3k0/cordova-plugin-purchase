@@ -220,9 +220,8 @@ namespace CdvPurchase {
                     applicationUsername: rawUsername,
                 }
                 if (!body.additionalData.applicationUsername) delete body.additionalData.applicationUsername;
-                if (rawUsername && body.transaction?.type) {
-                    const platform = body.transaction.type as CdvPurchase.Platform;
-                    body.additionalData.obfuscatedUsername = this.controller.obfuscateUsername(rawUsername, platform);
+                if (rawUsername) {
+                    body.additionalData.obfuscatedUsername = this.controller.obfuscateUsername(rawUsername, receipt.platform);
                 }
 
                 // Add device information
