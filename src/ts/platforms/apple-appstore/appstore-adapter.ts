@@ -692,7 +692,13 @@ namespace CdvPurchase {
                     // When we switch AppStore user, the cached receipt isn't from the new user.
                     // so after a purchase, we want to make sure we're using the receipt from the logged in user.
                     this.forceReceiptReload = true;
-                    this.bridge.purchase(offer.productId, quantity, this.context.getApplicationUsername(), discount, success, error);
+                    const rawUsername = additionalData?.applicationUsername || this.context.getApplicationUsername();
+                    const obfuscator = this.context.obfuscator ?? 'legacy';
+                    const skipObfuscation = !this.useSK2 && (obfuscator === 'legacy' || obfuscator === 'disabled');
+                    const username = (rawUsername && skipObfuscation)
+                        ? rawUsername
+                        : (rawUsername ? this.context.obfuscateUsername(rawUsername, Platform.APPLE_APPSTORE) : undefined);
+                    this.bridge.purchase(offer.productId, quantity, username, discount, success, error);
                 });
             }
 
