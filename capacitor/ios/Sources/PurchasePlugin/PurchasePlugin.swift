@@ -186,9 +186,9 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
         Task {
             do {
                 var options: Set<Product.PurchaseOption> = []
-                if let username = call.getString("applicationUsername") {
+                if let username = call.getString("applicationUsername"), let uuid = UUID(uuidString: username) {
                     options.insert(.appAccountToken(
-                        UUID(uuidString: username) ?? UUID()))
+                        uuid))
                 }
                 if quantity > 1 {
                     options.insert(.quantity(quantity))
