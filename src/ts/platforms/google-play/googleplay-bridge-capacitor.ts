@@ -183,11 +183,7 @@ namespace CdvPurchase {
             }
 
             function extendAdditionalData(ad?: CdvPurchase.AdditionalData): AdditionalData {
-                const additionalData: AdditionalData = ensureObject(ad?.googlePlay);
-                if (!additionalData.accountId && ad?.applicationUsername) {
-                    additionalData.accountId = Utils.md5(ad.applicationUsername);
-                }
-                return additionalData;
+                return ensureObject(ad?.googlePlay);
             }
         }
     }

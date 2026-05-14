@@ -478,6 +478,12 @@ namespace CdvPurchase {
 
             /** @inheritDoc */
             async order(offer: GOffer, additionalData: CdvPurchase.AdditionalData): Promise<IError | undefined> {
+                const username = additionalData?.applicationUsername || this.context.getApplicationUsername();
+                if (username && !additionalData?.googlePlay?.accountId) {
+                    if (!additionalData) additionalData = {};
+                    if (!additionalData.googlePlay) additionalData.googlePlay = {};
+                    additionalData.googlePlay.accountId = this.context.obfuscateUsername(username, Platform.GOOGLE_PLAY);
+                }
                 return new Promise(resolve => {
                     this.log.info("Order - " + JSON.stringify(offer));
                     const buySuccess = () => resolve(undefined);

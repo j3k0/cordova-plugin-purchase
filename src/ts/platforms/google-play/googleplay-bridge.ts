@@ -59,7 +59,9 @@ namespace CdvPurchase {
             /**
              * Obfuscated user account identifier
              *
-             * Default to md5(store.applicationUsername)
+             * Populated by the adapter using `store.obfuscateUsername()`.
+             * Format depends on `store.obfuscator` setting.
+             * @see {@link CdvPurchase.Store.obfuscator}
              */
             accountId?: string;
 
@@ -366,11 +368,7 @@ namespace CdvPurchase {
             }
 
             function extendAdditionalData(ad?: CdvPurchase.AdditionalData): AdditionalData {
-                const additionalData: AdditionalData = ensureObject(ad?.googlePlay);
-                if (!additionalData.accountId && ad?.applicationUsername) {
-                    additionalData.accountId = Utils.md5(ad.applicationUsername);
-                }
-                return additionalData;
+                return ensureObject(ad?.googlePlay);
             }
         }
     }
