@@ -249,8 +249,24 @@ namespace CdvPurchase {
      */
     export interface AdditionalData {
 
-        /** The application's user identifier, will be obfuscated with md5 to fill `accountId` if necessary */
+        /**
+         * The application's user identifier, passed to `store.order()` or `store.requestPayment()`.
+         *
+         * The value is obfuscated according to {@link Store.obfuscator} before being sent to
+         * the native platform API. The raw value is also sent to the receipt validator
+         * as `applicationUsername` alongside the `obfuscatedUsername`.
+         */
         applicationUsername?: string;
+
+        /**
+         * The obfuscated username, derived from `applicationUsername` by applying
+         * {@link Store.obfuscator}. Sent to the receipt validator alongside the
+         * raw `applicationUsername` so the server can correlate obfuscated IDs
+         * from Apple/Google server notifications with the original user.
+         *
+         * This field is populated automatically — do not set it manually.
+         */
+        obfuscatedUsername?: string;
 
         /**
          * Quantity of items to purchase.
@@ -271,6 +287,36 @@ namespace CdvPurchase {
         /** Apple AppStore specific additional data */
         appStore?: AppleAppStore.AdditionalData;
     }
+
+    /**
+     * Obfuscation strategy for the application username.
+     *
+     * Controls how `applicationUsername` is transformed before being sent to
+     * each platform's native API.
+     *
+     * - `'legacy'` (default) — Preserves backward compatibility:
+     *   - Google Play: raw MD5 hash (32 hex chars)
+     *   - Apple SK2: MD5 hash formatted as UUIDv3 (36 chars with dashes)
+     *   - Apple SK1: raw value (no transformation)
+     *   - **Deprecated**: will be replaced by `'uuid'` in a future major version.
+     *
+     * - `'uuid'` — MD5 hash formatted as UUIDv3 on all platforms.
+     *   Recommended for new integrations. **Breaking change** for Google Play:
+     *   `obfuscatedExternalAccountId` format changes from 32 hex chars to
+     *   36-char UUID format.
+     *
+     * - `'disabled'` — No obfuscation. The raw `applicationUsername` value is
+     *   passed through to all platforms. For Apple SK2, the value must be a
+     *   valid UUIDv4 string or `appAccountToken` will not be set.
+     *
+     * - Custom function — `(username: string, platform: Platform) => string`
+     *   Receives the raw username and platform, returns the obfuscated value.
+     *   For Apple SK2, must return a valid UUIDv4 string.
+     *
+     * @see {@link Store.obfuscator}
+     * @see {@link https://github.com/j3k0/cordova-plugin-purchase/issues/1665}
+     */
+    export type Obfuscator = 'legacy' | 'uuid' | 'disabled' | ((applicationUsername: string, platform: Platform) => string);
 
     /**
      * Purchase platforms supported by the plugin

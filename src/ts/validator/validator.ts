@@ -44,6 +44,7 @@ namespace CdvPurchase {
             adapters: Adapters;
             validator_privacy_policy: PrivacyPolicyItem | PrivacyPolicyItem[] | undefined;
             getApplicationUsername(): string | undefined;
+            obfuscateUsername: (applicationUsername: string, platform: CdvPurchase.Platform) => string | undefined;
             verifiedCallbacks: Callbacks<VerifiedReceipt>;
             unverifiedCallbacks: Callbacks<UnverifiedReceipt>;
             finish(receipt:VerifiedReceipt): Promise<void>;
@@ -213,11 +214,16 @@ namespace CdvPurchase {
                 if (!body) return;
 
                 // Add the applicationUsername
+                const rawUsername = this.controller.getApplicationUsername();
                 body.additionalData = {
                     ...body.additionalData ?? {},
-                    applicationUsername: this.controller.getApplicationUsername(),
+                    applicationUsername: rawUsername,
                 }
                 if (!body.additionalData.applicationUsername) delete body.additionalData.applicationUsername;
+                if (rawUsername && body.transaction?.type) {
+                    const platform = body.transaction.type as CdvPurchase.Platform;
+                    body.additionalData.obfuscatedUsername = this.controller.obfuscateUsername(rawUsername, platform);
+                }
 
                 // Add device information
                 body.device = {

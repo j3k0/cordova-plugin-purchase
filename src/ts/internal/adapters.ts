@@ -66,6 +66,12 @@ namespace CdvPurchase
             /** Retrieves the application username */
             getApplicationUsername: () => string | undefined;
 
+            /** Obfuscate the application username for the given platform */
+            obfuscateUsername: (applicationUsername: string, platform: CdvPurchase.Platform) => string | undefined;
+
+            /** The obfuscation strategy */
+            obfuscator?: CdvPurchase.Obfuscator;
+
             /** Functions used to decorate the API */
             apiDecorators: ProductDecorator & TransactionDecorator & OfferDecorator & ReceiptDecorator;
 

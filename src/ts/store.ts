@@ -12,6 +12,7 @@
 /// <reference path="internal/transaction-monitor.ts" />
 /// <reference path="internal/receipts-monitor.ts" />
 /// <reference path="internal/expiry-monitor.ts" />
+/// <reference path="utils/to-uuid.ts" />
 
 /**
  * Namespace for the cordova-plugin-purchase plugin.
@@ -97,8 +98,15 @@ namespace CdvPurchase {
         /**
          * Return the identifier of the user for your application.
          *
-         * **Note:** Apple AppStore requires an UUIDv4 if you want it to appear as the "appAccountToken" in
-         * the transaction data.
+         * This value is obfuscated according to {@link Store.obfuscator} before being
+         * sent to the native platform API. The default obfuscator (`'legacy'`) hashes
+         * or formats the value so the original username is never transmitted in cleartext.
+         *
+         * For Apple's App Store, the obfuscated value is used as `appAccountToken`
+         * (which must be a valid UUID when using StoreKit 2).
+         *
+         * You can also pass it per-transaction via `additionalData.applicationUsername`
+         * in `store.order()` or `store.requestPayment()`, which takes priority.
          */
         public applicationUsername?: string | (() => string | undefined);
 
@@ -108,6 +116,69 @@ namespace CdvPurchase {
         getApplicationUsername(): string | undefined {
             if (this.applicationUsername instanceof Function) return this.applicationUsername();
             return this.applicationUsername;
+        }
+
+        /**
+         * Obfuscation strategy for the application username.
+         *
+         * Controls how `applicationUsername` is transformed before being sent to
+         * each platform's native API. See {@link Obfuscator} for available options.
+         *
+         * @default 'legacy'
+         * @see {@link Obfuscator}
+         */
+        public obfuscator?: CdvPurchase.Obfuscator;
+
+        /** @internal Tracks whether the deprecation warning for 'legacy' has been emitted */
+        private _legacyObfuscatorWarningEmitted: boolean = false;
+
+        /**
+         * Obfuscate the application username according to the configured obfuscation strategy.
+         *
+         * The output format depends on the obfuscator and platform:
+         * - `'legacy'` + GOOGLE_PLAY: raw MD5 hash (32 hex chars, no dashes)
+         * - `'legacy'` + APPLE_APPSTORE: MD5 hash formatted as UUIDv3
+         * - `'legacy'` + others: MD5 hash formatted as UUIDv3
+         * - `'uuid'` + any platform: MD5 hash formatted as UUIDv3
+         * - `'disabled'` + any platform: raw value (no transformation)
+         * - Custom function: result of `fn(username, platform)`
+         *
+         * @internal
+         */
+        obfuscateUsername(applicationUsername: string, platform: CdvPurchase.Platform): string | undefined {
+            if (!applicationUsername) return undefined;
+
+            const obfuscator = this.obfuscator ?? 'legacy';
+
+            // Emit deprecation warning for 'legacy' mode (once)
+            if (obfuscator === 'legacy' && !this._legacyObfuscatorWarningEmitted) {
+                this._legacyObfuscatorWarningEmitted = true;
+                this.log.warn('store.obfuscator = "legacy" is deprecated. Use "uuid" for new integrations. See https://github.com/j3k0/cordova-plugin-purchase/issues/1665');
+            }
+
+            if (typeof obfuscator === 'function') {
+                return obfuscator(applicationUsername, platform);
+            }
+
+            switch (obfuscator) {
+                case 'disabled':
+                    return applicationUsername;
+                case 'uuid':
+                    return Utils.md5toUUID(applicationUsername);
+                case 'legacy':
+                default:
+                    switch (platform) {
+                        case Platform.GOOGLE_PLAY:
+                            // Backward-compatible: raw MD5 hash (32 hex chars, no dashes)
+                            return Utils.md5(applicationUsername);
+                        case Platform.APPLE_APPSTORE:
+                            // UUIDv3 format (works for both SK1 and SK2)
+                            // SK1 accepts any string, SK2 requires valid UUID
+                            return Utils.md5toUUID(applicationUsername);
+                        default:
+                            return Utils.md5toUUID(applicationUsername);
+                    }
+            }
         }
 
         /**
@@ -228,6 +299,7 @@ namespace CdvPurchase {
             this._validator = new Internal.Validator({
                 adapters: this.adapters,
                 getApplicationUsername: this.getApplicationUsername.bind(this),
+                obfuscateUsername: this.obfuscateUsername.bind(this),
                 get localReceipts() { return store.localReceipts; },
                 get validator() { return store.validator; },
                 get validator_privacy_policy() { return store.validator_privacy_policy; },
@@ -327,6 +399,8 @@ namespace CdvPurchase {
                 error: this.triggerError.bind(this),
                 get verbosity() { return store.verbosity; },
                 getApplicationUsername() { return store.getApplicationUsername() },
+                obfuscateUsername: (username: string, platform: CdvPurchase.Platform) => store.obfuscateUsername(username, platform),
+                get obfuscator() { return store.obfuscator; },
                 get listener() { return store.listener; },
                 get log() { return store.log; },
                 get registeredProducts() { return store.registeredProducts; },
