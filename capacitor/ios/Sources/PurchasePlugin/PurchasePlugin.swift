@@ -186,9 +186,12 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
         Task {
             do {
                 var options: Set<Product.PurchaseOption> = []
-                if let username = call.getString("applicationUsername"), let uuid = UUID(uuidString: username) {
-                    options.insert(.appAccountToken(
-                        uuid))
+                if let username = call.getString("applicationUsername"), !username.isEmpty {
+                    if let uuid = UUID(uuidString: username) {
+                        options.insert(.appAccountToken(uuid))
+                    } else {
+                        debugLog("applicationUsername is not a valid UUID, appAccountToken will not be set: \(username)")
+                    }
                 }
                 if quantity > 1 {
                     options.insert(.quantity(quantity))

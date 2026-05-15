@@ -160,7 +160,7 @@ namespace CdvPurchase {
                 /** String in JSON format that contains details about the purchase order. */
                 receipt: string;
 
-                /** Obfuscated account id specified at purchase, value depends on store.obfuscator setting */
+                /** Obfuscated account id specified at purchase. Format depends on `store.obfuscator`. */
                 accountId: string;
 
                 /** Obfuscated profile id specified at purchase - used when a single user can have multiple profiles */

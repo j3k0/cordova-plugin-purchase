@@ -99,6 +99,21 @@ namespace CdvPurchase {
             _products: SKProduct[] = [];
             get products(): Product[] { return this._products; }
 
+            /**
+             * Resolve the username string passed to the native bridge for a
+             * purchase. SK1 + 'legacy' keeps the raw username for backward
+             * compatibility; every other mode obfuscates through the
+             * configured strategy. 'disabled' always returns the raw value.
+             */
+            private resolveBridgeUsername(): string | undefined {
+                const raw = this.context.getApplicationUsername();
+                if (!raw) return undefined;
+                const obfuscator = this.context.obfuscator ?? 'legacy';
+                if (obfuscator === 'disabled') return raw;
+                if (obfuscator === 'legacy' && !this.useSK2) return raw;
+                return this.context.obfuscateUsername(raw, Platform.APPLE_APPSTORE);
+            }
+
             /** Find a given product from ID */
             getProduct(id: string): SKProduct | undefined { return this._products.find(p => p.id === id); }
 
@@ -692,12 +707,8 @@ namespace CdvPurchase {
                     // When we switch AppStore user, the cached receipt isn't from the new user.
                     // so after a purchase, we want to make sure we're using the receipt from the logged in user.
                     this.forceReceiptReload = true;
-                    const rawUsername = additionalData?.applicationUsername || this.context.getApplicationUsername();
-                    const obfuscator = this.context.obfuscator ?? 'legacy';
-                    const skipObfuscation = !this.useSK2 && (obfuscator === 'legacy' || obfuscator === 'disabled');
-                    const username = (rawUsername && skipObfuscation)
-                        ? rawUsername
-                        : (rawUsername ? this.context.obfuscateUsername(rawUsername, Platform.APPLE_APPSTORE) : undefined);
+                    warnIfDeprecatedAdditionalUsername(this.log, additionalData);
+                    const username = this.resolveBridgeUsername();
                     this.bridge.purchase(offer.productId, quantity, username, discount, success, error);
                 });
             }
@@ -950,6 +961,15 @@ namespace CdvPurchase {
 
         function appStoreError(code: ErrorCode, message: string, productId: string | null) {
             return storeError(code, message, Platform.APPLE_APPSTORE, productId);
+        }
+
+        let deprecatedAdditionalUsernameNoticed = false;
+        function warnIfDeprecatedAdditionalUsername(log: Logger, additionalData: CdvPurchase.AdditionalData | undefined) {
+            // Bracket access avoids the @deprecated read warning on the field.
+            if (!additionalData || !(additionalData as { [k: string]: any })['applicationUsername']) return;
+            if (deprecatedAdditionalUsernameNoticed) return;
+            deprecatedAdditionalUsernameNoticed = true;
+            log.warn('additionalData.applicationUsername is deprecated and ignored. Set store.applicationUsername instead.');
         }
     }
 }

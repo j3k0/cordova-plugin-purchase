@@ -213,7 +213,7 @@ namespace CdvPurchase {
                 const body = await adapter?.receiptValidationBody(receipt);
                 if (!body) return;
 
-                // Add the applicationUsername
+                // Add the applicationUsername and its obfuscated form
                 const rawUsername = this.controller.getApplicationUsername();
                 body.additionalData = {
                     ...body.additionalData ?? {},
@@ -221,7 +221,8 @@ namespace CdvPurchase {
                 }
                 if (!body.additionalData.applicationUsername) delete body.additionalData.applicationUsername;
                 if (rawUsername) {
-                    body.additionalData.obfuscatedUsername = this.controller.obfuscateUsername(rawUsername, receipt.platform);
+                    const obfuscated = this.controller.obfuscateUsername(rawUsername, receipt.platform);
+                    if (obfuscated) body.additionalData.obfuscatedUsername = obfuscated;
                 }
 
                 // Add device information

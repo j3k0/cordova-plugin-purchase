@@ -3,7 +3,7 @@ import '../www/store';
 describe('Store.obfuscateUsername', () => {
     afterEach(() => {
         CdvPurchase.store.obfuscator = undefined;
-        (CdvPurchase.store as any)._legacyObfuscatorWarningEmitted = false;
+        (CdvPurchase.store as any)._legacyObfuscatorNoticeEmitted = false;
     });
 
     test('default (legacy) + GOOGLE_PLAY returns raw MD5 hash', () => {
@@ -70,15 +70,17 @@ describe('Store.obfuscateUsername', () => {
             .toBe(CdvPurchase.store.obfuscateUsername('user1', CdvPurchase.Platform.GOOGLE_PLAY));
     });
 
-    test('legacy emits deprecation warning once', () => {
+    test('legacy emits info notice once', () => {
         const previousVerbosity = CdvPurchase.store.verbosity;
-        CdvPurchase.store.verbosity = CdvPurchase.LogLevel.WARNING;
-        const warnSpy = jest.spyOn(CdvPurchase.Logger.console, 'warn').mockImplementation(() => {});
+        CdvPurchase.store.verbosity = CdvPurchase.LogLevel.INFO;
+        const logSpy = jest.spyOn(CdvPurchase.Logger.console, 'log').mockImplementation(() => {});
         CdvPurchase.store.obfuscator = 'legacy';
         CdvPurchase.store.obfuscateUsername('test1', CdvPurchase.Platform.GOOGLE_PLAY);
         CdvPurchase.store.obfuscateUsername('test2', CdvPurchase.Platform.GOOGLE_PLAY);
-        expect(warnSpy).toHaveBeenCalledTimes(1);
-        warnSpy.mockRestore();
+        const noticeCalls = logSpy.mock.calls.filter(args =>
+            args.some(a => typeof a === 'string' && a.includes('store.obfuscator defaults to "legacy"')));
+        expect(noticeCalls).toHaveLength(1);
+        logSpy.mockRestore();
         CdvPurchase.store.verbosity = previousVerbosity;
     });
 });

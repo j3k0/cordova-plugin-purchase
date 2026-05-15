@@ -121,27 +121,24 @@ namespace CdvPurchase {
         /**
          * Obfuscation strategy for the application username.
          *
-         * Controls how `applicationUsername` is transformed before being sent to
-         * each platform's native API. See {@link Obfuscator} for available options.
+         * Controls how `applicationUsername` is transformed before being sent
+         * to each platform's native API. `'uuid'` is the recommended setting
+         * for new integrations; the default `'legacy'` exists only for
+         * backward compatibility with server-side modules that already
+         * correlate against the raw 32-hex MD5 value.
          *
          * @default 'legacy'
          * @see {@link Obfuscator}
          */
         public obfuscator?: CdvPurchase.Obfuscator;
 
-        /** @internal Tracks whether the deprecation warning for 'legacy' has been emitted */
-        private _legacyObfuscatorWarningEmitted: boolean = false;
+        /** @internal Tracks whether the info notice for 'legacy' has been emitted */
+        private _legacyObfuscatorNoticeEmitted: boolean = false;
 
         /**
          * Obfuscate the application username according to the configured obfuscation strategy.
          *
-         * The output format depends on the obfuscator and platform:
-         * - `'legacy'` + GOOGLE_PLAY: raw MD5 hash (32 hex chars, no dashes)
-         * - `'legacy'` + APPLE_APPSTORE: MD5 hash formatted as UUIDv3
-         * - `'legacy'` + others: MD5 hash formatted as UUIDv3
-         * - `'uuid'` + any platform: MD5 hash formatted as UUIDv3
-         * - `'disabled'` + any platform: raw value (no transformation)
-         * - Custom function: result of `fn(username, platform)`
+         * See {@link Obfuscator} for the per-mode output format.
          *
          * @internal
          */
@@ -149,12 +146,6 @@ namespace CdvPurchase {
             if (!applicationUsername) return undefined;
 
             const obfuscator = this.obfuscator ?? 'legacy';
-
-            // Emit deprecation warning for 'legacy' mode (once)
-            if (obfuscator === 'legacy' && !this._legacyObfuscatorWarningEmitted) {
-                this._legacyObfuscatorWarningEmitted = true;
-                this.log.warn('store.obfuscator = "legacy" is deprecated. Use "uuid" for new integrations. See https://github.com/j3k0/cordova-plugin-purchase/issues/1665');
-            }
 
             if (typeof obfuscator === 'function') {
                 return obfuscator(applicationUsername, platform);
@@ -167,17 +158,16 @@ namespace CdvPurchase {
                     return Utils.md5toUUID(applicationUsername);
                 case 'legacy':
                 default:
-                    switch (platform) {
-                        case Platform.GOOGLE_PLAY:
-                            // Backward-compatible: raw MD5 hash (32 hex chars, no dashes)
-                            return Utils.md5(applicationUsername);
-                        case Platform.APPLE_APPSTORE:
-                            // UUIDv3 format (works for both SK1 and SK2)
-                            // SK1 accepts any string, SK2 requires valid UUID
-                            return Utils.md5toUUID(applicationUsername);
-                        default:
-                            return Utils.md5toUUID(applicationUsername);
+                    if (!this._legacyObfuscatorNoticeEmitted) {
+                        this._legacyObfuscatorNoticeEmitted = true;
+                        this.log.info('store.obfuscator defaults to "legacy" for backward compatibility. New integrations should set store.obfuscator = "uuid". See https://github.com/j3k0/cordova-plugin-purchase/issues/1665');
                     }
+                    if (platform === Platform.GOOGLE_PLAY) {
+                        // Backward-compatible: raw MD5 hash (32 hex chars, no dashes)
+                        return Utils.md5(applicationUsername);
+                    }
+                    // UUIDv3 format — valid for Apple appAccountToken (SK1 + SK2) and any other platform
+                    return Utils.md5toUUID(applicationUsername);
             }
         }
 
