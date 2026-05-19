@@ -63,6 +63,7 @@ async function runValidator(payload: unknown): Promise<RunResult> {
     adapters: { find: () => adapter } as unknown as CdvPurchase.Internal.Adapters,
     validator_privacy_policy: undefined,
     getApplicationUsername: () => undefined,
+    obfuscateUsername: (_applicationUsername: string, _platform: CdvPurchase.Platform) => undefined,
     verifiedCallbacks,
     unverifiedCallbacks,
     finish: async () => {},

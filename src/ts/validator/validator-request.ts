@@ -49,6 +49,15 @@ namespace CdvPurchase {
                      *
                      * @optional */
                     applicationUsername?: string | number;
+
+                    /**
+                     * The obfuscated form of `applicationUsername`, derived by applying
+                     * `store.obfuscator`. The server can use this to correlate obfuscated
+                     * IDs from Apple/Google server notifications (e.g. `appAccountToken`,
+                     * `obfuscatedExternalAccountId`) with the original user.
+                     *
+                     * @optional */
+                    obfuscatedUsername?: string;
                 };
 
                 /** Microsoft license information */

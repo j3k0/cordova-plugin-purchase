@@ -478,6 +478,8 @@ namespace CdvPurchase {
 
             /** @inheritDoc */
             async order(offer: GOffer, additionalData: CdvPurchase.AdditionalData): Promise<IError | undefined> {
+                warnIfDeprecatedAdditionalUsername(this.log, additionalData);
+                additionalData = withObfuscatedAccountId(additionalData, this.context);
                 return new Promise(resolve => {
                     this.log.info("Order - " + JSON.stringify(offer));
                     const buySuccess = () => resolve(undefined);
@@ -614,6 +616,32 @@ namespace CdvPurchase {
                     });
                 });
             }
+        }
+
+        let deprecatedAdditionalUsernameNoticed = false;
+        function warnIfDeprecatedAdditionalUsername(log: Logger, additionalData: CdvPurchase.AdditionalData | undefined) {
+            // Bracket access avoids the @deprecated read warning on the field.
+            if (!additionalData || !(additionalData as { [k: string]: any })['applicationUsername']) return;
+            if (deprecatedAdditionalUsernameNoticed) return;
+            deprecatedAdditionalUsernameNoticed = true;
+            log.warn('additionalData.applicationUsername is deprecated and ignored. Set store.applicationUsername instead.');
+        }
+
+        /**
+         * Return a copy of `additionalData` with `googlePlay.accountId` populated
+         * from `store.applicationUsername` (via the configured obfuscator) when
+         * not already provided by the caller. Never mutates the input.
+         */
+        function withObfuscatedAccountId(additionalData: CdvPurchase.AdditionalData | undefined, context: Internal.AdapterContext): CdvPurchase.AdditionalData {
+            const next: CdvPurchase.AdditionalData = { ...(additionalData ?? {}) };
+            next.googlePlay = { ...(additionalData?.googlePlay ?? {}) };
+            if (!next.googlePlay.accountId) {
+                const username = context.getApplicationUsername();
+                if (username) {
+                    next.googlePlay.accountId = context.obfuscateUsername(username, Platform.GOOGLE_PLAY);
+                }
+            }
+            return next;
         }
 
         function playStoreError(code: ErrorCode, message: string, productId: string | null) {

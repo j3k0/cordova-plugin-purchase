@@ -173,6 +173,7 @@ describe('CDVPurchase', () => {
           verify: (receipt: CdvPurchase.Receipt | CdvPurchase.Transaction): Promise<void> => new Promise<void>(resolve => resolve()),
         },
         getApplicationUsername: () => 'user',
+        obfuscateUsername: (username: string, platform: CdvPurchase.Platform) => username,
         listener: {
           productsUpdated: (platform: CdvPurchase.Platform, products: CdvPurchase.Product[]): void => {},
           receiptsUpdated: (platform: CdvPurchase.Platform, receipts: CdvPurchase.Receipt[]): void => {},

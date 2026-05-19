@@ -249,7 +249,16 @@ namespace CdvPurchase {
      */
     export interface AdditionalData {
 
-        /** The application's user identifier, will be obfuscated with md5 to fill `accountId` if necessary */
+        /**
+         * The application's user identifier.
+         *
+         * @deprecated Set {@link Store.applicationUsername} instead. The
+         * per-transaction value is ignored — adapters always read the
+         * store-level username so receipt validation later (which doesn't
+         * have access to the original additionalData) sees the same value
+         * that was sent to the native API at purchase time. Passing this
+         * field logs a one-shot notice.
+         */
         applicationUsername?: string;
 
         /**
@@ -271,6 +280,39 @@ namespace CdvPurchase {
         /** Apple AppStore specific additional data */
         appStore?: AppleAppStore.AdditionalData;
     }
+
+    /**
+     * Obfuscation strategy for the application username.
+     *
+     * Controls how `applicationUsername` is transformed before being sent to
+     * each platform's native API.
+     *
+     * - `'uuid'` — **Recommended.** MD5 hash formatted as UUIDv3 on all
+     *   platforms. Deterministic, valid UUID, works as Apple's
+     *   `appAccountToken` (SK1 + SK2) and Google Play's
+     *   `obfuscatedAccountId`.
+     *
+     * - `'legacy'` (default) — Only use this when an existing server-side
+     *   integration already correlates against the original 32-hex MD5 value
+     *   sent on Google Play. New integrations should pick `'uuid'`.
+     *   - Google Play: raw MD5 hash (32 hex chars)
+     *   - Apple AppStore (SK2): MD5 hash formatted as UUIDv3
+     *   - Apple AppStore (SK1, deprecated): raw username, unchanged
+     *   - Other platforms: MD5 hash formatted as UUIDv3
+     *
+     * - `'disabled'` — No obfuscation. The raw `applicationUsername` is
+     *   passed through to all platforms. For Apple SK2, the value must be a
+     *   valid UUID string or `appAccountToken` will not be set.
+     *
+     * - Custom function — `(username: string, platform: Platform) => string`.
+     *   Receives the raw username and platform, returns the obfuscated value.
+     *   For Apple (both SK1 and SK2), the function must return a valid UUID
+     *   string.
+     *
+     * @see {@link Store.obfuscator}
+     * @see {@link https://github.com/j3k0/cordova-plugin-purchase/issues/1665}
+     */
+    export type Obfuscator = 'legacy' | 'uuid' | 'disabled' | ((applicationUsername: string, platform: Platform) => string);
 
     /**
      * Purchase platforms supported by the plugin
