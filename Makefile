@@ -73,6 +73,7 @@ capacitor-package: compile
 	@echo "Packaging Capacitor plugin..."
 	cp www/store.js capacitor/www/store.js
 	cp www/store.d.ts capacitor/www/store.d.ts
+	cd capacitor && npm run build
 	@ROOT_VERSION=$$(node -p "require('./package.json').version"); \
 	CAP_VERSION=$$(node -p "require('./capacitor/package.json').version"); \
 	if [ "$$ROOT_VERSION" != "$$CAP_VERSION" ]; then \

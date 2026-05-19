@@ -43,5 +43,13 @@ export default {
     sourcemap: true
   },
   plugins: [storeJsPlugin(), resolve()],
-  external: ['@capacitor/core']
+  external: ['@capacitor/core'],
+  onwarn(warning, defaultHandler) {
+    // store.js was emitted by TypeScript as a script; its `__awaiter` helper
+    // references top-level `this` to look up a shared global helper. In an
+    // ES module that's `undefined`, which is the correct fallback — the
+    // helper short-circuits to its local definition.
+    if (warning.code === 'THIS_IS_UNDEFINED' && warning.id?.endsWith('virtual:store-js')) return;
+    defaultHandler(warning);
+  }
 };
