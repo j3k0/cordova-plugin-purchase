@@ -89,6 +89,7 @@ const { store, ProductType, Platform, LogLevel } = CdvPurchase;
 
 - [Callback](CdvPurchase.md#callback)
 - [IPeriodUnit](CdvPurchase.md#iperiodunit)
+- [Obfuscator](CdvPurchase.md#obfuscator)
 - [PlatformFunctionality](CdvPurchase.md#platformfunctionality)
 - [PlatformWithOptions](CdvPurchase.md#platformwithoptions)
 - [PrivacyPolicyItem](CdvPurchase.md#privacypolicyitem)
@@ -136,6 +137,44 @@ Unit for measuring durations
 
 ___
 
+### Obfuscator
+
+Ƭ **Obfuscator**: ``"legacy"`` \| ``"uuid"`` \| ``"disabled"`` \| (`applicationUsername`: `string`, `platform`: [`Platform`](../enums/CdvPurchase.Platform.md)) => `string`
+
+Obfuscation strategy for the application username.
+
+Controls how `applicationUsername` is transformed before being sent to
+each platform's native API.
+
+- `'uuid'` — **Recommended.** MD5 hash formatted as UUIDv3 on all
+  platforms. Deterministic, valid UUID, works as Apple's
+  `appAccountToken` (SK1 + SK2) and Google Play's
+  `obfuscatedAccountId`.
+
+- `'legacy'` (default) — Only use this when an existing server-side
+  integration already correlates against the original 32-hex MD5 value
+  sent on Google Play. New integrations should pick `'uuid'`.
+  - Google Play: raw MD5 hash (32 hex chars)
+  - Apple AppStore (SK2): MD5 hash formatted as UUIDv3
+  - Apple AppStore (SK1, deprecated): raw username, unchanged
+  - Other platforms: MD5 hash formatted as UUIDv3
+
+- `'disabled'` — No obfuscation. The raw `applicationUsername` is
+  passed through to all platforms. For Apple SK2, the value must be a
+  valid UUID string or `appAccountToken` will not be set.
+
+- Custom function — `(username: string, platform: Platform) => string`.
+  Receives the raw username and platform, returns the obfuscated value.
+  For Apple (both SK1 and SK2), the function must return a valid UUID
+  string.
+
+**`See`**
+
+ - [Store.obfuscator](../classes/CdvPurchase.Store.md#obfuscator)
+ - [https://github.com/j3k0/cordova-plugin-purchase/issues/1665](https://github.com/j3k0/cordova-plugin-purchase/issues/1665)
+
+___
+
 ### PlatformFunctionality
 
 Ƭ **PlatformFunctionality**: ``"requestPayment"`` \| ``"order"`` \| ``"orderQuantity"`` \| ``"manageSubscriptions"`` \| ``"manageBilling"`` \| ``"getStorefront"``
@@ -168,7 +207,7 @@ ___
 
 ### PLUGIN\_VERSION
 
-• `Const` **PLUGIN\_VERSION**: ``"13.15.4"``
+• `Const` **PLUGIN\_VERSION**: ``"13.16.0"``
 
 Current release number of the plugin.
 

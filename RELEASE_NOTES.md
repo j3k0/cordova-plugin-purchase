@@ -1,5 +1,42 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.16
+
+### 13.16.0
+
+#### Configurable `applicationUsername` obfuscation via `store.obfuscator`
+
+The plugin now exposes `store.obfuscator` to control how `applicationUsername` is transformed before being passed to the native store. Pick `'uuid'` for new integrations — the value is hashed to a deterministic UUIDv3, which is a valid input for both Apple's `appAccountToken` (StoreKit 2) and Google Play's `obfuscatedAccountId` ([#1660](https://github.com/j3k0/cordova-plugin-purchase/issues/1660)).
+
+```ts
+store.applicationUsername = 'user-42';
+store.obfuscator = 'uuid'; // recommended for new integrations
+```
+
+Available modes:
+
+| Mode | Google Play | Apple SK1 (deprecated) | Apple SK2 |
+|---|---|---|---|
+| `'uuid'` (recommended) | UUIDv3 | UUIDv3 | UUIDv3 |
+| `'legacy'` (default) | MD5 hash (32 hex) | raw value | UUIDv3 |
+| `'disabled'` | raw value | raw value | raw value (must be a UUID) |
+| `(username, platform) => string` | custom | custom → must be a UUID | custom → must be a UUID |
+
+The default stays at `'legacy'` so existing integrations that already correlate the 32-hex MD5 value server-side keep working without changes.
+
+#### (ios) Fix `appAccountToken` being randomized on StoreKit 2
+
+When `applicationUsername` was not already a UUID string, the Capacitor StoreKit 2 bridge was falling back to a freshly generated `UUID()` — meaning every purchase carried a random `appAccountToken` instead of a value tied to the user ([#1665](https://github.com/j3k0/cordova-plugin-purchase/issues/1665)). The bridge now skips `appAccountToken` entirely when the value is not a valid UUID; with `store.obfuscator = 'uuid'`, the value is always a valid UUIDv3, so `appAccountToken` is reliably set and stable across purchases by the same user.
+
+#### Deprecation: `additionalData.applicationUsername`
+
+Passing `applicationUsername` per-transaction via `order(..., { applicationUsername })` is now **deprecated and ignored**. Set `store.applicationUsername` (or a `() => string` getter) once instead — this guarantees the value used at the native call site matches the value sent to the validator. Calls that still pass `additionalData.applicationUsername` emit a one-shot warning.
+
+#### Companion plugin compatibility
+
+- **StoreKit 2 Plugin** (`cordova-plugin-purchase-storekit2`) — no version bump required. Its `purchase` bridge already validates `applicationUsername` as a UUID and skips `appAccountToken` when it isn't, matching the new Capacitor behavior.
+- **Braintree Plugin**, **Apple Pay Plugin** — unaffected; no obfuscation is applied on those platforms.
+
 ## 13.15
 
 ### 13.15.4

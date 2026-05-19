@@ -348,6 +348,7 @@ declare namespace CdvPurchase {
             adapters: Adapters;
             validator_privacy_policy: PrivacyPolicyItem | PrivacyPolicyItem[] | undefined;
             getApplicationUsername(): string | undefined;
+            obfuscateUsername: (applicationUsername: string, platform: CdvPurchase.Platform) => string | undefined;
             verifiedCallbacks: Callbacks<VerifiedReceipt>;
             unverifiedCallbacks: Callbacks<UnverifiedReceipt>;
             finish(receipt: VerifiedReceipt): Promise<void>;
@@ -443,6 +444,10 @@ declare namespace CdvPurchase {
             listener: AdapterListener;
             /** Retrieves the application username */
             getApplicationUsername: () => string | undefined;
+            /** Obfuscate the application username for the given platform */
+            obfuscateUsername: (applicationUsername: string, platform: CdvPurchase.Platform) => string | undefined;
+            /** The obfuscation strategy */
+            obfuscator?: CdvPurchase.Obfuscator;
             /** Functions used to decorate the API */
             apiDecorators: ProductDecorator & TransactionDecorator & OfferDecorator & ReceiptDecorator;
             /** Collection of per-platform storefront values. */
@@ -854,6 +859,24 @@ declare namespace CdvPurchase {
         }
     }
 }
+declare namespace CdvPurchase {
+    namespace Utils {
+        /**
+         * Convert a string to a UUIDv3-like format using MD5 hashing.
+         *
+         * Takes an input string, computes its MD5 hash, then formats the 32 hex
+         * characters as a UUID with version nibble set to '3' (MD5) and variant
+         * nibble set to '8' (RFC 4122).
+         *
+         * This produces a deterministic, valid UUID suitable for Apple's SK2
+         * `appAccountToken` and Google Play's `obfuscatedAccountId`.
+         *
+         * @param str - The input string to hash and format
+         * @returns A UUIDv3-like string (36 chars with dashes), or empty string if input is empty
+         */
+        function md5toUUID(str: string): string;
+    }
+}
 /**
  * Namespace for the cordova-plugin-purchase plugin.
  *
@@ -886,7 +909,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.15.4";
+    const PLUGIN_VERSION = "13.16.0";
     /**
      * Entry class of the plugin.
      */
@@ -928,14 +951,44 @@ declare namespace CdvPurchase {
         /**
          * Return the identifier of the user for your application.
          *
-         * **Note:** Apple AppStore requires an UUIDv4 if you want it to appear as the "appAccountToken" in
-         * the transaction data.
+         * This value is obfuscated according to {@link Store.obfuscator} before being
+         * sent to the native platform API. The default obfuscator (`'legacy'`) hashes
+         * or formats the value so the original username is never transmitted in cleartext.
+         *
+         * For Apple's App Store, the obfuscated value is used as `appAccountToken`
+         * (which must be a valid UUID when using StoreKit 2).
+         *
+         * You can also pass it per-transaction via `additionalData.applicationUsername`
+         * in `store.order()` or `store.requestPayment()`, which takes priority.
          */
         applicationUsername?: string | (() => string | undefined);
         /**
          * Get the application username as a string by either calling or returning {@link Store.applicationUsername}
         */
         getApplicationUsername(): string | undefined;
+        /**
+         * Obfuscation strategy for the application username.
+         *
+         * Controls how `applicationUsername` is transformed before being sent
+         * to each platform's native API. `'uuid'` is the recommended setting
+         * for new integrations; the default `'legacy'` exists only for
+         * backward compatibility with server-side modules that already
+         * correlate against the raw 32-hex MD5 value.
+         *
+         * @default 'legacy'
+         * @see {@link Obfuscator}
+         */
+        obfuscator?: CdvPurchase.Obfuscator;
+        /** @internal Tracks whether the info notice for 'legacy' has been emitted */
+        private _legacyObfuscatorNoticeEmitted;
+        /**
+         * Obfuscate the application username according to the configured obfuscation strategy.
+         *
+         * See {@link Obfuscator} for the per-mode output format.
+         *
+         * @internal
+         */
+        obfuscateUsername(applicationUsername: string, platform: CdvPurchase.Platform): string | undefined;
         /**
          * URL or implementation of the receipt validation service
          *
@@ -1512,7 +1565,16 @@ declare namespace CdvPurchase {
      * @see {@link Store.requestPayment}
      */
     interface AdditionalData {
-        /** The application's user identifier, will be obfuscated with md5 to fill `accountId` if necessary */
+        /**
+         * The application's user identifier.
+         *
+         * @deprecated Set {@link Store.applicationUsername} instead. The
+         * per-transaction value is ignored — adapters always read the
+         * store-level username so receipt validation later (which doesn't
+         * have access to the original additionalData) sees the same value
+         * that was sent to the native API at purchase time. Passing this
+         * field logs a one-shot notice.
+         */
         applicationUsername?: string;
         /**
          * Quantity of items to purchase.
@@ -1530,6 +1592,38 @@ declare namespace CdvPurchase {
         /** Apple AppStore specific additional data */
         appStore?: AppleAppStore.AdditionalData;
     }
+    /**
+     * Obfuscation strategy for the application username.
+     *
+     * Controls how `applicationUsername` is transformed before being sent to
+     * each platform's native API.
+     *
+     * - `'uuid'` — **Recommended.** MD5 hash formatted as UUIDv3 on all
+     *   platforms. Deterministic, valid UUID, works as Apple's
+     *   `appAccountToken` (SK1 + SK2) and Google Play's
+     *   `obfuscatedAccountId`.
+     *
+     * - `'legacy'` (default) — Only use this when an existing server-side
+     *   integration already correlates against the original 32-hex MD5 value
+     *   sent on Google Play. New integrations should pick `'uuid'`.
+     *   - Google Play: raw MD5 hash (32 hex chars)
+     *   - Apple AppStore (SK2): MD5 hash formatted as UUIDv3
+     *   - Apple AppStore (SK1, deprecated): raw username, unchanged
+     *   - Other platforms: MD5 hash formatted as UUIDv3
+     *
+     * - `'disabled'` — No obfuscation. The raw `applicationUsername` is
+     *   passed through to all platforms. For Apple SK2, the value must be a
+     *   valid UUID string or `appAccountToken` will not be set.
+     *
+     * - Custom function — `(username: string, platform: Platform) => string`.
+     *   Receives the raw username and platform, returns the obfuscated value.
+     *   For Apple (both SK1 and SK2), the function must return a valid UUID
+     *   string.
+     *
+     * @see {@link Store.obfuscator}
+     * @see {@link https://github.com/j3k0/cordova-plugin-purchase/issues/1665}
+     */
+    type Obfuscator = 'legacy' | 'uuid' | 'disabled' | ((applicationUsername: string, platform: Platform) => string);
     /**
      * Purchase platforms supported by the plugin
      */
@@ -2700,6 +2794,13 @@ declare namespace CdvPurchase {
             /** List of products loaded from AppStore */
             _products: SKProduct[];
             get products(): Product[];
+            /**
+             * Resolve the username string passed to the native bridge for a
+             * purchase. SK1 + 'legacy' keeps the raw username for backward
+             * compatibility; every other mode obfuscates through the
+             * configured strategy. 'disabled' always returns the raw value.
+             */
+            private resolveBridgeUsername;
             /** Find a given product from ID */
             getProduct(id: string): SKProduct | undefined;
             /** The application receipt, contains all transactions */
@@ -4879,7 +4980,9 @@ declare namespace CdvPurchase {
             /**
              * Obfuscated user account identifier
              *
-             * Default to md5(store.applicationUsername)
+             * Populated by the adapter using `store.obfuscateUsername()`.
+             * Format depends on `store.obfuscator` setting.
+             * @see {@link CdvPurchase.Store.obfuscator}
              */
             accountId?: string;
             /**
@@ -4951,7 +5054,7 @@ declare namespace CdvPurchase {
                 signature: string;
                 /** String in JSON format that contains details about the purchase order. */
                 receipt: string;
-                /** Obfuscated account id specified at purchase - by default md5(applicationUsername) */
+                /** Obfuscated account id specified at purchase. Format depends on `store.obfuscator`. */
                 accountId: string;
                 /** Obfuscated profile id specified at purchase - used when a single user can have multiple profiles */
                 profileId: string;
@@ -6188,6 +6291,14 @@ declare namespace CdvPurchase {
                      *
                      * @optional */
                     applicationUsername?: string | number;
+                    /**
+                     * The obfuscated form of `applicationUsername`, derived by applying
+                     * `store.obfuscator`. The server can use this to correlate obfuscated
+                     * IDs from Apple/Google server notifications (e.g. `appAccountToken`,
+                     * `obfuscatedExternalAccountId`) with the original user.
+                     *
+                     * @optional */
+                    obfuscatedUsername?: string;
                 };
                 /** Microsoft license information */
                 license?: {

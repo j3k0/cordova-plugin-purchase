@@ -31,7 +31,7 @@
 
 • **accountId**: `string`
 
-Obfuscated account id specified at purchase - by default md5(applicationUsername)
+Obfuscated account id specified at purchase. Format depends on `store.obfuscator`.
 
 ___
 

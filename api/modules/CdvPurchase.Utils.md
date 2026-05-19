@@ -18,6 +18,7 @@
 - [formatBillingCycleEN](CdvPurchase.Utils.md#formatbillingcycleen)
 - [formatDurationEN](CdvPurchase.Utils.md#formatdurationen)
 - [md5](CdvPurchase.Utils.md#md5)
+- [md5toUUID](CdvPurchase.Utils.md#md5touuid)
 - [nonEnumerable](CdvPurchase.Utils.md#nonenumerable)
 - [objectValues](CdvPurchase.Utils.md#objectvalues)
 - [platformId](CdvPurchase.Utils.md#platformid-1)
@@ -146,6 +147,33 @@ I cleaned up the all-including minified version of it.
 #### Returns
 
 `string`
+
+___
+
+### md5toUUID
+
+▸ **md5toUUID**(`str`): `string`
+
+Convert a string to a UUIDv3-like format using MD5 hashing.
+
+Takes an input string, computes its MD5 hash, then formats the 32 hex
+characters as a UUID with version nibble set to '3' (MD5) and variant
+nibble set to '8' (RFC 4122).
+
+This produces a deterministic, valid UUID suitable for Apple's SK2
+`appAccountToken` and Google Play's `obfuscatedAccountId`.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `str` | `string` | The input string to hash and format |
+
+#### Returns
+
+`string`
+
+A UUIDv3-like string (36 chars with dashes), or empty string if input is empty
 
 ___
 

@@ -41,6 +41,7 @@ Additional data about the purchase
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `applicationUsername?` | `string` \| `number` | Attach the purchases to the given application user. Should be a string. See [/documentation/application-username](/documentation/application-username) for more information. **`Optional`** |
+| `obfuscatedUsername?` | `string` | The obfuscated form of `applicationUsername`, derived by applying `store.obfuscator`. The server can use this to correlate obfuscated IDs from Apple/Google server notifications (e.g. `appAccountToken`, `obfuscatedExternalAccountId`) with the original user. **`Optional`** |
 
 ___
 

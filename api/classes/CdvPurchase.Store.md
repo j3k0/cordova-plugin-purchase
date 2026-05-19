@@ -15,6 +15,7 @@ Entry class of the plugin.
 - [applicationUsername](CdvPurchase.Store.md#applicationusername)
 - [log](CdvPurchase.Store.md#log)
 - [minTimeBetweenUpdates](CdvPurchase.Store.md#mintimebetweenupdates)
+- [obfuscator](CdvPurchase.Store.md#obfuscator)
 - [validator](CdvPurchase.Store.md#validator)
 - [validator\_privacy\_policy](CdvPurchase.Store.md#validator_privacy_policy)
 - [verbosity](CdvPurchase.Store.md#verbosity)
@@ -73,8 +74,15 @@ Entry class of the plugin.
 
 Return the identifier of the user for your application.
 
-**Note:** Apple AppStore requires an UUIDv4 if you want it to appear as the "appAccountToken" in
-the transaction data.
+This value is obfuscated according to [Store.obfuscator](CdvPurchase.Store.md#obfuscator) before being
+sent to the native platform API. The default obfuscator (`'legacy'`) hashes
+or formats the value so the original username is never transmitted in cleartext.
+
+For Apple's App Store, the obfuscated value is used as `appAccountToken`
+(which must be a valid UUID when using StoreKit 2).
+
+You can also pass it per-transaction via `additionalData.applicationUsername`
+in `store.order()` or `store.requestPayment()`, which takes priority.
 
 ___
 
@@ -91,6 +99,30 @@ ___
 • **minTimeBetweenUpdates**: `number` = `600000`
 
 Avoid invoking store.update() if the most recent call occurred within this specific number of milliseconds.
+
+___
+
+### obfuscator
+
+• `Optional` **obfuscator**: [`Obfuscator`](../modules/CdvPurchase.md#obfuscator)
+
+Obfuscation strategy for the application username.
+
+Controls how `applicationUsername` is transformed before being sent
+to each platform's native API. `'uuid'` is the recommended setting
+for new integrations; the default `'legacy'` exists only for
+backward compatibility with server-side modules that already
+correlate against the raw 32-hex MD5 value.
+
+**`Default`**
+
+```ts
+'legacy'
+```
+
+**`See`**
+
+[Obfuscator](../modules/CdvPurchase.md#obfuscator)
 
 ___
 

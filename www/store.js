@@ -666,10 +666,16 @@ var CdvPurchase;
                     const body = yield (adapter === null || adapter === void 0 ? void 0 : adapter.receiptValidationBody(receipt));
                     if (!body)
                         return;
-                    // Add the applicationUsername
-                    body.additionalData = Object.assign(Object.assign({}, (_a = body.additionalData) !== null && _a !== void 0 ? _a : {}), { applicationUsername: this.controller.getApplicationUsername() });
+                    // Add the applicationUsername and its obfuscated form
+                    const rawUsername = this.controller.getApplicationUsername();
+                    body.additionalData = Object.assign(Object.assign({}, (_a = body.additionalData) !== null && _a !== void 0 ? _a : {}), { applicationUsername: rawUsername });
                     if (!body.additionalData.applicationUsername)
                         delete body.additionalData.applicationUsername;
+                    if (rawUsername) {
+                        const obfuscated = this.controller.obfuscateUsername(rawUsername, receipt.platform);
+                        if (obfuscated)
+                            body.additionalData.obfuscatedUsername = obfuscated;
+                    }
                     // Add device information
                     body.device = Object.assign(Object.assign({}, (_b = body.device) !== null && _b !== void 0 ? _b : {}), CdvPurchase.Validator.Internal.getDeviceInfo(this.controller));
                     // Add legacy pricing information
@@ -787,13 +793,32 @@ var CdvPurchase;
         Internal.Validator = Validator;
         /**
          * Check if a payload looks like a valid validator response.
+         *
+         * When `ok` is `true`, validates that `data` exists and contains the
+         * fields the rest of the pipeline reads unconditionally: `id` (used to
+         * key the verified-receipt cache) and `transaction` (stored as the
+         * native transaction). Optional fields like `latest_receipt`,
+         * `collection`, `warning`, `date` are not required — a validator that
+         * omits them produces a usable VerifiedReceipt all the same.
+         *
+         * When `ok` is `false`, the `data` field is optional per ErrorPayload.
          */
         function isValidatorResponsePayload(payload) {
-            // TODO: could be made more robust.
-            return (!!payload)
-                && (typeof payload === 'object')
-                && ('ok' in payload)
-                && (typeof payload.ok === 'boolean');
+            if (!payload || typeof payload !== 'object')
+                return false;
+            const p = payload;
+            if (typeof p.ok !== 'boolean')
+                return false;
+            if (p.ok === true) {
+                const data = p.data;
+                if (!data || typeof data !== 'object')
+                    return false;
+                if (typeof data.id !== 'string')
+                    return false;
+                if (!data.transaction || typeof data.transaction !== 'object')
+                    return false;
+            }
+            return true;
         }
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
@@ -1615,6 +1640,38 @@ var CdvPurchase;
         Internal.ExpiryMonitor = ExpiryMonitor;
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    let Utils;
+    (function (Utils) {
+        /**
+         * Convert a string to a UUIDv3-like format using MD5 hashing.
+         *
+         * Takes an input string, computes its MD5 hash, then formats the 32 hex
+         * characters as a UUID with version nibble set to '3' (MD5) and variant
+         * nibble set to '8' (RFC 4122).
+         *
+         * This produces a deterministic, valid UUID suitable for Apple's SK2
+         * `appAccountToken` and Google Play's `obfuscatedAccountId`.
+         *
+         * @param str - The input string to hash and format
+         * @returns A UUIDv3-like string (36 chars with dashes), or empty string if input is empty
+         */
+        function md5toUUID(str) {
+            if (!str)
+                return '';
+            const hash = Utils.md5(str);
+            // UUID format: xxxxxxxx-xxxx-3xxx-8xxx-xxxxxxxxxxxx
+            // Position 12: version '3' (MD5), Position 16: variant '8' (RFC 4122)
+            return hash.substring(0, 8) + '-'
+                + hash.substring(8, 12) + '-'
+                + '3' + hash.substring(13, 16) + '-'
+                + '8' + hash.substring(17, 20) + '-'
+                + hash.substring(20, 32);
+        }
+        Utils.md5toUUID = md5toUUID;
+    })(Utils = CdvPurchase.Utils || (CdvPurchase.Utils = {}));
+})(CdvPurchase || (CdvPurchase = {}));
 /// <reference path="types.ts" />
 /// <reference path="utils/compatibility.ts" />
 /// <reference path="utils/platform-name.ts" />
@@ -1629,6 +1686,7 @@ var CdvPurchase;
 /// <reference path="internal/transaction-monitor.ts" />
 /// <reference path="internal/receipts-monitor.ts" />
 /// <reference path="internal/expiry-monitor.ts" />
+/// <reference path="utils/to-uuid.ts" />
 /**
  * Namespace for the cordova-plugin-purchase plugin.
  *
@@ -1662,7 +1720,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.15.4';
+    CdvPurchase.PLUGIN_VERSION = '13.16.0';
     /**
      * Entry class of the plugin.
      */
@@ -1694,6 +1752,8 @@ var CdvPurchase;
              * @see {@link LogLevel}
              */
             this.verbosity = CdvPurchase.LogLevel.ERROR;
+            /** @internal Tracks whether the info notice for 'legacy' has been emitted */
+            this._legacyObfuscatorNoticeEmitted = false;
             /** List of callbacks for the "ready" events */
             this._readyCallbacks = new CdvPurchase.Internal.ReadyCallbacks(this.log);
             /** Callbacks when a product definition was updated */
@@ -1753,6 +1813,7 @@ var CdvPurchase;
             this._validator = new CdvPurchase.Internal.Validator({
                 adapters: this.adapters,
                 getApplicationUsername: this.getApplicationUsername.bind(this),
+                obfuscateUsername: this.obfuscateUsername.bind(this),
                 get localReceipts() { return store.localReceipts; },
                 get validator() { return store.validator; },
                 get validator_privacy_policy() { return store.validator_privacy_policy; },
@@ -1809,6 +1870,40 @@ var CdvPurchase;
             if (this.applicationUsername instanceof Function)
                 return this.applicationUsername();
             return this.applicationUsername;
+        }
+        /**
+         * Obfuscate the application username according to the configured obfuscation strategy.
+         *
+         * See {@link Obfuscator} for the per-mode output format.
+         *
+         * @internal
+         */
+        obfuscateUsername(applicationUsername, platform) {
+            var _a;
+            if (!applicationUsername)
+                return undefined;
+            const obfuscator = (_a = this.obfuscator) !== null && _a !== void 0 ? _a : 'legacy';
+            if (typeof obfuscator === 'function') {
+                return obfuscator(applicationUsername, platform);
+            }
+            switch (obfuscator) {
+                case 'disabled':
+                    return applicationUsername;
+                case 'uuid':
+                    return CdvPurchase.Utils.md5toUUID(applicationUsername);
+                case 'legacy':
+                default:
+                    if (!this._legacyObfuscatorNoticeEmitted) {
+                        this._legacyObfuscatorNoticeEmitted = true;
+                        this.log.info('store.obfuscator defaults to "legacy" for backward compatibility. New integrations should set store.obfuscator = "uuid". See https://github.com/j3k0/cordova-plugin-purchase/issues/1665');
+                    }
+                    if (platform === CdvPurchase.Platform.GOOGLE_PLAY) {
+                        // Backward-compatible: raw MD5 hash (32 hex chars, no dashes)
+                        return CdvPurchase.Utils.md5(applicationUsername);
+                    }
+                    // UUIDv3 format — valid for Apple appAccountToken (SK1 + SK2) and any other platform
+                    return CdvPurchase.Utils.md5toUUID(applicationUsername);
+            }
         }
         /**
          * Register a product.
@@ -1868,6 +1963,8 @@ var CdvPurchase;
                     error: this.triggerError.bind(this),
                     get verbosity() { return store.verbosity; },
                     getApplicationUsername() { return store.getApplicationUsername(); },
+                    obfuscateUsername: (username, platform) => store.obfuscateUsername(username, platform),
+                    get obfuscator() { return store.obfuscator; },
                     get listener() { return store.listener; },
                     get log() { return store.log; },
                     get registeredProducts() { return store.registeredProducts; },
@@ -3143,6 +3240,24 @@ var CdvPurchase;
                 }, 300);
             }
             get products() { return this._products; }
+            /**
+             * Resolve the username string passed to the native bridge for a
+             * purchase. SK1 + 'legacy' keeps the raw username for backward
+             * compatibility; every other mode obfuscates through the
+             * configured strategy. 'disabled' always returns the raw value.
+             */
+            resolveBridgeUsername() {
+                var _a;
+                const raw = this.context.getApplicationUsername();
+                if (!raw)
+                    return undefined;
+                const obfuscator = (_a = this.context.obfuscator) !== null && _a !== void 0 ? _a : 'legacy';
+                if (obfuscator === 'disabled')
+                    return raw;
+                if (obfuscator === 'legacy' && !this.useSK2)
+                    return raw;
+                return this.context.obfuscateUsername(raw, CdvPurchase.Platform.APPLE_APPSTORE);
+            }
             /** Find a given product from ID */
             getProduct(id) { return this._products.find(p => p.id === id); }
             get receipts() {
@@ -3638,7 +3753,9 @@ var CdvPurchase;
                         // When we switch AppStore user, the cached receipt isn't from the new user.
                         // so after a purchase, we want to make sure we're using the receipt from the logged in user.
                         this.forceReceiptReload = true;
-                        this.bridge.purchase(offer.productId, quantity, this.context.getApplicationUsername(), discount, success, error);
+                        warnIfDeprecatedAdditionalUsername(this.log, additionalData);
+                        const username = this.resolveBridgeUsername();
+                        this.bridge.purchase(offer.productId, quantity, username, discount, success, error);
                     });
                 });
             }
@@ -3894,6 +4011,16 @@ var CdvPurchase;
         }
         function appStoreError(code, message, productId) {
             return CdvPurchase.storeError(code, message, CdvPurchase.Platform.APPLE_APPSTORE, productId);
+        }
+        let deprecatedAdditionalUsernameNoticed = false;
+        function warnIfDeprecatedAdditionalUsername(log, additionalData) {
+            // Bracket access avoids the @deprecated read warning on the field.
+            if (!additionalData || !additionalData['applicationUsername'])
+                return;
+            if (deprecatedAdditionalUsernameNoticed)
+                return;
+            deprecatedAdditionalUsernameNoticed = true;
+            log.warn('additionalData.applicationUsername is deprecated and ignored. Set store.applicationUsername instead.');
         }
     })(AppleAppStore = CdvPurchase.AppleAppStore || (CdvPurchase.AppleAppStore = {}));
 })(CdvPurchase || (CdvPurchase = {}));
@@ -6359,6 +6486,8 @@ var CdvPurchase;
             /** @inheritDoc */
             order(offer, additionalData) {
                 return __awaiter(this, void 0, void 0, function* () {
+                    warnIfDeprecatedAdditionalUsername(this.log, additionalData);
+                    additionalData = withObfuscatedAccountId(additionalData, this.context);
                     return new Promise(resolve => {
                         this.log.info("Order - " + JSON.stringify(offer));
                         const buySuccess = () => resolve(undefined);
@@ -6516,6 +6645,33 @@ var CdvPurchase;
             PRODUCTION: 7 * 24 * 60 * 60 * 1000 + 10 * 60 * 1000, // 7 days + 10 minutes for production
         };
         GooglePlay.Adapter = Adapter;
+        let deprecatedAdditionalUsernameNoticed = false;
+        function warnIfDeprecatedAdditionalUsername(log, additionalData) {
+            // Bracket access avoids the @deprecated read warning on the field.
+            if (!additionalData || !additionalData['applicationUsername'])
+                return;
+            if (deprecatedAdditionalUsernameNoticed)
+                return;
+            deprecatedAdditionalUsernameNoticed = true;
+            log.warn('additionalData.applicationUsername is deprecated and ignored. Set store.applicationUsername instead.');
+        }
+        /**
+         * Return a copy of `additionalData` with `googlePlay.accountId` populated
+         * from `store.applicationUsername` (via the configured obfuscator) when
+         * not already provided by the caller. Never mutates the input.
+         */
+        function withObfuscatedAccountId(additionalData, context) {
+            var _a;
+            const next = Object.assign({}, (additionalData !== null && additionalData !== void 0 ? additionalData : {}));
+            next.googlePlay = Object.assign({}, ((_a = additionalData === null || additionalData === void 0 ? void 0 : additionalData.googlePlay) !== null && _a !== void 0 ? _a : {}));
+            if (!next.googlePlay.accountId) {
+                const username = context.getApplicationUsername();
+                if (username) {
+                    next.googlePlay.accountId = context.obfuscateUsername(username, CdvPurchase.Platform.GOOGLE_PLAY);
+                }
+            }
+            return next;
+        }
         function playStoreError(code, message, productId) {
             return CdvPurchase.storeError(code, message, CdvPurchase.Platform.GOOGLE_PLAY, productId);
         }
@@ -6681,11 +6837,7 @@ var CdvPurchase;
                 return !!obj && obj.constructor === Object ? obj : {};
             }
             function extendAdditionalData(ad) {
-                const additionalData = ensureObject(ad === null || ad === void 0 ? void 0 : ad.googlePlay);
-                if (!additionalData.accountId && (ad === null || ad === void 0 ? void 0 : ad.applicationUsername)) {
-                    additionalData.accountId = CdvPurchase.Utils.md5(ad.applicationUsername);
-                }
-                return additionalData;
+                return ensureObject(ad === null || ad === void 0 ? void 0 : ad.googlePlay);
             }
         })(Bridge = GooglePlay.Bridge || (GooglePlay.Bridge = {}));
     })(GooglePlay = CdvPurchase.GooglePlay || (CdvPurchase.GooglePlay = {}));
@@ -6949,11 +7101,7 @@ var CdvPurchase;
                 return !!obj && obj.constructor === Object ? obj : {};
             }
             function extendAdditionalData(ad) {
-                const additionalData = ensureObject(ad === null || ad === void 0 ? void 0 : ad.googlePlay);
-                if (!additionalData.accountId && (ad === null || ad === void 0 ? void 0 : ad.applicationUsername)) {
-                    additionalData.accountId = CdvPurchase.Utils.md5(ad.applicationUsername);
-                }
-                return additionalData;
+                return ensureObject(ad === null || ad === void 0 ? void 0 : ad.googlePlay);
             }
         })(Bridge = GooglePlay.Bridge || (GooglePlay.Bridge = {}));
     })(GooglePlay = CdvPurchase.GooglePlay || (CdvPurchase.GooglePlay = {}));
@@ -7813,11 +7961,12 @@ var CdvPurchase;
                 });
             }
             handleReceiptValidationResponse(receipt, response) {
+                var _a, _b;
                 return __awaiter(this, void 0, void 0, function* () {
                     this.log.info('handleReceiptValidationResponse for IapticJS');
                     if (response.ok) {
-                        const validatedData = response.data.transaction;
-                        const collection = response.data.collection;
+                        const validatedData = (_a = response.data) === null || _a === void 0 ? void 0 : _a.transaction;
+                        const collection = (_b = response.data) === null || _b === void 0 ? void 0 : _b.collection;
                         // Update receipt based on validated collection
                         if (collection) {
                             const purchases = collection.map((vp) => {

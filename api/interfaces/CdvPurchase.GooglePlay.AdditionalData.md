@@ -21,7 +21,12 @@
 
 Obfuscated user account identifier
 
-Default to md5(store.applicationUsername)
+Populated by the adapter using `store.obfuscateUsername()`.
+Format depends on `store.obfuscator` setting.
+
+**`See`**
+
+[CdvPurchase.Store.obfuscator](../classes/CdvPurchase.Store.md#obfuscator)
 
 ___
 

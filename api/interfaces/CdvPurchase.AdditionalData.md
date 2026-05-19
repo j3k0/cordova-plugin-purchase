@@ -33,7 +33,16 @@ ___
 
 • `Optional` **applicationUsername**: `string`
 
-The application's user identifier, will be obfuscated with md5 to fill `accountId` if necessary
+The application's user identifier.
+
+**`Deprecated`**
+
+Set [Store.applicationUsername](../classes/CdvPurchase.Store.md#applicationusername) instead. The
+per-transaction value is ignored — adapters always read the
+store-level username so receipt validation later (which doesn't
+have access to the original additionalData) sees the same value
+that was sent to the native API at purchase time. Passing this
+field logs a one-shot notice.
 
 ___
 
