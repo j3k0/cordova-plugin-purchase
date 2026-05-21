@@ -43,8 +43,9 @@ namespace CdvPurchase {
         const transaction = LocalReceipts.find(localReceipts, product);
         if (!transaction) return true;
         if (transaction.isConsumed) return true;
+        if (transaction.isPending) return false;
         if (transaction.expirationDate) return transaction.expirationDate.getTime() <= +new Date();
-        return true;
+        return false;
       }
     }
   }
