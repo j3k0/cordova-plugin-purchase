@@ -2,6 +2,23 @@
 
 ## 13.16
 
+### 13.16.1
+
+#### (fix) `canPurchase` returns `false` for pending and unfinished transactions
+
+`LocalReceipts.canPurchase` previously returned `true` whenever a matching transaction existed for a product but was neither consumed nor expired — letting the app start a second purchase while a previous one was still in flight ([#1705](https://github.com/j3k0/cordova-plugin-purchase/pull/1705)).
+
+Two related corrections:
+
+- **Deferred Google Play payments now block repurchase.** A transaction in the `PENDING` state (e.g. waiting for cash/family approval) reports `canPurchase = false` until the platform clears it.
+- **Unfinished non-expiring transactions block repurchase.** The default for a matching, non-expiring transaction flipped from `true` to `false`, so an unconsumed entitlement blocks `order()` until `finish()` is called.
+
+**Behavioral change to be aware of:** integrations that relied on `canPurchase` always being `true` for a product after purchase (and used another signal to gate the UI) will see `canPurchase` flip to `false` once a transaction exists for that product. Make sure consumables call `transaction.finish()` after granting the item — that returns `canPurchase` to `true`.
+
+#### (build) Capacitor `dist/index.js` rebuilt by `make capacitor-package`
+
+`make capacitor-package` now runs `cd capacitor && npm run build` so `capacitor/dist/index.js` — the file Capacitor apps actually load — stays in sync with `www/store.js`. Previously the Rollup bundle could silently go stale and ship outdated plugin code in the npm package. The harmless `THIS_IS_UNDEFINED` Rollup warning on the inlined `store.js` virtual module is now silenced.
+
 ### 13.16.0
 
 #### Configurable `applicationUsername` obfuscation via `store.obfuscator`

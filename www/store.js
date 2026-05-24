@@ -1720,7 +1720,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.16.0';
+    CdvPurchase.PLUGIN_VERSION = '13.16.1';
     /**
      * Entry class of the plugin.
      */
@@ -2915,9 +2915,11 @@ var CdvPurchase;
                     return true;
                 if (transaction.isConsumed)
                     return true;
+                if (transaction.isPending)
+                    return false;
                 if (transaction.expirationDate)
                     return transaction.expirationDate.getTime() <= +new Date();
-                return true;
+                return false;
             }
         }
         Internal.LocalReceipts = LocalReceipts;
