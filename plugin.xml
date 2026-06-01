@@ -122,6 +122,7 @@ SOFTWARE.
         https://developer.android.com/google/play/billing/billing_library_releases_notes
         NOTE: Billing Library 9.0.0+ requires minSdkVersion 23 or higher -->
       <framework src="com.android.billingclient:billing:9.0.0" />
+      <framework src="androidx.core:core:1.9.0" />
       <source-file src="src/android/cc/fovea/PurchasePlugin.java" target-dir="src/cc/fovea" />
       <source-file src="src/android/cc/fovea/Constants.java" target-dir="src/cc/fovea" />
     </platform>
