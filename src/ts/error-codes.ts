@@ -69,6 +69,8 @@ namespace CdvPurchase {
         INVALID_SIGNATURE = ERROR_CODES_BASE + 31,
         /** Error: Parameters are missing in a payment discount. */
         MISSING_OFFER_PARAMS = ERROR_CODES_BASE + 32,
+        /** Error: The store is blocked (e.g. Google Play blocking purchases). */
+        STORE_BLOCKED = ERROR_CODES_BASE + 33,
 
         /**
          * Server code used when a subscription expired.

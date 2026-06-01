@@ -71,6 +71,7 @@ static BOOL g_lazyInitialized = NO;
 #define ERR_INVALID_OFFER_PRICE               (ERROR_CODES_BASE + 30)
 #define ERR_INVALID_SIGNATURE                 (ERROR_CODES_BASE + 31)
 #define ERR_MISSING_OFFER_PARAMS              (ERROR_CODES_BASE + 32)
+#define ERR_STORE_BLOCKED                     (ERROR_CODES_BASE + 33) // Android-only
 
 static NSInteger jsErrorCode(NSInteger storeKitErrorCode) {
     switch (storeKitErrorCode) {
@@ -113,6 +114,7 @@ static NSInteger jsErrorCode(NSInteger storeKitErrorCode) {
             return ERR_PRODUCT_NOT_AVAILABLE;
     }
 #endif
+    // Note: ERR_STORE_BLOCKED (ERROR_CODES_BASE + 33) has no StoreKit mapping — it's Android-only.
     return ERR_UNKNOWN;
 }
 
@@ -136,6 +138,7 @@ static NSString *jsErrorCodeAsString(NSInteger code) {
         if (code == ERR_INVALID_OFFER_PRICE) return @"ERR_INVALID_OFFER_PRICE";
         if (code == ERR_INVALID_SIGNATURE) return @"ERR_INVALID_SIGNATURE";
         if (code == ERR_MISSING_OFFER_PARAMS) return @"ERR_MISSING_OFFER_PARAMS";
+        if (code == ERR_STORE_BLOCKED) return @"ERR_STORE_BLOCKED";
     }
 #if TARGET_OS_IPHONE
     if (@available(iOS 9.3, *)) {

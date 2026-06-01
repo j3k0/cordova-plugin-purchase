@@ -24,5 +24,6 @@ public class Constants {
   public static final int ERR_PAYMENT_EXPIRED = ERROR_CODES_BASE + 20;
   public static final int ERR_DOWNLOAD = ERROR_CODES_BASE + 21;
   public static final int ERR_SUBSCRIPTION_UPDATE_NOT_AVAILABLE = ERROR_CODES_BASE + 22;
+  public static final int ERR_STORE_BLOCKED = ERROR_CODES_BASE + 33;
 
 }
