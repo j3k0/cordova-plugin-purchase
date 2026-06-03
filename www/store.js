@@ -78,6 +78,8 @@ var CdvPurchase;
         ErrorCode[ErrorCode["INVALID_SIGNATURE"] = ERROR_CODES_BASE + 31] = "INVALID_SIGNATURE";
         /** Error: Parameters are missing in a payment discount. */
         ErrorCode[ErrorCode["MISSING_OFFER_PARAMS"] = ERROR_CODES_BASE + 32] = "MISSING_OFFER_PARAMS";
+        /** Error: The store is blocked (e.g. Google Play blocking purchases). */
+        ErrorCode[ErrorCode["STORE_BLOCKED"] = ERROR_CODES_BASE + 33] = "STORE_BLOCKED";
         /**
          * Server code used when a subscription expired.
          *
@@ -6239,8 +6241,17 @@ var CdvPurchase;
                             }
                             resolve(undefined);
                         };
-                        const iabError = (err) => {
+                        const iabError = (err, code) => {
                             this.initialized = false;
+                            // `Number(code)` normalizes both Cordova (numeric) and Capacitor (string) error codes.
+                            if (Number(code) === CdvPurchase.ErrorCode.STORE_BLOCKED) {
+                                // The Play Store is blocked by OEM restrictions; it won't unblock,
+                                // so report the error and resolve without retrying.
+                                const error = playStoreError(CdvPurchase.ErrorCode.STORE_BLOCKED, "Init failed - " + err, null);
+                                this.context.error(error);
+                                resolve(error);
+                                return;
+                            }
                             this.context.error(playStoreError(CdvPurchase.ErrorCode.SETUP, "Init failed - " + err, null));
                             this.retry.retry(() => this.initialize());
                         };
@@ -6495,6 +6506,13 @@ var CdvPurchase;
                         const buySuccess = () => resolve(undefined);
                         const buyFailed = (message, code) => {
                             this.log.warn('Order failed: ' + JSON.stringify({ message, code }));
+                            // `Number(code)` normalizes both Cordova (numeric) and Capacitor (string) error codes.
+                            if (Number(code) === CdvPurchase.ErrorCode.STORE_BLOCKED) {
+                                // The Play Store is blocked by OEM restrictions; resolve with the
+                                // blocked-store error immediately.
+                                resolve(playStoreError(CdvPurchase.ErrorCode.STORE_BLOCKED, message, offer.productId));
+                                return;
+                            }
                             resolve(playStoreError(code !== null && code !== void 0 ? code : CdvPurchase.ErrorCode.UNKNOWN, message, offer.productId));
                         };
                         if (offer.productType === CdvPurchase.ProductType.PAID_SUBSCRIPTION) {
