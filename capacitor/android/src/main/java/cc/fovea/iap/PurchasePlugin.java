@@ -91,6 +91,14 @@ public class PurchasePlugin extends Plugin implements
     /** Value for mBillingClientResult until BillingClient is connected. */
     private static final int BILLING_CLIENT_NOT_CONNECTED = -1;
 
+    /**
+     * Error code for a blocked Play Store (OEM kids mode, parental controls,
+     * enterprise policies). Must stay in sync with the canonical definitions
+     * in src/android/cc/fovea/Constants.java (ERR_STORE_BLOCKED) and
+     * src/ts/error-codes.ts (STORE_BLOCKED), both ERROR_CODES_BASE + 33.
+     */
+    private static final int ERR_STORE_BLOCKED = 6777033;
+
     /** Last response from the billing client. */
     private BillingResult mBillingClientResult = BillingResult.newBuilder()
             .setResponseCode(BILLING_CLIENT_NOT_CONNECTED).build();
@@ -353,7 +361,7 @@ public class PurchasePlugin extends Plugin implements
     private String codeToMessage(int code) {
         switch (code) {
             case BillingResponseCode.BILLING_UNAVAILABLE:
-                return "Billing API version is not supported for the type requested";
+                return "Billing is not available on this device";
             case BillingResponseCode.DEVELOPER_ERROR:
                 return "Invalid arguments provided to the API";
             case BillingResponseCode.ERROR:
@@ -388,6 +396,19 @@ public class PurchasePlugin extends Plugin implements
                         ? result.getDebugMessage()
                         : codeToMessage(code);
         return codeToString(code) + ": " + message;
+    }
+
+    /**
+     * Check if a BillingResult indicates that the Play Store is blocked
+     * on this device (OEM kids mode, parental controls, enterprise policies).
+     *
+     * In GPBL V9, this condition was reclassified from ERROR to BILLING_UNAVAILABLE
+     * with a "Play Store is blocked" debug message.
+     */
+    private boolean isPlayStoreBlocked(final BillingResult result) {
+        return result.getResponseCode() == BillingResponseCode.BILLING_UNAVAILABLE
+                && result.getDebugMessage() != null
+                && result.getDebugMessage().contains("Play Store is blocked");
     }
 
     // -------------------------------------------------------------------------
@@ -514,7 +535,12 @@ public class PurchasePlugin extends Plugin implements
             }
         }, () -> {
             Log.d(TAG, "init() -> Failure: " + format(getLastResult()));
-            call.reject("Setup failure. " + format(getLastResult()));
+            if (isPlayStoreBlocked(getLastResult())) {
+                call.reject("Play Store is blocked on this device",
+                        String.valueOf(ERR_STORE_BLOCKED));
+            } else {
+                call.reject("Setup failure. " + format(getLastResult()));
+            }
         });
     }
 
@@ -792,7 +818,12 @@ public class PurchasePlugin extends Plugin implements
                 Log.w(TAG, "onPurchasesUpdated() -> Failed: "
                         + format(result));
                 if (mPendingBuyCall != null) {
-                    mPendingBuyCall.reject(format(result), String.valueOf(code));
+                    if (isPlayStoreBlocked(result)) {
+                        mPendingBuyCall.reject("Play Store is blocked on this device",
+                                String.valueOf(ERR_STORE_BLOCKED));
+                    } else {
+                        mPendingBuyCall.reject(format(result), String.valueOf(code));
+                    }
                     mPendingBuyCall = null;
                 }
             }
