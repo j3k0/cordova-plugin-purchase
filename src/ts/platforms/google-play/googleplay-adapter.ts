@@ -184,8 +184,17 @@ namespace CdvPurchase {
                         resolve(undefined);
                     }
 
-                    const iabError = (err: string) => {
+                    const iabError = (err: string, code?: number) => {
                         this.initialized = false;
+                        // `Number(code)` normalizes both Cordova (numeric) and Capacitor (string) error codes.
+                        if (Number(code) === ErrorCode.STORE_BLOCKED) {
+                            // The Play Store is blocked by OEM restrictions; it won't unblock,
+                            // so report the error and resolve without retrying.
+                            const error = playStoreError(ErrorCode.STORE_BLOCKED, "Init failed - " + err, null);
+                            this.context.error(error);
+                            resolve(error);
+                            return;
+                        }
                         this.context.error(playStoreError(ErrorCode.SETUP, "Init failed - " + err, null));
                         this.retry.retry(() => this.initialize());
                     }
@@ -485,6 +494,13 @@ namespace CdvPurchase {
                     const buySuccess = () => resolve(undefined);
                     const buyFailed = (message: string, code?: ErrorCode): void => {
                         this.log.warn('Order failed: ' + JSON.stringify({message, code}));
+                        // `Number(code)` normalizes both Cordova (numeric) and Capacitor (string) error codes.
+                        if (Number(code) === ErrorCode.STORE_BLOCKED) {
+                            // The Play Store is blocked by OEM restrictions; resolve with the
+                            // blocked-store error immediately.
+                            resolve(playStoreError(ErrorCode.STORE_BLOCKED, message, offer.productId));
+                            return;
+                        }
                         resolve(playStoreError(code ?? ErrorCode.UNKNOWN, message, offer.productId));
                     };
                     if (offer.productType === ProductType.PAID_SUBSCRIPTION) {
