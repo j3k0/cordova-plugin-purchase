@@ -362,7 +362,11 @@ public final class PurchasePlugin
       }
     }, () -> {
         Log.d(mTag, "init() -> Failure: " + format(getLastResult()));
-        callError(Constants.ERR_SETUP, "Setup failure. " + format(getLastResult()));
+        if (isPlayStoreBlocked(getLastResult())) {
+          callError(Constants.ERR_STORE_BLOCKED, "Play Store is blocked on this device");
+        } else {
+          callError(Constants.ERR_SETUP, "Setup failure. " + format(getLastResult()));
+        }
     });
   }
 
@@ -699,7 +703,11 @@ public final class PurchasePlugin
       else {
         Log.w(mTag, "onPurchasesUpdated() -> "
             + "Failed: " + format(result));
-        callError(Constants.ERR_PURCHASE, codeToString(code));
+        if (isPlayStoreBlocked(result)) {
+          callError(Constants.ERR_STORE_BLOCKED, "Play Store is blocked on this device");
+        } else {
+          callError(Constants.ERR_PURCHASE, codeToString(code));
+        }
       }
     } catch (Exception e) {
       Log.w(mTag, "onPurchasesUpdated() -> Exception "
@@ -742,7 +750,7 @@ public final class PurchasePlugin
   private String codeToMessage(int code) {
     switch (code) {
       case BillingResponseCode.BILLING_UNAVAILABLE:
-        return "Billing API version is not supported for the type requested";
+        return "Billing is not available on this device";
       case BillingResponseCode.DEVELOPER_ERROR:
         return "Invalid arguments provided to the API";
       case BillingResponseCode.ERROR:
@@ -1387,6 +1395,19 @@ public final class PurchasePlugin
       ? result.getDebugMessage()
       : codeToMessage(code);
     return codeToString(code) + ": " + message;
+  }
+
+  /**
+   * Check if a BillingResult indicates that the Play Store is blocked
+   * on this device (OEM kids mode, parental controls, enterprise policies).
+   *
+   * <p>In GPBL V9, this condition was reclassified from ERROR to BILLING_UNAVAILABLE
+   * with a "Play Store is blocked" debug message.
+   */
+  private boolean isPlayStoreBlocked(final BillingResult result) {
+    return result.getResponseCode() == BillingResponseCode.BILLING_UNAVAILABLE
+      && result.getDebugMessage() != null
+      && result.getDebugMessage().contains("Play Store is blocked");
   }
 
   // Add new methods to handle callbacks with specific contexts
