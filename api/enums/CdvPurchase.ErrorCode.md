@@ -34,6 +34,7 @@ Error codes
 - [REFRESH](CdvPurchase.ErrorCode.md#refresh)
 - [REFRESH\_RECEIPTS](CdvPurchase.ErrorCode.md#refresh_receipts)
 - [SETUP](CdvPurchase.ErrorCode.md#setup)
+- [STORE\_BLOCKED](CdvPurchase.ErrorCode.md#store_blocked)
 - [SUBSCRIPTIONS\_NOT\_AVAILABLE](CdvPurchase.ErrorCode.md#subscriptions_not_available)
 - [SUBSCRIPTION\_UPDATE\_NOT\_AVAILABLE](CdvPurchase.ErrorCode.md#subscription_update_not_available)
 - [UNAUTHORIZED\_REQUEST\_DATA](CdvPurchase.ErrorCode.md#unauthorized_request_data)
@@ -248,6 +249,14 @@ ___
 • **SETUP** = `number`
 
 Error: Failed to intialize the in-app purchase library
+
+___
+
+### STORE\_BLOCKED
+
+• **STORE\_BLOCKED** = `number`
+
+Error: The store is blocked (e.g. Google Play blocking purchases).
 
 ___
 

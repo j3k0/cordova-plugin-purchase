@@ -1,5 +1,35 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.17
+
+### 13.17.0
+
+#### (android) Google Play Billing Library 9
+
+The Android plugins (Cordova and Capacitor) now build against Google Play Billing Library **9.0.0** (up from 8.3.0). A new `androidx.core:core:1.9.0` dependency is pulled in, required by GPBL v9's blocked-store detection.
+
+#### (android) New error code: `ErrorCode.STORE_BLOCKED`
+
+On some devices the Play Store is blocked from making purchases — OEM "kids mode" launchers, parental controls, or enterprise device policies. GPBL v9 reports this condition as `BILLING_UNAVAILABLE` with a "Play Store is blocked" debug message; the plugin now detects it and surfaces a dedicated error code, `ErrorCode.STORE_BLOCKED` (6777033):
+
+- **During initialization** — the adapter reports `STORE_BLOCKED` and stops, instead of entering the endless `SETUP`-error retry loop. The condition won't clear on its own, so retrying was just noise.
+- **During `order()`** — the purchase fails immediately with `STORE_BLOCKED`.
+
+Listen for it with the global error handler to show an appropriate message to the user:
+
+```ts
+store.error(err => {
+  if (err.code === CdvPurchase.ErrorCode.STORE_BLOCKED) {
+    // Purchases are blocked on this device (kids mode, parental
+    // controls or enterprise policy) — hide or disable the shop.
+  }
+});
+```
+
+#### Companion plugin compatibility
+
+**StoreKit 2 Plugin**, **Braintree Plugin** and **Apple Pay Plugin** are unaffected — the changes are Android / Google Play only, no version bump required.
+
 ## 13.16
 
 ### 13.16.1

@@ -66,6 +66,8 @@ declare namespace CdvPurchase {
         INVALID_SIGNATURE,
         /** Error: Parameters are missing in a payment discount. */
         MISSING_OFFER_PARAMS,
+        /** Error: The store is blocked (e.g. Google Play blocking purchases). */
+        STORE_BLOCKED,
         /**
          * Server code used when a subscription expired.
          *
@@ -909,7 +911,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.16.1";
+    const PLUGIN_VERSION = "13.17.0";
     /**
      * Entry class of the plugin.
      */
