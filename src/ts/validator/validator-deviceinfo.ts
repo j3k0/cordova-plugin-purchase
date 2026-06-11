@@ -64,7 +64,44 @@ namespace CdvPurchase {
                     return ['analytics', 'support', 'fraud'];
             }
 
-            export function getDeviceInfo(store: PrivacyPolicyProvider): DeviceInfo {
+            /** Map @capacitor/device data to the cordova-plugin-device format.
+             *
+             * Used as a fallback when cordova-plugin-device isn't installed (typically
+             * in Capacitor apps). Detected through the plugin proxy that Capacitor
+             * registers at window.Capacitor.Plugins.Device, so the plugin doesn't
+             * need a dependency on @capacitor/device.
+             *
+             * @param includeId fetch the device identifier (requires user consent) */
+            async function getCapacitorDevice(includeId: boolean): Promise<any> {
+                const capacitorDevice = (window as any).Capacitor?.Plugins?.Device;
+                if (!capacitorDevice) return {};
+                const device: any = {};
+                try {
+                    const info = await capacitorDevice.getInfo();
+                    if (isObject(info)) {
+                        device.model = info.model;
+                        // match cordova-plugin-device casing ("iOS", "Android")
+                        device.platform = info.operatingSystem === 'ios' ? 'iOS'
+                            : info.operatingSystem === 'android' ? 'Android'
+                            : info.operatingSystem;
+                        device.version = info.osVersion;
+                        device.manufacturer = info.manufacturer;
+                        device.isVirtual = info.isVirtual;
+                    }
+                }
+                catch (e) { /* @capacitor/device not functional, skip device info */ }
+                if (includeId) {
+                    try {
+                        const id = await capacitorDevice.getId();
+                        // "identifier" since @capacitor/device v4, "uuid" before
+                        device.uuid = id?.identifier ?? id?.uuid;
+                    }
+                    catch (e) { /* ignore, "uuid" stays undefined */ }
+                }
+                return device;
+            }
+
+            export async function getDeviceInfo(store: PrivacyPolicyProvider): Promise<DeviceInfo> {
 
                 const privacyPolicy = getPrivacyPolicy(store); // string[]
                 function allowed(policy: PrivacyPolicyItem) {
@@ -83,8 +120,11 @@ namespace CdvPurchase {
                     Ionic: any;
                 } = window as any;
 
-                // the cordova-plugin-device global object
-                const device: any = isObject(wdw.device) ? wdw.device : {};
+                // the cordova-plugin-device global object,
+                // with @capacitor/device as a fallback
+                const device: any = isObject(wdw.device)
+                    ? wdw.device
+                    : await getCapacitorDevice(allowed('tracking') || allowed('fraud'));
 
                 // Send the receipt validator information about the device.
                 // This will allow to make vendor or device specific fixes and detect class
@@ -141,7 +181,7 @@ namespace CdvPurchase {
                         if (device.model)
                             fingerprint += '/' + device.model;
                         if (device.manufacturer)
-                            fingerprint = '/' + device.manufacturer;
+                            fingerprint += '/' + device.manufacturer;
                     }
                     // Fingerprint is hashed to keep required level of privacy.
                     if (fingerprint)

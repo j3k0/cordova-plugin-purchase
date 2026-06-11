@@ -228,7 +228,7 @@ namespace CdvPurchase {
                 // Add device information
                 body.device = {
                     ...body.device ?? {},
-                    ...CdvPurchase.Validator.Internal.getDeviceInfo(this.controller),
+                    ...await CdvPurchase.Validator.Internal.getDeviceInfo(this.controller),
                 }
 
                 // Add legacy pricing information
