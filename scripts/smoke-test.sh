@@ -238,7 +238,7 @@ for devs in d["devices"].values():
         if dev.get("isAvailable") and dev.get("name")==name: print(dev["udid"]); sys.exit()
 ' 2>/dev/null)"
     [ -n "$sim_udid" ] || { warn "no available '$IOS_SIM_NAME' simulator (set IOS_SIM_NAME to an installed device)"; return 1; }
-    info "booting simulator $sim_udid…"
+    info "booting simulator ${sim_udid}…"
     xcrun simctl boot "$sim_udid" >/dev/null 2>&1
     emu_booted=1
   fi
