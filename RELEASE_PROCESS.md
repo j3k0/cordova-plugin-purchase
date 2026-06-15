@@ -78,27 +78,33 @@ artifacts (`www/store.js`, `www/store.d.ts`, `api/**`, `capacitor/dist/index.js`
 
 The unit tests in `make all` are not enough — prove the freshly built plugin loads and
 runs in real apps before committing. Build and launch the example apps and confirm, from
-device logs, that each one **launches and loads its products**:
+device logs, that each one **launches and loads its products**. This is now automated:
 
-- **Cordova** — `../cordova-purchase-micro-example/{subscriptions,consumables}`
-- **Capacitor** — `../capacitor-purchase-examples/{subscriptions,consumables}`
-- **Platforms** — Android **and** iOS for each (4 build/run combos total).
+```sh
+scripts/smoke-test.sh                 # all 4 combos: cordova + capacitor, android + ios
+scripts/smoke-test.sh --platform ios  # narrow it during iteration
+```
 
-Tooling that exists today:
-- `shared/build-all.sh <ios|android>` in **both** example repos builds + syncs all
-  examples (build-only — it does not launch or verify).
-- **Android** is agent-automated on the `Pixel_4_API_35_Play` AVD (Play license-tester
-  signed in). See `capacitor-purchase-examples/lessons/lesson_automated_purchase_testing_avd.md`.
-- **iOS** runs as Mac Catalyst ("My Mac — Designed for iPad") with a sandbox account;
-  see `capacitor-purchase-examples/CLAUDE.md` (`CODE_SIGNING_ALLOWED = 'YES'` in the
-  Podfile for Catalyst).
+It builds each example app, launches it on the `Pixel_4_API_35_Play` AVD (Android) and an
+iOS Simulator, captures `adb logcat` / simulator logs, and asserts the plugin markers:
+`[CdvPurchase] INFO: initialize(...)`, the platform adapter `initialized.`, and
+`products loaded:`. The gate exits non-zero if any combo fails to launch or load.
+See [`scripts/SMOKE_TESTING.md`](./scripts/SMOKE_TESTING.md) for the exact expected log
+lines per platform, the simulator-vs-catalyst decision, and prerequisites.
 
-Check `adb logcat` (Android, tag `Capacitor/Console`) and Console/Xcode logs (iOS) for
-the expected markers: app started, `store.initialize()` completed, products loaded.
+Scope (4 build/run combos): Cordova `../cordova-purchase-micro-example/{subscriptions,consumables}`
+and Capacitor `../capacitor-purchase-examples/{subscriptions,consumables}`, each on Android **and** iOS.
 
-> A single automated runner for all four combos — launch + product-load assertions,
-> iOS included — is being built in **FOV-468**. Until it lands, run the pieces above
-> manually; once it lands, this step becomes one command.
+Prerequisites: the two example repos checked out as siblings of this one, the Android SDK
+with the Play-enabled AVD (license-tester signed in), and Xcode with an iPhone simulator.
+The examples must point at the freshly built plugin — run `shared/update-plugin.sh file:<this repo>`
+(Cordova) and refresh the local Capacitor dependency before this step.
+
+> Manual fallback: if a combo can't be automated, the pieces below still work on their own —
+> `shared/build-all.sh <ios|android>` in either example repo (build-only), launch manually,
+> and grep `adb logcat` (tag `chromium`) / Console logs for the markers above. iOS real-sandbox
+> purchases can also be checked as Mac Catalyst ("My Mac — Designed for iPad", sandbox account;
+> `CODE_SIGNING_ALLOWED = 'YES'` in the Podfile) — see `capacitor-purchase-examples/CLAUDE.md`.
 
 ### 8. Commit
 ```sh
@@ -156,7 +162,7 @@ git tag --list "vX.Y.Z"
 - [ ] Add `### X.Y.Z` section to `RELEASE_NOTES.md`
 - [ ] `make all` (green tests + regenerated `www/`, `api/`, `capacitor/dist/`)
 - [ ] `git status` / `git diff` review
-- [ ] Integration testing — launch the 4 example apps (cordova + capacitor) on Android + iOS, confirm products load (adb/Console logs)
+- [ ] Integration testing — `scripts/smoke-test.sh` green (all 4 combos launch + load products on Android + iOS)
 - [ ] `git commit -m "release: X.Y.Z"`
 - [ ] `git tag -a vX.Y.Z -m "..."`
 - [ ] `git push && git push --tags`
