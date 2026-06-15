@@ -42,6 +42,18 @@ If you're using `cordova-plugin-purchase` in a Capacitor app:
 3. `npx cap sync`
 4. Update your import to `import { store, ProductType, Platform } from 'capacitor-plugin-cdv-purchase'` — the API is identical
 
+## Device info for receipt validation
+
+When validating receipts, the plugin sends device information (OS, model, manufacturer) to the validator to support fraud detection and support requests. In Capacitor apps, this information is collected automatically via `@capacitor/device` through the Capacitor plugin proxy — no additional plugin installation is required.
+
+Customize what is sent with `store.validator_privacy_policy`:
+
+```typescript
+store.validator_privacy_policy = ['fraud', 'support', 'analytics'];
+```
+
+See the [privacy policy documentation](https://github.com/j3k0/cordova-plugin-purchase/blob/master/api/classes/CdvPurchase.Store.md#validator_privacy_policy) for details.
+
 ## Platform Support
 
 | Platform | Native API | Minimum OS |

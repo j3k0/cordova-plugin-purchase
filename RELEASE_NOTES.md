@@ -1343,7 +1343,7 @@ Information sent to the validator can be customized with `store.validator_privac
 
 Default: `store.validator_privacy_policy = ['fraud', 'support', 'analytics']`
 
-**Important**: this feature requires the `cordova-plugin-device` plugin to be installed!
+**Important**: this feature requires device information. On Cordova, install the `cordova-plugin-device` plugin. On Capacitor, `@capacitor/device` is detected automatically via the plugin proxy — no extra install needed.
 
 See 58e24c3
 
