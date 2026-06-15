@@ -994,7 +994,7 @@ public final class PurchasePlugin
           callError(Constants.ERR_COMMUNICATION, "Activity no longer available to launch billing flow.");
           return;
         }
-        if (!mBillingClient.isReady()) {
+        if (mBillingClient == null || !mBillingClient.isReady()) {
           Log.e(mTag, "BillingClient not ready at launch time, aborting billing flow.");
           callError(Constants.ERR_COMMUNICATION, "BillingClient not ready to launch billing flow.");
           return;
@@ -1372,7 +1372,7 @@ public final class PurchasePlugin
   }
 
   private void executeServiceRequest(final Runnable runnable) {
-    if (mIsServiceConnected && mBillingClient.isReady()) {
+    if (mIsServiceConnected && mBillingClient != null && mBillingClient.isReady()) {
       Log.d(mTag, "executeServiceRequest() -> OK");
       resetLastResult(BillingResponseCode.OK);
       runnable.run();
