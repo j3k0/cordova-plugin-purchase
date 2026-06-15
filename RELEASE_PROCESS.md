@@ -4,8 +4,9 @@ Both packages are built and versioned from this single repo and **must share the
 version number** (verified by the `versions` script). Releases are cut manually from
 `master`; there is no CI auto-publish.
 
-> TL;DR: bump the 6 version files → write release notes → `make all` → commit → tag →
-> push → `npm publish` (cordova) + `make capacitor-publish` (capacitor) → `gh release`.
+> TL;DR: bump the 6 version files → write release notes → `make all` → **integration test
+> on devices** → commit → tag → push → `npm publish` (cordova) + `make capacitor-publish`
+> (capacitor) → `gh release`.
 
 ## Where things live
 
@@ -73,13 +74,39 @@ Expected changed files: the 6 version files, `RELEASE_NOTES.md`, plus regenerate
 artifacts (`www/store.js`, `www/store.d.ts`, `api/**`, `capacitor/dist/index.js`,
 `capacitor/www/*`). Anything else is unexpected — investigate before continuing.
 
-### 7. Commit
+### 7. Integration testing (smoke test before publishing)
+
+The unit tests in `make all` are not enough — prove the freshly built plugin loads and
+runs in real apps before committing. Build and launch the example apps and confirm, from
+device logs, that each one **launches and loads its products**:
+
+- **Cordova** — `../cordova-purchase-micro-example/{subscriptions,consumables}`
+- **Capacitor** — `../capacitor-purchase-examples/{subscriptions,consumables}`
+- **Platforms** — Android **and** iOS for each (4 build/run combos total).
+
+Tooling that exists today:
+- `shared/build-all.sh <ios|android>` in **both** example repos builds + syncs all
+  examples (build-only — it does not launch or verify).
+- **Android** is agent-automated on the `Pixel_4_API_35_Play` AVD (Play license-tester
+  signed in). See `capacitor-purchase-examples/lessons/lesson_automated_purchase_testing_avd.md`.
+- **iOS** runs as Mac Catalyst ("My Mac — Designed for iPad") with a sandbox account;
+  see `capacitor-purchase-examples/CLAUDE.md` (`CODE_SIGNING_ALLOWED = 'YES'` in the
+  Podfile for Catalyst).
+
+Check `adb logcat` (Android, tag `Capacitor/Console`) and Console/Xcode logs (iOS) for
+the expected markers: app started, `store.initialize()` completed, products loaded.
+
+> A single automated runner for all four combos — launch + product-load assertions,
+> iOS included — is being built in **FOV-468**. Until it lands, run the pieces above
+> manually; once it lands, this step becomes one command.
+
+### 8. Commit
 ```sh
 git add <the files from step 6>     # never `git add -A` — the tree has unrelated untracked files
 git commit -m "release: X.Y.Z"
 ```
 
-### 8. Tag (annotated)
+### 9. Tag (annotated)
 ```sh
 git tag -a vX.Y.Z -m "release: X.Y.Z" -m "<short summary of the changes>"
 ```
@@ -87,13 +114,13 @@ The tag **must** be prefixed with `v` (the `vX.Y.Z` form is what `gh release` an
 existing tags use). Include a one- or two-line summary of the release in the annotation,
 matching prior tags.
 
-### 9. Push
+### 10. Push
 ```sh
 git push
 git push --tags
 ```
 
-### 10. Publish to npm (manual)
+### 11. Publish to npm (manual)
 CI does **not** publish. You must be logged in to the publishing account (`npm whoami`
 → `jchoelt`). Publish **both** packages:
 ```sh
@@ -102,7 +129,7 @@ make capacitor-publish               # capacitor-plugin-cdv-purchase (cd capacit
 ```
 For a pre-release, add `--tag next` to both.
 
-### 11. Create the GitHub release
+### 12. Create the GitHub release
 ```sh
 gh release create vX.Y.Z \
   -R j3k0/cordova-plugin-purchase \
@@ -114,7 +141,7 @@ footer listing both published versions, and a link to `RELEASE_NOTES.md` at the 
 see the [v13.16.1 release](https://github.com/j3k0/cordova-plugin-purchase/releases/tag/v13.16.1)
 for the exact format. This step is easy to forget; do it right after publishing.
 
-### 12. Verify
+### 13. Verify
 ```sh
 npm view cordova-plugin-purchase version          # == X.Y.Z
 npm view capacitor-plugin-cdv-purchase version    # == X.Y.Z
@@ -129,6 +156,7 @@ git tag --list "vX.Y.Z"
 - [ ] Add `### X.Y.Z` section to `RELEASE_NOTES.md`
 - [ ] `make all` (green tests + regenerated `www/`, `api/`, `capacitor/dist/`)
 - [ ] `git status` / `git diff` review
+- [ ] Integration testing — launch the 4 example apps (cordova + capacitor) on Android + iOS, confirm products load (adb/Console logs)
 - [ ] `git commit -m "release: X.Y.Z"`
 - [ ] `git tag -a vX.Y.Z -m "..."`
 - [ ] `git push && git push --tags`
