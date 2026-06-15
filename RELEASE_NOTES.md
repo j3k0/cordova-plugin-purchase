@@ -2,6 +2,16 @@
 
 ## 13.17
 
+### 13.17.1
+
+#### (fix) Device info from `@capacitor/device` now sent to receipt validator
+
+When `cordova-plugin-device` is not installed — typical in Capacitor apps — the plugin previously sent no device information to the receipt validator. It now falls back to `@capacitor/device` via `window.Capacitor.Plugins.Device`, so the validator receives device info regardless of which device plugin is available ([#1708](https://github.com/j3k0/cordova-plugin-purchase/issues/1708)).
+
+#### (fix) Fraud fingerprint manufacturer field was overwritten instead of appended
+
+The fraud fingerprint construction used `=` instead of `+=` when adding the device manufacturer, so only the manufacturer was stored — discarding the model and other preceding fields. The fingerprint now correctly combines model and manufacturer as intended.
+
 ### 13.17.0
 
 #### (android) Google Play Billing Library 9
