@@ -65,6 +65,23 @@ KEEP=0
 WORK="$(mktemp -d -t cdv_smoke)"
 PIDFILE_EMU=""
 LOGPID=""
+LAUNCHPID=""
+emu_booted=0
+sim_udid=""
+
+# On any exit (incl. SIGINT/err under the eventual `set -e`/interrupt), stop the
+# booted AVD/sim and drop the temp dir — unless --keep-emulator was given.
+cleanup() {
+  [ $KEEP -eq 1 ] && return
+  [ -n "$LOGPID" ]    && kill "$LOGPID" 2>/dev/null
+  [ -n "$LAUNCHPID" ] && kill "$LAUNCHPID" 2>/dev/null
+  if [ $emu_booted -eq 1 ]; then
+    [ -f "$WORK/emu.pid" ] && kill "$(cat "$WORK/emu.pid")" 2>/dev/null
+    [ -n "$sim_udid" ] && xcrun simctl shutdown "$sim_udid" >/dev/null 2>&1
+  fi
+  rm -rf "$WORK" 2>/dev/null || true
+}
+trap cleanup EXIT
 
 # ─── logging helpers ─────────────────────────────────────────────────────────
 COLOR_RED=$'\033[31m'; COLOR_GRN=$'\033[32m'; COLOR_YLW=$'\033[33m'
@@ -87,6 +104,15 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# validate selector values — an unknown value would silently select nothing,
+# run zero combos and exit 0 (a false "all green").
+validate_sel() {  # $1=value $2=label $3=allowed-regex
+  [[ "$1" =~ $3 ]] || { echo "invalid $2: '$1' (expected: $3)" >&2; exit 2; }
+}
+validate_sel "$PLATFORM_SEL" "--platform" '^(all|android|ios)$'
+validate_sel "$REPO_SEL"     "--repo"     '^(both|cordova|capacitor)$'
+validate_sel "$EXAMPLE_SEL"  "--example"  '^(all|subscriptions|consumables)$'
+
 EXAMPLES=()
 [ "$EXAMPLE_SEL" = "all" ] && EXAMPLES=(subscriptions consumables) || EXAMPLES=("$EXAMPLE_SEL")
 
@@ -102,14 +128,18 @@ goodid_for() {  # $1 = example kind → known-good product id (in the stores)
 }
 
 # ─── build step ───────────────────────────────────────────────────────────────
+# Build output goes to /tmp/cdv_build_<platform>.log; on failure we tail it so
+# the failure isn't silent (iOS already did this via /tmp/cdv_xcbuild.log).
 build_android() {  # $1 = example dir, $2 = "cordova"|"capacitor"
   local dir="$1" kind="$2"
   if [ "$kind" = "cordova" ]; then
-    (cd "$dir" && npx cordova build android) || return 1
+    (cd "$dir" && npx cordova build android) >/tmp/cdv_build_android.log 2>&1 \
+      || { warn "cordova build android failed — tail of /tmp/cdv_build_android.log:" >&2; tail -20 /tmp/cdv_build_android.log >&2; return 1; }
   else
     # vite build + cap sync, then assemble the debug APK (cap sync alone won't)
     (cd "$dir" && npm run build >/dev/null 2>&1 && npx cap sync android >/dev/null 2>&1 \
-       && (cd android && ./gradlew assembleDebug >/dev/null 2>&1)) || return 1
+       && (cd android && ./gradlew assembleDebug)) >/tmp/cdv_build_android.log 2>&1 \
+      || { warn "capacitor build android failed — tail of /tmp/cdv_build_android.log:" >&2; tail -20 /tmp/cdv_build_android.log >&2; return 1; }
   fi
 }
 build_ios() {  # $1 = example dir, $2 = "cordova"|"capacitor"
@@ -151,7 +181,6 @@ _xcodebuild_sim() {  # $1 = example dir, $2 = kind
 }
 
 # ─── android launch + capture ────────────────────────────────────────────────
-emu_booted=0
 ensure_android() {
   local adb="$ANDROID_HOME/platform-tools/adb"
   command -v "$adb" >/dev/null || { warn "adb not found at $adb"; return 1; }
@@ -174,8 +203,8 @@ ensure_android() {
 run_android() {  # $1 = example dir
   local dir="$1" adb="$ANDROID_HOME/platform-tools/adb"
   local apk
-  apk="$(find "$dir/platforms/android" "$dir/android" -path '*/outputs/apk/debug/app-debug.apk' 2>/dev/null | head -1)"
-  [ -f "$apk" ] || apk="$(find "$dir" -path '*/outputs/apk/debug/app-debug.apk' 2>/dev/null | head -1)"
+  apk="$(find "$dir/platforms/android" "$dir/android" -path '*/outputs/apk/debug/app-debug.apk' -print -quit 2>/dev/null)"
+  [ -f "$apk" ] || apk="$(find "$dir" -path '*/outputs/apk/debug/app-debug.apk' -print -quit 2>/dev/null)"
   [ -f "$apk" ] || { warn "no debug APK under $dir"; return 1; }
   info "APK: ${apk#$dir/}"
   "$adb" uninstall "$PACKAGE" >/dev/null 2>&1
@@ -189,7 +218,6 @@ run_android() {  # $1 = example dir
 }
 
 # ─── ios launch + capture ────────────────────────────────────────────────────
-sim_udid=""
 ensure_ios() {
   command -v xcrun >/dev/null || { warn "xcrun not found (Xcode?)"; return 1; }
   # reuse a booted sim, else boot a matching one. The `devices` JSON maps each
@@ -220,8 +248,8 @@ for devs in d["devices"].values():
 
 run_ios() {  # $1 = example dir
   local dir="$1" app bid
-  app="$(find "$dir/platforms/ios/build" "$dir/build/smoke-derived" -name '*.app' -path '*Debug-iphonesimulator*' 2>/dev/null | grep -v '/Build/Intermediates' | head -1)"
-  [ -d "$app" ] || app="$(find "$dir" -name '*.app' -path '*Debug-iphonesimulator*' 2>/dev/null | grep -v '/Build/Intermediates' | head -1)"
+  app="$(find "$dir/platforms/ios/build" "$dir/build/smoke-derived" -name '*.app' -path '*Debug-iphonesimulator*' -not -path '*Build/Intermediates*' -print -quit 2>/dev/null)"
+  [ -d "$app" ] || app="$(find "$dir" -name '*.app' -path '*Debug-iphonesimulator*' -not -path '*Build/Intermediates*' -print -quit 2>/dev/null)"
   [ -d "$app" ] || { warn "no .app (Debug-iphonesimulator) under $dir"; return 1; }
   info "APP: ${app#$dir/}"
   bid="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Info.plist" 2>/dev/null)"
@@ -331,9 +359,15 @@ main() {
   [ "$PLATFORM_SEL" = "android" ] && want_android=1
   [ "$PLATFORM_SEL" = "ios" ] && want_ios=1
 
-  # platform prerequisites
-  [ $want_android -eq 1 ] && ensure_android
-  [ $want_ios -eq 1 ]     && ensure_ios
+  # platform prerequisites — clear the want flag on failure so we skip those
+  # combos with a clear reason instead of failing every one with a confusing
+  # "adb not found" / "no debug APK" downstream.
+  if [ $want_android -eq 1 ]; then
+    ensure_android || { warn "Android prerequisites failed — skipping Android combos"; want_android=0; }
+  fi
+  if [ $want_ios -eq 1 ]; then
+    ensure_ios || { warn "iOS prerequisites failed — skipping iOS combos"; want_ios=0; }
+  fi
 
   # Cordova combos
   if { [ "$REPO_SEL" = "both" ] || [ "$REPO_SEL" = "cordova" ]; } && [ -d "$CORDOVA_REPO" ]; then
@@ -350,6 +384,14 @@ main() {
     done
   fi
 
+  # nothing ran? (bad selection, or selected repos missing) — fail loudly rather
+  # than exit 0 with an empty result table.
+  if [ ${#RESULTS[@]} -eq 0 ]; then
+    warn "no combos were selected/run (check --platform/--repo/--example and that the example repos exist)"
+    [ $KEEP -eq 0 ] || info "kept running (--keep-emulator); logs in $WORK"
+    exit 1
+  fi
+
   # summary
   section "summary"
   printf "%-32s %-12s %s\n" "COMBO" "RESULT" "DETAIL"
@@ -364,21 +406,10 @@ main() {
   echo
   printf "%d passed (%d with soft product-validity notes), %d failed\n" "$PASS" "$SOFT" "$FAIL"
 
-  # teardown
-  if [ $KEEP -eq 0 ]; then
-    [ -n "$LOGPID" ] && kill "$LOGPID" 2>/dev/null
-    if [ $emu_booted -eq 1 ]; then
-      if [ $want_android -eq 1 ] && [ -f "$WORK/emu.pid" ]; then
-        kill "$(cat "$WORK/emu.pid")" 2>/dev/null
-      fi
-      [ $want_ios -eq 1 ] && [ -n "$sim_udid" ] && xcrun simctl shutdown "$sim_udid" >/dev/null 2>&1
-    fi
-  else
-    info "kept running (--keep-emulator); logs in $WORK"
-  fi
+  # AVD/sim + temp dir are cleaned by the EXIT trap; just note keep-mode here.
+  [ $KEEP -eq 1 ] && info "kept running (--keep-emulator); logs in $WORK"
 
   [ $FAIL -eq 0 ] || exit 1
-  rm -rf "$WORK" 2>/dev/null || true
   info "all green"
 }
 
