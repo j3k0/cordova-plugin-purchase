@@ -6242,7 +6242,7 @@ declare namespace CdvPurchase {
             interface PrivacyPolicyProvider {
                 validator_privacy_policy: undefined | string | string[];
             }
-            function getDeviceInfo(store: PrivacyPolicyProvider): DeviceInfo;
+            function getDeviceInfo(store: PrivacyPolicyProvider): Promise<DeviceInfo>;
         }
     }
 }
