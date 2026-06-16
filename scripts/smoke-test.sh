@@ -17,9 +17,11 @@
 #        log line:  GooglePlay initialized.   |   AppStore initialized.
 #   4. The product-load round-trip completed:
 #        log line:  products loaded:
-#   (soft) known-good product ids resolved — reported, not hard-failed, since
-#   validity depends on the Play Console / App Store Connect + sandbox account,
-#   which is environmental rather than a code regression.
+#   (soft) known-good product ids resolved — reported, not hard-failed by
+#   default, since validity depends on store config + sandbox account, which is
+#   environmental rather than a code regression. Set CDV_SMOKE_IOS_VALIDITY=hard
+#   to make iOS product validity a hard (gate-failing) assertion once a clean
+#   sandbox load has been confirmed (see SMOKE_TESTING.md).
 #
 # Usage:
 #   scripts/smoke-test.sh                         # all 4 combos (android + ios)
@@ -162,12 +164,21 @@ build_ios() {  # $1 = example dir, $2 = "cordova"|"capacitor"
 _xcodebuild_sim() {  # $1 = example dir, $2 = kind
   local dir="$1" kind="$2" ws scheme
   if [ "$kind" = "cordova" ]; then
-    ws="$dir/platforms/ios/App.xcworkspace"
+    # cordova-ios 8.x lays out App.xcworkspace (scheme "App"); older 7.x uses
+    # <AppName>.xcworkspace (scheme <AppName>). Detect whichever exists so the
+    # gate works against either example layout.
+    if [ -d "$dir/platforms/ios/App.xcworkspace" ]; then
+      ws="$dir/platforms/ios/App.xcworkspace"; scheme="App"
+    else
+      ws="$(find "$dir/platforms/ios" -maxdepth 1 -name '*.xcworkspace' -print -quit 2>/dev/null)"
+      [ -n "$ws" ] || { warn "no xcworkspace under $dir/platforms/ios"; return 1; }
+      scheme="$(basename "$ws" .xcworkspace)"
+    fi
   else
-    ws="$dir/ios/App/App.xcworkspace"
+    ws="$dir/ios/App/App.xcworkspace"; scheme="App"
   fi
-  scheme="App"
   [ -d "$ws" ] || { warn "no workspace at $ws"; return 1; }
+  info "workspace: ${ws#$dir/} (scheme $scheme)"
   xcodebuild -workspace "$ws" -scheme "$scheme" \
     -configuration Debug -sdk iphonesimulator \
     -destination 'generic/platform=iOS Simulator' \
@@ -292,7 +303,13 @@ assert_markers() {
   check "platform adapter initialized"             "$adapter_init"
   check "product-load round-trip completed"        'products loaded:'
 
-  # soft: did the known-good product resolve as valid?
+  # known-good product resolved? Soft by default (validity depends on store
+  # config + sandbox account, which is environmental). For iOS, set
+  # CDV_SMOKE_IOS_VALIDITY=hard to fail the gate when a known-good product is
+  # invalid — flip that ONLY once a clean sandbox load has been observed
+  # (App Store Connect products + signed-in sandbox tester; see SMOKE_TESTING.md).
+  local ios_hard=0
+  [ "$platform" = "ios" ] && [ "${CDV_SMOKE_IOS_VALIDITY:-soft}" = "hard" ] && ios_hard=1
   if [ "$platform" = "android" ]; then
     if grep -qE "productDetails.*\"productId\":\"$goodid\"|title.*$goodid" "$log" || \
        grep -qE "products loaded:.*\[[^]]*\"id\":\"$goodid\"" "$log"; then
@@ -304,6 +321,8 @@ assert_markers() {
     # Anchor on ` valid:[` (leading space) so we don't match `invalid:[`.
     if grep -qE 'load ok:.*\{ valid:\[[^]]*"'"$goodid"'"' "$log"; then
       printf "  ${COLOR_GRN}•${COLOR_RST} product '%s' resolved (valid)\n" "$goodid"
+    elif [ $ios_hard -eq 1 ]; then
+      printf "  ${COLOR_RED}✗${COLOR_RST} product '%s' invalid/not-found (iOS validity=hard)\n" "$goodid"; missing=1
     else soft="product '$goodid' invalid/not-found (App Store Connect bundle/sandbox dependent)"
          printf "  ${COLOR_YLW}•${COLOR_RST} %s\n" "$soft"; fi
   fi
