@@ -2,6 +2,21 @@
 
 ## 13.17
 
+### 13.17.2
+
+#### (android) Prevent crashes when the Google Play BillingClient disconnects mid-flow
+
+The purchase flow could crash with a null `PendingIntent` (or an NPE on `mBillingClient`) when the billing service disconnected between the connection-state check and the actual operation — the `mIsServiceConnected` flag reported "ready" while the underlying `BillingClient` was not ([#1710](https://github.com/j3k0/cordova-plugin-purchase/issues/1710)). Two corrections in `PurchasePlugin`:
+
+- **`executeServiceRequest()` now checks `mBillingClient.isReady()` in addition to the flag.** When the two are out of sync it resets the flag and forces a reconnect, instead of proceeding against a dead client.
+- **`initiatePurchaseFlow()` re-validates inside the UI-thread lambda.** It re-checks activity validity (`isFinishing`/`isDestroyed`) and BillingClient readiness at launch time, since conditions can change during the reconnection delay.
+
+A follow-up ([#1711](https://github.com/j3k0/cordova-plugin-purchase/pull/1711)) adds `mBillingClient != null` guards at both call sites — defensive, since `mBillingClient` is initialised in `onCreate` and never nulled in practice.
+
+#### Companion plugin compatibility
+
+**StoreKit 2 Plugin**, **Braintree Plugin** and **Apple Pay Plugin** are unaffected — the changes are Android / Google Play only, no version bump required.
+
 ### 13.17.1
 
 #### (fix) Device info from `@capacitor/device` now sent to receipt validator
