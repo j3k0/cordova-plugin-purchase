@@ -57,15 +57,17 @@ automated). Full end-to-end purchase automation on iOS is a follow-up.
 
 ## What "pass" means
 
-For each combo, three **hard** assertions (any miss → FAIL) and one **soft**
-check (reported, never fails the gate):
+For each combo, four **hard** assertions (any miss → FAIL) plus a soft
+product-validity check on Android (reported, never fails the gate). iOS
+product validity is **hard** by default since the example products resolve
+against the App Store sandbox:
 
 | Assertion | How it's checked | Why |
 |---|---|---|
 | App launched + plugin JS ran | log line `[CdvPurchase] INFO: initialize([...]) v<ver>` | catches launch crashes, broken JS bundle, version regressions |
 | Platform adapter came up | `GooglePlay initialized.` / `AppStore initialized.` | catches a broken native bridge |
 | Product-load round-trip completed | `products loaded:` | proves StoreKit/Billing `loadProducts` was called and returned |
-| *(soft)* known-good product resolved | product id seen as `valid` | environmental (store config + sandbox account); `CDV_SMOKE_IOS_VALIDITY=hard` makes iOS validity gate-failing (see below) |
+| known-good product resolved | product id seen as `valid` | iOS: **hard** (fails the gate); Android: soft (Play Console/env dependent). Demote iOS to soft with `CDV_SMOKE_IOS_VALIDITY=soft` |
 
 ## Expected log lines (what success looks like)
 
@@ -113,14 +115,13 @@ grep works regardless of framework.
 
 ## Caveats
 
-- **iOS product validity is sandbox/Connect-dependent.** Both example repos
-  build their iOS apps with bundle id `cc.fovea.subsdemo`, set via the
-  `ios-CFBundleIdentifier` attribute on `<widget>` in `config.xml` (the
-  attribute cordova-ios reads — `ios-id`/`widget id` alone do **not** override
-  `CFBundleIdentifier`). Products must exist in App Store Connect under that
-  bundle and a sandbox tester must be signed in for them to resolve as `valid`
-  (see [iOS sandbox setup](#ios-sandbox-setup)). Until that is confirmed,
-  product validity stays a **soft** check.
+- **iOS bundle id.** Both example repos build their iOS apps with bundle id
+  `cc.fovea.subsdemo`, set via the `ios-CFBundleIdentifier` attribute on
+  `<widget>` in `config.xml` (the attribute cordova-ios reads — `ios-id`/
+  `widget id` alone do **not** override `CFBundleIdentifier`). Products exist
+  in App Store Connect under that bundle, so iOS product validity is a **hard**
+  gate (see [iOS sandbox setup](#ios-sandbox-setup)); demote with
+  `CDV_SMOKE_IOS_VALIDITY=soft` when iterating offline.
 - **The AVD boots headless** (`-no-window -no-audio`); first boot takes ~60s.
 - A **full** run rebuilds all four apps and can take 10+ minutes. Use
   `--platform`, `--repo`, `--example` to narrow it, or `--no-build` to reuse
@@ -129,41 +130,39 @@ grep works regardless of framework.
 ## iOS sandbox setup
 
 For iOS products to resolve as `valid` (not just `products loaded:`), the
-simulator's `storekitd` must reach real App Store Connect data. Three things
-must line up (this is the App-Store-Connect side of [FOV-478], not a code fix):
+simulator's `storekitd` must reach real App Store Connect data. Confirmed
+working as of [FOV-478] — the known-good products resolve **without** a
+signed-in sandbox account (metadata loading queries the catalog; an account is
+only needed to *purchase*):
 
 1. **Bundle id matches the Connect app.** The example apps build with
-   `cc.fovea.subsdemo` (via `ios-CFBundleIdentifier` in `config.xml` /
-   `appId` in `capacitor.config.json`). That bundle must exist in App Store
-   Connect with a valid signing/setup state.
-2. **Products exist under that app.** The example apps register (among others)
-   `subscription1`, `subscription2`, `monthly_with_intro`, `demo_weekly_basic`
-   (subscriptions) and `consumable1`, `consumable2`, `1_token`/`one_token`
-   (consumables). Confirm those exact product ids exist in App Store Connect
-   under `cc.fovea.subsdemo` and are in *Ready to Submit* or approved state. If
-   the real ids differ, align the `store.register({...})` calls in the example
-   `www/js` (Cordova) / `src` (Capacitor) to them — it is safe to register more
-   ids than necessary and observe which come back `valid`.
-3. **Sandbox tester signed in.** On the booted simulator: **Settings → … → Media
-   & Purchases → Sign out**, then sign back in with an App Store Connect sandbox
-   tester account (create one under *Users and Access → Sandbox → Testers*).
-   Product *metadata* loading does not strictly require a purchase, but sandbox
-   sign-in is what makes the product catalog resolve for this app.
+   `cc.fovea.subsdemo` (via `ios-CFBundleIdentifier` in `config.xml` / `appId`
+   in `capacitor.config.json`). That bundle exists in App Store Connect.
+2. **Products exist under that app.** Verified valid in App Store Connect under
+   `cc.fovea.subsdemo`: `demo_weekly_basic` and `monthly_with_intro`
+   (subscriptions) and `one_token` (consumables). These are the gate's
+   known-good ids (`goodid_for` in `scripts/smoke-test.sh`). `subscription1`,
+   `subscription2`, `consumable1`, `consumable2` and `1_token` are registered
+   by the examples but do **not** exist in App Store Connect, so they return
+   `invalid` (harmless). If the valid ids change, update `goodid_for`.
+3. **Sandbox tester (purchase tests only).** Product *metadata* loading — what
+   the gate checks — works without a signed-in account. To exercise an actual
+   purchase, sign into **Settings → … → Media & Purchases** with an App Store
+   Connect sandbox tester (*Users and Access → Sandbox → Testers*).
 
-### Promoting validity to a hard gate
+### iOS validity is a hard gate
 
-Once a run shows a known-good product in the `valid:` list:
+iOS product validity fails the gate by default — an invalid known-good product
+→ FAIL — because the products above resolve reliably. A successful load looks
+like:
 
 ```
-[CdvPurchase.AppleAppStore.Bridge] DEBUG: load ok: { valid:["subscription1",...] invalid:[] }
+[CdvPurchase.AppleAppStore.Bridge] DEBUG: load ok: { valid:[{"id":"demo_weekly_basic",...},{"id":"monthly_with_intro",...}] invalid:["subscription1","subscription2"] }
 ```
 
-set `CDV_SMOKE_IOS_VALIDITY=hard` so an invalid known-good product fails the
-gate (the same bar Android already meets):
+To iterate offline (no network / App Store Connect), demote it to a
+non-failing warning:
 
 ```sh
-CDV_SMOKE_IOS_VALIDITY=hard scripts/smoke-test.sh --platform ios
+CDV_SMOKE_IOS_VALIDITY=soft scripts/smoke-test.sh --platform ios
 ```
-
-Leave it unset (default `soft`) until the sandbox setup above is confirmed,
-otherwise the gate fails for everyone regardless of code.

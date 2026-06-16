@@ -17,11 +17,11 @@
 #        log line:  GooglePlay initialized.   |   AppStore initialized.
 #   4. The product-load round-trip completed:
 #        log line:  products loaded:
-#   (soft) known-good product ids resolved — reported, not hard-failed by
-#   default, since validity depends on store config + sandbox account, which is
-#   environmental rather than a code regression. Set CDV_SMOKE_IOS_VALIDITY=hard
-#   to make iOS product validity a hard (gate-failing) assertion once a clean
-#   sandbox load has been confirmed (see SMOKE_TESTING.md).
+#   5. (iOS, hard) a known-good product resolved as `valid` — the example
+#        products resolve against the App Store sandbox, so an invalid
+#        known-good product fails the gate. Set CDV_SMOKE_IOS_VALIDITY=soft to
+#        demote this to a non-failing warning while iterating offline. Android
+#        validity stays a soft (reported) check.
 #
 # Usage:
 #   scripts/smoke-test.sh                         # all 4 combos (android + ios)
@@ -121,11 +121,17 @@ EXAMPLES=()
 # results table
 declare -a RESULTS=()
 PASS=0; FAIL=0; SOFT=0
-goodid_for() {  # $1 = example kind → known-good product id (in the stores)
-  case "$1" in
-    subscriptions) echo "subscription1";;
-    consumables)   echo "consumable1";;
-    *) echo "$1";;
+goodid_for() {  # $1 = platform, $2 = example kind → a product id confirmed valid.
+  # Google Play (cc.fovea.purchase.demo.nc) and App Store Connect
+  # (cc.fovea.subsdemo) carry DIFFERENT product ids, so the known-good id is
+  # platform-specific. subscription1/consumable1 exist on Play but NOT in
+  # App Store Connect; demo_weekly_basic/one_token are the iOS-known-valid ones.
+  case "$1/$2" in
+    android/subscriptions) echo "subscription1";;
+    android/consumables)   echo "consumable1";;
+    ios/subscriptions)     echo "demo_weekly_basic";;
+    ios/consumables)       echo "one_token";;
+    *) echo "$2";;
   esac
 }
 
@@ -162,7 +168,7 @@ build_ios() {  # $1 = example dir, $2 = "cordova"|"capacitor"
 }
 
 _xcodebuild_sim() {  # $1 = example dir, $2 = kind
-  local dir="$1" kind="$2" ws scheme
+  local dir="$1" kind="$2" ws scheme wsflag="-workspace"
   if [ "$kind" = "cordova" ]; then
     # cordova-ios 8.x lays out App.xcworkspace (scheme "App"); older 7.x uses
     # <AppName>.xcworkspace (scheme <AppName>). Detect whichever exists so the
@@ -175,11 +181,18 @@ _xcodebuild_sim() {  # $1 = example dir, $2 = kind
       scheme="$(basename "$ws" .xcworkspace)"
     fi
   else
-    ws="$dir/ios/App/App.xcworkspace"; scheme="App"
+    # Capacitor <=6 (CocoaPods) lays out App.xcworkspace; Capacitor 7+/8 (Swift
+    # Package Manager) only ships App.xcodeproj. Use whichever exists.
+    if [ -d "$dir/ios/App/App.xcworkspace" ]; then
+      ws="$dir/ios/App/App.xcworkspace"
+    else
+      ws="$dir/ios/App/App.xcodeproj"; wsflag="-project"
+    fi
+    scheme="App"
   fi
-  [ -d "$ws" ] || { warn "no workspace at $ws"; return 1; }
-  info "workspace: ${ws#$dir/} (scheme $scheme)"
-  xcodebuild -workspace "$ws" -scheme "$scheme" \
+  [ -e "$ws" ] || { warn "no Xcode workspace/project at $ws"; return 1; }
+  info "build: ${ws#$dir/} ($wsflag $scheme)"
+  xcodebuild $wsflag "$ws" -scheme "$scheme" \
     -configuration Debug -sdk iphonesimulator \
     -destination 'generic/platform=iOS Simulator' \
     -derivedDataPath "$dir/build/smoke-derived" \
@@ -303,13 +316,12 @@ assert_markers() {
   check "platform adapter initialized"             "$adapter_init"
   check "product-load round-trip completed"        'products loaded:'
 
-  # known-good product resolved? Soft by default (validity depends on store
-  # config + sandbox account, which is environmental). For iOS, set
-  # CDV_SMOKE_IOS_VALIDITY=hard to fail the gate when a known-good product is
-  # invalid — flip that ONLY once a clean sandbox load has been observed
-  # (App Store Connect products + signed-in sandbox tester; see SMOKE_TESTING.md).
+  # iOS product validity is a HARD assertion by default (the example products
+  # resolve against the App Store sandbox; see SMOKE_TESTING.md). Set
+  # CDV_SMOKE_IOS_VALIDITY=soft to demote it back to a non-failing warning, e.g.
+  # while iterating without network/App Store Connect access.
   local ios_hard=0
-  [ "$platform" = "ios" ] && [ "${CDV_SMOKE_IOS_VALIDITY:-soft}" = "hard" ] && ios_hard=1
+  [ "$platform" = "ios" ] && [ "${CDV_SMOKE_IOS_VALIDITY:-hard}" = "hard" ] && ios_hard=1
   if [ "$platform" = "android" ]; then
     if grep -qE "productDetails.*\"productId\":\"$goodid\"|title.*$goodid" "$log" || \
        grep -qE "products loaded:.*\[[^]]*\"id\":\"$goodid\"" "$log"; then
@@ -317,9 +329,13 @@ assert_markers() {
     else soft="product '$goodid' not seen as valid (Play Console / env dependent)"
          printf "  ${COLOR_YLW}•${COLOR_RST} %s\n" "$soft"; fi
   else
-    # AppStore bridge logs: `load ok: { valid:["id",...] invalid:["id",...] }`.
-    # Anchor on ` valid:[` (leading space) so we don't match `invalid:[`.
-    if grep -qE 'load ok:.*\{ valid:\[[^]]*"'"$goodid"'"' "$log"; then
+    # The AppStore bridge emits different lines per framework, so accept any:
+    #  - Cordova ObjC bridge: `load ok: { valid:["id",...] ... }`
+    #  - Capacitor SK2 bridge: `validProducts:[{"id":"id",...}]`
+    #  - adapter (both):       `<id> is valid:`
+    if grep -qE 'load ok:.*\{ valid:\[[^]]*"'$goodid'"' "$log" || \
+       grep -qE 'validProducts.*"id":"'"$goodid"'"' "$log" || \
+       grep -qE ''$goodid' is valid' "$log"; then
       printf "  ${COLOR_GRN}•${COLOR_RST} product '%s' resolved (valid)\n" "$goodid"
     elif [ $ios_hard -eq 1 ]; then
       printf "  ${COLOR_RED}✗${COLOR_RST} product '%s' invalid/not-found (iOS validity=hard)\n" "$goodid"; missing=1
@@ -387,19 +403,18 @@ main() {
   if [ $want_ios -eq 1 ]; then
     ensure_ios || { warn "iOS prerequisites failed — skipping iOS combos"; want_ios=0; }
   fi
-
   # Cordova combos
   if { [ "$REPO_SEL" = "both" ] || [ "$REPO_SEL" = "cordova" ]; } && [ -d "$CORDOVA_REPO" ]; then
     for ex in "${EXAMPLES[@]}"; do
-      [ $want_android -eq 1 ] && run_combo "cordova/$ex (android)" cordova "$CORDOVA_REPO/$ex" android "$(goodid_for "$ex")"
-      [ $want_ios -eq 1 ]     && run_combo "cordova/$ex (ios)"     cordova "$CORDOVA_REPO/$ex" ios     "$(goodid_for "$ex")"
+      [ $want_android -eq 1 ] && run_combo "cordova/$ex (android)" cordova "$CORDOVA_REPO/$ex" android "$(goodid_for android "$ex")"
+      [ $want_ios -eq 1 ]     && run_combo "cordova/$ex (ios)"     cordova "$CORDOVA_REPO/$ex" ios     "$(goodid_for ios "$ex")"
     done
   fi
   # Capacitor combos
   if { [ "$REPO_SEL" = "both" ] || [ "$REPO_SEL" = "capacitor" ]; } && [ -d "$CAPACITOR_REPO" ]; then
     for ex in "${EXAMPLES[@]}"; do
-      [ $want_android -eq 1 ] && run_combo "capacitor/$ex (android)" capacitor "$CAPACITOR_REPO/$ex" android "$(goodid_for "$ex")"
-      [ $want_ios -eq 1 ]     && run_combo "capacitor/$ex (ios)"     capacitor "$CAPACITOR_REPO/$ex" ios     "$(goodid_for "$ex")"
+      [ $want_android -eq 1 ] && run_combo "capacitor/$ex (android)" capacitor "$CAPACITOR_REPO/$ex" android "$(goodid_for android "$ex")"
+      [ $want_ios -eq 1 ]     && run_combo "capacitor/$ex (ios)"     capacitor "$CAPACITOR_REPO/$ex" ios     "$(goodid_for ios "$ex")"
     done
   fi
 
