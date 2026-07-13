@@ -22,9 +22,13 @@
 #        known-good product fails the gate. Set CDV_SMOKE_IOS_VALIDITY=soft to
 #        demote this to a non-failing warning while iterating offline. Android
 #        validity stays a soft (reported) check.
+#   6. (offline example, hard) OfflineEntitlements cache loaded and isOwned()
+#        ran — the offline code path executed in the running app.
+#        log lines:  OfflineEntitlements ready — cache loaded
+#                     offline.isOwned(...)
 #
 # Usage:
-#   scripts/smoke-test.sh                         # all 4 combos (android + ios)
+#   scripts/smoke-test.sh                         # all 6 combos (android + ios)
 #   scripts/smoke-test.sh --platform android      # both repos, android only
 #   scripts/smoke-test.sh --platform ios          # both repos, ios only
 #   scripts/smoke-test.sh --repo cordova          # cordova only, both platforms
@@ -113,10 +117,10 @@ validate_sel() {  # $1=value $2=label $3=allowed-regex
 }
 validate_sel "$PLATFORM_SEL" "--platform" '^(all|android|ios)$'
 validate_sel "$REPO_SEL"     "--repo"     '^(both|cordova|capacitor)$'
-validate_sel "$EXAMPLE_SEL"  "--example"  '^(all|subscriptions|consumables)$'
+validate_sel "$EXAMPLE_SEL"  "--example"  '^(all|subscriptions|consumables|offline)$'
 
 EXAMPLES=()
-[ "$EXAMPLE_SEL" = "all" ] && EXAMPLES=(subscriptions consumables) || EXAMPLES=("$EXAMPLE_SEL")
+[ "$EXAMPLE_SEL" = "all" ] && EXAMPLES=(subscriptions consumables offline) || EXAMPLES=("$EXAMPLE_SEL")
 
 # results table
 declare -a RESULTS=()
@@ -129,8 +133,10 @@ goodid_for() {  # $1 = platform, $2 = example kind → a product id confirmed va
   case "$1/$2" in
     android/subscriptions) echo "subscription1";;
     android/consumables)   echo "consumable1";;
+    android/offline)       echo "subscription1";;
     ios/subscriptions)     echo "demo_weekly_basic";;
     ios/consumables)       echo "one_token";;
+    ios/offline)           echo "demo_weekly_basic";;
     *) echo "$2";;
   esac
 }
@@ -301,9 +307,9 @@ run_ios() {  # $1 = example dir
 }
 
 # ─── assertions ──────────────────────────────────────────────────────────────
-# $1 = log file, $2 = platform (android|ios), $3 = known-good product id
+# $1 = log file, $2 = platform (android|ios), $3 = known-good product id, $4 = example name
 assert_markers() {
-  local log="$1" platform="$2" goodid="$3"
+  local log="$1" platform="$2" goodid="$3" ex="${4:-}"
   local adapter_init missing=0 soft=""
   if [ "$platform" = "android" ]; then adapter_init="GooglePlay initialized\."
   else adapter_init="AppStore initialized\."; fi
@@ -315,6 +321,15 @@ assert_markers() {
   check "app launched + plugin JS ran (initialize)" '\[CdvPurchase\] INFO: initialize\('
   check "platform adapter initialized"             "$adapter_init"
   check "product-load round-trip completed"        'products loaded:'
+
+  # Offline-entitlements-specific assertions (only for the 'offline' example).
+  # The offline example instantiates OfflineEntitlements, calls offline.ready()
+  # to load the persisted cache, then calls offline.isOwned() for each product.
+  # These are hard assertions — they prove the offline code path executed.
+  if [ "$ex" = "offline" ]; then
+    check "offline cache loaded (offline.ready)" 'OfflineEntitlements ready — cache loaded'
+    check "offline.isOwned() called" 'offline\.isOwned\('
+  fi
 
   # iOS product validity is a HARD assertion by default (the example products
   # resolve against the App Store sandbox; see SMOKE_TESTING.md). Set
@@ -353,6 +368,7 @@ assert_markers() {
 # $1=label $2=repo-kind $3=example-dir $4=platform $5=good-id
 run_combo() {
   local label="$1" kind="$2" dir="$3" platform="$4" goodid="$5" rc logf
+  local ex; ex="$(basename "$dir")"
   section "$label — build+launch+verify"
   [ -d "$dir" ] || { warn "missing example dir $dir"; add_result "$label" SKIP; return; }
   if [ $NO_BUILD -eq 0 ]; then
@@ -362,7 +378,7 @@ run_combo() {
   fi
   if [ "$platform" = "android" ]; then run_android "$dir" || { add_result "$label" FAIL "launch"; return; }; logf="$WORK/android.log"
   else run_ios "$dir" || { add_result "$label" FAIL "launch"; return; }; logf="$WORK/ios.log"; fi
-  assert_markers "$logf" "$platform" "$goodid"; rc=$?
+  assert_markers "$logf" "$platform" "$goodid" "$ex"; rc=$?
   case $rc in
     0) add_result "$label" PASS;;
     2) add_result "$label" "PASS (soft)" ;;

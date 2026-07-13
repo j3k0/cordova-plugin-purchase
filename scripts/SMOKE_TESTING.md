@@ -12,7 +12,7 @@ It runs between `make all` and the release commit.
 
 ```sh
 # from the repo root, after `make all` and pointing the examples at the build:
-scripts/smoke-test.sh                 # all 4 combos (Android + iOS)
+scripts/smoke-test.sh                 # all 6 combos (Android + iOS)
 scripts/smoke-test.sh --platform ios  # iOS only, both repos
 scripts/smoke-test.sh --no-build      # reuse already-built artifacts
 scripts/smoke-test.sh --help
@@ -21,12 +21,12 @@ scripts/smoke-test.sh --help
 Exit code is `0` only if every selected combo passed the **hard** assertions.
 Soft product-validity notes are reported but never fail the gate (see below).
 
-## The 4 combos
+## The 6 combos
 
 | Repo | Example | Android | iOS |
 |---|---|---|---|
-| `cordova-purchase-micro-example`   | `subscriptions`, `consumables` | APK on `Pixel_4_API_35_Play` AVD | Simulator `.app` |
-| `capacitor-purchase-examples`      | `subscriptions`, `consumables` | APK on `Pixel_4_API_35_Play` AVD | Simulator `.app` |
+| `cordova-purchase-micro-example`   | `subscriptions`, `consumables`, `offline` | APK on `Pixel_4_API_35_Play` AVD | Simulator `.app` |
+| `capacitor-purchase-examples`      | `subscriptions`, `consumables`, `offline` | APK on `Pixel_4_API_35_Play` AVD | Simulator `.app` |
 
 Prerequisites: the two example repos checked out as siblings of this one
 (`../cordova-purchase-micro-example`, `../capacitor-purchase-examples`), the
@@ -57,10 +57,11 @@ automated). Full end-to-end purchase automation on iOS is a follow-up.
 
 ## What "pass" means
 
-For each combo, four **hard** assertions (any miss → FAIL) plus a soft
+For each combo, three **hard** assertions (any miss → FAIL) plus a soft
 product-validity check on Android (reported, never fails the gate). iOS
 product validity is **hard** by default since the example products resolve
-against the App Store sandbox:
+against the App Store sandbox. The `offline` example adds two extra hard
+assertions that verify the `OfflineEntitlements` code path executed:
 
 | Assertion | How it's checked | Why |
 |---|---|---|
@@ -68,6 +69,8 @@ against the App Store sandbox:
 | Platform adapter came up | `GooglePlay initialized.` / `AppStore initialized.` | catches a broken native bridge |
 | Product-load round-trip completed | `products loaded:` | proves StoreKit/Billing `loadProducts` was called and returned |
 | known-good product resolved | product id seen as `valid` | iOS: **hard** (fails the gate); Android: soft (Play Console/env dependent). Demote iOS to soft with `CDV_SMOKE_IOS_VALIDITY=soft` |
+| Offline cache loaded (`offline` only) | log line `OfflineEntitlements ready — cache loaded` | proves `OfflineEntitlements` was instantiated and `offline.ready()` resolved (storage adapter read back) |
+| `isOwned()` ran (`offline` only) | log line `offline.isOwned(` | proves the ownership check executed against the cache |
 
 ## Expected log lines (what success looks like)
 
@@ -123,9 +126,24 @@ grep works regardless of framework.
   gate (see [iOS sandbox setup](#ios-sandbox-setup)); demote with
   `CDV_SMOKE_IOS_VALIDITY=soft` when iterating offline.
 - **The AVD boots headless** (`-no-window -no-audio`); first boot takes ~60s.
-- A **full** run rebuilds all four apps and can take 10+ minutes. Use
+- A **full** run rebuilds all six apps and can take 15+ minutes. Use
   `--platform`, `--repo`, `--example` to narrow it, or `--no-build` to reuse
   artifacts during iteration.
+
+## The `offline` example
+
+The `offline` example exercises the `OfflineEntitlements` class shipped in
+[FOV-882]. It registers the same subscription products as the other examples
+(`demo_weekly_basic` on iOS, `subscription1` on Android), instantiates
+`OfflineEntitlements`, calls `offline.ready()` to load the persisted cache,
+then calls `offline.isOwned()` for each registered product.
+
+The smoke test asserts that the offline code path executed on a normal launch:
+the `OfflineEntitlements ready — cache loaded` and `offline.isOwned(` log
+lines must appear. The cache is empty on first launch (no prior `verified`
+event), so `isOwned()` returns `false` — the assertion is that the call *ran*
+and logged, not that it returned `true`. A true offline-cache test (purchase
+online → go offline → assert `true`) is a manual or future-automation scenario.
 
 ## iOS sandbox setup
 
