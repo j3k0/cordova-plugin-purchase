@@ -124,6 +124,7 @@ namespace CdvPurchase {
 
         /** Remove all persisted entitlements from storage and clear the in-memory cache. For user logout. */
         async clear(): Promise<void> {
+            this.store.off(this.verifiedCallback);
             this.cache = {};
             this.lastSeenTimestamp = 0;
             this.isReady = false;
@@ -179,7 +180,7 @@ namespace CdvPurchase {
                     // Lapsed subscriptions deny at expiryDate.
                     return false;
                 }
-                // Grace period elapsed.
+                // Unknown/undefined renewalIntent: fall through to onExpiredOffline.
                 if (this.onExpiredOffline === 'readonly') {
                     this.fireEvent('readonly', persisted.id, 'Subscription expired and grace period elapsed; granting readonly access.');
                     return true;
