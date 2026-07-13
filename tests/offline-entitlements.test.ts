@@ -238,7 +238,7 @@ describe('OfflineEntitlements', () => {
 
       expect(oe.isOwned(productId)).toBe(false);
       await flushTimers();
-      expect(events.some(e => e.type === 'token_expired' && e.productId === productId)).toBe(true);
+      expect(events.some(e => e.type === 'expired' && e.productId === productId)).toBe(true);
     });
   });
 
@@ -271,7 +271,7 @@ describe('OfflineEntitlements', () => {
   });
 
   describe('isOwned — no persisted entitlement', () => {
-    test('returns false + token_invalid event', async () => {
+    test('returns false + entitlement_missing event', async () => {
       const storage = mockStorage();
       const oe = new CdvPurchase.OfflineEntitlements(CdvPurchase.store, { storage });
       const events = collectEvents(oe);
@@ -279,7 +279,7 @@ describe('OfflineEntitlements', () => {
 
       expect(oe.isOwned('unknown-product')).toBe(false);
       await flushTimers();
-      expect(events.some(e => e.type === 'token_invalid' && e.productId === 'unknown-product')).toBe(true);
+      expect(events.some(e => e.type === 'entitlement_missing' && e.productId === 'unknown-product')).toBe(true);
     });
   });
 
@@ -460,9 +460,8 @@ describe('OfflineEntitlements', () => {
       };
       await storage.setItem('cdvpurchase.offline_entitlements', JSON.stringify(payload));
 
-      // refresh() triggers a reload (async), wait for it to settle
-      oe.refresh();
-      await new Promise(r => setTimeout(r, 10));
+      // refresh() now returns a promise — await it directly
+      await oe.refresh();
 
       expect(oe.isOwned('refreshed')).toBe(true);
     });
@@ -492,6 +491,175 @@ describe('OfflineEntitlements', () => {
       }
       // Consumable should not be owned offline
       expect(oe.isOwned('coins_pack')).toBe(false);
+    });
+  });
+
+  describe('clear() does not break subsequent verified events', () => {
+    test('after clear() + ready(), verified events still persist', async () => {
+      const storage = mockStorage();
+      const oe = new CdvPurchase.OfflineEntitlements(CdvPurchase.store, { storage });
+      await oe.ready();
+
+      // Clear data (e.g., user logout)
+      await oe.clear();
+
+      // Re-ready
+      await oe.ready();
+
+      // Simulate a verified receipt for the new user
+      const now = Date.now();
+      const receipt = makeVerifiedReceipt(Platform.APPLE_APPSTORE, {
+        id: 'new_user_sub',
+        platform: Platform.APPLE_APPSTORE,
+        expiryDate: now + 30 * 24 * 60 * 60 * 1000,
+        isExpired: false,
+        renewalIntent: RenewalIntent.RENEW,
+        purchaseDate: now - 1000,
+      });
+
+      // @ts-ignore - accessing private property for testing
+      CdvPurchase.store.verifiedCallbacks.trigger(receipt, 'test');
+      await flushTimers();
+      await new Promise(r => setTimeout(r, 10));
+
+      expect(oe.isOwned('new_user_sub')).toBe(true);
+    });
+  });
+
+  describe('event deduplication', () => {
+    test('same event type for same product fires only once', async () => {
+      const storage = mockStorage();
+      const oe = new CdvPurchase.OfflineEntitlements(CdvPurchase.store, { storage });
+      const events = collectEvents(oe);
+      await oe.ready();
+
+      // No entitlement → entitlement_missing on every call, but deduped
+      oe.isOwned('dedup_product');
+      await flushTimers();
+      oe.isOwned('dedup_product');
+      await flushTimers();
+      oe.isOwned('dedup_product');
+      await flushTimers();
+
+      const missing = events.filter(e => e.type === 'entitlement_missing' && e.productId === 'dedup_product');
+      expect(missing.length).toBe(1);
+    });
+
+    test('different event types for same product both fire', async () => {
+      const storage = mockStorage();
+      const now = Date.now();
+
+      // First: a valid subscription → no event, returns true
+      const payloadValid = {
+        receipts: {
+          [Platform.APPLE_APPSTORE + ':dedup2']: {
+            id: 'dedup2',
+            platform: Platform.APPLE_APPSTORE,
+            expiryDate: now + 30 * 24 * 60 * 60 * 1000,
+            isExpired: false,
+            renewalIntent: RenewalIntent.RENEW,
+          },
+        },
+        lastSeenTimestamp: now,
+        schemaVersion: 1,
+      };
+      await storage.setItem('cdvpurchase.offline_entitlements', JSON.stringify(payloadValid));
+
+      const oe = new CdvPurchase.OfflineEntitlements(CdvPurchase.store, { storage });
+      const events = collectEvents(oe);
+      await oe.ready();
+
+      expect(oe.isOwned('dedup2')).toBe(true);
+      await flushTimers();
+
+      // Now overwrite with an expired subscription → grace event
+      const payloadGrace = {
+        receipts: {
+          [Platform.APPLE_APPSTORE + ':dedup2']: {
+            id: 'dedup2',
+            platform: Platform.APPLE_APPSTORE,
+            expiryDate: now - 5 * 24 * 60 * 60 * 1000,
+            isExpired: false,
+            renewalIntent: RenewalIntent.RENEW,
+          },
+        },
+        lastSeenTimestamp: now,
+        schemaVersion: 1,
+      };
+      await storage.setItem('cdvpurchase.offline_entitlements', JSON.stringify(payloadGrace));
+      await oe.refresh();
+
+      expect(oe.isOwned('dedup2')).toBe(true);
+      await flushTimers();
+
+      const grace = events.filter(e => e.type === 'grace' && e.productId === 'dedup2');
+      expect(grace.length).toBe(1);
+    });
+  });
+
+  describe('ready() idempotency', () => {
+    test('second ready() call is a no-op', async () => {
+      const storage = mockStorage();
+      const now = Date.now();
+      const payload = {
+        receipts: {
+          [Platform.APPLE_APPSTORE + ':idem']: {
+            id: 'idem',
+            platform: Platform.APPLE_APPSTORE,
+            expiryDate: now + 30 * 24 * 60 * 60 * 1000,
+            isExpired: false,
+            renewalIntent: RenewalIntent.RENEW,
+          },
+        },
+        lastSeenTimestamp: now,
+        schemaVersion: 1,
+      };
+      await storage.setItem('cdvpurchase.offline_entitlements', JSON.stringify(payload));
+
+      const oe = new CdvPurchase.OfflineEntitlements(CdvPurchase.store, { storage });
+      await oe.ready();
+      // Second call should resolve immediately
+      await oe.ready();
+
+      expect(oe.isOwned('idem')).toBe(true);
+    });
+  });
+
+  describe('loadFromStorage error handling', () => {
+    test('corrupted JSON in storage → graceful fallback to empty cache', async () => {
+      const storage = mockStorage();
+      await storage.setItem('cdvpurchase.offline_entitlements', '{not valid json');
+
+      const oe = new CdvPurchase.OfflineEntitlements(CdvPurchase.store, { storage });
+      await oe.ready();
+
+      // Should not throw, should return false
+      expect(oe.isOwned('any-product')).toBe(false);
+    });
+
+    test('schema version mismatch → ignores cached data', async () => {
+      const storage = mockStorage();
+      const now = Date.now();
+      const payload = {
+        receipts: {
+          [Platform.APPLE_APPSTORE + ':mismatch']: {
+            id: 'mismatch',
+            platform: Platform.APPLE_APPSTORE,
+            expiryDate: now + 30 * 24 * 60 * 60 * 1000,
+            isExpired: false,
+            renewalIntent: RenewalIntent.RENEW,
+          },
+        },
+        lastSeenTimestamp: now,
+        schemaVersion: 999,
+      };
+      await storage.setItem('cdvpurchase.offline_entitlements', JSON.stringify(payload));
+
+      const oe = new CdvPurchase.OfflineEntitlements(CdvPurchase.store, { storage });
+      await oe.ready();
+
+      // Data should be ignored — no entitlement
+      expect(oe.isOwned('mismatch')).toBe(false);
     });
   });
 });

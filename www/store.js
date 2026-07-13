@@ -1712,14 +1712,15 @@ var CdvPurchase;
             this.lastSeenTimestamp = 0;
             /** True once `ready()` has resolved. */
             this.isReady = false;
+            /** Last event fired per productId, to deduplicate events on repeated isOwned() calls. */
+            this.lastEventPerProduct = {};
             this.store = store;
             this.storage = (_a = options.storage) !== null && _a !== void 0 ? _a : OfflineEntitlements.createLocalStorageAdapter();
             this.gracePeriodMs = (_b = options.gracePeriodMs) !== null && _b !== void 0 ? _b : OfflineEntitlements.DEFAULT_GRACE_PERIOD_MS;
             this.onExpiredOffline = (_c = options.onExpiredOffline) !== null && _c !== void 0 ? _c : 'readonly';
             this.detectClockRollback = (_d = options.detectClockRollback) !== null && _d !== void 0 ? _d : false;
             this.eventCallbacks = new CdvPurchase.Internal.Callbacks(store.log, 'OfflineEntitlements');
-            this.verifiedCallback = (receipt) => { void this.onVerified(receipt); };
-            this.store.when().verified(this.verifiedCallback);
+            this.store.when().verified((receipt) => { void this.onVerified(receipt); });
         }
         /** Wrap the global `localStorage` as an async `OfflineStorageAdapter`. */
         static createLocalStorageAdapter() {
@@ -1738,9 +1739,9 @@ var CdvPurchase;
                 this.isReady = true;
             });
         }
-        /** Reload from storage and re-evaluate. Call after reconnecting or manually. */
+        /** Reload from storage and re-evaluate. Resolves when the reload is complete. Call after reconnecting or manually. */
         refresh() {
-            void this.loadFromStorage();
+            return this.loadFromStorage();
         }
         /** Register a callback for {@link OfflineEntitlementEvent}s. */
         onEvent(callback) {
@@ -1752,6 +1753,7 @@ var CdvPurchase;
                 this.cache = {};
                 this.lastSeenTimestamp = 0;
                 this.isReady = false;
+                this.lastEventPerProduct = {};
                 yield this.storage.removeItem(OfflineEntitlements.STORAGE_KEY);
             });
         }
@@ -1762,31 +1764,33 @@ var CdvPurchase;
          * Returns `false` for all products until `ready()` has resolved.
          */
         isOwned(productId) {
-            if (!this.isReady)
+            if (!this.isReady) {
+                this.store.log.warn('OfflineEntitlements.isOwned("' + productId + '") called before ready() — returning false. Call await offline.ready() at startup.');
                 return false;
+            }
             // 1. If store.verifiedReceipts has a valid (non-expired) entry, return true.
             const online = CdvPurchase.Internal.VerifiedReceipts.isOwned(this.store.verifiedReceipts, { id: productId });
             if (online)
                 return true;
             const now = +new Date();
-            // 4. Clock rollback detection.
-            if (this.detectClockRollback && this.lastSeenTimestamp > now) {
-                this.fireEvent('clock_rollback', productId, 'Clock appears to have rolled back; denying offline entitlement.');
-                return false;
-            }
             // 2. Find persisted purchase for this productId across all platforms.
             const persisted = this.findPersisted(productId);
             if (!persisted) {
-                // 5. No persisted entitlement.
-                this.fireEvent('token_invalid', productId, 'No persisted entitlement for this product.');
+                // No persisted entitlement.
+                this.fireEvent('entitlement_missing', productId, 'No persisted entitlement for this product.');
                 return false;
             }
             // 3. Branch by product type.
             // Subscriptions have an expiryDate; non-consumables don't.
             if (persisted.expiryDate !== undefined && persisted.expiryDate !== null) {
                 // Subscription
+                // Clock rollback detection — scoped to subscriptions (non-consumables have no time component).
+                if (this.detectClockRollback && this.lastSeenTimestamp > now) {
+                    this.fireEvent('clock_rollback', persisted.id, 'Clock appears to have rolled back; denying offline entitlement.');
+                    return false;
+                }
                 if (persisted.isExpired) {
-                    this.fireEvent('token_expired', persisted.id, 'Subscription is marked as expired.');
+                    this.fireEvent('expired', persisted.id, 'Subscription is marked as expired.');
                     return false;
                 }
                 if (now < persisted.expiryDate) {
@@ -1801,7 +1805,7 @@ var CdvPurchase;
                     // Lapsed subscriptions deny at expiryDate.
                     return false;
                 }
-                // Grace period elapsed.
+                // Unknown/undefined renewalIntent: fall through to onExpiredOffline.
                 if (this.onExpiredOffline === 'readonly') {
                     this.fireEvent('readonly', persisted.id, 'Subscription expired and grace period elapsed; granting readonly access.');
                     return true;
@@ -1809,7 +1813,7 @@ var CdvPurchase;
                 return false;
             }
             else {
-                // Non-consumable: never hard-expires.
+                // Non-consumable: never hard-expires, no clock rollback check.
                 return true;
             }
         }
@@ -1900,8 +1904,11 @@ var CdvPurchase;
                 }
             });
         }
-        /** Fire an event to all registered callbacks. */
+        /** Fire an event to all registered callbacks, deduplicating per productId. */
         fireEvent(type, productId, message) {
+            if (this.lastEventPerProduct[productId] === type)
+                return;
+            this.lastEventPerProduct[productId] = type;
             this.eventCallbacks.trigger({ type, productId, message }, 'offline_entitlements');
         }
     }

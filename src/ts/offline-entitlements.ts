@@ -21,7 +21,7 @@ namespace CdvPurchase {
 
     /** Event emitted by {@link OfflineEntitlements} when evaluating ownership offline. */
     export interface OfflineEntitlementEvent {
-        type: 'grace' | 'readonly' | 'clock_rollback' | 'token_invalid' | 'token_expired';
+        type: 'grace' | 'readonly' | 'clock_rollback' | 'entitlement_missing' | 'expired';
         productId: string;
         message: string;
     }
@@ -82,8 +82,8 @@ namespace CdvPurchase {
         /** Event callbacks. */
         private eventCallbacks: Internal.Callbacks<OfflineEntitlementEvent>;
 
-        /** The callback registered on `store.when().verified(...)`, kept so we can `off()` it on `clear()`. */
-        private verifiedCallback: Callback<VerifiedReceipt>;
+        /** Last event fired per productId, to deduplicate events on repeated isOwned() calls. */
+        private lastEventPerProduct: { [productId: string]: OfflineEntitlementEvent['type'] } = {};
 
         constructor(store: Store, options: OfflineEntitlementsOptions = {}) {
             this.store = store;
@@ -92,8 +92,7 @@ namespace CdvPurchase {
             this.onExpiredOffline = options.onExpiredOffline ?? 'readonly';
             this.detectClockRollback = options.detectClockRollback ?? false;
             this.eventCallbacks = new Internal.Callbacks<OfflineEntitlementEvent>(store.log, 'OfflineEntitlements');
-            this.verifiedCallback = (receipt: VerifiedReceipt) => { void this.onVerified(receipt); };
-            this.store.when().verified(this.verifiedCallback);
+            this.store.when().verified((receipt: VerifiedReceipt) => { void this.onVerified(receipt); });
         }
 
         /** Wrap the global `localStorage` as an async `OfflineStorageAdapter`. */
@@ -112,9 +111,9 @@ namespace CdvPurchase {
             this.isReady = true;
         }
 
-        /** Reload from storage and re-evaluate. Call after reconnecting or manually. */
-        refresh(): void {
-            void this.loadFromStorage();
+        /** Reload from storage and re-evaluate. Resolves when the reload is complete. Call after reconnecting or manually. */
+        refresh(): Promise<void> {
+            return this.loadFromStorage();
         }
 
         /** Register a callback for {@link OfflineEntitlementEvent}s. */
@@ -124,10 +123,10 @@ namespace CdvPurchase {
 
         /** Remove all persisted entitlements from storage and clear the in-memory cache. For user logout. */
         async clear(): Promise<void> {
-            this.store.off(this.verifiedCallback);
             this.cache = {};
             this.lastSeenTimestamp = 0;
             this.isReady = false;
+            this.lastEventPerProduct = {};
             await this.storage.removeItem(OfflineEntitlements.STORAGE_KEY);
         }
 
@@ -138,7 +137,10 @@ namespace CdvPurchase {
          * Returns `false` for all products until `ready()` has resolved.
          */
         isOwned(productId: string): boolean {
-            if (!this.isReady) return false;
+            if (!this.isReady) {
+                this.store.log.warn('OfflineEntitlements.isOwned("' + productId + '") called before ready() — returning false. Call await offline.ready() at startup.');
+                return false;
+            }
 
             // 1. If store.verifiedReceipts has a valid (non-expired) entry, return true.
             const online = Internal.VerifiedReceipts.isOwned(this.store.verifiedReceipts, { id: productId });
@@ -146,17 +148,11 @@ namespace CdvPurchase {
 
             const now = +new Date();
 
-            // 4. Clock rollback detection.
-            if (this.detectClockRollback && this.lastSeenTimestamp > now) {
-                this.fireEvent('clock_rollback', productId, 'Clock appears to have rolled back; denying offline entitlement.');
-                return false;
-            }
-
             // 2. Find persisted purchase for this productId across all platforms.
             const persisted = this.findPersisted(productId);
             if (!persisted) {
-                // 5. No persisted entitlement.
-                this.fireEvent('token_invalid', productId, 'No persisted entitlement for this product.');
+                // No persisted entitlement.
+                this.fireEvent('entitlement_missing', productId, 'No persisted entitlement for this product.');
                 return false;
             }
 
@@ -164,8 +160,13 @@ namespace CdvPurchase {
             // Subscriptions have an expiryDate; non-consumables don't.
             if (persisted.expiryDate !== undefined && persisted.expiryDate !== null) {
                 // Subscription
+                // Clock rollback detection — scoped to subscriptions (non-consumables have no time component).
+                if (this.detectClockRollback && this.lastSeenTimestamp > now) {
+                    this.fireEvent('clock_rollback', persisted.id, 'Clock appears to have rolled back; denying offline entitlement.');
+                    return false;
+                }
                 if (persisted.isExpired) {
-                    this.fireEvent('token_expired', persisted.id, 'Subscription is marked as expired.');
+                    this.fireEvent('expired', persisted.id, 'Subscription is marked as expired.');
                     return false;
                 }
                 if (now < persisted.expiryDate) {
@@ -188,7 +189,7 @@ namespace CdvPurchase {
                 return false;
             }
             else {
-                // Non-consumable: never hard-expires.
+                // Non-consumable: never hard-expires, no clock rollback check.
                 return true;
             }
         }
@@ -274,8 +275,10 @@ namespace CdvPurchase {
             }
         }
 
-        /** Fire an event to all registered callbacks. */
+        /** Fire an event to all registered callbacks, deduplicating per productId. */
         private fireEvent(type: OfflineEntitlementEvent['type'], productId: string, message: string): void {
+            if (this.lastEventPerProduct[productId] === type) return;
+            this.lastEventPerProduct[productId] = type;
             this.eventCallbacks.trigger({ type, productId, message }, 'offline_entitlements');
         }
     }

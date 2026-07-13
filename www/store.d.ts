@@ -899,7 +899,7 @@ declare namespace CdvPurchase {
     }
     /** Event emitted by {@link OfflineEntitlements} when evaluating ownership offline. */
     interface OfflineEntitlementEvent {
-        type: 'grace' | 'readonly' | 'clock_rollback' | 'token_invalid' | 'token_expired';
+        type: 'grace' | 'readonly' | 'clock_rollback' | 'entitlement_missing' | 'expired';
         productId: string;
         message: string;
     }
@@ -950,15 +950,15 @@ declare namespace CdvPurchase {
         private isReady;
         /** Event callbacks. */
         private eventCallbacks;
-        /** The callback registered on `store.when().verified(...)`, kept so we can `off()` it on `clear()`. */
-        private verifiedCallback;
+        /** Last event fired per productId, to deduplicate events on repeated isOwned() calls. */
+        private lastEventPerProduct;
         constructor(store: Store, options?: OfflineEntitlementsOptions);
         /** Wrap the global `localStorage` as an async `OfflineStorageAdapter`. */
         private static createLocalStorageAdapter;
         /** Load persisted entitlements from storage into the in-memory cache. Idempotent. */
         ready(): Promise<void>;
-        /** Reload from storage and re-evaluate. Call after reconnecting or manually. */
-        refresh(): void;
+        /** Reload from storage and re-evaluate. Resolves when the reload is complete. Call after reconnecting or manually. */
+        refresh(): Promise<void>;
         /** Register a callback for {@link OfflineEntitlementEvent}s. */
         onEvent(callback: Callback<OfflineEntitlementEvent>): void;
         /** Remove all persisted entitlements from storage and clear the in-memory cache. For user logout. */
@@ -978,7 +978,7 @@ declare namespace CdvPurchase {
         private loadFromStorage;
         /** Serialize the in-memory cache to storage. */
         private saveToStorage;
-        /** Fire an event to all registered callbacks. */
+        /** Fire an event to all registered callbacks, deduplicating per productId. */
         private fireEvent;
     }
 }
