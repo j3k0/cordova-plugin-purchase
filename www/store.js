@@ -1674,6 +1674,245 @@ var CdvPurchase;
         Utils.md5toUUID = md5toUUID;
     })(Utils = CdvPurchase.Utils || (CdvPurchase.Utils = {}));
 })(CdvPurchase || (CdvPurchase = {}));
+var CdvPurchase;
+(function (CdvPurchase) {
+    /**
+     * Persist a subset of {@link VerifiedPurchase} to device storage so that
+     * `store.owned()` works when the device is offline or has just restarted
+     * without connectivity.
+     *
+     * Phase 1 — unsigned cache. No JWT, no crypto, no server changes.
+     *
+     * @example
+     * ```typescript
+     * const offline = new CdvPurchase.OfflineEntitlements(store, {
+     *     gracePeriodMs: 30 * 24 * 60 * 60 * 1000, // 30 days
+     *     onExpiredOffline: 'readonly',
+     *     detectClockRollback: true,
+     * });
+     *
+     * await offline.ready();
+     *
+     * function isUserPremium(): boolean {
+     *     return store.owned('premium') || offline.isOwned('premium');
+     * }
+     * ```
+     *
+     * **Durability warning:** for long-offline deployments (weeks without
+     * connectivity), pass a file-based or secure-storage adapter. `localStorage`
+     * (the default) can be evicted by the WebView under storage pressure, which
+     * would silently lose the cached entitlements.
+     */
+    class OfflineEntitlements {
+        constructor(store, options = {}) {
+            var _a, _b, _c, _d;
+            /** In-memory cache of persisted entitlements, keyed by `platform:productId`. */
+            this.cache = {};
+            /** Last seen timestamp persisted with the data, used for clock rollback detection. */
+            this.lastSeenTimestamp = 0;
+            /** True once `ready()` has resolved. */
+            this.isReady = false;
+            this.store = store;
+            this.storage = (_a = options.storage) !== null && _a !== void 0 ? _a : OfflineEntitlements.createLocalStorageAdapter();
+            this.gracePeriodMs = (_b = options.gracePeriodMs) !== null && _b !== void 0 ? _b : OfflineEntitlements.DEFAULT_GRACE_PERIOD_MS;
+            this.onExpiredOffline = (_c = options.onExpiredOffline) !== null && _c !== void 0 ? _c : 'readonly';
+            this.detectClockRollback = (_d = options.detectClockRollback) !== null && _d !== void 0 ? _d : false;
+            this.eventCallbacks = new CdvPurchase.Internal.Callbacks(store.log, 'OfflineEntitlements');
+            this.verifiedCallback = (receipt) => { void this.onVerified(receipt); };
+            this.store.when().verified(this.verifiedCallback);
+        }
+        /** Wrap the global `localStorage` as an async `OfflineStorageAdapter`. */
+        static createLocalStorageAdapter() {
+            return {
+                getItem: (key) => Promise.resolve(localStorage.getItem(key)),
+                setItem: (key, value) => { localStorage.setItem(key, value); return Promise.resolve(); },
+                removeItem: (key) => { localStorage.removeItem(key); return Promise.resolve(); },
+            };
+        }
+        /** Load persisted entitlements from storage into the in-memory cache. Idempotent. */
+        ready() {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (this.isReady)
+                    return;
+                yield this.loadFromStorage();
+                this.isReady = true;
+            });
+        }
+        /** Reload from storage and re-evaluate. Call after reconnecting or manually. */
+        refresh() {
+            void this.loadFromStorage();
+        }
+        /** Register a callback for {@link OfflineEntitlementEvent}s. */
+        onEvent(callback) {
+            this.eventCallbacks.push(callback);
+        }
+        /** Remove all persisted entitlements from storage and clear the in-memory cache. For user logout. */
+        clear() {
+            return __awaiter(this, void 0, void 0, function* () {
+                this.cache = {};
+                this.lastSeenTimestamp = 0;
+                this.isReady = false;
+                yield this.storage.removeItem(OfflineEntitlements.STORAGE_KEY);
+            });
+        }
+        /**
+         * Return `true` if the product is owned, using the persisted cache when
+         * the in-memory `verifiedReceipts` don't grant ownership.
+         *
+         * Returns `false` for all products until `ready()` has resolved.
+         */
+        isOwned(productId) {
+            if (!this.isReady)
+                return false;
+            // 1. If store.verifiedReceipts has a valid (non-expired) entry, return true.
+            const online = CdvPurchase.Internal.VerifiedReceipts.isOwned(this.store.verifiedReceipts, { id: productId });
+            if (online)
+                return true;
+            const now = +new Date();
+            // 4. Clock rollback detection.
+            if (this.detectClockRollback && this.lastSeenTimestamp > now) {
+                this.fireEvent('clock_rollback', productId, 'Clock appears to have rolled back; denying offline entitlement.');
+                return false;
+            }
+            // 2. Find persisted purchase for this productId across all platforms.
+            const persisted = this.findPersisted(productId);
+            if (!persisted) {
+                // 5. No persisted entitlement.
+                this.fireEvent('token_invalid', productId, 'No persisted entitlement for this product.');
+                return false;
+            }
+            // 3. Branch by product type.
+            // Subscriptions have an expiryDate; non-consumables don't.
+            if (persisted.expiryDate !== undefined && persisted.expiryDate !== null) {
+                // Subscription
+                if (persisted.isExpired) {
+                    this.fireEvent('token_expired', persisted.id, 'Subscription is marked as expired.');
+                    return false;
+                }
+                if (now < persisted.expiryDate) {
+                    return true;
+                }
+                const renewalIntent = persisted.renewalIntent;
+                if (renewalIntent === CdvPurchase.RenewalIntent.RENEW && now < persisted.expiryDate + this.gracePeriodMs) {
+                    this.fireEvent('grace', persisted.id, 'Subscription expired but within grace period.');
+                    return true;
+                }
+                if (renewalIntent === CdvPurchase.RenewalIntent.LAPSE) {
+                    // Lapsed subscriptions deny at expiryDate.
+                    return false;
+                }
+                // Grace period elapsed.
+                if (this.onExpiredOffline === 'readonly') {
+                    this.fireEvent('readonly', persisted.id, 'Subscription expired and grace period elapsed; granting readonly access.');
+                    return true;
+                }
+                return false;
+            }
+            else {
+                // Non-consumable: never hard-expires.
+                return true;
+            }
+        }
+        /** Persist all `VerifiedPurchase`s in a verified receipt to storage. */
+        onVerified(receipt) {
+            var _a;
+            return __awaiter(this, void 0, void 0, function* () {
+                for (const purchase of receipt.collection) {
+                    // Skip consumables — they don't need offline entitlement.
+                    if (purchase.isConsumed)
+                        continue;
+                    const platform = (_a = purchase.platform) !== null && _a !== void 0 ? _a : receipt.platform;
+                    const product = this.store.get(purchase.id, platform);
+                    if (product && product.type === CdvPurchase.ProductType.CONSUMABLE)
+                        continue;
+                    const key = platform + ':' + purchase.id;
+                    this.cache[key] = {
+                        id: purchase.id,
+                        platform,
+                        expiryDate: purchase.expiryDate,
+                        isExpired: purchase.isExpired,
+                        renewalIntent: purchase.renewalIntent,
+                        lastRenewalDate: purchase.lastRenewalDate,
+                        purchaseDate: purchase.purchaseDate,
+                        cancelationReason: purchase.cancelationReason,
+                        isBillingRetryPeriod: purchase.isBillingRetryPeriod,
+                    };
+                }
+                this.lastSeenTimestamp = +new Date();
+                yield this.saveToStorage();
+            });
+        }
+        /** Find the persisted purchase for a productId across all platforms. */
+        findPersisted(productId) {
+            var _a, _b, _c, _d;
+            let found;
+            for (const key of Object.keys(this.cache)) {
+                const entry = this.cache[key];
+                if (entry.id === productId) {
+                    if (!found || ((_b = (_a = found.lastRenewalDate) !== null && _a !== void 0 ? _a : found.purchaseDate) !== null && _b !== void 0 ? _b : 0) < ((_d = (_c = entry.lastRenewalDate) !== null && _c !== void 0 ? _c : entry.purchaseDate) !== null && _d !== void 0 ? _d : 0)) {
+                        found = entry;
+                    }
+                }
+            }
+            return found;
+        }
+        /** Load the persisted payload from storage into the in-memory cache. */
+        loadFromStorage() {
+            var _a, _b;
+            return __awaiter(this, void 0, void 0, function* () {
+                try {
+                    const raw = yield this.storage.getItem(OfflineEntitlements.STORAGE_KEY);
+                    if (!raw) {
+                        this.cache = {};
+                        this.lastSeenTimestamp = 0;
+                        return;
+                    }
+                    const parsed = JSON.parse(raw);
+                    if (parsed.schemaVersion !== OfflineEntitlements.SCHEMA_VERSION) {
+                        this.store.log.warn('OfflineEntitlements: schema version mismatch, ignoring cached data.');
+                        this.cache = {};
+                        this.lastSeenTimestamp = 0;
+                        return;
+                    }
+                    this.cache = (_a = parsed.receipts) !== null && _a !== void 0 ? _a : {};
+                    this.lastSeenTimestamp = (_b = parsed.lastSeenTimestamp) !== null && _b !== void 0 ? _b : 0;
+                }
+                catch (err) {
+                    this.store.log.warn('OfflineEntitlements: failed to load from storage: ' + err.message);
+                    this.cache = {};
+                    this.lastSeenTimestamp = 0;
+                }
+            });
+        }
+        /** Serialize the in-memory cache to storage. */
+        saveToStorage() {
+            return __awaiter(this, void 0, void 0, function* () {
+                const payload = {
+                    receipts: this.cache,
+                    lastSeenTimestamp: this.lastSeenTimestamp,
+                    schemaVersion: OfflineEntitlements.SCHEMA_VERSION,
+                };
+                try {
+                    yield this.storage.setItem(OfflineEntitlements.STORAGE_KEY, JSON.stringify(payload));
+                }
+                catch (err) {
+                    this.store.log.warn('OfflineEntitlements: failed to save to storage: ' + err.message);
+                }
+            });
+        }
+        /** Fire an event to all registered callbacks. */
+        fireEvent(type, productId, message) {
+            this.eventCallbacks.trigger({ type, productId, message }, 'offline_entitlements');
+        }
+    }
+    /** Storage key used in the storage adapter. */
+    OfflineEntitlements.STORAGE_KEY = 'cdvpurchase.offline_entitlements';
+    /** Schema version for the persisted payload. */
+    OfflineEntitlements.SCHEMA_VERSION = 1;
+    /** Default grace period: 30 days. */
+    OfflineEntitlements.DEFAULT_GRACE_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
+    CdvPurchase.OfflineEntitlements = OfflineEntitlements;
+})(CdvPurchase || (CdvPurchase = {}));
 /// <reference path="types.ts" />
 /// <reference path="utils/compatibility.ts" />
 /// <reference path="utils/platform-name.ts" />
@@ -1689,6 +1928,7 @@ var CdvPurchase;
 /// <reference path="internal/receipts-monitor.ts" />
 /// <reference path="internal/expiry-monitor.ts" />
 /// <reference path="utils/to-uuid.ts" />
+/// <reference path="offline-entitlements.ts" />
 /**
  * Namespace for the cordova-plugin-purchase plugin.
  *

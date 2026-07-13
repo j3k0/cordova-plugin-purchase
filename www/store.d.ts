@@ -879,6 +879,109 @@ declare namespace CdvPurchase {
         function md5toUUID(str: string): string;
     }
 }
+declare namespace CdvPurchase {
+    /** Storage adapter for persisting offline entitlements. */
+    interface OfflineStorageAdapter {
+        getItem(key: string): Promise<string | null>;
+        setItem(key: string, value: string): Promise<void>;
+        removeItem(key: string): Promise<void>;
+    }
+    /** Options for {@link OfflineEntitlements}. */
+    interface OfflineEntitlementsOptions {
+        /** Storage adapter. Defaults to a `localStorage` wrapper. */
+        storage?: OfflineStorageAdapter;
+        /** Grace period in milliseconds after a subscription's expiryDate during which it's still considered owned. Defaults to 30 days. */
+        gracePeriodMs?: number;
+        /** Behavior when the grace period has elapsed and the device is still offline. `'readonly'` keeps granting access; `'deny'` revokes it. Defaults to `'readonly'`. */
+        onExpiredOffline?: 'deny' | 'readonly';
+        /** If true, detect clock rollback (persisted lastSeenTimestamp is in the future relative to now) and deny access. */
+        detectClockRollback?: boolean;
+    }
+    /** Event emitted by {@link OfflineEntitlements} when evaluating ownership offline. */
+    interface OfflineEntitlementEvent {
+        type: 'grace' | 'readonly' | 'clock_rollback' | 'token_invalid' | 'token_expired';
+        productId: string;
+        message: string;
+    }
+    /**
+     * Persist a subset of {@link VerifiedPurchase} to device storage so that
+     * `store.owned()` works when the device is offline or has just restarted
+     * without connectivity.
+     *
+     * Phase 1 — unsigned cache. No JWT, no crypto, no server changes.
+     *
+     * @example
+     * ```typescript
+     * const offline = new CdvPurchase.OfflineEntitlements(store, {
+     *     gracePeriodMs: 30 * 24 * 60 * 60 * 1000, // 30 days
+     *     onExpiredOffline: 'readonly',
+     *     detectClockRollback: true,
+     * });
+     *
+     * await offline.ready();
+     *
+     * function isUserPremium(): boolean {
+     *     return store.owned('premium') || offline.isOwned('premium');
+     * }
+     * ```
+     *
+     * **Durability warning:** for long-offline deployments (weeks without
+     * connectivity), pass a file-based or secure-storage adapter. `localStorage`
+     * (the default) can be evicted by the WebView under storage pressure, which
+     * would silently lose the cached entitlements.
+     */
+    class OfflineEntitlements {
+        /** Storage key used in the storage adapter. */
+        private static STORAGE_KEY;
+        /** Schema version for the persisted payload. */
+        private static SCHEMA_VERSION;
+        /** Default grace period: 30 days. */
+        private static DEFAULT_GRACE_PERIOD_MS;
+        private store;
+        private storage;
+        private gracePeriodMs;
+        private onExpiredOffline;
+        private detectClockRollback;
+        /** In-memory cache of persisted entitlements, keyed by `platform:productId`. */
+        private cache;
+        /** Last seen timestamp persisted with the data, used for clock rollback detection. */
+        private lastSeenTimestamp;
+        /** True once `ready()` has resolved. */
+        private isReady;
+        /** Event callbacks. */
+        private eventCallbacks;
+        /** The callback registered on `store.when().verified(...)`, kept so we can `off()` it on `clear()`. */
+        private verifiedCallback;
+        constructor(store: Store, options?: OfflineEntitlementsOptions);
+        /** Wrap the global `localStorage` as an async `OfflineStorageAdapter`. */
+        private static createLocalStorageAdapter;
+        /** Load persisted entitlements from storage into the in-memory cache. Idempotent. */
+        ready(): Promise<void>;
+        /** Reload from storage and re-evaluate. Call after reconnecting or manually. */
+        refresh(): void;
+        /** Register a callback for {@link OfflineEntitlementEvent}s. */
+        onEvent(callback: Callback<OfflineEntitlementEvent>): void;
+        /** Remove all persisted entitlements from storage and clear the in-memory cache. For user logout. */
+        clear(): Promise<void>;
+        /**
+         * Return `true` if the product is owned, using the persisted cache when
+         * the in-memory `verifiedReceipts` don't grant ownership.
+         *
+         * Returns `false` for all products until `ready()` has resolved.
+         */
+        isOwned(productId: string): boolean;
+        /** Persist all `VerifiedPurchase`s in a verified receipt to storage. */
+        private onVerified;
+        /** Find the persisted purchase for a productId across all platforms. */
+        private findPersisted;
+        /** Load the persisted payload from storage into the in-memory cache. */
+        private loadFromStorage;
+        /** Serialize the in-memory cache to storage. */
+        private saveToStorage;
+        /** Fire an event to all registered callbacks. */
+        private fireEvent;
+    }
+}
 /**
  * Namespace for the cordova-plugin-purchase plugin.
  *

@@ -13,6 +13,7 @@
 /// <reference path="internal/receipts-monitor.ts" />
 /// <reference path="internal/expiry-monitor.ts" />
 /// <reference path="utils/to-uuid.ts" />
+/// <reference path="offline-entitlements.ts" />
 
 /**
  * Namespace for the cordova-plugin-purchase plugin.
