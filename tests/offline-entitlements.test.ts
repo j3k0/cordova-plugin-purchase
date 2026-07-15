@@ -662,4 +662,142 @@ describe('OfflineEntitlements', () => {
       expect(oe.isOwned('mismatch')).toBe(false);
     });
   });
+  describe('find() — retrieve persisted entitlement', () => {
+    test('returns undefined before ready()', () => {
+      const oe = new CdvPurchase.OfflineEntitlements(CdvPurchase.store, { storage: mockStorage() });
+      expect(oe.find('any-product')).toBeUndefined();
+    });
+
+    test('returns undefined for product with no persisted entitlement', async () => {
+      const storage = mockStorage();
+      const oe = new CdvPurchase.OfflineEntitlements(CdvPurchase.store, { storage });
+      await oe.ready();
+      expect(oe.find('nonexistent')).toBeUndefined();
+    });
+
+    test('returns PersistedPurchase with expected fields for a subscription', async () => {
+      const storage = mockStorage();
+      const now = Date.now();
+      const expiry = now + 30 * 24 * 60 * 60 * 1000;
+      const payload = {
+        receipts: {
+          [Platform.APPLE_APPSTORE + ':sub_find']: {
+            id: 'sub_find',
+            platform: Platform.APPLE_APPSTORE,
+            expiryDate: expiry,
+            isExpired: false,
+            renewalIntent: RenewalIntent.RENEW,
+            lastRenewalDate: now - 7 * 24 * 60 * 60 * 1000,
+            purchaseDate: now - 30 * 24 * 60 * 60 * 1000,
+          },
+        },
+        lastSeenTimestamp: now,
+        schemaVersion: 1,
+      };
+      await storage.setItem('cdvpurchase.offline_entitlements', JSON.stringify(payload));
+
+      const oe = new CdvPurchase.OfflineEntitlements(CdvPurchase.store, { storage });
+      await oe.ready();
+
+      const entitlement = oe.find('sub_find');
+      expect(entitlement).toBeDefined();
+      expect(entitlement!.id).toBe('sub_find');
+      expect(entitlement!.platform).toBe(Platform.APPLE_APPSTORE);
+      expect(entitlement!.expiryDate).toBe(expiry);
+      expect(entitlement!.isExpired).toBe(false);
+      expect(entitlement!.renewalIntent).toBe(RenewalIntent.RENEW);
+      expect(entitlement!.lastRenewalDate).toBe(now - 7 * 24 * 60 * 60 * 1000);
+      expect(entitlement!.purchaseDate).toBe(now - 30 * 24 * 60 * 60 * 1000);
+    });
+
+    test('returns PersistedPurchase for a non-consumable (no expiryDate)', async () => {
+      const storage = mockStorage();
+      const now = Date.now();
+      const payload = {
+        receipts: {
+          [Platform.GOOGLE_PLAY + ':nc_find']: {
+            id: 'nc_find',
+            platform: Platform.GOOGLE_PLAY,
+            purchaseDate: now - 365 * 24 * 60 * 60 * 1000,
+          },
+        },
+        lastSeenTimestamp: now,
+        schemaVersion: 1,
+      };
+      await storage.setItem('cdvpurchase.offline_entitlements', JSON.stringify(payload));
+
+      const oe = new CdvPurchase.OfflineEntitlements(CdvPurchase.store, { storage });
+      await oe.ready();
+
+      const entitlement = oe.find('nc_find');
+      expect(entitlement).toBeDefined();
+      expect(entitlement!.id).toBe('nc_find');
+      expect(entitlement!.platform).toBe(Platform.GOOGLE_PLAY);
+      expect(entitlement!.expiryDate).toBeUndefined();
+    });
+
+    test('returns the most recent entry when same productId spans platforms', async () => {
+      const storage = mockStorage();
+      const now = Date.now();
+      const olderRenewal = now - 30 * 24 * 60 * 60 * 1000;
+      const newerRenewal = now - 1 * 24 * 60 * 60 * 1000;
+      const payload = {
+        receipts: {
+          [Platform.APPLE_APPSTORE + ':multi']: {
+            id: 'multi',
+            platform: Platform.APPLE_APPSTORE,
+            expiryDate: now + 30 * 24 * 60 * 60 * 1000,
+            isExpired: false,
+            renewalIntent: RenewalIntent.RENEW,
+            lastRenewalDate: olderRenewal,
+          },
+          [Platform.GOOGLE_PLAY + ':multi']: {
+            id: 'multi',
+            platform: Platform.GOOGLE_PLAY,
+            expiryDate: now + 30 * 24 * 60 * 60 * 1000,
+            isExpired: false,
+            renewalIntent: RenewalIntent.RENEW,
+            lastRenewalDate: newerRenewal,
+          },
+        },
+        lastSeenTimestamp: now,
+        schemaVersion: 1,
+      };
+      await storage.setItem('cdvpurchase.offline_entitlements', JSON.stringify(payload));
+
+      const oe = new CdvPurchase.OfflineEntitlements(CdvPurchase.store, { storage });
+      await oe.ready();
+
+      const entitlement = oe.find('multi');
+      expect(entitlement).toBeDefined();
+      // findPersisted picks the entry with the more recent lastRenewalDate
+      expect(entitlement!.lastRenewalDate).toBe(newerRenewal);
+    });
+
+    test('returns undefined after clear()', async () => {
+      const storage = mockStorage();
+      const now = Date.now();
+      const payload = {
+        receipts: {
+          [Platform.APPLE_APPSTORE + ':clear_find']: {
+            id: 'clear_find',
+            platform: Platform.APPLE_APPSTORE,
+            expiryDate: now + 30 * 24 * 60 * 60 * 1000,
+            isExpired: false,
+            renewalIntent: RenewalIntent.RENEW,
+          },
+        },
+        lastSeenTimestamp: now,
+        schemaVersion: 1,
+      };
+      await storage.setItem('cdvpurchase.offline_entitlements', JSON.stringify(payload));
+
+      const oe = new CdvPurchase.OfflineEntitlements(CdvPurchase.store, { storage });
+      await oe.ready();
+      expect(oe.find('clear_find')).toBeDefined();
+
+      await oe.clear();
+      expect(oe.find('clear_find')).toBeUndefined();
+    });
+  });
 });

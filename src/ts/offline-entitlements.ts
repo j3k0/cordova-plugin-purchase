@@ -193,6 +193,29 @@ namespace CdvPurchase {
                 return true;
             }
         }
+        /**
+         * Retrieve the persisted entitlement for a product, analogous to
+         * `store.findInVerifiedReceipts()`.
+         *
+         * Returns the {@link PersistedPurchase} (with `expiryDate`,
+         * `renewalIntent`, `lastRenewalDate`, etc.) if one has been cached,
+         * or `undefined` if no offline entitlement exists for this product.
+         *
+         * Returns `undefined` for all products until `ready()` has resolved.
+         *
+         * @example
+         * ```typescript
+         * const entitlement = offline.find('premium');
+         * if (entitlement?.expiryDate) {
+         *     const daysLeft = Math.ceil((entitlement.expiryDate - Date.now()) / 86400000);
+         *     showRenewalBanner(daysLeft);
+         * }
+         * ```
+         */
+        find(productId: string): PersistedPurchase | undefined {
+            if (!this.isReady) return undefined;
+            return this.findPersisted(productId);
+        }
 
         /** Persist all `VerifiedPurchase`s in a verified receipt to storage. */
         private async onVerified(receipt: VerifiedReceipt): Promise<void> {
@@ -283,8 +306,8 @@ namespace CdvPurchase {
         }
     }
 
-    /** Persisted subset of {@link VerifiedPurchase}. */
-    interface PersistedPurchase {
+    /** Persisted subset of {@link VerifiedPurchase}, stored by the offline entitlements layer. */
+    export interface PersistedPurchase {
         id: string;
         platform: Platform;
         expiryDate?: number;
