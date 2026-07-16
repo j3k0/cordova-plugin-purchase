@@ -1,5 +1,42 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.18
+
+### 13.18.0
+
+#### (feat) OfflineEntitlements — `store.owned()` works when the device is offline
+
+New `CdvPurchase.OfflineEntitlements` helper class persists a subset of `VerifiedPurchase` to device storage on each `verified` event, reloads it at app launch, and answers `isOwned()` when the device is offline or has just restarted without connectivity. Phase 1 — unsigned cache (no JWT, no crypto, no server changes) ([FOV-882](https://github.com/j3k0/cordova-plugin-purchase/issues/882)).
+
+```ts
+const offline = new CdvPurchase.OfflineEntitlements(store, {
+    gracePeriodMs: 30 * 24 * 60 * 60 * 1000, // 30 days
+    onExpiredOffline: 'readonly',
+    detectClockRollback: true,
+});
+
+await offline.ready();
+
+function isUserPremium(): boolean {
+    return store.owned('premium') || offline.isOwned('premium');
+}
+```
+
+Options:
+
+- `storage` — pluggable `OfflineStorageAdapter` (defaults to a `localStorage` wrapper). For long-offline deployments (weeks without connectivity), pass a file-based or secure-storage adapter — `localStorage` can be evicted by the WebView under storage pressure.
+- `gracePeriodMs` — grace window after a subscription's `expiryDate` during which it's still considered owned (default 30 days).
+- `onExpiredOffline` — behavior when the grace period has elapsed and the device is still offline: `'readonly'` keeps granting access (default), `'deny'` revokes it.
+- `detectClockRollback` — if `true`, deny access when the persisted `lastSeenTimestamp` is in the future relative to `now` (clock tampering).
+
+Events (`offline.on(event => ...)`) fire on `grace`, `readonly`, `clock_rollback`, `entitlement_missing`, and `expired` transitions, deduplicated per `productId`.
+
+`offline.clear()` removes all persisted entitlements (for user logout); `offline.find(productId)` returns the persisted `PersistedPurchase` (expiryDate, renewalIntent, lastRenewalDate, …) without digging into local storage by hand ([FOV-882](https://github.com/j3k0/cordova-plugin-purchase/issues/882)).
+
+#### Companion plugin compatibility
+
+**StoreKit 2 Plugin**, **Braintree Plugin** and **Apple Pay Plugin** are unaffected — `OfflineEntitlements` is a TypeScript-only helper with no native code, no version bump required.
+
 ## 13.17
 
 ### 13.17.2
