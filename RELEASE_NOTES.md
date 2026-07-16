@@ -4,9 +4,11 @@
 
 ### 13.18.0
 
-#### (feat) OfflineEntitlements — `store.owned()` works when the device is offline
+#### (feat) OfflineEntitlements — answer "is this product owned?" when the device is offline
 
-New `CdvPurchase.OfflineEntitlements` helper class persists a subset of `VerifiedPurchase` to device storage on each `verified` event, reloads it at app launch, and answers `isOwned()` when the device is offline or has just restarted without connectivity. Phase 1 — unsigned cache (no JWT, no crypto, no server changes) ([FOV-882](https://github.com/j3k0/cordova-plugin-purchase/issues/882)).
+New `CdvPurchase.OfflineEntitlements` helper class persists a subset of `VerifiedPurchase` to device storage on each `verified` event, reloads it at app launch, and answers `isOwned()` when the device is offline or has just restarted without connectivity. Phase 1 — unsigned cache (no JWT, no crypto, no server changes).
+
+`store.owned()` itself is unchanged — it still checks the in-memory verified and local receipts. `OfflineEntitlements` adds a **parallel** check against a persisted cache, so you can combine both:
 
 ```ts
 const offline = new CdvPurchase.OfflineEntitlements(store, {
@@ -22,6 +24,16 @@ function isUserPremium(): boolean {
 }
 ```
 
+Use `find()` to retrieve the persisted entitlement details — expiry date, renewal intent, last renewal date, etc. — without digging into local storage by hand:
+
+```ts
+const entitlement = offline.find('premium');
+if (entitlement?.expiryDate) {
+    const daysLeft = Math.ceil((entitlement.expiryDate - Date.now()) / 86400000);
+    showRenewalBanner(daysLeft);
+}
+```
+
 Options:
 
 - `storage` — pluggable `OfflineStorageAdapter` (defaults to a `localStorage` wrapper). For long-offline deployments (weeks without connectivity), pass a file-based or secure-storage adapter — `localStorage` can be evicted by the WebView under storage pressure.
@@ -31,7 +43,7 @@ Options:
 
 Events (`offline.on(event => ...)`) fire on `grace`, `readonly`, `clock_rollback`, `entitlement_missing`, and `expired` transitions, deduplicated per `productId`.
 
-`offline.clear()` removes all persisted entitlements (for user logout); `offline.find(productId)` returns the persisted `PersistedPurchase` (expiryDate, renewalIntent, lastRenewalDate, …) without digging into local storage by hand ([FOV-882](https://github.com/j3k0/cordova-plugin-purchase/issues/882)).
+`offline.clear()` removes all persisted entitlements (for user logout).
 
 #### Companion plugin compatibility
 
