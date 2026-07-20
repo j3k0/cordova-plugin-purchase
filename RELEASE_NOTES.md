@@ -41,7 +41,7 @@ Options:
 - `onExpiredOffline` — behavior when the grace period has elapsed and the device is still offline: `'readonly'` keeps granting access (default), `'deny'` revokes it.
 - `detectClockRollback` — if `true`, deny access when the persisted `lastSeenTimestamp` is in the future relative to `now` (clock tampering).
 
-Events (`offline.on(event => ...)`) fire on `grace`, `readonly`, `clock_rollback`, `entitlement_missing`, and `expired` transitions, deduplicated per `productId`.
+Events (`offline.onEvent(event => ...)`) fire on `grace`, `readonly`, `clock_rollback`, `entitlement_missing`, and `expired` transitions, deduplicated per `productId`.
 
 `offline.clear()` removes all persisted entitlements (for user logout).
 
