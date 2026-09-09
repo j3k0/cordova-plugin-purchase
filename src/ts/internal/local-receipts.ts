@@ -17,7 +17,7 @@ namespace CdvPurchase {
               if (trProducts.id === product.id) {
                 // No matching transaction has been found or the tested one is newer than the already found one?
                 // Then we chose the tested one.
-                if (!found || (transaction.purchaseDate ?? 0) < (found.purchaseDate ?? 1))
+                if (!found || (transaction.purchaseDate ?? 0) > (found.purchaseDate ?? 0))
                   found = transaction;
               }
             }

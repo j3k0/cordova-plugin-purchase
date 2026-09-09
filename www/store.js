@@ -3157,7 +3157,7 @@ var CdvPurchase;
                             if (trProducts.id === product.id) {
                                 // No matching transaction has been found or the tested one is newer than the already found one?
                                 // Then we chose the tested one.
-                                if (!found || ((_a = transaction.purchaseDate) !== null && _a !== void 0 ? _a : 0) < ((_b = found.purchaseDate) !== null && _b !== void 0 ? _b : 1))
+                                if (!found || ((_a = transaction.purchaseDate) !== null && _a !== void 0 ? _a : 0) > ((_b = found.purchaseDate) !== null && _b !== void 0 ? _b : 0))
                                     found = transaction;
                             }
                         }

@@ -1,5 +1,70 @@
 import '../www/store';
 
+describe('Internal.LocalReceipts.find', () => {
+    const { LocalReceipts } = CdvPurchase.Internal;
+    const product = { id: 'subscription.monthly', platform: CdvPurchase.Platform.TEST };
+
+    function makeReceipt(transactions: Partial<CdvPurchase.Transaction>[], platform = product.platform): CdvPurchase.Receipt {
+        return {
+            platform,
+            transactions: transactions.map(transaction => ({ products: [{ id: product.id }], ...transaction })),
+        } as unknown as CdvPurchase.Receipt;
+    }
+
+    it.each([false, true])('uses the active renewal regardless of receipt order (reversed: %s)', reversed => {
+        const now = Date.now();
+        const expired = makeReceipt([{ purchaseDate: new Date(now - 2000), expirationDate: new Date(now - 1000) }]);
+        const renewed = makeReceipt([{ purchaseDate: new Date(now - 500), expirationDate: new Date(now + 24 * 60 * 60 * 1000) }]);
+        const receipts = reversed ? [renewed, expired] : [expired, renewed];
+
+        expect(LocalReceipts.find(receipts, product)).toBe(renewed.transactions[0]);
+        expect(LocalReceipts.isOwned(receipts, product)).toBe(true);
+        expect(LocalReceipts.canPurchase(receipts, product)).toBe(false);
+    });
+
+    it('selects the latest matching transaction while ignoring other products and platforms', () => {
+        const matching = makeReceipt([
+            { purchaseDate: new Date(1000) },
+            { purchaseDate: new Date(2000), products: [{ id: 'other.product' }, { id: product.id }] },
+        ]);
+        const otherProduct = makeReceipt([{ purchaseDate: new Date(3000), products: [{ id: 'other.product' }] }]);
+        const otherPlatform = makeReceipt([{ purchaseDate: new Date(4000) }], CdvPurchase.Platform.GOOGLE_PLAY);
+
+        expect(LocalReceipts.find([matching, otherProduct, otherPlatform], product)).toBe(matching.transactions[1]);
+    });
+
+    it.each([false, true])('prefers a dated transaction to an undated one (reversed: %s)', reversed => {
+        const dated = makeReceipt([{ purchaseDate: new Date(1000) }]);
+        const undated = makeReceipt([{}]);
+        const receipts = reversed ? [undated, dated] : [dated, undated];
+
+        expect(LocalReceipts.find(receipts, product)).toBe(dated.transactions[0]);
+    });
+
+    it.each([
+        { name: 'equal dates', purchaseDate: new Date(1000) },
+        { name: 'missing dates', purchaseDate: undefined },
+    ])('keeps the first transaction for $name', ({ purchaseDate }) => {
+        const receipt = makeReceipt([{ purchaseDate }, { purchaseDate }]);
+
+        expect(LocalReceipts.find([receipt], product)).toBe(receipt.transactions[0]);
+    });
+
+    it('uses the latest consumable purchase state instead of an older consumed purchase', () => {
+        const receipt = makeReceipt([
+            { purchaseDate: new Date(1000), isConsumed: true },
+            { purchaseDate: new Date(2000), isConsumed: false },
+        ]);
+
+        expect(LocalReceipts.isOwned([receipt], product)).toBe(true);
+        expect(LocalReceipts.canPurchase([receipt], product)).toBe(false);
+
+        receipt.transactions[1].isConsumed = true;
+        expect(LocalReceipts.isOwned([receipt], product)).toBe(false);
+        expect(LocalReceipts.canPurchase([receipt], product)).toBe(true);
+    });
+});
+
 /**
  * Unit tests for Internal.LocalReceipts.canPurchase — covers the fix for
  * issue #1705: canPurchase used to return true for transactions that were
