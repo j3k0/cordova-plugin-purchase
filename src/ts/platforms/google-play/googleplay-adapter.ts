@@ -397,6 +397,15 @@ namespace CdvPurchase {
              */
             onSetPurchases(purchases: Bridge.Purchase[]): void {
                 this.log.debug("onSetPurchases: " + JSON.stringify(purchases));
+
+                // Only a complete purchase inventory can establish that a purchase was removed.
+                const removedReceipts = this.receipts.filter(r => !purchases.find(p => p.purchaseToken === r.purchaseToken));
+                if (removedReceipts.length > 0) {
+                    this.log.debug("Removed purchases: " + removedReceipts.map(r => r.purchaseToken).join(', '));
+                    removedReceipts.forEach(receipt => receipt.removed());
+                    this.context.listener.receiptsUpdated(Platform.GOOGLE_PLAY, removedReceipts);
+                }
+
                 this.onPurchasesUpdated(purchases);
                 this.context.listener.receiptsReady(Platform.GOOGLE_PLAY);
                 
@@ -407,18 +416,12 @@ namespace CdvPurchase {
             /**
              * Called when the platform reports updates for some purchases
              * 
-             * Notice that purchases can be removed from the array, we should handle that so they stop
-             * being "owned" by the user.
+             * Live billing events can contain only the changed purchases. Omitted purchases
+             * remain owned until a complete inventory reports their removal.
              */
             onPurchasesUpdated(purchases: Bridge.Purchase[]): void {
                 this.log.debug("onPurchaseUpdated: " + purchases.map(p => p.orderId).join(', '));
                 // GooglePlay generates one receipt for each purchase
-
-                const removedReceipts = this.receipts.filter(r => !purchases.find(p => p.purchaseToken === r.purchaseToken));
-                if (removedReceipts.length > 0) {
-                    this.log.debug("Removed purchases: " + removedReceipts.map(r => r.purchaseToken).join(', '));
-                    removedReceipts.forEach(receipt => receipt.removed());
-                }
 
                 purchases.forEach(purchase => {
                     const existingReceipt = this.receipts.find(r => r.purchaseToken === purchase.purchaseToken);

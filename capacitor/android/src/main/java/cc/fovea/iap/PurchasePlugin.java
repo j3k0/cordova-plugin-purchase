@@ -39,7 +39,6 @@ import com.android.billingclient.api.ProductDetails.PricingPhase;
 import com.android.billingclient.api.ProductDetails.SubscriptionOfferDetails;
 import com.android.billingclient.api.ProductDetailsResponseListener;
 import com.android.billingclient.api.Purchase;
-import com.android.billingclient.api.PurchasesResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
 import com.android.billingclient.api.QueryProductDetailsParams.Product;
@@ -124,9 +123,6 @@ public class PurchasePlugin extends Plugin implements
     /** Last time onStart refreshed purchases. */
     private long mLastQueryOnStart = 0;
 
-    /** Intermediate results for parallel purchase queries. */
-    private BillingResult mInAppResult;
-    private BillingResult mSubsResult;
     private int nProductDetailsQuerySuccessful = 0;
 
     // -------------------------------------------------------------------------
@@ -901,62 +897,52 @@ public class PurchasePlugin extends Plugin implements
     private void queryPurchases() {
         Log.d(TAG, "queryPurchases()");
         executeServiceRequest(() -> {
-            long time = System.currentTimeMillis();
-
+            final long time = System.currentTimeMillis();
             final List<Purchase> allPurchases = new ArrayList<>();
-            mInAppResult = null;
-            mSubsResult = null;
+            final BillingResult supportResult =
+                    mBillingClient.isFeatureSupported(FeatureType.SUBSCRIPTIONS);
+            final boolean subscriptionsSupported =
+                    supportResult.getResponseCode() == BillingResponseCode.OK;
+
+            // A failed query is not evidence that previously owned purchases are gone.
+            if (!subscriptionsSupported
+                    && (supportResult.getResponseCode() != BillingResponseCode.FEATURE_NOT_SUPPORTED
+                        || !mSubsProductIds.isEmpty())) {
+                onQueryPurchasesFinished(supportResult, allPurchases);
+                return;
+            }
 
             mBillingClient.queryPurchasesAsync(
                     QueryPurchasesParams.newBuilder()
                             .setProductType(ProductType.INAPP).build(),
-                    (billingResult, purchases) -> {
-                        mInAppResult = billingResult;
+                    (inAppResult, inAppPurchases) -> {
                         Log.i(TAG, "queryPurchases(INAPP) -> Elapsed time: "
                                 + (System.currentTimeMillis() - time) + "ms");
-                        if (billingResult.getResponseCode()
-                                == BillingResponseCode.OK) {
-                            allPurchases.addAll(purchases);
+                        if (inAppResult.getResponseCode() != BillingResponseCode.OK) {
+                            onQueryPurchasesFinished(inAppResult, allPurchases);
+                            return;
                         }
-                        if (mInAppResult != null
-                                && (mSubsResult != null
-                                || !areSubscriptionsSupported())) {
-                            BillingResult best =
-                                    mInAppResult.getResponseCode()
-                                            == BillingResponseCode.OK
-                                            ? mInAppResult : mSubsResult;
-                            onQueryPurchasesFinished(best, allPurchases);
-                        }
-                    });
+                        allPurchases.addAll(inAppPurchases);
 
-            if (areSubscriptionsSupported()) {
-                mBillingClient.queryPurchasesAsync(
-                        QueryPurchasesParams.newBuilder()
-                                .setProductType(ProductType.SUBS).build(),
-                        (billingResult, purchases) -> {
-                            mSubsResult = billingResult;
-                            Log.i(TAG,
-                                    "queryPurchases(SUBS) -> Elapsed time: "
-                                            + (System.currentTimeMillis()
-                                            - time) + "ms");
-                            if (billingResult.getResponseCode()
-                                    == BillingResponseCode.OK) {
-                                allPurchases.addAll(purchases);
-                            }
-                            if (mInAppResult != null
-                                    && (mSubsResult != null
-                                    || !areSubscriptionsSupported())) {
-                                BillingResult best =
-                                        mInAppResult.getResponseCode()
-                                                == BillingResponseCode.OK
-                                                ? mInAppResult : mSubsResult;
-                                onQueryPurchasesFinished(best, allPurchases);
-                            }
-                        });
-            } else {
-                Log.i(TAG, "queryPurchases() -> "
-                        + "Subscriptions are not supported, skipped.");
-            }
+                        if (!subscriptionsSupported) {
+                            Log.i(TAG, "queryPurchases() -> "
+                                    + "Subscriptions are not supported, skipped.");
+                            onQueryPurchasesFinished(inAppResult, allPurchases);
+                            return;
+                        }
+
+                        mBillingClient.queryPurchasesAsync(
+                                QueryPurchasesParams.newBuilder()
+                                        .setProductType(ProductType.SUBS).build(),
+                                (subsResult, subsPurchases) -> {
+                                    Log.i(TAG, "queryPurchases(SUBS) -> Elapsed time: "
+                                            + (System.currentTimeMillis() - time) + "ms");
+                                    if (subsResult.getResponseCode() == BillingResponseCode.OK) {
+                                        allPurchases.addAll(subsPurchases);
+                                    }
+                                    onQueryPurchasesFinished(subsResult, allPurchases);
+                                });
+                    });
         });
     }
 
