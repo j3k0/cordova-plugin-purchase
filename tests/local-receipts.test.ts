@@ -11,13 +11,13 @@ describe('Internal.LocalReceipts.find', () => {
         } as unknown as CdvPurchase.Receipt;
     }
 
-    it.each([false, true])('uses the active renewal regardless of receipt order (reversed: %s)', reversed => {
+    it.each([false, true])('uses the active transaction with the newer purchaseDate regardless of receipt order (reversed: %s)', reversed => {
         const now = Date.now();
         const expired = makeReceipt([{ purchaseDate: new Date(now - 2000), expirationDate: new Date(now - 1000) }]);
-        const renewed = makeReceipt([{ purchaseDate: new Date(now - 500), expirationDate: new Date(now + 24 * 60 * 60 * 1000) }]);
-        const receipts = reversed ? [renewed, expired] : [expired, renewed];
+        const newer = makeReceipt([{ purchaseDate: new Date(now - 500), expirationDate: new Date(now + 24 * 60 * 60 * 1000) }]);
+        const receipts = reversed ? [newer, expired] : [expired, newer];
 
-        expect(LocalReceipts.find(receipts, product)).toBe(renewed.transactions[0]);
+        expect(LocalReceipts.find(receipts, product)).toBe(newer.transactions[0]);
         expect(LocalReceipts.isOwned(receipts, product)).toBe(true);
         expect(LocalReceipts.canPurchase(receipts, product)).toBe(false);
     });
@@ -33,21 +33,35 @@ describe('Internal.LocalReceipts.find', () => {
         expect(LocalReceipts.find([matching, otherProduct, otherPlatform], product)).toBe(matching.transactions[1]);
     });
 
-    it.each([false, true])('prefers a dated transaction to an undated one (reversed: %s)', reversed => {
+    it.each([false, true])('preserves undated transaction precedence (reversed: %s)', reversed => {
         const dated = makeReceipt([{ purchaseDate: new Date(1000) }]);
         const undated = makeReceipt([{}]);
         const receipts = reversed ? [undated, dated] : [dated, undated];
 
-        expect(LocalReceipts.find(receipts, product)).toBe(dated.transactions[0]);
+        expect(LocalReceipts.find(receipts, product)).toBe(undated.transactions[0]);
     });
 
-    it.each([
-        { name: 'equal dates', purchaseDate: new Date(1000) },
-        { name: 'missing dates', purchaseDate: undefined },
-    ])('keeps the first transaction for $name', ({ purchaseDate }) => {
+    it('keeps the first transaction when purchase dates are equal', () => {
+        const purchaseDate = new Date(1000);
         const receipt = makeReceipt([{ purchaseDate }, { purchaseDate }]);
 
         expect(LocalReceipts.find([receipt], product)).toBe(receipt.transactions[0]);
+    });
+
+    it('keeps the last undated transaction as before', () => {
+        const receipt = makeReceipt([{}, {}]);
+
+        expect(LocalReceipts.find([receipt], product)).toBe(receipt.transactions[1]);
+    });
+
+    it.each([false, true])('blocks repurchase for an undated pending transaction after a consumed purchase (reversed: %s)', reversed => {
+        const consumed = makeReceipt([{ purchaseDate: new Date(1000), isConsumed: true }]);
+        const pending = makeReceipt([{ isPending: true }]);
+        const receipts = reversed ? [pending, consumed] : [consumed, pending];
+
+        expect(LocalReceipts.find(receipts, product)).toBe(pending.transactions[0]);
+        expect(LocalReceipts.isOwned(receipts, product)).toBe(false);
+        expect(LocalReceipts.canPurchase(receipts, product)).toBe(false);
     });
 
     it('uses the latest consumable purchase state instead of an older consumed purchase', () => {

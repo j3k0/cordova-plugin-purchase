@@ -393,12 +393,12 @@ namespace CdvPurchase {
             }
 
             /**
-             * Called when the platform reports some purchases
+             * Called when the platform refreshes the purchase inventory
              */
             onSetPurchases(purchases: Bridge.Purchase[]): void {
                 this.log.debug("onSetPurchases: " + JSON.stringify(purchases));
 
-                // Only a complete purchase inventory can establish that a purchase was removed.
+                // Reconcile removed purchases when the platform refreshes the inventory.
                 const removedReceipts = this.receipts.filter(r => !purchases.find(p => p.purchaseToken === r.purchaseToken));
                 if (removedReceipts.length > 0) {
                     this.log.debug("Removed purchases: " + removedReceipts.map(r => r.purchaseToken).join(', '));
@@ -416,8 +416,8 @@ namespace CdvPurchase {
             /**
              * Called when the platform reports updates for some purchases
              * 
-             * Live billing events can contain only the changed purchases. Omitted purchases
-             * remain owned until a complete inventory reports their removal.
+             * Live billing events can contain only the changed purchases, so an omitted
+             * purchase does not indicate removal.
              */
             onPurchasesUpdated(purchases: Bridge.Purchase[]): void {
                 this.log.debug("onPurchaseUpdated: " + purchases.map(p => p.orderId).join(', '));

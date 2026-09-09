@@ -3155,9 +3155,10 @@ var CdvPurchase;
                     for (const transaction of receipt.transactions) {
                         for (const trProducts of transaction.products) {
                             if (trProducts.id === product.id) {
-                                // No matching transaction has been found or the tested one is newer than the already found one?
-                                // Then we chose the tested one.
-                                if (!found || ((_a = transaction.purchaseDate) !== null && _a !== void 0 ? _a : 0) > ((_b = found.purchaseDate) !== null && _b !== void 0 ? _b : 0))
+                                // Select the newer known date; preserve existing ordering when either date is missing.
+                                if (!found || (transaction.purchaseDate && found.purchaseDate
+                                    ? transaction.purchaseDate > found.purchaseDate
+                                    : ((_a = transaction.purchaseDate) !== null && _a !== void 0 ? _a : 0) < ((_b = found.purchaseDate) !== null && _b !== void 0 ? _b : 1)))
                                     found = transaction;
                             }
                         }
@@ -6683,11 +6684,11 @@ var CdvPurchase;
                 }
             }
             /**
-             * Called when the platform reports some purchases
+             * Called when the platform refreshes the purchase inventory
              */
             onSetPurchases(purchases) {
                 this.log.debug("onSetPurchases: " + JSON.stringify(purchases));
-                // Only a complete purchase inventory can establish that a purchase was removed.
+                // Reconcile removed purchases when the platform refreshes the inventory.
                 const removedReceipts = this.receipts.filter(r => !purchases.find(p => p.purchaseToken === r.purchaseToken));
                 if (removedReceipts.length > 0) {
                     this.log.debug("Removed purchases: " + removedReceipts.map(r => r.purchaseToken).join(', '));
@@ -6702,8 +6703,8 @@ var CdvPurchase;
             /**
              * Called when the platform reports updates for some purchases
              *
-             * Live billing events can contain only the changed purchases. Omitted purchases
-             * remain owned until a complete inventory reports their removal.
+             * Live billing events can contain only the changed purchases, so an omitted
+             * purchase does not indicate removal.
              */
             onPurchasesUpdated(purchases) {
                 this.log.debug("onPurchaseUpdated: " + purchases.map(p => p.orderId).join(', '));
