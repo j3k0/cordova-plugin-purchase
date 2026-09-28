@@ -2,7 +2,7 @@ declare namespace ModuleIapticJS {
     /**
      * Type of product that can be purchased
      */
-    export type ProductType = 'subscription' | 'consumable' | 'non_consumable' | 'paid subscription';
+    export type ProductType = 'subscription' | 'consumable' | 'non consumable' | 'paid subscription';
 
     /**
      * Represents a pricing phase for an offer
