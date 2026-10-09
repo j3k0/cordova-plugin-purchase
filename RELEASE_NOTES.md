@@ -1,5 +1,34 @@
 # Release Notes - Cordova Plugin Purchase
 
+## 13.19
+
+### 13.19.0
+
+#### (feat) `unverified` events say whether the failure is temporary
+
+`UnverifiedReceipt` has a new `transient` flag. It's `true` when validation failed because the validator, or the store behind it, couldn't be reached. In that case the receipt may well be valid. It's `false` when the validator gave a definitive answer.
+
+Use it so that an outage (yours, the validator's, Apple's or Google's, or just a bad network) doesn't lock your paying users out:
+
+```ts
+store.when().unverified(({ receipt, payload, transient }) => {
+    if (transient) {
+        // Temporary failure: keep the access you already granted, retry later.
+        return;
+    }
+    // Definitive answer (invalid receipt, expired, ...): update access.
+});
+```
+
+| `transient` | Validator answer |
+|---|---|
+| `true` | HTTP 5xx (from the transport, or as `payload.status` in the response body), `CONNECTION_FAILED` (6778002), request timeout, no network, unreadable response |
+| `false` | Everything else: HTTP 400 `INVALID_PAYLOAD`, 401/403, 410, 419 expired, malformed success response (`BAD_RESPONSE`) |
+
+The semantics of `unverified` don't change: it still fires on every failed validation, and `store.owned()` and `store.verifiedReceipts` behave as before. The field is optional in the type definition, so existing TypeScript code compiles unchanged.
+
+The plugin still doesn't store subscription state on the device. On a transient failure, your server's database stays the source of truth. `OfflineEntitlements` remains an opt-in for apps that accept weaker security in exchange for convenience.
+
 ## 13.18
 
 ### 13.18.0
