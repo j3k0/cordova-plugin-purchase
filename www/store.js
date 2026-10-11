@@ -595,11 +595,11 @@ var CdvPurchase;
                                 this.controller.verifiedCallbacks.trigger(vr, 'payload_expired');
                             }
                             else {
-                                this.controller.unverifiedCallbacks.trigger({ receipt, payload }, 'no_verified_receipt');
+                                this.controller.unverifiedCallbacks.trigger({ receipt, payload, transient: false }, 'no_verified_receipt');
                             }
                         }
                         else {
-                            this.controller.unverifiedCallbacks.trigger({ receipt, payload }, 'validator_error');
+                            this.controller.unverifiedCallbacks.trigger({ receipt, payload, transient: isTransientError(payload) }, 'validator_error');
                         }
                     }
                     catch (err) {
@@ -608,7 +608,7 @@ var CdvPurchase;
                                 ok: false,
                                 code: CdvPurchase.ErrorCode.VERIFICATION_FAILED,
                                 message: err.message,
-                            } }, 'validator_exception');
+                            }, transient: false }, 'validator_exception');
                     }
                 });
                 receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));
@@ -793,6 +793,36 @@ var CdvPurchase;
             }
         }
         Internal.Validator = Validator;
+        /** Validator error code: the validator couldn't reach the store (Apple, Google, ...). */
+        const VALIDATOR_CONNECTION_FAILED = 6778002;
+        /**
+         * True if a validation error is temporary (validator or store unreachable,
+         * server error, timeout, no network) rather than a definitive answer about
+         * the receipt.
+         *
+         * Error responses from the validator come in two shapes:
+         * - HTTP 200 with `{ ok: false, status, code }` in the body (iaptic does this,
+         *   so a store outage is `status: 502, code: 6778002` in the body);
+         * - a failed HTTP request, reported by the plugin as `code: COMMUNICATION`
+         *   with the transport status: 5xx, 408 (timeout), 417 (unreadable response,
+         *   e.g. a captive portal page), 0 or negative (no network, as reported by
+         *   XMLHttpRequest or cordova-plugin-advanced-http).
+         */
+        function isTransientError(payload) {
+            const status = payload.status;
+            if (typeof status === 'number' && status >= 500)
+                return true;
+            if (payload.code === VALIDATOR_CONNECTION_FAILED)
+                return true;
+            if (payload.code === CdvPurchase.ErrorCode.COMMUNICATION) {
+                if (typeof status !== 'number' || status <= 0)
+                    return true;
+                if (status === CdvPurchase.Utils.Ajax.HTTP_REQUEST_TIMEOUT || status === 417)
+                    return true;
+            }
+            return false;
+        }
+        Internal.isTransientError = isTransientError;
         /**
          * Check if a payload looks like a valid validator response.
          *
@@ -1993,7 +2023,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.18.0';
+    CdvPurchase.PLUGIN_VERSION = '13.19.0';
     /**
      * Entry class of the plugin.
      */
