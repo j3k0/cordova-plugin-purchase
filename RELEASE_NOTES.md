@@ -29,6 +29,20 @@ The semantics of `unverified` don't change: it still fires on every failed valid
 
 The plugin still doesn't store subscription state on the device. On a transient failure, your server's database stays the source of truth. `OfflineEntitlements` remains an opt-in for apps that accept weaker security in exchange for convenience.
 
+#### (fix) Capacitor iOS: unfinished transactions no longer lost when JS starts slowly
+
+The StoreKit 2 transaction observer started when the native plugin loaded, before any JavaScript listener existed. Transactions delivered in that window were marked as processed but their events were dropped, so they stayed unfinished for the whole session. The observer now starts at the end of `store.initialize()`, and unfinished transactions (consumables included) are re-emitted once JavaScript is listening. Native state shared between the observer and plugin calls is now serialized on the main thread. See [#1714](https://github.com/j3k0/cordova-plugin-purchase/issues/1714).
+
+The Capacitor README also documents a behavior change for apps moving from the Cordova build (StoreKit 1) to the Capacitor build (StoreKit 2): at launch, `approved` fires for current entitlements, including transactions you already finished. Make fulfillment idempotent on the transaction id.
+
+#### (fix) Capacitor: TypeScript consumers compile again
+
+`www/store.d.ts` referenced `iaptic-js-types.d.ts`, which wasn't included in the `capacitor-plugin-cdv-purchase` package, causing TS6053/TS2503 errors. The file is now shipped. See [#1716](https://github.com/j3k0/cordova-plugin-purchase/issues/1716).
+
+#### (fix) iaptic-js: `ProductType` spells `'non consumable'`
+
+The vendored type declaration for the iaptic-js global listed `'non_consumable'`, which the iaptic server doesn't accept. It now uses `'non consumable'`, matching `CdvPurchase.ProductType.NON_CONSUMABLE`.
+
 ## 13.18
 
 ### 13.18.0
