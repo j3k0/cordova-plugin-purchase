@@ -45,7 +45,22 @@ namespace CdvPurchase
         /** Time when the subscription is set to expire following this transaction */
         expirationDate?: Date;
 
-        /** True when the transaction has been acknowledged to the platform. */
+        /**
+         * True when the transaction has been acknowledged to the platform.
+         *
+         * - Google Play: the purchase was acknowledged (or consumed).
+         * - Apple App Store (StoreKit 2): the transaction was finished. StoreKit 2 re-reports
+         *   finished non-consumables and non-renewing subscriptions as `approved` at every
+         *   app launch; check this flag in your `approved()` handler to skip delivering them again.
+         *
+         * Undefined when the platform doesn't report it.
+         *
+         * @example
+         * store.when().approved(transaction => {
+         *   if (transaction.isAcknowledged) return transaction.finish(); // already delivered
+         *   deliver(transaction).then(() => transaction.finish());
+         * });
+         */
         isAcknowledged?: boolean;
 
         /** True when the transaction is still pending payment. */

@@ -372,18 +372,23 @@ namespace CdvPurchase {
                             await this.receiptsUpdated.wait();
                             this.log.info('finish: ' + transactionIdentifier + ' - ' + productId);
                             this.removeTransactionInProgress(productId);
-                            await this.upsertTransaction(productId, transactionIdentifier, TransactionState.FINISHED);
+                            const finishedTransaction = await this.upsertTransaction(productId, transactionIdentifier, TransactionState.FINISHED);
+                            finishedTransaction.isAcknowledged = true;
                             this.receiptsUpdated.call();
                         },
 
                         restored: async (transactionIdentifier: string, productId: string,
                             originalTransactionIdentifier?: string, transactionDate?: string,
                             discountId?: string, expirationDate?: string, jwsRepresentation?: string,
-                            quantity?: number) => {
+                            quantity?: number, isFinished?: boolean) => {
                             this.log.info('restore: ' + transactionIdentifier + ' - ' + productId);
                             const transaction = await this.upsertTransaction(productId, transactionIdentifier, TransactionState.APPROVED);
                             transaction.refresh(productId, originalTransactionIdentifier, transactionDate,
                                 discountId, expirationDate, jwsRepresentation, quantity);
+                            // StoreKit 2 re-emits finished entitlements (non-consumables,
+                            // non-renewing subscriptions) at every launch. Expose the finished
+                            // state the same way Google Play does, so apps can skip them in approved().
+                            if (isFinished !== undefined) transaction.isAcknowledged = isFinished;
                             this.receiptsUpdated.call();
                         },
 
