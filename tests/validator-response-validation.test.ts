@@ -77,6 +77,7 @@ async function runValidator(payload: unknown): Promise<RunResult> {
 
   try {
     const validator = new CdvPurchase.Internal.Validator(controller, makeLogger());
+    validator.maxAttempts = 1; // retries are covered in validator-transient.test.ts
     const receipt = makeReceipt(platform);
     validator.add(receipt);
     validator.run();

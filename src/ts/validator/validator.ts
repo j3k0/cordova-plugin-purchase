@@ -70,6 +70,42 @@ namespace CdvPurchase {
                 this.log = log.child('Validator');
             }
 
+            /** Maximum number of validation attempts for a receipt when failures are temporary */
+            public maxAttempts = 4;
+
+            /** Number of failed attempts in a row, per receipt */
+            private failedAttempts = new Map<Receipt, number>();
+
+            /** Backoff for retrying temporary failures (created on first use, it listens to the "online" event) */
+            private retry?: Retry;
+
+            /**
+             * Schedule a new validation if the failure is temporary and attempts remain.
+             *
+             * @return true if a retry was scheduled
+             */
+            private scheduleRetry(receipt: Receipt, payload: Validator.Response.Payload): boolean {
+                if (payload.ok || !isRetriableError(payload)) {
+                    this.failedAttempts.delete(receipt);
+                    if (payload.ok && this.retry) this.retry.retryTimeout = this.retry.minTimeout;
+                    return false;
+                }
+                const attempts = (this.failedAttempts.get(receipt) ?? 0) + 1;
+                if (attempts >= this.maxAttempts) {
+                    this.log.warn(`Validation failed ${attempts} times, giving up: ${payload.message}`);
+                    this.failedAttempts.delete(receipt);
+                    return false;
+                }
+                this.failedAttempts.set(receipt, attempts);
+                if (!this.retry) this.retry = new Retry();
+                this.log.info(`Validation failed (${payload.message}), retry in ${this.retry.retryTimeout}ms (attempt ${attempts + 1}/${this.maxAttempts})`);
+                this.retry.retry(() => {
+                    this.add(receipt);
+                    this.run();
+                });
+                return true;
+            }
+
             public numRequests: number = 0;
             public numResponses: number = 0;
 
@@ -117,6 +153,7 @@ namespace CdvPurchase {
                 const onResponse = async (r: ReceiptResponse) => {
                     const { receipt, payload } = r;
                     this.incrResponsesCounter();
+                    if (this.scheduleRetry(receipt, payload)) return;
                     try {
                         const adapter = this.controller.adapters.find(receipt.platform);
                         await adapter?.handleReceiptValidationResponse(receipt, payload);
@@ -336,10 +373,13 @@ namespace CdvPurchase {
                                     data: { latest_receipt: (response as any)?.data?.latest_receipt },
                                 } as Validator.Response.ErrorPayload
                             });
-                        this.cache[bodyTransactionHash] = {
-                            payload: response,
-                            expires: (+new Date()) + 120000, // expires in 2 minutes
-                        };
+                        // don't cache temporary errors, so a retry makes a new request
+                        if (response.ok || !isTransientError(response)) {
+                            this.cache[bodyTransactionHash] = {
+                                payload: response,
+                                expires: (+new Date()) + 120000, // expires in 2 minutes
+                            };
+                        }
                         callback({ receipt, payload: response });
                     },
                     error: (status, message, data) => {
@@ -386,6 +426,15 @@ namespace CdvPurchase {
                 if (status === Utils.Ajax.HTTP_REQUEST_TIMEOUT || status === 417) return true;
             }
             return false;
+        }
+
+        /**
+         * True if a validation failure is worth retrying: a temporary error
+         * (see isTransientError) or an invalid response from the validator.
+         * Validator verdicts (invalid receipt, expired, ...) are not retried.
+         */
+        function isRetriableError(payload: Validator.Response.ErrorPayload): boolean {
+            return isTransientError(payload) || payload.code === ErrorCode.BAD_RESPONSE;
         }
 
         /**

@@ -20,7 +20,10 @@ type AjaxOutcome =
   | { success: unknown }
   | { error: { status: number; message: string } };
 
-async function runValidator(outcome: AjaxOutcome) {
+async function runValidator(outcome: AjaxOutcome | AjaxOutcome[]) {
+  // A list of outcomes is served one per request, the last one repeats.
+  const outcomes = Array.isArray(outcome) ? outcome : [outcome];
+  let calls = 0;
   const platform = CdvPurchase.Platform.GOOGLE_PLAY;
   const adapter = {
     id: platform,
@@ -52,6 +55,7 @@ async function runValidator(outcome: AjaxOutcome) {
 
   const originalAjax = CdvPurchase.Utils.ajax;
   (CdvPurchase.Utils as any).ajax = (_log: CdvPurchase.Logger, opts: any) => {
+    const outcome = outcomes[Math.min(calls++, outcomes.length - 1)];
     setTimeout(() => {
       if ('success' in outcome) opts.success(outcome.success);
       else opts.error(outcome.error.status, outcome.error.message, null);
@@ -61,15 +65,16 @@ async function runValidator(outcome: AjaxOutcome) {
 
   try {
     const validator = new CdvPurchase.Internal.Validator(controller, makeLogger());
+    (validator as any).retry = new CdvPurchase.Internal.Retry(1, 1); // retry fast
     validator.add(new CdvPurchase.Receipt(platform, { verify: async () => {}, finish: async () => {} }));
     validator.run();
-    for (let i = 0; i < 10; i++) await Promise.resolve();
-    await new Promise(r => setTimeout(r, 50));
-    for (let i = 0; i < 10; i++) await Promise.resolve();
+    for (let i = 0; i < 100 && verified.length + unverified.length === 0; i++)
+      await new Promise(r => setTimeout(r, 10));
+    await new Promise(r => setTimeout(r, 50)); // let any extra retry show up
   } finally {
     (CdvPurchase.Utils as any).ajax = originalAjax;
   }
-  return { verified, unverified };
+  return { verified, unverified, calls };
 }
 
 /** Error body as sent by iaptic: HTTP 200 with ok:false. */
@@ -118,5 +123,40 @@ describe('unverified() transient flag', () => {
     });
     expect(unverified).toHaveLength(0);
     expect(verified).toHaveLength(1);
+  });
+});
+
+describe('retry on temporary failures', () => {
+  const ok = { success: { ok: true, data: { id: 'com.test.product', latest_receipt: true, transaction: { type: 'test' } } } };
+
+  test.each<[string, AjaxOutcome]>([
+    ['no network', { error: { status: 0, message: '' } }],
+    ['request timeout', { error: { status: 408, message: 'Timeout' } }],
+    ['HTTP 503', { error: { status: 503, message: 'Service Unavailable' } }],
+    ['body 502 CONNECTION_FAILED', body(502, 6778002)],
+    ['invalid success payload (BAD_RESPONSE)', { success: { ok: true } }],
+  ])('%s, then success → verified, no unverified', async (_label, failure) => {
+    const { verified, unverified, calls } = await runValidator([failure, failure, ok]);
+    expect(calls).toBe(3);
+    expect(unverified).toHaveLength(0);
+    expect(verified).toHaveLength(1);
+  });
+
+  test('gives up after 4 attempts and fires unverified once', async () => {
+    const { verified, unverified, calls } = await runValidator({ error: { status: 0, message: '' } });
+    expect(calls).toBe(4);
+    expect(verified).toHaveLength(0);
+    expect(unverified).toHaveLength(1);
+  });
+
+  test.each<[string, AjaxOutcome]>([
+    ['body 400 INVALID_PAYLOAD', body(400, 6778001)],
+    ['body 419 expired', body(419, 6778003)],
+    ['HTTP 401', { error: { status: 401, message: 'Unauthorized' } }],
+  ])('%s → no retry', async (_label, verdict) => {
+    const { verified, unverified, calls } = await runValidator([verdict, ok]);
+    expect(calls).toBe(1);
+    expect(verified).toHaveLength(0);
+    expect(unverified).toHaveLength(1);
   });
 });
