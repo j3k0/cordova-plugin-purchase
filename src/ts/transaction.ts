@@ -49,11 +49,12 @@ namespace CdvPurchase
          * True when the transaction has been acknowledged to the platform.
          *
          * - Google Play: the purchase was acknowledged (or consumed).
-         * - Apple App Store (StoreKit 2): the transaction was finished. StoreKit 2 re-reports
+         * - Apple App Store (StoreKit 2, Capacitor build only): the transaction was finished. StoreKit 2 re-reports
          *   finished non-consumables and non-renewing subscriptions as `approved` at every
          *   app launch; check this flag in your `approved()` handler to skip delivering them again.
          *
-         * Undefined when the platform doesn't report it.
+         * Undefined when the platform doesn't report it (including StoreKit 1 and the Cordova
+         * `cordova-plugin-purchase-storekit2` plugin).
          *
          * @example
          * store.when().approved(transaction => {

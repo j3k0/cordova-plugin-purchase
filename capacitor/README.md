@@ -72,7 +72,7 @@ store.when().approved((transaction) => {
 });
 ```
 
-`isAcknowledged` is `false` for transactions you haven't finished yet, and becomes `true` once you call `finish()`. It's the same flag Google Play uses for acknowledged purchases. Keeping server-side fulfillment idempotent on the transaction id is still good practice: an app killed between delivery and `finish()` gets the transaction again, unfinished.
+`isAcknowledged` is `false` for transactions you haven't finished yet, and becomes `true` once you call `finish()`. It's the same flag Google Play uses for acknowledged purchases. On iOS it is only set by this Capacitor plugin: Cordova apps (StoreKit 1, or the `cordova-plugin-purchase-storekit2` plugin) leave it `undefined`. Keeping server-side fulfillment idempotent on the transaction id is still good practice: an app killed between delivery and `finish()` gets the transaction again, unfinished.
 
 ## Device info for receipt validation
 

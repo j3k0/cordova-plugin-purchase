@@ -110,8 +110,8 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
         // to JS so existing purchases are visible immediately on app launch
         // (without requiring a manual restore).
         Task {
-            let unfinishedIds = await self.unfinishedTransactionIds()
-            for await result in Transaction.currentEntitlements {
+            let (entitlements, unfinishedIds) = await self.entitlementsWithUnfinishedIds()
+            for result in entitlements {
                 switch result {
                 case .verified(let transaction):
                     if transaction.isUpgraded {
@@ -326,8 +326,8 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
         Task {
             do {
                 try await AppStore.sync()
-                let unfinishedIds = await unfinishedTransactionIds()
-                for await result in Transaction.currentEntitlements {
+                let (entitlements, unfinishedIds) = await entitlementsWithUnfinishedIds()
+                for result in entitlements {
                     switch result {
                     case .verified(let transaction):
                         if transaction.isUpgraded {
@@ -457,17 +457,27 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    /// Ids of every transaction the app has not finished yet. Used to tell
-    /// finished entitlements apart from unfinished ones: finished
-    /// non-consumables and non-renewing subscriptions stay in
-    /// Transaction.currentEntitlements and are re-emitted at every launch.
+    /// Current entitlements, plus the ids of every transaction the app has
+    /// not finished yet. Used to tell finished entitlements apart from
+    /// unfinished ones: finished non-consumables and non-renewing
+    /// subscriptions stay in Transaction.currentEntitlements and are
+    /// re-emitted at every launch.
+    ///
+    /// The unfinished snapshot is taken AFTER listing entitlements, so an
+    /// entitlement is never wrongly reported as finished: anything listed
+    /// that is still unfinished is in the snapshot. The only possible error
+    /// is the safe one (finished in between, reported as unfinished).
     @available(iOS 15.0, *)
-    private func unfinishedTransactionIds() async -> Set<UInt64> {
+    private func entitlementsWithUnfinishedIds() async -> ([VerificationResult<Transaction>], Set<UInt64>) {
+        var entitlements: [VerificationResult<Transaction>] = []
+        for await result in Transaction.currentEntitlements {
+            entitlements.append(result)
+        }
         var ids = Set<UInt64>()
         for await result in Transaction.unfinished {
             ids.insert(result.unsafePayloadValue.id)
         }
-        return ids
+        return (entitlements, ids)
     }
 
     /// Atomically check-and-mark a transaction id as emitted to the JS layer.
