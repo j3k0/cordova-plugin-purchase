@@ -22,6 +22,9 @@ namespace CdvPurchase {
          * Don't revoke access on a transient failure: keep what your app (or
          * your server) last knew, and validate again later.
          *
+         * The plugin already retried a few times (with backoff) before firing
+         * a transient failure.
+         *
          * False when the validator gave a definitive answer (e.g. invalid
          * receipt, expired subscription, authentication error).
          *

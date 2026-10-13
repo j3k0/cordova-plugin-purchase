@@ -2,6 +2,16 @@
 
 ## 13.19
 
+### Unreleased
+
+#### (fix) Retry receipt validation on temporary failures
+
+Since v13, a single failed validation request (no network, timeout, server error) ended validation for the session: the transaction stayed unfinished until the next app launch. Older versions retried; v13 now does again.
+
+When validation fails for a temporary reason (the `transient` cases below, or a malformed response from the validator), the plugin retries with a growing delay (5s, 10s, 20s, ...), and right away when the device comes back online. After 4 failed attempts, it gives up and fires `unverified` as before. Definitive answers from the validator (invalid receipt, expired, ...) are not retried.
+
+So `unverified` with `transient: true` now means "failed several times in a row", and you won't see it for every network blip.
+
 ### 13.19.0
 
 #### (feat) `unverified` events say whether the failure is temporary
