@@ -23,7 +23,8 @@ namespace CdvPurchase {
                 restored: (transactionIdentifier: string, productId: string,
                     originalTransactionIdentifier?: string, transactionDate?: string,
                     discountId?: string, expirationDate?: string,
-                    jwsRepresentation?: string, quantity?: number) => void;
+                    jwsRepresentation?: string, quantity?: number,
+                    isFinished?: boolean) => void;
             }
 
             export class CapacitorNativeBridge implements Bridge.BridgeInterface {
@@ -46,6 +47,7 @@ namespace CdvPurchase {
                     expirationDate: string | undefined;
                     jwsRepresentation: string | undefined;
                     quantity: number | undefined;
+                    isFinished: boolean | undefined;
                 }[] = [];
                 private initialized = false;
                 private needRestoreNotification = false;
@@ -101,6 +103,7 @@ namespace CdvPurchase {
                             data.expirationDate,
                             data.jwsRepresentation,
                             data.quantity,
+                            data.isFinished,
                         );
                     });
 
@@ -130,7 +133,7 @@ namespace CdvPurchase {
                                     args.transactionReceipt, args.originalTransactionIdentifier,
                                     args.transactionDate, args.discountId,
                                     args.expirationDate, args.jwsRepresentation,
-                                    args.quantity);
+                                    args.quantity, args.isFinished);
                             }
                             if (this.options.ready) this.options.ready();
                             success();
@@ -237,13 +240,14 @@ namespace CdvPurchase {
                     expirationDate?: string,
                     jwsRepresentation?: string,
                     quantity?: number,
+                    isFinished?: boolean,
                 ): void {
                     if (!this.initialized) {
                         this.pendingTransactionUpdates.push({
                             state, errorCode, errorText, transactionIdentifier,
                             productId, transactionReceipt, originalTransactionIdentifier,
                             transactionDate, discountId, expirationDate, jwsRepresentation,
-                            quantity,
+                            quantity, isFinished,
                         });
                         return;
                     }
@@ -291,7 +295,8 @@ namespace CdvPurchase {
                                     transactionIdentifier, productId,
                                     originalTransactionIdentifier,
                                     transactionDate, discountId,
-                                    expirationDate, jwsRepresentation, quantity);
+                                    expirationDate, jwsRepresentation, quantity,
+                                    isFinished);
                             }
                             break;
                         case 'PaymentTransactionStateDeferred':

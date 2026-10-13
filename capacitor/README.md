@@ -63,7 +63,16 @@ store.when().approved((transaction) => {
 });
 ```
 
-`approved` fires for already-fulfilled non-consumables and non-renewing subscriptions on every app launch. Make fulfillment **idempotent on the transaction id**: your server (or app) must treat re-delivery of an already-fulfilled transaction id as a no-op.
+`approved` fires for already-fulfilled non-consumables and non-renewing subscriptions on every app launch. Those transactions have `isAcknowledged === true` (you already finished them), so you can skip them without keeping your own list of processed ids:
+
+```typescript
+store.when().approved((transaction) => {
+  if (transaction.isAcknowledged) return transaction.finish(); // already delivered
+  deliverToServer(transaction).then(() => transaction.finish());
+});
+```
+
+`isAcknowledged` is `false` for transactions you haven't finished yet, and becomes `true` once you call `finish()`. It's the same flag Google Play uses for acknowledged purchases. On iOS it is only set by this Capacitor plugin: Cordova apps (StoreKit 1, or the `cordova-plugin-purchase-storekit2` plugin) leave it `undefined`. Keeping server-side fulfillment idempotent on the transaction id is still good practice: an app killed between delivery and `finish()` gets the transaction again, unfinished.
 
 ## Device info for receipt validation
 

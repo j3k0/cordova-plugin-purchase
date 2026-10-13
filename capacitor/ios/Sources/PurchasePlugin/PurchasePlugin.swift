@@ -110,7 +110,8 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
         // to JS so existing purchases are visible immediately on app launch
         // (without requiring a manual restore).
         Task {
-            for await result in Transaction.currentEntitlements {
+            let (entitlements, unfinishedIds) = await self.entitlementsWithUnfinishedIds()
+            for result in entitlements {
                 switch result {
                 case .verified(let transaction):
                     if transaction.isUpgraded {
@@ -123,7 +124,8 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
                     }
                     await self.emitTransactionUpdate(transaction,
                         state: "PaymentTransactionStateRestored",
-                        jwsRepresentation: result.jwsRepresentation)
+                        jwsRepresentation: result.jwsRepresentation,
+                        isFinished: !unfinishedIds.contains(transaction.id))
                 case .unverified(let transaction, let error):
                     debugLog("init: unverified entitlement id=\(transaction.id) product=\(transaction.productID) error=\(error)")
                 }
@@ -143,7 +145,8 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
                     debugLog("init: emitting unfinished transaction id=\(transaction.id) product=\(transaction.productID)")
                     await self.emitTransactionUpdate(transaction,
                         state: "PaymentTransactionStateRestored",
-                        jwsRepresentation: result.jwsRepresentation)
+                        jwsRepresentation: result.jwsRepresentation,
+                        isFinished: false)
                 case .unverified(let transaction, let error):
                     debugLog("init: unverified unfinished transaction id=\(transaction.id) product=\(transaction.productID) error=\(error)")
                 }
@@ -323,7 +326,8 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
         Task {
             do {
                 try await AppStore.sync()
-                for await result in Transaction.currentEntitlements {
+                let (entitlements, unfinishedIds) = await entitlementsWithUnfinishedIds()
+                for result in entitlements {
                     switch result {
                     case .verified(let transaction):
                         if transaction.isUpgraded {
@@ -335,7 +339,8 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
                         _ = await markEmittedToJs(transaction.id)
                         await emitTransactionUpdate(transaction,
                                                     state: "PaymentTransactionStateRestored",
-                                                    jwsRepresentation: result.jwsRepresentation)
+                                                    jwsRepresentation: result.jwsRepresentation,
+                                                    isFinished: !unfinishedIds.contains(transaction.id))
                     case .unverified(let transaction, let error):
                         debugLog("restore: unverified entitlement id=\(transaction.id) product=\(transaction.productID) error=\(error)")
                     }
@@ -452,6 +457,29 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    /// Current entitlements, plus the ids of every transaction the app has
+    /// not finished yet. Used to tell finished entitlements apart from
+    /// unfinished ones: finished non-consumables and non-renewing
+    /// subscriptions stay in Transaction.currentEntitlements and are
+    /// re-emitted at every launch.
+    ///
+    /// The unfinished snapshot is taken AFTER listing entitlements, so an
+    /// entitlement is never wrongly reported as finished: anything listed
+    /// that is still unfinished is in the snapshot. The only possible error
+    /// is the safe one (finished in between, reported as unfinished).
+    @available(iOS 15.0, *)
+    private func entitlementsWithUnfinishedIds() async -> ([VerificationResult<Transaction>], Set<UInt64>) {
+        var entitlements: [VerificationResult<Transaction>] = []
+        for await result in Transaction.currentEntitlements {
+            entitlements.append(result)
+        }
+        var ids = Set<UInt64>()
+        for await result in Transaction.unfinished {
+            ids.insert(result.unsafePayloadValue.id)
+        }
+        return (entitlements, ids)
+    }
+
     /// Atomically check-and-mark a transaction id as emitted to the JS layer.
     /// Returns false when it was already emitted this session. "Emitted" is
     /// unrelated to Apple's finished state — it only prevents duplicate
@@ -470,7 +498,8 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
     @available(iOS 15.0, *)
     private func emitTransactionUpdate(_ transaction: Transaction, state: String,
                                        errorCode: Int? = nil, errorText: String? = nil,
-                                       jwsRepresentation: String? = nil) async {
+                                       jwsRepresentation: String? = nil,
+                                       isFinished: Bool? = nil) async {
         let transactionId = String(transaction.id)
         // Serialized on the main thread — see SK2State.unfinishedTransactions.
         await MainActor.run {
@@ -498,6 +527,11 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
         }
         if let jws = jwsRepresentation {
             data["jwsRepresentation"] = jws
+        }
+        // Whether the app already called finish() on this transaction. Only
+        // set when known (Restored emissions), so JS can skip re-delivery.
+        if let isFinished = isFinished {
+            data["isFinished"] = isFinished
         }
 
         notifyListeners("transactionUpdated", data: data)
