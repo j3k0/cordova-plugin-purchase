@@ -100,7 +100,8 @@ namespace CdvPurchase {
                 if (!this.retry) this.retry = new Retry();
                 this.log.info(`Validation failed (${payload.message}), retry in ${this.retry.retryTimeout}ms (attempt ${attempts + 1}/${this.maxAttempts})`);
                 this.retry.retry(() => {
-                    this.add(receipt);
+                    // the request is still counted as pending, so don't count it again
+                    this.receiptsToValidate.add(receipt);
                     this.run();
                 });
                 return true;
@@ -152,8 +153,9 @@ namespace CdvPurchase {
 
                 const onResponse = async (r: ReceiptResponse) => {
                     const { receipt, payload } = r;
-                    this.incrResponsesCounter();
+                    // a retried request is still pending: only count final responses
                     if (this.scheduleRetry(receipt, payload)) return;
+                    this.incrResponsesCounter();
                     try {
                         const adapter = this.controller.adapters.find(receipt.platform);
                         await adapter?.handleReceiptValidationResponse(receipt, payload);

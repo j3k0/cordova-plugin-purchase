@@ -24,6 +24,7 @@ async function runValidator(outcome: AjaxOutcome | AjaxOutcome[]) {
   // A list of outcomes is served one per request, the last one repeats.
   const outcomes = Array.isArray(outcome) ? outcome : [outcome];
   let calls = 0;
+  let counters: { requests: number, responses: number }[] = [];
   const platform = CdvPurchase.Platform.GOOGLE_PLAY;
   const adapter = {
     id: platform,
@@ -53,9 +54,11 @@ async function runValidator(outcome: AjaxOutcome | AjaxOutcome[]) {
     finish: async () => {},
   };
 
+  let validator: CdvPurchase.Internal.Validator;
   const originalAjax = CdvPurchase.Utils.ajax;
   (CdvPurchase.Utils as any).ajax = (_log: CdvPurchase.Logger, opts: any) => {
     const outcome = outcomes[Math.min(calls++, outcomes.length - 1)];
+    counters.push({ requests: validator.numRequests, responses: validator.numResponses });
     setTimeout(() => {
       if ('success' in outcome) opts.success(outcome.success);
       else opts.error(outcome.error.status, outcome.error.message, null);
@@ -64,17 +67,18 @@ async function runValidator(outcome: AjaxOutcome | AjaxOutcome[]) {
   };
 
   try {
-    const validator = new CdvPurchase.Internal.Validator(controller, makeLogger());
+    validator = new CdvPurchase.Internal.Validator(controller, makeLogger());
     (validator as any).retry = new CdvPurchase.Internal.Retry(1, 1); // retry fast
     validator.add(new CdvPurchase.Receipt(platform, { verify: async () => {}, finish: async () => {} }));
     validator.run();
     for (let i = 0; i < 100 && verified.length + unverified.length === 0; i++)
       await new Promise(r => setTimeout(r, 10));
     await new Promise(r => setTimeout(r, 50)); // let any extra retry show up
+    counters.push({ requests: validator.numRequests, responses: validator.numResponses });
   } finally {
     (CdvPurchase.Utils as any).ajax = originalAjax;
   }
-  return { verified, unverified, calls };
+  return { verified, unverified, calls, counters };
 }
 
 /** Error body as sent by iaptic: HTTP 200 with ok:false. */
@@ -140,6 +144,18 @@ describe('retry on temporary failures', () => {
     expect(calls).toBe(3);
     expect(unverified).toHaveLength(0);
     expect(verified).toHaveLength(1);
+  });
+
+  test('a receipt waiting for a retry stays counted as pending', async () => {
+    const failure = { error: { status: 0, message: '' } };
+    const { counters } = await runValidator([failure, failure, ok]);
+    // one entry per request, then the final state
+    expect(counters).toEqual([
+      { requests: 1, responses: 0 },
+      { requests: 1, responses: 0 },
+      { requests: 1, responses: 0 },
+      { requests: 1, responses: 1 },
+    ]);
   });
 
   test('gives up after 4 attempts and fires unverified once', async () => {
