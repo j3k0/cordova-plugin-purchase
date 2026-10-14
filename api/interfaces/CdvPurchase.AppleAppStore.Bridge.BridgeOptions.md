@@ -359,13 +359,17 @@ ___
 
 ### restored
 
-• **restored**: (`transactionIdentifier`: `string`, `productId`: `string`, `originalTransactionIdentifier?`: `string`, `transactionDate?`: `string`, `discountId?`: `string`, `expirationDate?`: `string`, `jwsRepresentation?`: `string`, `quantity?`: `number`) => `void`
+• **restored**: (`transactionIdentifier`: `string`, `productId`: `string`, `originalTransactionIdentifier?`: `string`, `transactionDate?`: `string`, `discountId?`: `string`, `expirationDate?`: `string`, `jwsRepresentation?`: `string`, `quantity?`: `number`, `isFinished?`: `boolean`) => `void`
 
-Called when a transaction is in "restored" state
+Called when a transaction is in "restored" state.
+
+`isFinished` is set by StoreKit 2 bridges when known: true when the app
+already finished the transaction (e.g. a finished entitlement re-emitted
+at launch), false when it is still unfinished.
 
 #### Type declaration
 
-▸ (`transactionIdentifier`, `productId`, `originalTransactionIdentifier?`, `transactionDate?`, `discountId?`, `expirationDate?`, `jwsRepresentation?`, `quantity?`): `void`
+▸ (`transactionIdentifier`, `productId`, `originalTransactionIdentifier?`, `transactionDate?`, `discountId?`, `expirationDate?`, `jwsRepresentation?`, `quantity?`, `isFinished?`): `void`
 
 ##### Parameters
 
@@ -379,6 +383,7 @@ Called when a transaction is in "restored" state
 | `expirationDate?` | `string` |
 | `jwsRepresentation?` | `string` |
 | `quantity?` | `number` |
+| `isFinished?` | `boolean` |
 
 ##### Returns
 

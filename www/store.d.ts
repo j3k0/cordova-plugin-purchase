@@ -366,6 +366,18 @@ declare namespace CdvPurchase {
             /** List of verified receipts */
             verifiedReceipts: VerifiedReceipt[];
             constructor(controller: ValidatorController, log: Logger);
+            /** Maximum number of validation attempts for a receipt when failures are temporary */
+            maxAttempts: number;
+            /** Number of failed attempts in a row, per receipt */
+            private failedAttempts;
+            /** Backoff for retrying temporary failures (created on first use, it listens to the "online" event) */
+            private retry?;
+            /**
+             * Schedule a new validation if the failure is temporary and attempts remain.
+             *
+             * @return true if a retry was scheduled
+             */
+            private scheduleRetry;
             numRequests: number;
             numResponses: number;
             incrRequestsCounter(): void;
@@ -1060,7 +1072,7 @@ declare namespace CdvPurchase {
     /**
      * Current release number of the plugin.
      */
-    const PLUGIN_VERSION = "13.19.0";
+    const PLUGIN_VERSION = "13.19.1";
     /**
      * Entry class of the plugin.
      */
@@ -2195,7 +2207,23 @@ declare namespace CdvPurchase {
         lastRenewalDate?: Date;
         /** Time when the subscription is set to expire following this transaction */
         expirationDate?: Date;
-        /** True when the transaction has been acknowledged to the platform. */
+        /**
+         * True when the transaction has been acknowledged to the platform.
+         *
+         * - Google Play: the purchase was acknowledged (or consumed).
+         * - Apple App Store (StoreKit 2, Capacitor build only): the transaction was finished. StoreKit 2 re-reports
+         *   finished non-consumables and non-renewing subscriptions as `approved` at every
+         *   app launch; check this flag in your `approved()` handler to skip delivering them again.
+         *
+         * Undefined when the platform doesn't report it (including StoreKit 1 and the Cordova
+         * `cordova-plugin-purchase-storekit2` plugin).
+         *
+         * @example
+         * store.when().approved(transaction => {
+         *   if (transaction.isAcknowledged) return transaction.finish(); // already delivered
+         *   deliver(transaction).then(() => transaction.finish());
+         * });
+         */
         isAcknowledged?: boolean;
         /** True when the transaction is still pending payment. */
         isPending?: boolean;
@@ -3029,7 +3057,7 @@ declare namespace CdvPurchase {
             /** Extended callbacks with SK2 fields (same as SK2BridgeCallbacks) */
             interface CapacitorBridgeCallbacks extends Bridge.BridgeCallbacks {
                 purchased: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string, quantity?: number) => void;
-                restored: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string, quantity?: number) => void;
+                restored: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string, quantity?: number, isFinished?: boolean) => void;
             }
             class CapacitorNativeBridge implements Bridge.BridgeInterface {
                 appStoreReceipt: ApplicationReceipt | null;
@@ -3293,8 +3321,14 @@ declare namespace CdvPurchase {
                 deferred: (productId: string) => void;
                 /** Called when a transaction is in "finished" state */
                 finished: (transactionIdentifier: string, productId: string) => void;
-                /** Called when a transaction is in "restored" state */
-                restored: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string, quantity?: number) => void;
+                /**
+                 * Called when a transaction is in "restored" state.
+                 *
+                 * `isFinished` is set by StoreKit 2 bridges when known: true when the app
+                 * already finished the transaction (e.g. a finished entitlement re-emitted
+                 * at launch), false when it is still unfinished.
+                 */
+                restored: (transactionIdentifier: string, productId: string, originalTransactionIdentifier?: string, transactionDate?: string, discountId?: string, expirationDate?: string, jwsRepresentation?: string, quantity?: number, isFinished?: boolean) => void;
                 /** Called when the application receipt is refreshed */
                 receiptsRefreshed: (receipt: ApplicationReceipt) => void;
                 /** Called when a call to "restore" failed */
@@ -6735,6 +6769,9 @@ declare namespace CdvPurchase {
          *
          * Don't revoke access on a transient failure: keep what your app (or
          * your server) last knew, and validate again later.
+         *
+         * The plugin already retried a few times (with backoff) before firing
+         * a transient failure.
          *
          * False when the validator gave a definitive answer (e.g. invalid
          * receipt, expired subscription, authentication error).

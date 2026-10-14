@@ -322,7 +322,11 @@ ___
 
 • **restored**: (`transactionIdentifier`: `string`, `productId`: `string`, `originalTransactionIdentifier?`: `string`, `transactionDate?`: `string`, `discountId?`: `string`, `expirationDate?`: `string`, `jwsRepresentation?`: `string`, `quantity?`: `number`) => `void`
 
-Called when a transaction is in "restored" state
+Called when a transaction is in "restored" state.
+
+`isFinished` is set by StoreKit 2 bridges when known: true when the app
+already finished the transaction (e.g. a finished entitlement re-emitted
+at launch), false when it is still unfinished.
 
 #### Type declaration
 

@@ -2,7 +2,22 @@
 
 ## 13.19
 
-### Unreleased
+### 13.19.1
+
+#### (feat) Capacitor iOS: `isAcknowledged` tells already-finished transactions apart
+
+StoreKit 2 re-reports finished non-consumables and non-renewing subscriptions as `approved` at every app launch. The Capacitor plugin now sends `isFinished` on restored transactions (compared against `Transaction.unfinished`), surfaced as `transaction.isAcknowledged` — the same flag Google Play uses. `finish()` also sets it to `true`.
+
+Use it to skip already-delivered purchases without keeping your own list of processed ids:
+
+```typescript
+store.when().approved((transaction) => {
+  if (transaction.isAcknowledged) return transaction.finish(); // already delivered
+  deliverToServer(transaction).then(() => transaction.finish());
+});
+```
+
+`isAcknowledged` is `false` for transactions you haven't finished yet, and becomes `true` once you call `finish()`. Keeping server-side fulfillment idempotent on the transaction id is still good practice: an app killed between delivery and `finish()` gets the transaction again, unfinished. The flag is only set by the Capacitor build on iOS. See [#1714](https://github.com/j3k0/cordova-plugin-purchase/issues/1714).
 
 #### (fix) Retry receipt validation on temporary failures
 

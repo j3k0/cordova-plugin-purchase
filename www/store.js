@@ -521,6 +521,10 @@ var CdvPurchase;
                 this.receiptsToValidate = new ReceiptsToValidate();
                 /** List of verified receipts */
                 this.verifiedReceipts = [];
+                /** Maximum number of validation attempts for a receipt when failures are temporary */
+                this.maxAttempts = 4;
+                /** Number of failed attempts in a row, per receipt */
+                this.failedAttempts = new Map();
                 this.numRequests = 0;
                 this.numResponses = 0;
                 /**
@@ -533,6 +537,36 @@ var CdvPurchase;
                 this.cache = {};
                 this.controller = controller;
                 this.log = log.child('Validator');
+            }
+            /**
+             * Schedule a new validation if the failure is temporary and attempts remain.
+             *
+             * @return true if a retry was scheduled
+             */
+            scheduleRetry(receipt, payload) {
+                var _a;
+                if (payload.ok || !isRetriableError(payload)) {
+                    this.failedAttempts.delete(receipt);
+                    if (payload.ok && this.retry)
+                        this.retry.retryTimeout = this.retry.minTimeout;
+                    return false;
+                }
+                const attempts = ((_a = this.failedAttempts.get(receipt)) !== null && _a !== void 0 ? _a : 0) + 1;
+                if (attempts >= this.maxAttempts) {
+                    this.log.warn(`Validation failed ${attempts} times, giving up: ${payload.message}`);
+                    this.failedAttempts.delete(receipt);
+                    return false;
+                }
+                this.failedAttempts.set(receipt, attempts);
+                if (!this.retry)
+                    this.retry = new Internal.Retry();
+                this.log.info(`Validation failed (${payload.message}), retry in ${this.retry.retryTimeout}ms (attempt ${attempts + 1}/${this.maxAttempts})`);
+                this.retry.retry(() => {
+                    // the request is still counted as pending, so don't count it again
+                    this.receiptsToValidate.add(receipt);
+                    this.run();
+                });
+                return true;
             }
             incrRequestsCounter() {
                 this.numRequests = (this.numRequests + 1) | 0;
@@ -574,6 +608,9 @@ var CdvPurchase;
                 const onResponse = (r) => __awaiter(this, void 0, void 0, function* () {
                     var _a;
                     const { receipt, payload } = r;
+                    // a retried request is still pending: only count final responses
+                    if (this.scheduleRetry(receipt, payload))
+                        return;
                     this.incrResponsesCounter();
                     try {
                         const adapter = this.controller.adapters.find(receipt.platform);
@@ -768,10 +805,13 @@ var CdvPurchase;
                                     data: { latest_receipt: (_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.latest_receipt },
                                 }
                             });
-                        this.cache[bodyTransactionHash] = {
-                            payload: response,
-                            expires: (+new Date()) + 120000, // expires in 2 minutes
-                        };
+                        // don't cache temporary errors, so a retry makes a new request
+                        if (response.ok || !isTransientError(response)) {
+                            this.cache[bodyTransactionHash] = {
+                                payload: response,
+                                expires: (+new Date()) + 120000, // expires in 2 minutes
+                            };
+                        }
                         callback({ receipt, payload: response });
                     },
                     error: (status, message, data) => {
@@ -823,6 +863,14 @@ var CdvPurchase;
             return false;
         }
         Internal.isTransientError = isTransientError;
+        /**
+         * True if a validation failure is worth retrying: a temporary error
+         * (see isTransientError) or an invalid response from the validator.
+         * Validator verdicts (invalid receipt, expired, ...) are not retried.
+         */
+        function isRetriableError(payload) {
+            return isTransientError(payload) || payload.code === CdvPurchase.ErrorCode.BAD_RESPONSE;
+        }
         /**
          * Check if a payload looks like a valid validator response.
          *
@@ -2023,7 +2071,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.19.0';
+    CdvPurchase.PLUGIN_VERSION = '13.19.1';
     /**
      * Entry class of the plugin.
      */
@@ -3744,13 +3792,19 @@ var CdvPurchase;
                             yield this.receiptsUpdated.wait();
                             this.log.info('finish: ' + transactionIdentifier + ' - ' + productId);
                             this.removeTransactionInProgress(productId);
-                            yield this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.FINISHED);
+                            const finishedTransaction = yield this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.FINISHED);
+                            finishedTransaction.isAcknowledged = true;
                             this.receiptsUpdated.call();
                         }),
-                        restored: (transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity) => __awaiter(this, void 0, void 0, function* () {
+                        restored: (transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity, isFinished) => __awaiter(this, void 0, void 0, function* () {
                             this.log.info('restore: ' + transactionIdentifier + ' - ' + productId);
                             const transaction = yield this.upsertTransaction(productId, transactionIdentifier, CdvPurchase.TransactionState.APPROVED);
                             transaction.refresh(productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity);
+                            // StoreKit 2 re-emits finished entitlements (non-consumables,
+                            // non-renewing subscriptions) at every launch. Expose the finished
+                            // state the same way Google Play does, so apps can skip them in approved().
+                            if (isFinished !== undefined)
+                                transaction.isAcknowledged = isFinished;
                             this.receiptsUpdated.call();
                         }),
                         receiptsRefreshed: (receipt) => {
@@ -4384,7 +4438,7 @@ var CdvPurchase;
                     }
                     // Listen for transaction updates from native
                     plugin.addListener('transactionUpdated', (data) => {
-                        this.transactionUpdated(data.state, data.errorCode, data.errorText, data.transactionIdentifier, data.productId, data.transactionReceipt, data.originalTransactionIdentifier, data.transactionDate, data.discountId, data.expirationDate, data.jwsRepresentation, data.quantity);
+                        this.transactionUpdated(data.state, data.errorCode, data.errorText, data.transactionIdentifier, data.productId, data.transactionReceipt, data.originalTransactionIdentifier, data.transactionDate, data.discountId, data.expirationDate, data.jwsRepresentation, data.quantity, data.isFinished);
                     });
                     plugin.addListener('restoreCompleted', () => {
                         this.restoreCompletedTransactionsFinished();
@@ -4405,7 +4459,7 @@ var CdvPurchase;
                         const pending = this.pendingTransactionUpdates;
                         this.pendingTransactionUpdates = [];
                         for (const args of pending) {
-                            this.transactionUpdated(args.state, args.errorCode, args.errorText, args.transactionIdentifier, args.productId, args.transactionReceipt, args.originalTransactionIdentifier, args.transactionDate, args.discountId, args.expirationDate, args.jwsRepresentation, args.quantity);
+                            this.transactionUpdated(args.state, args.errorCode, args.errorText, args.transactionIdentifier, args.productId, args.transactionReceipt, args.originalTransactionIdentifier, args.transactionDate, args.discountId, args.expirationDate, args.jwsRepresentation, args.quantity, args.isFinished);
                         }
                         if (this.options.ready)
                             this.options.ready();
@@ -4489,13 +4543,13 @@ var CdvPurchase;
                         .catch((err) => errorCb(CdvPurchase.ErrorCode.LOAD, (err === null || err === void 0 ? void 0 : err.message) || 'loadReceipts failed'));
                 }
                 // Called when the native side sends a transaction update
-                transactionUpdated(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity) {
+                transactionUpdated(state, errorCode, errorText, transactionIdentifier, productId, transactionReceipt, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity, isFinished) {
                     if (!this.initialized) {
                         this.pendingTransactionUpdates.push({
                             state, errorCode, errorText, transactionIdentifier,
                             productId, transactionReceipt, originalTransactionIdentifier,
                             transactionDate, discountId, expirationDate, jwsRepresentation,
-                            quantity,
+                            quantity, isFinished,
                         });
                         return;
                     }
@@ -4531,7 +4585,7 @@ var CdvPurchase;
                             // purchased, but is meaningless here: consumables cannot be
                             // restored, so restored transactions are always quantity 1.
                             if (this.options.restored) {
-                                this.options.restored(transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity);
+                                this.options.restored(transactionIdentifier, productId, originalTransactionIdentifier, transactionDate, discountId, expirationDate, jwsRepresentation, quantity, isFinished);
                             }
                             break;
                         case 'PaymentTransactionStateDeferred':
