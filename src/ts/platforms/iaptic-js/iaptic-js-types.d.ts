@@ -2,7 +2,9 @@ declare namespace ModuleIapticJS {
     /**
      * Type of product that can be purchased
      */
-    export type ProductType = 'subscription' | 'consumable' | 'non consumable' | 'paid subscription';
+    export type ProductType = 'subscription' | 'consumable' | 'non consumable' | 'paid subscription' | 'non renewing subscription' | 'application' | 'product'
+        /** @deprecated never sent by the server, use 'non consumable' */
+        | 'non_consumable';
 
     /**
      * Represents a pricing phase for an offer
@@ -24,7 +26,7 @@ declare namespace ModuleIapticJS {
         /**
          * Defines when payment is collected
          */
-        paymentMode: 'PayAsYouGo' | 'PayUpFront';
+        paymentMode: 'PayAsYouGo' | 'UpFront' | 'FreeTrial';
     }
 
     /**
@@ -36,7 +38,7 @@ declare namespace ModuleIapticJS {
         /** Payment platform identifier (e.g., 'stripe', 'google', 'apple') */
         platform: string;
         /** Type of the offer */
-        offerType: 'Subscription' | 'Default';
+        offerType: 'Subscription' | 'Default' | 'Introductory';
         /** Array of pricing phases that make up this offer's payment schedule */
         pricingPhases: PricingPhase[];
     }
@@ -82,7 +84,9 @@ declare namespace ModuleIapticJS {
         /** Date of the expiration */
         expirationDate: string;
         /** Intent of the renewal */
-        renewalIntent: 'Renew' | 'Cancel';
+        renewalIntent: 'Lapse' | 'Renew'
+        /** @deprecated never sent by the server, use 'Lapse' */
+        | 'Cancel';
         /** Whether the purchase is a trial period */
         isTrialPeriod: boolean;
         /** Price in micros (1/1,000,000 of the currency unit) */
@@ -110,7 +114,7 @@ declare namespace ModuleIapticJS {
     /** Plan change request */
     export interface PlanChange {
         /** Unique identifier for the purchase to replace (optional) */
-        purchaseId: string;
+        purchaseId?: string;
         /** New offer to subscribe to */
         offerId: string;
         /** Optional access token for the user */
@@ -123,8 +127,8 @@ declare namespace ModuleIapticJS {
     export interface Config {
         /** Adapter type (currently only 'stripe' is supported) */
         type: 'stripe';
-        /** Stripe publishable key */
-        stripePublicKey: string;
+        /** @deprecated not required anymore (removed in iaptic-js 2.0.0) */
+        stripePublicKey?: string;
         /** Your application name as configured on iaptic.com */
         appName: string;
         /** Your Iaptic public API key */
