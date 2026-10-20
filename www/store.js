@@ -9678,6 +9678,7 @@ var CdvPurchase;
             this.latestReceipt = response.latest_receipt;
             this.nativeTransactions = [response.transaction];
             this.warning = response.warning;
+            this.cache = response.cache;
             this.validationDate = response.date ? new Date(response.date) : new Date();
             Object.defineProperty(this, 'raw', { 'enumerable': false, get() { return response; } });
             Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
@@ -9699,6 +9700,7 @@ var CdvPurchase;
             this.latestReceipt = response.latest_receipt;
             this.nativeTransactions = [response.transaction];
             this.warning = response.warning;
+            this.cache = response.cache;
         }
         /** Finish all transactions in the receipt */
         finish() {
