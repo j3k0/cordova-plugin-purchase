@@ -26,7 +26,9 @@ declare namespace ModuleIapticJS {
         /**
          * Defines when payment is collected
          */
-        paymentMode: 'PayAsYouGo' | 'UpFront' | 'FreeTrial';
+        paymentMode: 'PayAsYouGo' | 'UpFront' | 'FreeTrial'
+        /** @deprecated never sent by the server, use 'UpFront' */
+        | 'PayUpFront';
     }
 
     /**
@@ -114,7 +116,7 @@ declare namespace ModuleIapticJS {
     /** Plan change request */
     export interface PlanChange {
         /** Unique identifier for the purchase to replace (optional) */
-        purchaseId?: string;
+        purchaseId: string;
         /** New offer to subscribe to */
         offerId: string;
         /** Optional access token for the user */
@@ -127,8 +129,8 @@ declare namespace ModuleIapticJS {
     export interface Config {
         /** Adapter type (currently only 'stripe' is supported) */
         type: 'stripe';
-        /** @deprecated not required anymore (removed in iaptic-js 2.0.0) */
-        stripePublicKey?: string;
+        /** Stripe publishable key */
+        stripePublicKey: string;
         /** Your application name as configured on iaptic.com */
         appName: string;
         /** Your Iaptic public API key */
