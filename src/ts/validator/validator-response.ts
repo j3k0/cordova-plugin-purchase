@@ -29,12 +29,25 @@ namespace CdvPurchase {
                      *
                      * It might be present when the server had to fallback to a backup validation solution. */
                     warning?: string;
+                    /** Present when the server answered from its last successful validation of this
+                     * receipt because the store couldn't be reached, instead of asking the store. */
+                    cache?: ValidatorCacheInfo;
                     /** Date and time the receipt was validated.
                      *
                      * It will provide the client with a more reliable clock time
                      * than the user's device when needed. */
                     date?: ISODate;
                 }
+            }
+
+            /** Marker added by the validator to an answer that wasn't confirmed by the store just now. */
+            export interface ValidatorCacheInfo {
+                /** Where the answer comes from. `last-verified`: the last answer the store confirmed for this exact receipt. */
+                source: 'last-verified' | (string & {});
+                /** Why the cache was used. `store_unreachable`: the store (Apple, Google, ...) couldn't be reached. */
+                reason: 'store_unreachable' | (string & {});
+                /** When the store last confirmed this receipt (ISO 8601). */
+                lastConfirmedAt: ISODate;
             }
 
             export type NativeTransaction =

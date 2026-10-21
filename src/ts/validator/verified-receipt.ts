@@ -82,6 +82,18 @@ namespace CdvPurchase {
         warning?: string;
 
         /**
+         * Set when the validator answered from its last successful validation of this receipt,
+         * because the store (Apple, Google, ...) couldn't be reached.
+         *
+         * `undefined` means the store confirmed this receipt during the validation.
+         * The content is the last one confirmed by the store, `cache.lastConfirmedAt` tells when.
+         *
+         * Receipts with a `cache` are as valid as the others (no purchase is owned past its `expiryDate`),
+         * but you might prefer to validate again later, or tell your users.
+         */
+        cache?: Validator.Response.ValidatorCacheInfo;
+
+        /**
          * Id of the product that have been validated. Used internally.
          */
         id: string;
@@ -99,6 +111,7 @@ namespace CdvPurchase {
             this.latestReceipt = response.latest_receipt;
             this.nativeTransactions = [response.transaction];
             this.warning = response.warning;
+            this.cache = response.cache;
             this.validationDate = response.date ? new Date(response.date) : new Date();
             Object.defineProperty(this, 'raw', { 'enumerable': false, get() { return response; } });
             Object.defineProperty(this, 'finish', { 'enumerable': false, get() { return () => decorator.finish(this); } });
@@ -116,6 +129,7 @@ namespace CdvPurchase {
             this.latestReceipt = response.latest_receipt;
             this.nativeTransactions = [response.transaction];
             this.warning = response.warning;
+            this.cache = response.cache;
         }
 
         /** Finish all transactions in the receipt */

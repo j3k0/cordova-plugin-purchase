@@ -6683,12 +6683,24 @@ declare namespace CdvPurchase {
                      *
                      * It might be present when the server had to fallback to a backup validation solution. */
                     warning?: string;
+                    /** Present when the server answered from its last successful validation of this
+                     * receipt because the store couldn't be reached, instead of asking the store. */
+                    cache?: ValidatorCacheInfo;
                     /** Date and time the receipt was validated.
                      *
                      * It will provide the client with a more reliable clock time
                      * than the user's device when needed. */
                     date?: ISODate;
                 };
+            }
+            /** Marker added by the validator to an answer that wasn't confirmed by the store just now. */
+            interface ValidatorCacheInfo {
+                /** Where the answer comes from. `last-verified`: the last answer the store confirmed for this exact receipt. */
+                source: 'last-verified' | (string & {});
+                /** Why the cache was used. `store_unreachable`: the store (Apple, Google, ...) couldn't be reached. */
+                reason: 'store_unreachable' | (string & {});
+                /** When the store last confirmed this receipt (ISO 8601). */
+                lastConfirmedAt: ISODate;
             }
             type NativeTransaction = ({
                 type: 'braintree';
@@ -6819,6 +6831,17 @@ declare namespace CdvPurchase {
          * When a warning is present, you should threat the content of this receipt accordingly.
          */
         warning?: string;
+        /**
+         * Set when the validator answered from its last successful validation of this receipt,
+         * because the store (Apple, Google, ...) couldn't be reached.
+         *
+         * `undefined` means the store confirmed this receipt during the validation.
+         * The content is the last one confirmed by the store, `cache.lastConfirmedAt` tells when.
+         *
+         * Receipts with a `cache` are as valid as the others (no purchase is owned past its `expiryDate`),
+         * but you might prefer to validate again later, or tell your users.
+         */
+        cache?: Validator.Response.ValidatorCacheInfo;
         /**
          * Id of the product that have been validated. Used internally.
          */

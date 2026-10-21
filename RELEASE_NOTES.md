@@ -1,5 +1,31 @@
 # Release Notes - Cordova Plugin Purchase
 
+## Unreleased
+
+#### (feat) `VerifiedReceipt.cache` tells cached answers from store-confirmed ones
+
+When the store (Apple, Google, ...) is unreachable, the iaptic validator can answer with the last successful validation of the same receipt, instead of an error (subscriptions only, confirmed within the last 7 days, not past expiry). The answer is a normal success: `verified` fires, with `receipt.cache` set:
+
+```ts
+store.when().verified((receipt) => {
+    if (receipt.cache) {
+        // { source: 'last-verified', reason: 'store_unreachable', lastConfirmedAt: '2026-10-19T10:00:00.000Z' }
+        // Same content as the last store-confirmed validation.
+        // The plugin doesn't re-validate on its own: call receipt.sourceReceipt.verify() to check again later.
+    }
+});
+```
+
+`receipt.cache` is `undefined` when the store confirmed the receipt during the validation. Nothing in the plugin reads it: it doesn't trigger a new validation, so it's up to your app to call `receipt.sourceReceipt.verify()` later if you want a store-confirmed answer. `receipt.warning` carries a human-readable version of the same information.
+
+Nothing else changes: ownership still ends at the purchase's `expiryDate`, and a new successful validation replaces the whole content of the verified receipt (no merge), which is safe because the server always answers with the whole receipt.
+
+What to expect during an outage:
+
+- **Mid-session:** a validation error fires `unverified` (`transient: true`) but `store.verifiedReceipts` stays untouched, so `store.owned()` keeps its answer until `expiryDate`.
+- **Cold start:** `store.verifiedReceipts` is kept in memory only, so with a validator configured nothing is owned until a validation succeeds. For apps that accept caching entitlements on the device, enable `OfflineEntitlements` (v13.18+) and use `store.owned(id) || offline.isOwned(id)`. The plugin doesn't persist anything by default.
+- **Never-verified or mixed receipts** (subscription plus consumable) are not answered from the cache: they fail with `CONNECTION_FAILED` (6778002), which is `transient: true`. Keep the access you already granted and retry later.
+
 ## 13.19
 
 ### 13.19.1
