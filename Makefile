@@ -1,6 +1,6 @@
 NODE_MODULES?=node_modules
 
-.PHONY: clean help all build compile typedoc typedoc-dev doc doc-contrib doc-api javalint todo capacitor-package capacitor-publish check-versions
+.PHONY: clean help all build compile typedoc typedoc-dev doc doc-contrib doc-api javalint todo capacitor-package capacitor-publish check-versions sync-iaptic-js
 
 help:
 	@echo ""
@@ -22,6 +22,7 @@ help:
 	@echo "    capacitor-package . Build Capacitor plugin package"
 	@echo "    capacitor-publish . Publish Capacitor plugin to npm"
 	@echo "    check-versions .... Verify all version numbers match"
+	@echo "    sync-iaptic-js .... Regenerate the vendored iaptic-js types from the npm package"
 	@echo ""
 	@echo "(c)2014-, Jean-Christophe Hoelt <hoelt@fovea.cc>"
 	@echo ""
@@ -35,6 +36,9 @@ all: build doc capacitor-package
 
 build: compile
 	@make tests
+
+sync-iaptic-js:
+	@node scripts/sync-iaptic-js-types.js
 
 compile:
 	@make check-tsc

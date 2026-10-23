@@ -1,0 +1,36 @@
+# Weekly check that the vendored iaptic-js types still match the latest
+# published iaptic-js. A failure means upstream published a change: bump the
+# `iaptic-js` devDependency, run `make sync-iaptic-js`, and review the diff
+# (the three-step delta list lives in scripts/sync-iaptic-js-types.js).
+name: iaptic-js types drift check
+
+on:
+  schedule:
+    - cron: '23 6 * * 3'
+  workflow_dispatch:
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    # Read-only: the job only inspects the npm tarball and diffs a file.
+    # Keep the third-party install from gaining the default token scope.
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      - name: Regenerate the vendored types from iaptic-js@latest
+        run: npm install --ignore-scripts --no-save iaptic-js@latest && make sync-iaptic-js
+
+      - name: Compare with the committed copy
+        run: |
+          if ! git diff --exit-code -- src/ts/platforms/iaptic-js/iaptic-js-types.d.ts; then
+            echo "::error::iaptic-js@latest differs from the pinned version. Bump the iaptic-js devDependency, run make sync-iaptic-js, review the diff."
+            exit 1
+          fi

@@ -4,13 +4,16 @@ describe('IapticJS.Transaction', () => {
 
   const context = { apiDecorators: {} } as unknown as CdvPurchase.Internal.AdapterContext;
 
+  // At runtime the server may omit these fields (that's what these tests
+  // exercise), even though the vendored contract declares them required
+  // (FOV-2228 review decided to keep the copy's types stable).
   const purchase = (fields: Partial<ModuleIapticJS.Purchase>): ModuleIapticJS.Purchase => ({
     purchaseId: 'stripe:pi_test',
     transactionId: 'stripe:pi_test',
     productId: 'stripe:prod_test',
     platform: 'stripe',
     ...fields,
-  });
+  } as ModuleIapticJS.Purchase);
 
   test('a one-time payment without dates has no dates (not Invalid Date)', () => {
     const receipt = new CdvPurchase.IapticJS.Receipt([purchase({})], 'token', context);
