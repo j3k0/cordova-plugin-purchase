@@ -2,7 +2,9 @@ declare namespace ModuleIapticJS {
     /**
      * Type of product that can be purchased
      */
-    export type ProductType = 'subscription' | 'consumable' | 'non consumable' | 'paid subscription';
+    export type ProductType = 'subscription' | 'consumable' | 'non consumable' | 'paid subscription' | 'non renewing subscription' | 'application' | 'product'
+        /** @deprecated never sent by the server, use 'non consumable' */
+        | 'non_consumable';
 
     /**
      * Represents a pricing phase for an offer
@@ -24,7 +26,9 @@ declare namespace ModuleIapticJS {
         /**
          * Defines when payment is collected
          */
-        paymentMode: 'PayAsYouGo' | 'PayUpFront';
+        paymentMode: 'PayAsYouGo' | 'UpFront' | 'FreeTrial'
+        /** @deprecated never sent by the server, use 'UpFront' */
+        | 'PayUpFront';
     }
 
     /**
@@ -36,7 +40,7 @@ declare namespace ModuleIapticJS {
         /** Payment platform identifier (e.g., 'stripe', 'google', 'apple') */
         platform: string;
         /** Type of the offer */
-        offerType: 'Subscription' | 'Default';
+        offerType: 'Subscription' | 'Default' | 'Introductory';
         /** Array of pricing phases that make up this offer's payment schedule */
         pricingPhases: PricingPhase[];
     }
@@ -82,7 +86,9 @@ declare namespace ModuleIapticJS {
         /** Date of the expiration */
         expirationDate: string;
         /** Intent of the renewal */
-        renewalIntent: 'Renew' | 'Cancel';
+        renewalIntent: 'Lapse' | 'Renew'
+        /** @deprecated never sent by the server, use 'Lapse' */
+        | 'Cancel';
         /** Whether the purchase is a trial period */
         isTrialPeriod: boolean;
         /** Price in micros (1/1,000,000 of the currency unit) */
