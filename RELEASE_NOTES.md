@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+#### (feat) The vendored `IapticJS` types are generated from iaptic-js, add `onAccessTokenChange()` and `Utils.storage*`
+
+The copy of iaptic-js's type declarations shipped by the plugin had drifted from the library more than once; it is now generated from the published package, with the plugin's historical contract kept. Declared types are unchanged except for additions that exist at runtime from iaptic-js 1.0.4: `IapticStripe.onAccessTokenChange(callback)` and `Utils.storageGetJson/storageGetString/storageSetJson/storageSetString/storageRemove`.
+
+One trade-off to know: fields the iaptic server can omit (`purchaseDate`, `expirationDate`, `currency`, `amountMicros`, ...) remain declared **required**, as they have always been. App code that reads a purchase's fields should still handle them being absent at runtime (the plugin's own IapticJS adapter does).
+
 #### (feat) `VerifiedReceipt.cache` tells cached answers from store-confirmed ones
 
 When the store (Apple, Google, ...) is unreachable, the iaptic validator can answer with the last successful validation of the same receipt, instead of an error (subscriptions only, confirmed within the last 7 days, not past expiry). The answer is a normal success: `verified` fires, with `receipt.cache` set:
