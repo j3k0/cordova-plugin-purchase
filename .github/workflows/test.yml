@@ -19,6 +19,11 @@ jobs:
 
       - run: npm ci
 
+      - name: Check the vendored iaptic-js types are in sync
+        run: |
+          make sync-iaptic-js
+          git diff --exit-code -- src/ts/platforms/iaptic-js/iaptic-js-types.d.ts
+
       - name: Compile TypeScript
         run: make compile
 
