@@ -20,7 +20,7 @@ type AjaxOutcome =
   | { success: unknown }
   | { error: { status: number; message: string } };
 
-async function runValidator(outcome: AjaxOutcome | AjaxOutcome[]) {
+async function runValidator(outcome: AjaxOutcome | AjaxOutcome[], adapterThrows = false) {
   // A list of outcomes is served one per request, the last one repeats.
   const outcomes = Array.isArray(outcome) ? outcome : [outcome];
   let calls = 0;
@@ -33,7 +33,9 @@ async function runValidator(outcome: AjaxOutcome | AjaxOutcome[]) {
       type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
       transaction: { type: 'test', id: 't1' },
     }),
-    handleReceiptValidationResponse: async () => {},
+    handleReceiptValidationResponse: async () => {
+      if (adapterThrows) throw new Error('boom');
+    },
   } as unknown as CdvPurchase.Adapter;
   const verifiedCallbacks = new CdvPurchase.Internal.Callbacks<CdvPurchase.VerifiedReceipt>(makeLogger(), 'verified');
   const unverifiedCallbacks = new CdvPurchase.Internal.Callbacks<CdvPurchase.UnverifiedReceipt>(makeLogger(), 'unverified');
@@ -119,6 +121,16 @@ describe('unverified() transient flag', () => {
     expect(verified).toHaveLength(0);
     expect(unverified).toHaveLength(1);
     expect(unverified[0].transient).toBe(false);
+  });
+
+  test('exception while processing the answer (VERIFICATION_FAILED) → transient', async () => {
+    const { verified, unverified } = await runValidator({
+      success: { ok: true, data: { id: 'com.test.product', latest_receipt: true, transaction: { type: 'test' } } },
+    }, true);
+    expect(verified).toHaveLength(0);
+    expect(unverified).toHaveLength(1);
+    expect(unverified[0].payload.code).toBe(CdvPurchase.ErrorCode.VERIFICATION_FAILED);
+    expect(unverified[0].transient).toBe(true);
   });
 
   test('a successful validation fires verified(), not unverified()', async () => {

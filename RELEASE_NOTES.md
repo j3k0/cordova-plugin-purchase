@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-#### (changed) `unverified`: a malformed validator answer (`BAD_RESPONSE`) is now reported as `transient: true`
+#### (changed) `unverified`: `BAD_RESPONSE` and `VERIFICATION_FAILED` are now reported as `transient: true`
 
-When the validator responds with data the plugin cannot read (`BAD_RESPONSE`), the `transient` flag of the `unverified` event is now `true`, matching the plugin's own decision to retry such answers. Until 13.19.x it was `false`, which made a validator fault look like a definitive answer about the receipt: an app reacting to `transient: false` by revoking access could lock out a paying user for a server-side hiccup. `transient: true` means "no verdict on the receipt", the same rule as before for the other transient cases (server errors, timeouts, no network). Apps that check `payload.code === BAD_RESPONSE` to keep access can drop that check.
+When the validator responds with data the plugin cannot read (`BAD_RESPONSE`), the `transient` flag of the `unverified` event is now `true`, matching the plugin's own decision to retry such answers. Same for `VERIFICATION_FAILED`, fired when the plugin throws while processing the validator's answer. Until 13.19.x both were `false`, which made a validator fault look like a definitive answer about the receipt: an app reacting to `transient: false` by revoking access could lock out a paying user for a server-side hiccup. `transient: true` means "no verdict on the receipt", the same rule as before for the other transient cases (server errors, timeouts, no network). Apps that check `payload.code === BAD_RESPONSE` (or `VERIFICATION_FAILED`) to keep access can drop that check. An invalid receipt is unchanged: the validator rejects it with its own error code, still `transient: false`.
 
 #### (feat) `VerifiedReceipt.cache` tells cached answers from store-confirmed ones
 
