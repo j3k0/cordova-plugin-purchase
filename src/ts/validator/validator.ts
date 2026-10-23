@@ -180,7 +180,7 @@ namespace CdvPurchase {
                             }
                         }
                         else {
-                            this.controller.unverifiedCallbacks.trigger({receipt, payload, transient: isTransientError(payload)}, 'validator_error');
+                            this.controller.unverifiedCallbacks.trigger({receipt, payload, transient: isRetriableError(payload)}, 'validator_error');
                         }
                     }
                     catch (err) {
