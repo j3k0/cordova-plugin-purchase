@@ -13,16 +13,17 @@ declare namespace ModuleIapticJS {
         /** Price in micros (1/1,000,000 of the currency unit). For example, $1.99 = 1990000 micros */
         priceMicros: number;
         /** ISO 4217 currency code (e.g., 'USD', 'EUR', 'JPY') */
-        currency: string;
+        currency?: string;
         /**
          * ISO 8601 duration string representing the billing period
          * Examples: 'P1M' = 1 month, 'P1Y' = 1 year, 'P7D' = 7 days
+         * Absent for one-time purchases.
          */
-        billingPeriod: string;
+        billingPeriod?: string;
         /**
          * Defines how the subscription recurs
          */
-        recurrenceMode: 'INFINITE_RECURRING' | 'NON_RECURRING' | 'FINITE_RECURRING';
+        recurrenceMode?: 'INFINITE_RECURRING' | 'NON_RECURRING' | 'FINITE_RECURRING';
         /**
          * Defines when payment is collected
          */
@@ -79,22 +80,22 @@ declare namespace ModuleIapticJS {
         productId: string;
         /** Platform identifier (e.g., 'stripe') */
         platform: 'stripe';
-        /** Date of the purchase */
-        purchaseDate: string;
-        /** Date of the last renewal */
-        lastRenewalDate: string;
-        /** Date of the expiration */
-        expirationDate: string;
+        /** Date of the purchase (ISO 8601). Can be absent. */
+        purchaseDate?: string;
+        /** Date of the last renewal (ISO 8601). Can be absent. */
+        lastRenewalDate?: string;
+        /** Date of the expiration (ISO 8601). Absent for one-time purchases. */
+        expirationDate?: string;
         /** Intent of the renewal */
-        renewalIntent: 'Lapse' | 'Renew'
+        renewalIntent?: 'Lapse' | 'Renew'
         /** @deprecated never sent by the server, use 'Lapse' */
         | 'Cancel';
         /** Whether the purchase is a trial period */
-        isTrialPeriod: boolean;
+        isTrialPeriod?: boolean;
         /** Price in micros (1/1,000,000 of the currency unit) */
-        amountMicros: number;
+        amountMicros?: number;
         /** Currency code (e.g., 'USD', 'EUR') */
-        currency: string;
+        currency?: string;
     }
 
     /**
