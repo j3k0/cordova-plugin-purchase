@@ -6775,15 +6775,19 @@ declare namespace CdvPurchase {
         receipt: Receipt;
         payload: Validator.Response.ErrorPayload;
         /**
-         * True when validation failed for a temporary reason: the validator
-         * (or the store behind it) couldn't be reached, timed out, or answered
-         * with a server error. The receipt may well be valid.
+         * True when validation failed without a definitive answer about the
+         * receipt: the validator (or the store behind it) couldn't be
+         * reached, timed out, answered with a server error, or responded with
+         * malformed data. The receipt may well be valid.
          *
          * Don't revoke access on a transient failure: keep what your app (or
          * your server) last knew, and validate again later.
          *
          * The plugin already retried a few times (with backoff) before firing
-         * a transient failure.
+         * a transient failure. This matches the plugin's own retry decision:
+         * since v13.20.0, `BAD_RESPONSE` (the validator's answer was
+         * malformed) is reported as transient (it used to be
+         * `transient: false`).
          *
          * False when the validator gave a definitive answer (e.g. invalid
          * receipt, expired subscription, authentication error).
@@ -6792,6 +6796,7 @@ declare namespace CdvPurchase {
          * - HTTP 5xx, from the transport or as `payload.status` in the response body
          * - `CONNECTION_FAILED` (6778002) from the validator
          * - request timeout, no network, unreadable response
+         * - `BAD_RESPONSE`: the validator's answer was malformed
          *
          * Definitive: everything else (HTTP 400 `INVALID_PAYLOAD`, 401/403, 410,
          * 419 expired, ...).

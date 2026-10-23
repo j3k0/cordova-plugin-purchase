@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+#### (changed) `unverified`: a malformed validator answer (`BAD_RESPONSE`) is now reported as `transient: true`
+
+When the validator responds with data the plugin cannot read (`BAD_RESPONSE`), the `transient` flag of the `unverified` event is now `true`, matching the plugin's own decision to retry such answers. Until 13.19.x it was `false`, which made a validator fault look like a definitive answer about the receipt: an app reacting to `transient: false` by revoking access could lock out a paying user for a server-side hiccup. `transient: true` means "no verdict on the receipt", the same rule as before for the other transient cases (server errors, timeouts, no network). Apps that check `payload.code === BAD_RESPONSE` to keep access can drop that check.
+
 #### (feat) `VerifiedReceipt.cache` tells cached answers from store-confirmed ones
 
 When the store (Apple, Google, ...) is unreachable, the iaptic validator can answer with the last successful validation of the same receipt, instead of an error (subscriptions only, confirmed within the last 7 days, not past expiry). The answer is a normal success: `verified` fires, with `receipt.cache` set:
