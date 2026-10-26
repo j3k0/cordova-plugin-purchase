@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+#### (fix) Capacitor iOS: pay-up-front offers report payment mode `"UpFront"`
+
+With StoreKit 2, the Capacitor iOS plugin sent `"PayUpFront"` for pay-up-front introductory offers and discounts, which the validator could not decode (`introPricePaymentMode`, `discounts[].paymentMode`). It now sends `"UpFront"`, the value the SK1 bridge and the server already use. (#1740)
+
+#### (fix) IapticJS: a missing purchase date no longer becomes `Invalid Date`
+
+When the iaptic server omits `purchaseDate`, the IapticJS adapter now leaves it unset instead of producing an `Invalid Date` (it already did so for `expirationDate` and `lastRenewalDate`). A missing pricing-phase currency is guarded the same way.
+
 #### (feat) The vendored `IapticJS` types are generated from iaptic-js, add `onAccessTokenChange()` and `Utils.storage*`
 
 The copy of iaptic-js's type declarations shipped by the plugin had drifted from the library more than once; it is now generated from the published package, with the plugin's historical contract kept. Declared types are unchanged except for additions that exist at runtime from iaptic-js 1.0.4: `IapticStripe.onAccessTokenChange(callback)` and `Utils.storageGetJson/storageGetString/storageSetJson/storageSetString/storageRemove`.
