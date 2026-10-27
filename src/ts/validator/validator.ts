@@ -180,7 +180,7 @@ namespace CdvPurchase {
                             }
                         }
                         else {
-                            this.controller.unverifiedCallbacks.trigger({receipt, payload, transient: isTransientError(payload)}, 'validator_error');
+                            this.controller.unverifiedCallbacks.trigger({receipt, payload, transient: isRetriableError(payload)}, 'validator_error');
                         }
                     }
                     catch (err) {
@@ -189,7 +189,7 @@ namespace CdvPurchase {
                             ok: false,
                             code: ErrorCode.VERIFICATION_FAILED,
                             message: (err as Error).message,
-                        }, transient: false}, 'validator_exception');
+                        }, transient: true}, 'validator_exception');
                     }
                 };
                 receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));
