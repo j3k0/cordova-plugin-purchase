@@ -21,6 +21,7 @@ Response from a validator endpoint
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
+| `cache?` | [`ValidatorCacheInfo`](CdvPurchase.Validator.Response.ValidatorCacheInfo.md) | Present when the server answered from its last successful validation of this receipt because the store couldn't be reached, instead of asking the store. |
 | `collection?` | [`VerifiedPurchase`](CdvPurchase.VerifiedPurchase.md)[] | The collection of purchases in this receipt. An array of ValidatorPurchase |
 | `date?` | `string` | Date and time the receipt was validated. It will provide the client with a more reliable clock time than the user's device when needed. |
 | `id` | `string` | Id of the product that have been validated |

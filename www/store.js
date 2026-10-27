@@ -636,7 +636,7 @@ var CdvPurchase;
                             }
                         }
                         else {
-                            this.controller.unverifiedCallbacks.trigger({ receipt, payload, transient: isTransientError(payload) }, 'validator_error');
+                            this.controller.unverifiedCallbacks.trigger({ receipt, payload, transient: isRetriableError(payload) }, 'validator_error');
                         }
                     }
                     catch (err) {
@@ -645,7 +645,7 @@ var CdvPurchase;
                                 ok: false,
                                 code: CdvPurchase.ErrorCode.VERIFICATION_FAILED,
                                 message: err.message,
-                            }, transient: false }, 'validator_exception');
+                            }, transient: true }, 'validator_exception');
                     }
                 });
                 receipts.forEach(receipt => this.runOnReceipt(receipt, onResponse));
@@ -2071,7 +2071,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.19.1';
+    CdvPurchase.PLUGIN_VERSION = '13.20.0';
     /**
      * Entry class of the plugin.
      */
@@ -8065,7 +8065,7 @@ var CdvPurchase;
                 this.products = [{ id: productId }];
                 this.transactionId = purchase.transactionId;
                 this.purchaseId = purchase.purchaseId;
-                this.purchaseDate = new Date(purchase.purchaseDate);
+                this.purchaseDate = purchase.purchaseDate ? new Date(purchase.purchaseDate) : undefined;
                 this.expirationDate = purchase.expirationDate ? new Date(purchase.expirationDate) : undefined;
                 this.lastRenewalDate = purchase.lastRenewalDate ? new Date(purchase.lastRenewalDate) : undefined;
                 this.renewalIntent = purchase.renewalIntent === 'Renew' ? CdvPurchase.RenewalIntent.RENEW : CdvPurchase.RenewalIntent.LAPSE;
@@ -8184,7 +8184,7 @@ var CdvPurchase;
                                         billingPeriod: pp.billingPeriod,
                                         paymentMode: pp.paymentMode,
                                         recurrenceMode: pp.recurrenceMode,
-                                        price: window.IapticJS.Utils.formatCurrency(pp.priceMicros, pp.currency) // Use Utils for formatting
+                                        price: pp.currency ? window.IapticJS.Utils.formatCurrency(pp.priceMicros, pp.currency) : '' // Use Utils for formatting
                                     })),
                                 }, this.context.apiDecorators);
                                 product.addOffer(offer);

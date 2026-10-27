@@ -212,7 +212,7 @@ ___
 
 ### PLUGIN\_VERSION
 
-• `Const` **PLUGIN\_VERSION**: ``"13.19.1"``
+• `Const` **PLUGIN\_VERSION**: ``"13.20.0"``
 
 Current release number of the plugin.
 

@@ -8,6 +8,7 @@
 
 - [ErrorPayload](../interfaces/CdvPurchase.Validator.Response.ErrorPayload.md)
 - [SuccessPayload](../interfaces/CdvPurchase.Validator.Response.SuccessPayload.md)
+- [ValidatorCacheInfo](../interfaces/CdvPurchase.Validator.Response.ValidatorCacheInfo.md)
 
 ### Type Aliases
 

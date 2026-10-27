@@ -8,6 +8,7 @@ Receipt data as validated by the receipt validation server
 
 ### Properties
 
+- [cache](CdvPurchase.VerifiedReceipt.md#cache)
 - [collection](CdvPurchase.VerifiedReceipt.md#collection)
 - [id](CdvPurchase.VerifiedReceipt.md#id)
 - [latestReceipt](CdvPurchase.VerifiedReceipt.md#latestreceipt)
@@ -26,6 +27,21 @@ Receipt data as validated by the receipt validation server
 - [finish](CdvPurchase.VerifiedReceipt.md#finish)
 
 ## Properties
+
+### cache
+
+• `Optional` **cache**: [`ValidatorCacheInfo`](../interfaces/CdvPurchase.Validator.Response.ValidatorCacheInfo.md)
+
+Set when the validator answered from its last successful validation of this receipt,
+because the store (Apple, Google, ...) couldn't be reached.
+
+`undefined` means the store confirmed this receipt during the validation.
+The content is the last one confirmed by the store, `cache.lastConfirmedAt` tells when.
+
+Receipts with a `cache` are as valid as the others (no purchase is owned past its `expiryDate`),
+but you might prefer to validate again later, or tell your users.
+
+___
 
 ### collection
 
@@ -112,6 +128,7 @@ Get raw response data from the receipt validation request
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
+| `cache?` | [`ValidatorCacheInfo`](../interfaces/CdvPurchase.Validator.Response.ValidatorCacheInfo.md) | Present when the server answered from its last successful validation of this receipt because the store couldn't be reached, instead of asking the store. |
 | `collection?` | [`VerifiedPurchase`](../interfaces/CdvPurchase.VerifiedPurchase.md)[] | The collection of purchases in this receipt. An array of ValidatorPurchase |
 | `date?` | `string` | Date and time the receipt was validated. It will provide the client with a more reliable clock time than the user's device when needed. |
 | `id` | `string` | Id of the product that have been validated |

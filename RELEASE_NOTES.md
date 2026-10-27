@@ -1,6 +1,8 @@
 # Release Notes - Cordova Plugin Purchase
 
-## Unreleased
+## 13.20
+
+### 13.20.0
 
 #### (changed) `unverified`: `BAD_RESPONSE` and `VERIFICATION_FAILED` are now reported as `transient: true`
 
