@@ -64,7 +64,7 @@ namespace CdvPurchase {
                 this.products = [{ id: productId }];
                 this.transactionId = purchase.transactionId;
                 this.purchaseId = purchase.purchaseId;
-                this.purchaseDate = new Date(purchase.purchaseDate);
+                this.purchaseDate = purchase.purchaseDate ? new Date(purchase.purchaseDate) : undefined;
                 this.expirationDate = purchase.expirationDate ? new Date(purchase.expirationDate) : undefined;
                 this.lastRenewalDate = purchase.lastRenewalDate ? new Date(purchase.lastRenewalDate) : undefined;
                 this.renewalIntent = purchase.renewalIntent === 'Renew' ? RenewalIntent.RENEW : RenewalIntent.LAPSE;
@@ -196,7 +196,7 @@ namespace CdvPurchase {
                                     billingPeriod: pp.billingPeriod,
                                     paymentMode: pp.paymentMode as PaymentMode, // Cast might be needed if types differ slightly
                                     recurrenceMode: pp.recurrenceMode as RecurrenceMode,
-                                    price: window.IapticJS.Utils.formatCurrency(pp.priceMicros, pp.currency) // Use Utils for formatting
+                                    price: pp.currency ? window.IapticJS.Utils.formatCurrency(pp.priceMicros, pp.currency) : '' // Use Utils for formatting
                                 })),
                             }, this.context.apiDecorators);
                             product!.addOffer(offer);

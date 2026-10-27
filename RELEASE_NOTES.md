@@ -6,6 +6,12 @@
 
 When the validator responds with data the plugin cannot read (`BAD_RESPONSE`), the `transient` flag of the `unverified` event is now `true`, matching the plugin's own decision to retry such answers. Same for `VERIFICATION_FAILED`, fired when the plugin throws while processing the validator's answer. Until 13.19.x both were `false`, which made a validator fault look like a definitive answer about the receipt: an app reacting to `transient: false` by revoking access could lock out a paying user for a server-side hiccup. `transient: true` means "no verdict on the receipt", the same rule as before for the other transient cases (server errors, timeouts, no network). Apps that check `payload.code === BAD_RESPONSE` (or `VERIFICATION_FAILED`) to keep access can drop that check. An invalid receipt is unchanged: the validator rejects it with its own error code, still `transient: false`.
 
+#### (feat) The vendored `IapticJS` types are generated from iaptic-js, add `onAccessTokenChange()` and `Utils.storage*`
+
+The copy of iaptic-js's type declarations shipped by the plugin had drifted from the library more than once; it is now generated from the published package, with the plugin's historical contract kept. Declared types are unchanged except for additions that exist at runtime from iaptic-js 1.0.4: `IapticStripe.onAccessTokenChange(callback)` and `Utils.storageGetJson/storageGetString/storageSetJson/storageSetString/storageRemove`.
+
+One trade-off to know: fields the iaptic server can omit (`purchaseDate`, `expirationDate`, `currency`, `amountMicros`, ...) remain declared **required**, as they have always been. App code that reads a purchase's fields should still handle them being absent at runtime (the plugin's own IapticJS adapter does).
+
 #### (feat) `VerifiedReceipt.cache` tells cached answers from store-confirmed ones
 
 When the store (Apple, Google, ...) is unreachable, the iaptic validator can answer with the last successful validation of the same receipt, instead of an error (subscriptions only, confirmed within the last 7 days, not past expiry). The answer is a normal success: `verified` fires, with `receipt.cache` set:
