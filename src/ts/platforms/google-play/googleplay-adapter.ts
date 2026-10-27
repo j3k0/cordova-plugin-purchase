@@ -196,10 +196,13 @@ namespace CdvPurchase {
                             return;
                         }
                         this.context.error(playStoreError(ErrorCode.SETUP, "Init failed - " + err, null));
-                        this.retry.retry(() => this.initialize());
+                        // Retry the native setup itself: initialize() would only return
+                        // this pending promise, and the store would never become ready.
+                        this.retry.retry(setup);
                     }
 
-                    this.bridge.init(iabReady, iabError, iabOptions);
+                    const setup = () => this.bridge.init(iabReady, iabError, iabOptions);
+                    setup();
                 });
             }
 
