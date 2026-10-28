@@ -266,5 +266,30 @@ describe('CDVPurchase', () => {
         });
       });
     })
+
+    // The Braintree token request must carry the username of the store given to Iaptic, not the global one.
+    describe('braintreeClientTokenProvider', () => {
+      test('uses the username of the store given to the constructor', () => {
+        const sent: string[] = [];
+        const OriginalXHR = (window as any).XMLHttpRequest;
+        (window as any).XMLHttpRequest = class {
+          open() {}
+          setRequestHeader() {}
+          send(body?: string) { sent.push(body ?? ''); }
+        };
+        try {
+          CdvPurchase.store.applicationUsername = 'global-user';
+          const otherStore = new CdvPurchase.Store();
+          otherStore.applicationUsername = 'other-user';
+          const iaptic = new CdvPurchase.Iaptic({ apiKey: 'k', appName: 'a' }, otherStore);
+          iaptic.braintreeClientTokenProvider(() => {});
+          expect(sent.length).toBe(1);
+          expect(JSON.parse(sent[0]).applicationUsername).toBe('other-user');
+        } finally {
+          (window as any).XMLHttpRequest = OriginalXHR;
+          CdvPurchase.store.applicationUsername = undefined;
+        }
+      });
+    });
   });
 });
