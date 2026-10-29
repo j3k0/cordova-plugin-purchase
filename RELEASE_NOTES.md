@@ -8,6 +8,14 @@
 
 When the validator responds with data the plugin cannot read (`BAD_RESPONSE`), the `transient` flag of the `unverified` event is now `true`, matching the plugin's own decision to retry such answers. Same for `VERIFICATION_FAILED`, fired when the plugin throws while processing the validator's answer. Until 13.19.x both were `false`, which made a validator fault look like a definitive answer about the receipt: an app reacting to `transient: false` by revoking access could lock out a paying user for a server-side hiccup. `transient: true` means "no verdict on the receipt", the same rule as before for the other transient cases (server errors, timeouts, no network). Apps that check `payload.code === BAD_RESPONSE` (or `VERIFICATION_FAILED`) to keep access can drop that check. An invalid receipt is unchanged: the validator rejects it with its own error code, still `transient: false`.
 
+#### (fix) Capacitor iOS: pay-up-front offers report payment mode `"UpFront"`
+
+With StoreKit 2, the Capacitor iOS plugin sent `"PayUpFront"` for pay-up-front introductory offers and discounts, which the validator could not decode (`introPricePaymentMode`, `discounts[].paymentMode`). It now sends `"UpFront"`, the value the SK1 bridge and the server already use. (#1740)
+
+#### (fix) IapticJS: a missing purchase date no longer becomes `Invalid Date`
+
+When the iaptic server omits `purchaseDate`, the IapticJS adapter now leaves it unset instead of producing an `Invalid Date` (it already did so for `expirationDate` and `lastRenewalDate`). A missing pricing-phase currency is guarded the same way.
+
 #### (feat) The vendored `IapticJS` types are generated from iaptic-js, add `onAccessTokenChange()` and `Utils.storage*`
 
 The copy of iaptic-js's type declarations shipped by the plugin had drifted from the library more than once; it is now generated from the published package, with the plugin's historical contract kept. Declared types are unchanged except for additions that exist at runtime from iaptic-js 1.0.4: `IapticStripe.onAccessTokenChange(callback)` and `Utils.storageGetJson/storageGetString/storageSetJson/storageSetString/storageRemove`.
