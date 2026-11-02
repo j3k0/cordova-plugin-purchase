@@ -1,5 +1,11 @@
 # Release Notes - Cordova Plugin Purchase
 
+## Unreleased
+
+#### (fix) `LocalReceipts.find` returns the newest transaction for a product
+
+`find()` is documented to return the latest transaction for a product, but it kept the oldest one. For an active subscriber whose first purchase had expired, `isOwned()` returned `false` and `canPurchase()` returned `true`. It now returns the transaction with the newest `purchaseDate`. Undated (in-flight) transactions still take precedence.
+
 ## 13.20
 
 ### 13.20.0
