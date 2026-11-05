@@ -14,6 +14,9 @@ namespace CdvPurchase {
 
                 options: Options = {};
 
+                /** The adapter calls init() again to retry a failed setup: listen to the plugin only once. */
+                private listenersAdded = false;
+
                 /** Check if the Capacitor purchase plugin is available */
                 static isAvailable(): boolean {
                     const marker = window.CdvPurchaseCapacitor;
@@ -47,29 +50,33 @@ namespace CdvPurchase {
                         return;
                     }
 
-                    plugin.addListener('setPurchases', (data: any) => {
-                        if (this.options.onSetPurchases) {
-                            this.options.onSetPurchases(data.purchases);
-                        }
-                    });
+                    if (!this.listenersAdded) {
+                        this.listenersAdded = true;
 
-                    plugin.addListener('purchasesUpdated', (data: any) => {
-                        if (this.options.onPurchasesUpdated) {
-                            this.options.onPurchasesUpdated(data.purchases);
-                        }
-                    });
+                        plugin.addListener('setPurchases', (data: any) => {
+                            if (this.options.onSetPurchases) {
+                                this.options.onSetPurchases(data.purchases);
+                            }
+                        });
 
-                    plugin.addListener('purchaseConsumed', (data: any) => {
-                        if (this.options.onPurchaseConsumed) {
-                            this.options.onPurchaseConsumed(data.purchase);
-                        }
-                    });
+                        plugin.addListener('purchasesUpdated', (data: any) => {
+                            if (this.options.onPurchasesUpdated) {
+                                this.options.onPurchasesUpdated(data.purchases);
+                            }
+                        });
 
-                    plugin.addListener('priceChangeConfirmationResult', (data: any) => {
-                        if (this.options.onPriceChangeConfirmationResult) {
-                            this.options.onPriceChangeConfirmationResult(data.result);
-                        }
-                    });
+                        plugin.addListener('purchaseConsumed', (data: any) => {
+                            if (this.options.onPurchaseConsumed) {
+                                this.options.onPurchaseConsumed(data.purchase);
+                            }
+                        });
+
+                        plugin.addListener('priceChangeConfirmationResult', (data: any) => {
+                            if (this.options.onPriceChangeConfirmationResult) {
+                                this.options.onPriceChangeConfirmationResult(data.result);
+                            }
+                        });
+                    }
 
                     // Initialize the native billing client
                     plugin.init()
