@@ -4,7 +4,7 @@
 
 #### (fix) Google Play: a failed setup is retried until the Play Store answers
 
-When the billing setup failed for a reason other than a blocked Play Store (for example `SERVICE_DISCONNECTED`), the adapter reported `Init failed` and scheduled a retry, but the retry called `initialize()` again, which only returned the pending initialization. The setup never ran a second time, so `store.initialize()` never resolved and the store stayed not ready until the app restarted. The retry now runs the native setup again, with the usual growing delay (5s, 10s, 20s, ... up to 2 minutes) and right away when the device comes back online. The Capacitor bridge registers its plugin listeners only once, so a retried setup doesn't deliver purchase updates twice.
+When the billing setup failed for a reason other than a blocked Play Store (for example `SERVICE_DISCONNECTED`), the adapter reported `Init failed` and scheduled a retry, but the retry called `initialize()` again, which only returned the pending initialization. The setup never ran a second time, so `store.initialize()` never resolved and the store stayed not ready until the app restarted. The retry now runs the native setup again, with the usual growing delay (5s, 10s, 20s, ... up to 2 minutes) and right away when the device comes back online. The Capacitor bridge registers its plugin listeners only once, so a retried setup doesn't deliver purchase updates twice. Each failed setup attempt now emits a store error (`SETUP`), up to every 2 minutes while Google Play is unavailable, instead of a single error.
 
 ## 13.20
 
