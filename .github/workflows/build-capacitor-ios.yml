@@ -14,11 +14,11 @@ jobs:
       matrix:
         include:
           - capacitor-version: '6'
-            xcode-version: '15.4'
-            runner: macos-14
+            xcode-version: '16.4'
+            runner: macos-15
           - capacitor-version: '7'
-            xcode-version: '15.4'
-            runner: macos-14
+            xcode-version: '16.4'
+            runner: macos-15
           - capacitor-version: '8'
             xcode-version: '26.0'
             runner: macos-15
