@@ -59,7 +59,7 @@ namespace CdvPurchase {
           url: `${this.config.url}/v3/braintree/client-token?appName=${this.config.appName}&apiKey=${this.config.apiKey}`,
           method: 'POST',
           data: {
-            applicationUsername: store.getApplicationUsername(),
+            applicationUsername: this.store.getApplicationUsername(),
             customerId: Braintree.customerId,
           },
           success: body => {
