@@ -6,6 +6,10 @@
 
 When the billing setup failed for a reason other than a blocked Play Store (for example `SERVICE_DISCONNECTED`), the adapter reported `Init failed` and scheduled a retry, but the retry called `initialize()` again, which only returned the pending initialization. The setup never ran a second time, so `store.initialize()` never resolved and the store stayed not ready until the app restarted. The retry now runs the native setup again, with the usual growing delay (5s, 10s, 20s, ... up to 2 minutes) and right away when the device comes back online. The Capacitor bridge registers its plugin listeners only once, so a retried setup doesn't deliver purchase updates twice. Each failed setup attempt now emits a store error (`SETUP`), up to every 2 minutes while Google Play is unavailable, instead of a single error.
 
+#### (fix) Renewed purchases no longer look expired in local receipts
+
+`store.findInLocalReceipts()` is documented to return the latest transaction for a product, but it returned the oldest one. When a product had several transactions on the device (for example a subscription whose first period had expired), the plugin judged it from the expired one: `canPurchase` was `true` for an active subscriber, and without a receipt validator `store.owned()` was `false`. The newest transaction (by `purchaseDate`) is now used; undated, in-flight transactions still take precedence. With a validator, `store.owned()` was not affected. No code change needed. See [#1746](https://github.com/j3k0/cordova-plugin-purchase/pull/1746), based on [#1727](https://github.com/j3k0/cordova-plugin-purchase/pull/1727) by @tiguven.
+
 ## 13.20
 
 ### 13.20.0
@@ -43,6 +47,14 @@ What to expect during an outage:
 - **Mid-session:** a validation error fires `unverified` (`transient: true`) but `store.verifiedReceipts` stays untouched, so `store.owned()` keeps its answer until `expiryDate`.
 - **Cold start:** `store.verifiedReceipts` is kept in memory only, so with a validator configured nothing is owned until a validation succeeds. For apps that accept caching entitlements on the device, enable `OfflineEntitlements` (v13.18+) and use `store.owned(id) || offline.isOwned(id)`. The plugin doesn't persist anything by default.
 - **Never-verified or mixed receipts** (subscription plus consumable) are not answered from the cache: they fail with `CONNECTION_FAILED` (6778002), which is `transient: true`. Keep the access you already granted and retry later.
+
+#### (fix) Capacitor iOS (StoreKit 2): pay-up-front offers report payment mode `"UpFront"`
+
+With StoreKit 2, the Capacitor iOS plugin reported pay-up-front introductory offers and discounts with payment mode `"PayUpFront"` instead of `"UpFront"`. In your app, the pricing phase's `paymentMode` didn't match `CdvPurchase.PaymentMode.UP_FRONT`, and the iaptic validator received a value it didn't recognise (`introPricePaymentMode`, `discounts[].paymentMode`). It is now `"UpFront"`, the value the StoreKit 1 bridge and the server use. If your code checks for `"PayUpFront"`, compare with `PaymentMode.UP_FRONT` instead. Cordova apps using StoreKit 2 get the same fix in `cordova-plugin-purchase-storekit2` 1.0.6. See [#1740](https://github.com/j3k0/cordova-plugin-purchase/pull/1740).
+
+#### (fix) IapticJS (Stripe): a missing purchase date no longer becomes `Invalid Date`
+
+When the iaptic server omits a purchase's `purchaseDate`, `transaction.purchaseDate` is now `undefined` instead of an `Invalid Date`, as `expirationDate` and `lastRenewalDate` already were. Check it before calling date methods on it. When a pricing phase has no currency, its formatted `price` is now an empty string. See [#1741](https://github.com/j3k0/cordova-plugin-purchase/pull/1741).
 
 ## 13.19
 
