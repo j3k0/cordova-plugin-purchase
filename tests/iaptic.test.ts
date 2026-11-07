@@ -266,5 +266,53 @@ describe('CDVPurchase', () => {
         });
       });
     })
+
+    // The Braintree token request must carry the username of the store given to Iaptic, not the global one.
+    describe('braintreeClientTokenProvider', () => {
+      test('uses the username of the store given to the constructor', () => {
+        const sent: string[] = [];
+        const OriginalXHR = (window as any).XMLHttpRequest;
+        const originalUsername = CdvPurchase.store.applicationUsername;
+        (window as any).XMLHttpRequest = class {
+          open() {}
+          setRequestHeader() {}
+          send(body?: string) { sent.push(body ?? ''); }
+        };
+        try {
+          CdvPurchase.store.applicationUsername = 'global-user';
+          const otherStore = new CdvPurchase.Store();
+          otherStore.applicationUsername = 'other-user';
+          const iaptic = new CdvPurchase.Iaptic({ apiKey: 'k', appName: 'a' }, otherStore);
+          iaptic.braintreeClientTokenProvider(() => {});
+          expect(sent.length).toBe(1);
+          expect(JSON.parse(sent[0]).applicationUsername).toBe('other-user');
+        } finally {
+          (window as any).XMLHttpRequest = OriginalXHR;
+          CdvPurchase.store.applicationUsername = originalUsername;
+        }
+      });
+
+      test('reads the username when the token is requested, not when Iaptic is created', () => {
+        const sent: string[] = [];
+        const OriginalXHR = (window as any).XMLHttpRequest;
+        (window as any).XMLHttpRequest = class {
+          open() {}
+          setRequestHeader() {}
+          send(body?: string) { sent.push(body ?? ''); }
+        };
+        try {
+          let user = 'before';
+          const otherStore = new CdvPurchase.Store();
+          otherStore.applicationUsername = () => user;
+          const iaptic = new CdvPurchase.Iaptic({ apiKey: 'k', appName: 'a' }, otherStore);
+          user = 'after';
+          iaptic.braintreeClientTokenProvider(() => {});
+          expect(sent.length).toBe(1);
+          expect(JSON.parse(sent[0]).applicationUsername).toBe('after');
+        } finally {
+          (window as any).XMLHttpRequest = OriginalXHR;
+        }
+      });
+    });
   });
 });
