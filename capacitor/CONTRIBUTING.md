@@ -35,13 +35,14 @@ Capacitor 6 and 7 use CocoaPods by default, which compiles from source. Any Xcod
 
 | Capacitor | Runner   | Xcode | Package Manager |
 |-----------|----------|-------|-----------------|
-| 6         | macOS-14 | 15.4  | CocoaPods       |
-| 7         | macOS-14 | 15.4  | CocoaPods       |
+| 6         | macOS-15 | 16.4  | CocoaPods       |
+| 7         | macOS-15 | 16.4  | CocoaPods       |
 | 8         | macOS-15 | 26.0  | SPM             |
 
 ## CI environment notes
 
-- **macOS-15 + Xcode 16.2** fails with "iOS 18.2 Platform Not Installed" on storyboard compilation. Use Xcode 26 (for Cap 8) or macOS-14 + Xcode 15.4 (for Cap 6/7).
+- **macOS-14 runners are retired** (jobs are cancelled with "The configuration 'macos-14-arm64-us-default' is not supported").
+- **macOS-15 + Xcode 16.2** fails with "iOS 18.2 Platform Not Installed" on storyboard compilation: the image only ships the iOS 18.5 simulator runtime, which matches Xcode 16.4 (the image default). Use Xcode 16.4 (Cap 6/7, Cordova) or Xcode 26 (Cap 8).
 - **`@capacitor/create-app`** always scaffolds the latest template (Cap 8 / SPM) regardless of CLI version. For testing older versions, scaffold manually with `npm init` + pinned deps.
 - **Podfile deployment target**: Cap 6/7 generate Podfiles defaulting to iOS 13.0/14.0. The plugin needs 15.0 — CI patches this with `sed`.
 - **Ruby version conflicts** on macOS: `pod` (Homebrew) and `gem` (system) may point to different Ruby versions. Install gems with the Homebrew Ruby if needed.
