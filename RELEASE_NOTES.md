@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+#### (fix) Own validation server: answers without `transaction` are accepted again, and rejected answers say why
+
+This only matters if you run your own receipt validation server (not iaptic). Since 13.16.0, the plugin rejected a successful answer (`ok: true`) as `BAD_RESPONSE` unless `data.id` was a string and `data.transaction` an object. Servers that didn't send them, which worked until 13.15.x, saw purchases never get verified: `verified` didn't fire, `store.owned()` stayed `false`, transactions weren't finished, and after a few retries `unverified` fired with the message "Validator responded with invalid data".
+
+`data.transaction` is optional again: when it's missing or not an object, `receipt.nativeTransactions` is empty (the original value stays in `receipt.raw.transaction`). The Braintree adapter no longer fails on `transaction: null`.
+
+`data.id` is still required, because the plugin keeps one verified receipt per `id`. Without it, the receipts of a platform replace each other: on Google Play, where each purchase is its own receipt, validating one purchase removed the others from `store.verifiedReceipts`. If your server doesn't send `id`, send back the `id` it received in the request.
+
+The `BAD_RESPONSE` message, also logged as a warning, now names the problem, for example `Validator responded with invalid data: "data.id" must be a string, got undefined`.
+
 #### (fix) Google Play: a failed setup is retried until the Play Store answers
 
 When the billing setup failed for a reason other than a blocked Play Store (for example `SERVICE_DISCONNECTED`), the adapter reported `Init failed` and scheduled a retry, but the retry called `initialize()` again, which only returned the pending initialization. The setup never ran a second time, so `store.initialize()` never resolved and the store stayed not ready until the app restarted. The retry now runs the native setup again, with the usual growing delay (5s, 10s, 20s, ... up to 2 minutes) and right away when the device comes back online. The Capacitor bridge registers its plugin listeners only once, so a retried setup doesn't deliver purchase updates twice. Each failed setup attempt now emits a store error (`SETUP`), up to every 2 minutes while Google Play is unavailable, instead of a single error.
@@ -276,6 +286,12 @@ When `applicationUsername` was not already a UUID string, the Capacitor StoreKit
 #### Deprecation: `additionalData.applicationUsername`
 
 Passing `applicationUsername` per-transaction via `order(..., { applicationUsername })` is now **deprecated and ignored**. Set `store.applicationUsername` (or a `() => string` getter) once instead — this guarantees the value used at the native call site matches the value sent to the validator. Calls that still pass `additionalData.applicationUsername` emit a one-shot warning.
+
+#### (changed) Own validation server: successful answers must include `data.id` and `data.transaction`
+
+_Added after the release: this change wasn't in the original notes._
+
+This only matters if you run your own receipt validation server (not iaptic). A successful answer (`ok: true`) is rejected as `BAD_RESPONSE` unless `data.id` is a string and `data.transaction` an object, as described in `Validator.Response.SuccessPayload`. Until 13.15.x, any answer with a boolean `ok` was accepted. If your server doesn't send these fields, purchases are never verified. The `transaction` requirement was dropped again after 13.20.0 (see Unreleased); `id` is still required.
 
 #### Companion plugin compatibility
 

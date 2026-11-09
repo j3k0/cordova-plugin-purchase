@@ -410,9 +410,10 @@ namespace CdvPurchase {
              */
             async handleReceiptValidationResponse(receipt: Receipt, response: Validator.Response.Payload): Promise<void> {
                 this.log.info("receipt validation response: " + JSON.stringify(response));
-                if (response?.data && ('transaction' in response.data)) {
-                    if (response.data.transaction.type === 'braintree') {
-                        const lCustomerId = response.data.transaction.data.transaction?.customer.id;
+                const transaction = response?.data && ('transaction' in response.data) ? response.data.transaction : undefined;
+                if (transaction) {
+                    if (transaction.type === 'braintree') {
+                        const lCustomerId = transaction.data?.transaction?.customer?.id;
                         if (lCustomerId && !customerId) {
                             this.log.info("customerId updated: " + lCustomerId);
                             customerId = lCustomerId;
