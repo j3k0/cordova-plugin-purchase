@@ -1,8 +1,59 @@
 namespace CdvPurchase {
     export namespace Braintree {
 
-        /** The Braintree customer identifier. Set it to allow reusing of payment methods. */
+        /**
+         * The Braintree customer identifier. Set it to allow reusing of payment methods.
+         *
+         * The plugin also fills it in when a receipt validation response contains a customer ID.
+         * Such captured values are tied to the `applicationUsername` that was active at the time:
+         * they are not sent for another user (see {@link getCustomerId}).
+         *
+         * A value you set yourself is sent as-is, whatever the current `applicationUsername`.
+         * If you set it, reset it when the user changes (e.g. on logout).
+         */
         export let customerId: string | undefined;
+
+        /** Customer IDs captured from receipt validation responses, by application username. */
+        const capturedCustomerIds = new Map<string | undefined, string>();
+
+        /** Last value written to {@link customerId} by the plugin. Any other value was set by the app. */
+        let lastCapturedCustomerId: string | undefined;
+
+        /**
+         * Record the customer ID returned by the validator for a given application username.
+         *
+         * @internal
+         */
+        export function captureCustomerId(applicationUsername: string | undefined, id: string): void {
+            capturedCustomerIds.set(applicationUsername, id);
+            // Keep the public variable up to date, unless the app has set its own value.
+            if (customerId === undefined || customerId === lastCapturedCustomerId) {
+                customerId = id;
+                lastCapturedCustomerId = id;
+            }
+        }
+
+        /**
+         * Get the customer ID to use for a given application username.
+         *
+         * - If the app has set {@link customerId} itself, that value is returned.
+         * - Otherwise, returns the customer ID captured for this application username, if any.
+         */
+        export function getCustomerId(applicationUsername: string | undefined): string | undefined {
+            if (customerId !== undefined && customerId !== lastCapturedCustomerId) return customerId;
+            return capturedCustomerIds.get(applicationUsername);
+        }
+
+        /**
+         * Forget all customer IDs captured from receipt validation responses.
+         *
+         * @internal
+         */
+        export function resetCapturedCustomerIds(): void {
+            capturedCustomerIds.clear();
+            if (customerId === lastCapturedCustomerId) customerId = undefined;
+            lastCapturedCustomerId = undefined;
+        }
 
         export interface AdapterOptions {
 
@@ -414,9 +465,9 @@ namespace CdvPurchase {
                 if (transaction) {
                     if (transaction.type === 'braintree') {
                         const lCustomerId = transaction.data?.transaction?.customer?.id;
-                        if (lCustomerId && !customerId) {
+                        if (lCustomerId) {
                             this.log.info("customerId updated: " + lCustomerId);
-                            customerId = lCustomerId;
+                            captureCustomerId(this.context.getApplicationUsername(), lCustomerId);
                         }
                     }
                 }

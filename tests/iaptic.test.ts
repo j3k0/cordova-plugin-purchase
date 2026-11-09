@@ -313,6 +313,114 @@ describe('CDVPurchase', () => {
           (window as any).XMLHttpRequest = OriginalXHR;
         }
       });
+
+    });
+
+    // gh #1751: the Braintree customer ID must not leak from one application username to another.
+    describe('Braintree customerId', () => {
+      const Braintree = CdvPurchase.Braintree;
+
+      /** Response of the validator for a Braintree transaction made by the given customer */
+      function validationResponse(customerId: string): CdvPurchase.Validator.Response.Payload {
+        return {
+          ok: true,
+          data: {
+            id: 'x',
+            latest_receipt: true,
+            transaction: { type: 'braintree', data: { transaction: { customer: { id: customerId } } } },
+          },
+        } as unknown as CdvPurchase.Validator.Response.Payload;
+      }
+
+      /** Create a Braintree adapter for the given store, and a function to feed it validation responses */
+      function makeAdapter(store: CdvPurchase.Store) {
+        const adapter = new Braintree.Adapter({
+          log: new CdvPurchase.Logger({ verbosity: CdvPurchase.LogLevel.QUIET }),
+          getApplicationUsername: () => store.getApplicationUsername(),
+        } as unknown as CdvPurchase.Internal.AdapterContext, {});
+        return (customerId: string) =>
+          adapter.handleReceiptValidationResponse({} as CdvPurchase.Receipt, validationResponse(customerId));
+      }
+
+      /** Request a client token and return the customerId that was sent to iaptic */
+      function sentCustomerId(store: CdvPurchase.Store): string | undefined {
+        const sent: string[] = [];
+        const OriginalXHR = (window as any).XMLHttpRequest;
+        (window as any).XMLHttpRequest = class {
+          open() {}
+          setRequestHeader() {}
+          send(body?: string) { sent.push(body ?? ''); }
+        };
+        try {
+          new CdvPurchase.Iaptic({ apiKey: 'k', appName: 'a' }, store).braintreeClientTokenProvider(() => {});
+          return JSON.parse(sent[0]).customerId;
+        } finally {
+          (window as any).XMLHttpRequest = OriginalXHR;
+        }
+      }
+
+      beforeEach(() => {
+        Braintree.resetCapturedCustomerIds();
+        Braintree.customerId = undefined;
+      });
+      afterAll(() => {
+        Braintree.resetCapturedCustomerIds();
+        Braintree.customerId = undefined;
+      });
+
+      test('is sent for the user it was captured for', async () => {
+        const store = new CdvPurchase.Store();
+        store.applicationUsername = 'alice';
+        await makeAdapter(store)('cust-alice');
+        expect(sentCustomerId(store)).toBe('cust-alice');
+        expect(Braintree.customerId).toBe('cust-alice');
+      });
+
+      test('is not sent after the application username changes', async () => {
+        const store = new CdvPurchase.Store();
+        store.applicationUsername = 'alice';
+        await makeAdapter(store)('cust-alice');
+        store.applicationUsername = 'bob';
+        expect(sentCustomerId(store)).toBeUndefined();
+        store.applicationUsername = undefined;
+        expect(sentCustomerId(store)).toBeUndefined();
+      });
+
+      test('is kept per user', async () => {
+        const store = new CdvPurchase.Store();
+        const validated = makeAdapter(store);
+        store.applicationUsername = 'alice';
+        await validated('cust-alice');
+        store.applicationUsername = 'bob';
+        await validated('cust-bob');
+        expect(sentCustomerId(store)).toBe('cust-bob');
+        store.applicationUsername = 'alice';
+        expect(sentCustomerId(store)).toBe('cust-alice');
+      });
+
+      test('is replaced by a newer value for the same user', async () => {
+        const store = new CdvPurchase.Store();
+        store.applicationUsername = 'alice';
+        const validated = makeAdapter(store);
+        await validated('cust-old');
+        await validated('cust-new');
+        expect(sentCustomerId(store)).toBe('cust-new');
+        expect(Braintree.customerId).toBe('cust-new');
+      });
+
+      test('a value set by the app is sent as-is and not overwritten', async () => {
+        const store = new CdvPurchase.Store();
+        store.applicationUsername = 'alice';
+        Braintree.customerId = 'manual';
+        await makeAdapter(store)('cust-alice');
+        expect(Braintree.customerId).toBe('manual');
+        store.applicationUsername = 'bob';
+        expect(sentCustomerId(store)).toBe('manual');
+        // once the app clears it, captured values are used again
+        Braintree.customerId = undefined;
+        store.applicationUsername = 'alice';
+        expect(sentCustomerId(store)).toBe('cust-alice');
+      });
     });
   });
 });

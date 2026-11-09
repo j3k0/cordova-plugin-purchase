@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+#### (fix) Braintree: a customer ID is no longer sent for another user
+
+After a Braintree payment was validated, the plugin stored the Braintree customer ID in `CdvPurchase.Braintree.customerId`, and `iaptic.braintreeClientTokenProvider` sent it with every client token request, whatever the current `applicationUsername`. When a user logged out and another one logged in during the same session, the new user's Drop-in was opened for the previous user's Braintree customer, showing that customer's saved payment methods. The ID was also kept forever once set, so a newer one from a later validation was ignored.
+
+Customer IDs captured from validation responses are now kept per `applicationUsername`, and only sent for the user they belong to. A newer ID replaces the older one. No code change needed.
+
+If your app sets `CdvPurchase.Braintree.customerId` itself, that value is still sent as-is: reset it when the user changes. `CdvPurchase.Braintree.getCustomerId(applicationUsername)` returns the ID that will be sent for a given user. See [#1751](https://github.com/j3k0/cordova-plugin-purchase/issues/1751).
+
 #### (fix) iOS: a failed restore says why
 
 With the Capacitor plugin, `store.restorePurchases()` on iOS returned the same error for every failure, with code `0` and the message "Restore purchases failed". A user tapping Cancel on the App Store sign-in looked like a network error ([#1726](https://github.com/j3k0/cordova-plugin-purchase/issues/1726)).
@@ -10,7 +18,6 @@ With the Capacitor plugin, `store.restorePurchases()` on iOS returned the same e
 - The message includes the reason from StoreKit, for example `Restore purchases failed: <StoreKit message>`, on Capacitor and on the Cordova StoreKit 1 plugin.
 
 `store.restorePurchases()` doesn't change otherwise: it still resolves with an error instead of rejecting.
-
 ## 13.20
 
 ### 13.20.1

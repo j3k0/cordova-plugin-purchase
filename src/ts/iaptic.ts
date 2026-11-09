@@ -55,12 +55,13 @@ namespace CdvPurchase {
     get braintreeClientTokenProvider(): Braintree.ClientTokenProvider {
       return callback => {
         this.log.info('Calling Braintree clientTokenProvider');
+        const applicationUsername = this.store.getApplicationUsername();
         Utils.ajax(this.log, {
           url: `${this.config.url}/v3/braintree/client-token?appName=${this.config.appName}&apiKey=${this.config.apiKey}`,
           method: 'POST',
           data: {
-            applicationUsername: this.store.getApplicationUsername(),
-            customerId: Braintree.customerId,
+            applicationUsername,
+            customerId: Braintree.getCustomerId(applicationUsername),
           },
           success: body => {
             this.log.info('clientTokenProvider success: ' + JSON.stringify(body));
