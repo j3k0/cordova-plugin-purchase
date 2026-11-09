@@ -198,11 +198,17 @@ _xcodebuild_sim() {  # $1 = example dir, $2 = kind
   fi
   [ -e "$ws" ] || { warn "no Xcode workspace/project at $ws"; return 1; }
   info "build: ${ws#$dir/} ($wsflag $scheme)"
+  # Xcode 27 rejects deployment targets below iOS 15 (the examples and some
+  # pods still declare 11.0/13.0). The override applies to every target,
+  # pods included. Set CDV_SMOKE_IOS_DEPLOYMENT_TARGET= (empty) to disable.
+  local target_override=()
+  local ios_target="${CDV_SMOKE_IOS_DEPLOYMENT_TARGET-15.0}"
+  [ -n "$ios_target" ] && target_override=("IPHONEOS_DEPLOYMENT_TARGET=$ios_target")
   xcodebuild $wsflag "$ws" -scheme "$scheme" \
     -configuration Debug -sdk iphonesimulator \
     -destination 'generic/platform=iOS Simulator' \
     -derivedDataPath "$dir/build/smoke-derived" \
-    CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=NO \
+    CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=NO "${target_override[@]}" \
     build >/tmp/cdv_xcbuild.log 2>&1 || {
       warn "xcodebuild failed — tail of /tmp/cdv_xcbuild.log:" >&2
       tail -20 /tmp/cdv_xcbuild.log >&2
