@@ -10,6 +10,10 @@ When the billing setup failed for a reason other than a blocked Play Store (for 
 
 `store.findInLocalReceipts()` is documented to return the latest transaction for a product, but it returned the oldest one. When a product had several transactions on the device (for example a subscription whose first period had expired), the plugin judged it from the expired one: `canPurchase` was `true` for an active subscriber, and without a receipt validator `store.owned()` was `false`. The newest transaction (by `purchaseDate`) is now used; undated, in-flight transactions still take precedence. With a validator, `store.owned()` was not affected. No code change needed. See [#1746](https://github.com/j3k0/cordova-plugin-purchase/pull/1746), based on [#1727](https://github.com/j3k0/cordova-plugin-purchase/pull/1727) by @tiguven.
 
+#### (fix) Braintree: `iaptic.braintreeClientTokenProvider` sends the right `applicationUsername`
+
+When requesting a Braintree client token, the provider read `applicationUsername` from the global `CdvPurchase.store` instead of the store passed to `new CdvPurchase.Iaptic(config, store)`. Apps that pass their own store instance now get a client token for the right user. Apps using the global store (the default) are not affected. No code change needed. See [#1747](https://github.com/j3k0/cordova-plugin-purchase/pull/1747).
+
 ## 13.20
 
 ### 13.20.0
