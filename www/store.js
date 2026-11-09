@@ -141,7 +141,7 @@ var CdvPurchase;
                     url: `${this.config.url}/v3/braintree/client-token?appName=${this.config.appName}&apiKey=${this.config.apiKey}`,
                     method: 'POST',
                     data: {
-                        applicationUsername: CdvPurchase.store.getApplicationUsername(),
+                        applicationUsername: this.store.getApplicationUsername(),
                         customerId: CdvPurchase.Braintree.customerId,
                     },
                     success: body => {
@@ -795,16 +795,20 @@ var CdvPurchase;
                     success: (response) => {
                         var _a;
                         this.log.debug("validator success, response: " + JSON.stringify(response));
-                        if (!isValidatorResponsePayload(response))
+                        const problem = validatorResponsePayloadProblem(response);
+                        if (problem) {
+                            const message = 'Validator responded with invalid data: ' + problem;
+                            this.log.warn(message);
                             return callback({
                                 receipt,
                                 payload: {
                                     ok: false,
                                     code: CdvPurchase.ErrorCode.BAD_RESPONSE,
-                                    message: 'Validator responded with invalid data',
+                                    message,
                                     data: { latest_receipt: (_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.latest_receipt },
                                 }
                             });
+                        }
                         // don't cache temporary errors, so a retry makes a new request
                         if (response.ok || !isTransientError(response)) {
                             this.cache[bodyTransactionHash] = {
@@ -871,34 +875,45 @@ var CdvPurchase;
         function isRetriableError(payload) {
             return isTransientError(payload) || payload.code === CdvPurchase.ErrorCode.BAD_RESPONSE;
         }
+        /** Describe the type of a value for error messages ("undefined", "null", "array", "number", ...) */
+        function describeType(value) {
+            if (value === null)
+                return 'null';
+            if (Array.isArray(value))
+                return 'array';
+            return typeof value;
+        }
         /**
          * Check if a payload looks like a valid validator response.
          *
-         * When `ok` is `true`, validates that `data` exists and contains the
-         * fields the rest of the pipeline reads unconditionally: `id` (used to
-         * key the verified-receipt cache) and `transaction` (stored as the
-         * native transaction). Optional fields like `latest_receipt`,
-         * `collection`, `warning`, `date` are not required — a validator that
-         * omits them produces a usable VerifiedReceipt all the same.
+         * Returns `undefined` when the payload is usable, or a description of
+         * the problem (reported in the BAD_RESPONSE error message and logs, so
+         * developers of custom validators know what to fix).
+         *
+         * When `ok` is `true`, `data` must be an object with a string `id`:
+         * the plugin uses it to match the answer with the verified receipt it
+         * replaces, so without it the receipts of a platform would overwrite
+         * each other. Other fields (`transaction`, `latest_receipt`,
+         * `collection`, `warning`, `date`) are optional: adapters read
+         * `transaction` only when present, and a validator that omits them
+         * produces a usable VerifiedReceipt all the same.
          *
          * When `ok` is `false`, the `data` field is optional per ErrorPayload.
          */
-        function isValidatorResponsePayload(payload) {
+        function validatorResponsePayloadProblem(payload) {
             if (!payload || typeof payload !== 'object')
-                return false;
+                return `expected a JSON object, got ${describeType(payload)}`;
             const p = payload;
             if (typeof p.ok !== 'boolean')
-                return false;
+                return `"ok" must be a boolean, got ${describeType(p.ok)}`;
             if (p.ok === true) {
                 const data = p.data;
-                if (!data || typeof data !== 'object')
-                    return false;
+                if (!data || typeof data !== 'object' || Array.isArray(data))
+                    return `"data" must be an object when "ok" is true, got ${describeType(data)}`;
                 if (typeof data.id !== 'string')
-                    return false;
-                if (!data.transaction || typeof data.transaction !== 'object')
-                    return false;
+                    return `"data.id" must be a string, got ${describeType(data.id)}`;
             }
-            return true;
+            return undefined;
         }
     })(Internal = CdvPurchase.Internal || (CdvPurchase.Internal = {}));
 })(CdvPurchase || (CdvPurchase = {}));
@@ -2071,7 +2086,7 @@ var CdvPurchase;
     /**
      * Current release number of the plugin.
      */
-    CdvPurchase.PLUGIN_VERSION = '13.20.0';
+    CdvPurchase.PLUGIN_VERSION = '13.20.1';
     /**
      * Entry class of the plugin.
      */
@@ -3233,9 +3248,10 @@ var CdvPurchase;
                     for (const transaction of receipt.transactions) {
                         for (const trProducts of transaction.products) {
                             if (trProducts.id === product.id) {
-                                // No matching transaction has been found or the tested one is newer than the already found one?
-                                // Then we chose the tested one.
-                                if (!found || ((_a = transaction.purchaseDate) !== null && _a !== void 0 ? _a : 0) < ((_b = found.purchaseDate) !== null && _b !== void 0 ? _b : 1))
+                                // Select the newer known date; preserve existing ordering when either date is missing.
+                                if (!found || (transaction.purchaseDate && found.purchaseDate
+                                    ? transaction.purchaseDate > found.purchaseDate
+                                    : ((_a = transaction.purchaseDate) !== null && _a !== void 0 ? _a : 0) < ((_b = found.purchaseDate) !== null && _b !== void 0 ? _b : 1)))
                                     found = transaction;
                             }
                         }
@@ -5863,12 +5879,13 @@ var CdvPurchase;
              * @returns A promise that resolves when the response has been handled.
              */
             handleReceiptValidationResponse(receipt, response) {
-                var _a;
+                var _a, _b, _c;
                 return __awaiter(this, void 0, void 0, function* () {
                     this.log.info("receipt validation response: " + JSON.stringify(response));
-                    if ((response === null || response === void 0 ? void 0 : response.data) && ('transaction' in response.data)) {
-                        if (response.data.transaction.type === 'braintree') {
-                            const lCustomerId = (_a = response.data.transaction.data.transaction) === null || _a === void 0 ? void 0 : _a.customer.id;
+                    const transaction = (response === null || response === void 0 ? void 0 : response.data) && ('transaction' in response.data) ? response.data.transaction : undefined;
+                    if (transaction) {
+                        if (transaction.type === 'braintree') {
+                            const lCustomerId = (_c = (_b = (_a = transaction.data) === null || _a === void 0 ? void 0 : _a.transaction) === null || _b === void 0 ? void 0 : _b.customer) === null || _c === void 0 ? void 0 : _c.id;
                             if (lCustomerId && !Braintree.customerId) {
                                 this.log.info("customerId updated: " + lCustomerId);
                                 Braintree.customerId = lCustomerId;
@@ -6608,9 +6625,12 @@ var CdvPurchase;
                                 return;
                             }
                             this.context.error(playStoreError(CdvPurchase.ErrorCode.SETUP, "Init failed - " + err, null));
-                            this.retry.retry(() => this.initialize());
+                            // Retry the native setup itself: initialize() would only return
+                            // this pending promise, and the store would never become ready.
+                            this.retry.retry(setup);
                         };
-                        this.bridge.init(iabReady, iabError, iabOptions);
+                        const setup = () => this.bridge.init(iabReady, iabError, iabOptions);
+                        setup();
                     });
                 });
             }
@@ -7068,6 +7088,8 @@ var CdvPurchase;
             class CapacitorBridge {
                 constructor() {
                     this.options = {};
+                    /** The adapter calls init() again to retry a failed setup: listen to the plugin only once. */
+                    this.listenersAdded = false;
                 }
                 /** Check if the Capacitor purchase plugin is available */
                 static isAvailable() {
@@ -7099,26 +7121,29 @@ var CdvPurchase;
                         fail('Capacitor PurchasePlugin not available');
                         return;
                     }
-                    plugin.addListener('setPurchases', (data) => {
-                        if (this.options.onSetPurchases) {
-                            this.options.onSetPurchases(data.purchases);
-                        }
-                    });
-                    plugin.addListener('purchasesUpdated', (data) => {
-                        if (this.options.onPurchasesUpdated) {
-                            this.options.onPurchasesUpdated(data.purchases);
-                        }
-                    });
-                    plugin.addListener('purchaseConsumed', (data) => {
-                        if (this.options.onPurchaseConsumed) {
-                            this.options.onPurchaseConsumed(data.purchase);
-                        }
-                    });
-                    plugin.addListener('priceChangeConfirmationResult', (data) => {
-                        if (this.options.onPriceChangeConfirmationResult) {
-                            this.options.onPriceChangeConfirmationResult(data.result);
-                        }
-                    });
+                    if (!this.listenersAdded) {
+                        this.listenersAdded = true;
+                        plugin.addListener('setPurchases', (data) => {
+                            if (this.options.onSetPurchases) {
+                                this.options.onSetPurchases(data.purchases);
+                            }
+                        });
+                        plugin.addListener('purchasesUpdated', (data) => {
+                            if (this.options.onPurchasesUpdated) {
+                                this.options.onPurchasesUpdated(data.purchases);
+                            }
+                        });
+                        plugin.addListener('purchaseConsumed', (data) => {
+                            if (this.options.onPurchaseConsumed) {
+                                this.options.onPurchaseConsumed(data.purchase);
+                            }
+                        });
+                        plugin.addListener('priceChangeConfirmationResult', (data) => {
+                            if (this.options.onPriceChangeConfirmationResult) {
+                                this.options.onPriceChangeConfirmationResult(data.result);
+                            }
+                        });
+                    }
                     // Initialize the native billing client
                     plugin.init()
                         .then(() => success())
@@ -9663,6 +9688,11 @@ var CdvPurchase;
 })(CdvPurchase || (CdvPurchase = {}));
 var CdvPurchase;
 (function (CdvPurchase) {
+    /** The validator's `transaction` as a list, empty when the validator didn't send one. */
+    function nativeTransactionsOf(response) {
+        const transaction = response.transaction;
+        return (transaction && typeof transaction === 'object') ? [transaction] : [];
+    }
     /** Receipt data as validated by the receipt validation server */
     class VerifiedReceipt {
         /**
@@ -9676,7 +9706,7 @@ var CdvPurchase;
             this.sourceReceipt = receipt;
             this.collection = (_a = response.collection) !== null && _a !== void 0 ? _a : [];
             this.latestReceipt = response.latest_receipt;
-            this.nativeTransactions = [response.transaction];
+            this.nativeTransactions = nativeTransactionsOf(response);
             this.warning = response.warning;
             this.cache = response.cache;
             this.validationDate = response.date ? new Date(response.date) : new Date();
@@ -9698,7 +9728,7 @@ var CdvPurchase;
             this.sourceReceipt = receipt;
             this.collection = (_a = response.collection) !== null && _a !== void 0 ? _a : [];
             this.latestReceipt = response.latest_receipt;
-            this.nativeTransactions = [response.transaction];
+            this.nativeTransactions = nativeTransactionsOf(response);
             this.warning = response.warning;
             this.cache = response.cache;
         }

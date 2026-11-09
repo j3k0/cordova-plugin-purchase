@@ -1,6 +1,8 @@
 # Release Notes - Cordova Plugin Purchase
 
-## Unreleased
+## 13.20
+
+### 13.20.1
 
 #### (fix) Own validation server: answers without `transaction` are accepted again, and rejected answers say why
 
@@ -23,8 +25,6 @@ When the billing setup failed for a reason other than a blocked Play Store (for 
 #### (fix) Braintree: `iaptic.braintreeClientTokenProvider` sends the right `applicationUsername`
 
 When requesting a Braintree client token, the provider read `applicationUsername` from the global `CdvPurchase.store` instead of the store passed to `new CdvPurchase.Iaptic(config, store)`. Apps that pass their own store instance now get a client token for the right user. Apps using the global store (the default) are not affected. No code change needed. See [#1747](https://github.com/j3k0/cordova-plugin-purchase/pull/1747).
-
-## 13.20
 
 ### 13.20.0
 
@@ -295,7 +295,7 @@ Passing `applicationUsername` per-transaction via `order(..., { applicationUsern
 
 _Added after the release: this change wasn't in the original notes._
 
-This only matters if you run your own receipt validation server (not iaptic). A successful answer (`ok: true`) is rejected as `BAD_RESPONSE` unless `data.id` is a string and `data.transaction` an object, as described in `Validator.Response.SuccessPayload`. Until 13.15.x, any answer with a boolean `ok` was accepted. If your server doesn't send these fields, purchases are never verified. The `transaction` requirement was dropped again after 13.20.0 (see Unreleased); `id` is still required.
+This only matters if you run your own receipt validation server (not iaptic). A successful answer (`ok: true`) is rejected as `BAD_RESPONSE` unless `data.id` is a string and `data.transaction` an object, as described in `Validator.Response.SuccessPayload`. Until 13.15.x, any answer with a boolean `ok` was accepted. If your server doesn't send these fields, purchases are never verified. The `transaction` requirement was dropped again in 13.20.1; `id` is still required.
 
 #### Companion plugin compatibility
 

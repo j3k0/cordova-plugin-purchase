@@ -24,10 +24,10 @@ Response from a validator endpoint
 | `cache?` | [`ValidatorCacheInfo`](CdvPurchase.Validator.Response.ValidatorCacheInfo.md) | Present when the server answered from its last successful validation of this receipt because the store couldn't be reached, instead of asking the store. |
 | `collection?` | [`VerifiedPurchase`](CdvPurchase.VerifiedPurchase.md)[] | The collection of purchases in this receipt. An array of ValidatorPurchase |
 | `date?` | `string` | Date and time the receipt was validated. It will provide the client with a more reliable clock time than the user's device when needed. |
-| `id` | `string` | Id of the product that have been validated |
+| `id` | `string` | Id of the product that have been validated. Required: an answer without a string `id` is rejected with `BAD_RESPONSE`. The plugin keeps one verified receipt per `id` (and platform), so give each receipt its own value; echoing the request's `id` works. |
 | `ineligible_for_intro_price?` | `string`[] | List of product ids for which intro price isn't available anymore |
 | `latest_receipt` | `boolean` | Tell the plugin that we've used the latest receipt |
-| `transaction` | [`NativeTransaction`](../modules/CdvPurchase.Validator.Response.md#nativetransaction) | Native transaction detail |
+| `transaction` | [`NativeTransaction`](../modules/CdvPurchase.Validator.Response.md#nativetransaction) | Native transaction detail The iaptic validator always sends it. The plugin accepts answers without it (custom validators): `VerifiedReceipt.nativeTransactions` is then empty. |
 | `warning?` | `string` | A warning message about this validation. It might be present when the server had to fallback to a backup validation solution. |
 
 ___
