@@ -365,16 +365,20 @@ namespace CdvPurchase {
                     data: body,
                     success: (response) => {
                         this.log.debug("validator success, response: " + JSON.stringify(response));
-                        if (!isValidatorResponsePayload(response))
+                        const problem = validatorResponsePayloadProblem(response);
+                        if (problem) {
+                            const message = 'Validator responded with invalid data: ' + problem;
+                            this.log.warn(message);
                             return callback({
                                 receipt,
                                 payload: {
                                     ok: false,
                                     code: ErrorCode.BAD_RESPONSE,
-                                    message: 'Validator responded with invalid data',
+                                    message,
                                     data: { latest_receipt: (response as any)?.data?.latest_receipt },
                                 } as Validator.Response.ErrorPayload
                             });
+                        }
                         // don't cache temporary errors, so a retry makes a new request
                         if (response.ok || !isTransientError(response)) {
                             this.cache[bodyTransactionHash] = {
@@ -439,34 +443,44 @@ namespace CdvPurchase {
             return isTransientError(payload) || payload.code === ErrorCode.BAD_RESPONSE;
         }
 
+        /** Describe the type of a value for error messages ("undefined", "null", "array", "number", ...) */
+        function describeType(value: unknown): string {
+            if (value === null) return 'null';
+            if (Array.isArray(value)) return 'array';
+            return typeof value;
+        }
+
         /**
          * Check if a payload looks like a valid validator response.
          *
-         * When `ok` is `true`, validates that `data` exists and contains the
-         * fields the rest of the pipeline reads unconditionally: `id` (used to
-         * key the verified-receipt cache) and `transaction` (stored as the
-         * native transaction). Optional fields like `latest_receipt`,
-         * `collection`, `warning`, `date` are not required — a validator that
-         * omits them produces a usable VerifiedReceipt all the same.
+         * Returns `undefined` when the payload is usable, or a description of
+         * the problem (reported in the BAD_RESPONSE error message and logs, so
+         * developers of custom validators know what to fix).
+         *
+         * When `ok` is `true`, `data` must be an object with a string `id`:
+         * the plugin uses it to match the answer with the verified receipt it
+         * replaces, so without it the receipts of a platform would overwrite
+         * each other. Other fields (`transaction`, `latest_receipt`,
+         * `collection`, `warning`, `date`) are optional: adapters read
+         * `transaction` only when present, and a validator that omits them
+         * produces a usable VerifiedReceipt all the same.
          *
          * When `ok` is `false`, the `data` field is optional per ErrorPayload.
          */
-        function isValidatorResponsePayload(payload: unknown): payload is Validator.Response.Payload {
+        function validatorResponsePayloadProblem(payload: unknown): string | undefined {
             if (!payload || typeof payload !== 'object')
-                return false;
+                return `expected a JSON object, got ${describeType(payload)}`;
             const p = payload as any;
             if (typeof p.ok !== 'boolean')
-                return false;
+                return `"ok" must be a boolean, got ${describeType(p.ok)}`;
             if (p.ok === true) {
                 const data = p.data;
-                if (!data || typeof data !== 'object')
-                    return false;
+                if (!data || typeof data !== 'object' || Array.isArray(data))
+                    return `"data" must be an object when "ok" is true, got ${describeType(data)}`;
                 if (typeof data.id !== 'string')
-                    return false;
-                if (!data.transaction || typeof data.transaction !== 'object')
-                    return false;
+                    return `"data.id" must be a string, got ${describeType(data.id)}`;
             }
-            return true;
+            return undefined;
         }
     }
 }

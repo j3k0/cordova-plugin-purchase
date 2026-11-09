@@ -10,6 +10,12 @@ namespace CdvPurchase {
         }
     }
 
+    /** The validator's `transaction` as a list, empty when the validator didn't send one. */
+    function nativeTransactionsOf(response: Validator.Response.SuccessPayload['data']): Validator.Response.NativeTransaction[] {
+        const transaction: unknown = response.transaction;
+        return (transaction && typeof transaction === 'object') ? [transaction as Validator.Response.NativeTransaction] : [];
+    }
+
     export interface UnverifiedReceipt {
         receipt: Receipt;
         payload: Validator.Response.ErrorPayload;
@@ -76,6 +82,9 @@ namespace CdvPurchase {
 
         /**
          * Raw content from the platform's API.
+         *
+         * Empty when the validator's answer has no `transaction` object (custom
+         * validators may omit it). The original value is still in `raw.transaction`.
          */
         nativeTransactions: Validator.Response.NativeTransaction[];
 
@@ -117,7 +126,7 @@ namespace CdvPurchase {
             this.sourceReceipt = receipt;
             this.collection = response.collection ?? [];
             this.latestReceipt = response.latest_receipt;
-            this.nativeTransactions = [response.transaction];
+            this.nativeTransactions = nativeTransactionsOf(response);
             this.warning = response.warning;
             this.cache = response.cache;
             this.validationDate = response.date ? new Date(response.date) : new Date();
@@ -135,7 +144,7 @@ namespace CdvPurchase {
             this.sourceReceipt = receipt;
             this.collection = response.collection ?? [];
             this.latestReceipt = response.latest_receipt;
-            this.nativeTransactions = [response.transaction];
+            this.nativeTransactions = nativeTransactionsOf(response);
             this.warning = response.warning;
             this.cache = response.cache;
         }

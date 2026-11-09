@@ -19,11 +19,22 @@ namespace CdvPurchase {
                     collection?: VerifiedPurchase[];
                     /** List of product ids for which intro price isn't available anymore */
                     ineligible_for_intro_price?: string[];
-                    /** Id of the product that have been validated */
+                    /**
+                     * Id of the product that have been validated.
+                     *
+                     * Required: an answer without a string `id` is rejected with `BAD_RESPONSE`.
+                     * The plugin keeps one verified receipt per `id` (and platform), so give each
+                     * receipt its own value; echoing the request's `id` works.
+                     */
                     id: string;
                     /** Tell the plugin that we've used the latest receipt */
                     latest_receipt: boolean;
-                    /** Native transaction detail */
+                    /**
+                     * Native transaction detail
+                     *
+                     * The iaptic validator always sends it. The plugin accepts answers without it
+                     * (custom validators): `VerifiedReceipt.nativeTransactions` is then empty.
+                     */
                     transaction: NativeTransaction;
                     /** A warning message about this validation.
                      *
