@@ -8,7 +8,9 @@ After a Braintree payment was validated, the plugin stored the Braintree custome
 
 Customer IDs captured from validation responses are now kept per `applicationUsername`, and only sent for the user they belong to. A newer ID replaces the older one. No code change needed.
 
-If your app sets `CdvPurchase.Braintree.customerId` itself, that value is still sent as-is: reset it when the user changes. `CdvPurchase.Braintree.getCustomerId(applicationUsername)` returns the ID that will be sent for a given user. See [#1751](https://github.com/j3k0/cordova-plugin-purchase/issues/1751).
+If your app sets `CdvPurchase.Braintree.customerId` itself, that value is still sent as-is: reset it when the user changes. `CdvPurchase.Braintree.getCustomerId(applicationUsername)` returns the ID that will be sent for a given user.
+
+Also, `iaptic.braintreeClientTokenProvider` no longer logs the client token, and `appName` and `apiKey` are URL-encoded in requests to iaptic. See [#1751](https://github.com/j3k0/cordova-plugin-purchase/issues/1751).
 
 #### (fix) iOS: a failed restore says why
 

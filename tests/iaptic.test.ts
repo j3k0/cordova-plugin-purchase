@@ -314,6 +314,22 @@ describe('CDVPurchase', () => {
         }
       });
 
+      test('encodes appName and apiKey in the URL', () => {
+        const urls: string[] = [];
+        const OriginalXHR = (window as any).XMLHttpRequest;
+        (window as any).XMLHttpRequest = class {
+          open(_method: string, url: string) { urls.push(url); }
+          setRequestHeader() {}
+          send() {}
+        };
+        try {
+          const iaptic = new CdvPurchase.Iaptic({ apiKey: 'k&x=1', appName: 'my app' }, new CdvPurchase.Store());
+          iaptic.braintreeClientTokenProvider(() => {});
+          expect(urls[0]).toContain('appName=my%20app&apiKey=k%26x%3D1');
+        } finally {
+          (window as any).XMLHttpRequest = OriginalXHR;
+        }
+      });
     });
 
     // gh #1751: the Braintree customer ID must not leak from one application username to another.
