@@ -194,9 +194,14 @@ namespace CdvPurchase
                         return; // skip unsupported adapters
                     }
                     const initResult = await adapter.initialize();
+                    if (initResult?.code) {
+                        // A failed adapter is not ready: findReady() skips it.
+                        adapter.ready = false;
+                        log.warn(`${adapter.name} failed to initialize. ${JSON.stringify(initResult)}`);
+                        return initResult;
+                    }
                     adapter.ready = true;
-                    log.info(`${adapter.name} initialized. ${initResult ? JSON.stringify(initResult) : ''}`);
-                    if (initResult?.code) return initResult;
+                    log.info(`${adapter.name} initialized.`);
                     log.info(`${adapter.name} products: ${JSON.stringify(platformProducts)}`);
 
                     // Storefront refresh runs in parallel with product / receipt loading.
