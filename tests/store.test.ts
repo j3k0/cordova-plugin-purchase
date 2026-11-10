@@ -175,8 +175,8 @@ describe('CDVPurchase', () => {
       if (CdvPurchase.store.getAdapter(CdvPurchase.Platform.TEST)) {
         // @ts-ignore - accessing private property for testing
         CdvPurchase.store.adapters = new CdvPurchase.Internal.Adapters();
-        // @ts-ignore - reset the initialized flag
-        CdvPurchase.store.initializedHasBeenCalled = false;
+        // @ts-ignore - reset the first initialize() result
+        CdvPurchase.store.initializePromise = undefined;
       }
       // @ts-ignore - reset the storefront cache so storefrontUpdated fires on every init
       CdvPurchase.store._storefronts = new CdvPurchase.Internal.Storefronts(CdvPurchase.store.log.child('Storefronts'));

@@ -370,20 +370,23 @@ namespace CdvPurchase {
             });
         }
 
-        private initializedHasBeenCalled = false;
+        /** Result of the first call to initialize(), returned to later calls. */
+        private initializePromise?: Promise<IError[]>;
 
         /**
          * Call to initialize the in-app purchase plugin.
          *
+         * The plugin is initialized only once: later calls return the result of the first call
+         * (waiting for it if it's still running), including its errors.
+         *
          * @param platforms - List of payment platforms to initialize, default to Store.defaultPlatform().
          */
         async initialize(platforms: (Platform | PlatformWithOptions)[] = [this.defaultPlatform()]): Promise<IError[]> {
-            if (this.initializedHasBeenCalled) {
-                this.log.warn('store.initialized() has been called already.');
-                return [];
+            if (this.initializePromise) {
+                this.log.warn('store.initialize() has been called already, returning the result of the first call.');
+                return this.initializePromise;
             }
             this.log.info('initialize(' + JSON.stringify(platforms) + ') v' + PLUGIN_VERSION);
-            this.initializedHasBeenCalled = true;
             this.lastUpdate = +new Date();
             const store = this;
             const ret = this.adapters.initialize(platforms, {
@@ -404,6 +407,7 @@ namespace CdvPurchase {
                     verify: this.verify.bind(this),
                 },
             });
+            this.initializePromise = ret;
             ret.then(() => {
                 this._readyCallbacks.trigger('initialize_promise_resolved');
                 this.listener.setSupportedPlatforms(this.adapters.list.filter(a => a.isSupported).map(a => a.id));
