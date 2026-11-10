@@ -348,10 +348,34 @@ public class PurchasePlugin: CAPPlugin, CAPBridgedPlugin {
                 notifyListeners("restoreCompleted", data: [:])
                 call.resolve()
             } catch {
-                notifyListeners("restoreFailed", data: ["errorCode": 0])
+                debugLog("restore: failed error=\(error)")
+                notifyListeners("restoreFailed", data: [
+                    "errorCode": restoreErrorCode(error),
+                    "errorMessage": error.localizedDescription,
+                ])
                 call.reject("Restore failed: \(error.localizedDescription)")
             }
         }
+    }
+
+    /// Map an AppStore.sync() error to a CdvPurchase.ErrorCode value.
+    @available(iOS 15.0, *)
+    private func restoreErrorCode(_ error: Error) -> Int {
+        if let storeKitError = error as? StoreKitError {
+            switch storeKitError {
+            case .userCancelled: return 6777006 // PAYMENT_CANCELLED
+            case .networkError: return 6777025 // CLOUD_SERVICE_NETWORK_CONNECTION_FAILED
+            default: return 6777010 // UNKNOWN
+            }
+        }
+        if let skError = error as? SKError {
+            switch skError.code {
+            case .paymentCancelled: return 6777006 // PAYMENT_CANCELLED
+            case .cloudServiceNetworkConnectionFailed: return 6777025 // CLOUD_SERVICE_NETWORK_CONNECTION_FAILED
+            default: return 6777010 // UNKNOWN
+            }
+        }
+        return 6777010 // UNKNOWN
     }
 
     @objc func manageSubscriptions(_ call: CAPPluginCall) {

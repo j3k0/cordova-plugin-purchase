@@ -397,10 +397,11 @@ namespace CdvPurchase {
                             if (this._receipt) this._receipt.refresh(receipt, this.needAppReceipt, this.context.apiDecorators);
                         },
 
-                        restoreFailed: (errorCode: ErrorCode) => {
-                            this.log.info('restoreFailed: ' + errorCode);
+                        restoreFailed: (errorCode: ErrorCode, errorMessage?: string) => {
+                            this.log.info('restoreFailed: ' + errorCode + (errorMessage ? ' - ' + errorMessage : ''));
                             if (this.onRestoreCompleted) {
-                                this.onRestoreCompleted(appStoreError(errorCode, 'Restore purchases failed', null));
+                                const message = errorMessage ? 'Restore purchases failed: ' + errorMessage : 'Restore purchases failed';
+                                this.onRestoreCompleted(appStoreError(errorCode, message, null));
                                 this.onRestoreCompleted = undefined;
                             }
                         },

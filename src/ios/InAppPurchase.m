@@ -706,8 +706,13 @@ static NSString *toTimestamp(NSDate *date) {
 
 - (void) paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error {
     DLog(@"paymentQueue:restoreCompletedTransactionsFailedWithError:");
-    NSString *js = [NSString stringWithFormat:
-        @"window.storekit.restoreCompletedTransactionsFailed(%li)", (unsigned long)jsErrorCode(error.code)];
+    NSArray *callbackArgs = @[
+        [NSNumber numberWithInteger:jsErrorCode(error.code)],
+        NILABLE(error.localizedDescription)
+    ];
+    NSString *js = [NSString
+        stringWithFormat:@"window.storekit.restoreCompletedTransactionsFailed.apply(window.storekit, %@)",
+        [callbackArgs JSONSerialize]];
     [self.commandDelegate evalJs: js];
 }
 

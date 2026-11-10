@@ -221,7 +221,7 @@ namespace CdvPurchase {
                 receiptsRefreshed: (receipt: ApplicationReceipt) => void;
 
                 /** Called when a call to "restore" failed */
-                restoreFailed: (errorCode: ErrorCode) => void;
+                restoreFailed: (errorCode: ErrorCode, errorMessage?: string) => void;
 
                 /** Called when a call to "restore" is complete */
                 restoreCompleted: () => void;
@@ -602,11 +602,11 @@ namespace CdvPurchase {
                     protectCall(this.options.restoreCompleted, 'options.restoreCompleted');
                 }
 
-                restoreCompletedTransactionsFailed(errorCode: ErrorCode) {
+                restoreCompletedTransactionsFailed(errorCode: ErrorCode, errorMessage?: string) {
                     if (!this.needRestoreNotification)
                         return;
                     this.needRestoreNotification = false;
-                    protectCall(this.options.restoreFailed, 'options.restoreFailed', errorCode);
+                    protectCall(this.options.restoreFailed, 'options.restoreFailed', errorCode, errorMessage);
                 }
 
                 parseReceiptArgs(args: RawReceiptArgs): ApplicationReceipt {
