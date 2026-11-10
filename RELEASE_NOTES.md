@@ -1,5 +1,17 @@
 # Release Notes - Cordova Plugin Purchase
 
+## Unreleased
+
+#### (fix) A failed setup no longer looks like a success
+
+When a platform failed to set up, the plugin still marked its adapter as ready, and calling `store.initialize()` again returned an empty error list without doing anything. Both looked like a working store ([#1720](https://github.com/j3k0/cordova-plugin-purchase/issues/1720), [#1721](https://github.com/j3k0/cordova-plugin-purchase/issues/1721)).
+
+- A platform whose setup fails is no longer marked ready (`store.getAdapter(platform).ready` stays `false`). The store treats it like a platform that isn't available: `store.restorePurchases()` skips it, `store.order()` returns `PAYMENT_NOT_ALLOWED`, `store.manageSubscriptions()` and `store.manageBilling()` return a `SETUP` error, and `store.getStorefront()` returns `undefined`. Setup failures this applies to: a blocked Play Store (`STORE_BLOCKED`), iOS with the Cordova StoreKit 1 plugin on a device that can't make payments (Screen Time restrictions), a missing native plugin, iOS older than 15 with Capacitor, and an iaptic-js SDK that isn't loaded. Before, purchases already failed in these cases; on the restricted iOS device, `store.manageSubscriptions()` and `store.manageBilling()` used to open the App Store page anyway.
+- Google Play setup errors that are retried (for example `SERVICE_DISCONNECTED`, see 13.20.1) are not affected: `store.initialize()` still waits for the retry, and the platform is ready once setup succeeds.
+- Calling `store.initialize()` more than once still initializes the plugin only once, but later calls now return the result of the first call, including its errors, instead of `[]`. If the first call is still running, later calls wait for it.
+
+`store.ready()` and `store.isReady` don't change: the ready callbacks still fire once `store.initialize()` is done, even when a platform failed.
+
 ## 13.20
 
 ### 13.20.1
