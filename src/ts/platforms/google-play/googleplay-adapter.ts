@@ -294,20 +294,21 @@ namespace CdvPurchase {
                     if (!firstProduct)
                         return resolve(playStoreError(ErrorCode.FINISH, 'Cannot finish a transaction with no product', null));
 
-                    const product = this._products.getProduct(firstProduct.id);
-                    if (!product)
-                        return resolve(playStoreError(ErrorCode.FINISH, 'Cannot finish transaction, unknown product ' + firstProduct.id, firstProduct.id));
+                    const productId = firstProduct.id;
+                    const productType = this.productType(productId);
+                    if (!productType)
+                        return resolve(playStoreError(ErrorCode.FINISH, 'Cannot finish transaction, unknown product ' + productId, productId));
 
                     const receipt = this._receipts.find(r => r.hasTransaction(transaction));
                     if (!receipt)
-                        return resolve(playStoreError(ErrorCode.FINISH, 'Cannot finish transaction, linked receipt not found.', product.id));
+                        return resolve(playStoreError(ErrorCode.FINISH, 'Cannot finish transaction, linked receipt not found.', productId));
 
                     if (!receipt.purchaseToken)
-                        return resolve(playStoreError(ErrorCode.FINISH, 'Cannot finish transaction, linked receipt contains no purchaseToken.', product.id));
+                        return resolve(playStoreError(ErrorCode.FINISH, 'Cannot finish transaction, linked receipt contains no purchaseToken.', productId));
 
-                    const onFailure = (message: string, code?: ErrorCode) => resolve(playStoreError(code || ErrorCode.UNKNOWN, message, product.id));
+                    const onFailure = (message: string, code?: ErrorCode) => resolve(playStoreError(code || ErrorCode.UNKNOWN, message, productId));
 
-                    if (product.type === ProductType.NON_RENEWING_SUBSCRIPTION || product.type === ProductType.CONSUMABLE) {
+                    if (productType === ProductType.NON_RENEWING_SUBSCRIPTION || productType === ProductType.CONSUMABLE) {
                         if (!transaction.isConsumed)
                             return this.bridge.consumePurchase(onSuccess, onFailure, receipt.purchaseToken);
                     }
@@ -550,6 +551,15 @@ namespace CdvPurchase {
             }
 
             /**
+             * Type of a product, from the products loaded from Google Play or, when Google Play
+             * didn't return it (e.g. an inactive legacy product), from its registration.
+             */
+            private productType(productId: string): ProductType | undefined {
+                return this._products.getProduct(productId)?.type
+                    ?? this.context.registeredProducts.find(Platform.GOOGLE_PLAY, productId)?.type;
+            }
+
+            /**
              * Prepare for receipt validation
              */
             async receiptValidationBody(receipt: Receipt): Promise<Validator.Request.Body | undefined> {
@@ -558,12 +568,19 @@ namespace CdvPurchase {
                 const productId = transaction.products[0]?.id;
                 if (!productId) return;
                 const product = this._products.getProduct(productId);
-                if (!product) return;
+                const type = this.productType(productId);
+                if (!type) {
+                    this.log.warn(`Cannot validate a purchase of "${productId}": the product is not registered. Add it with store.register().`);
+                    return;
+                }
+                if (!product) {
+                    this.log.info(`Google Play didn't return "${productId}", validating it with its registered type (${type}).`);
+                }
                 const purchase = transaction.nativePurchase;
                 return {
                     id: productId,
-                    type: product.type,
-                    offers: product.offers,
+                    type,
+                    offers: product?.offers,
                     products: this._products.products,
                     transaction: {
                         type: Platform.GOOGLE_PLAY,
