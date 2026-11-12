@@ -1,5 +1,16 @@
 # Release Notes - Cordova Plugin Purchase
 
+## Unreleased
+
+#### (fix) iOS: a failed restore says why
+
+With the Capacitor plugin, `store.restorePurchases()` on iOS returned the same error for every failure, with code `0` and the message "Restore purchases failed". A user tapping Cancel on the App Store sign-in looked like a network error ([#1726](https://github.com/j3k0/cordova-plugin-purchase/issues/1726)).
+
+- The error code now says what happened. **Cancel now comes back as `PAYMENT_CANCELLED`**, so you can skip the error message in that case. A network failure is `CLOUD_SERVICE_NETWORK_CONNECTION_FAILED`, anything else `UNKNOWN`. The Cordova StoreKit 1 plugin already returned these codes.
+- The message includes the reason from StoreKit, for example `Restore purchases failed: <StoreKit message>`, on Capacitor and on the Cordova StoreKit 1 plugin.
+
+`store.restorePurchases()` doesn't change otherwise: it still resolves with an error instead of rejecting.
+
 ## 13.20
 
 ### 13.20.1

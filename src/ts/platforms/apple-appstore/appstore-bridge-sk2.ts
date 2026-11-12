@@ -330,10 +330,10 @@ namespace CdvPurchase {
                     protectCall(this.options.restoreCompleted, 'options.restoreCompleted');
                 }
 
-                restoreCompletedTransactionsFailed(errorCode: ErrorCode) {
+                restoreCompletedTransactionsFailed(errorCode: ErrorCode, errorMessage?: string) {
                     if (!this.needRestoreNotification) return;
                     this.needRestoreNotification = false;
-                    protectCall(this.options.restoreFailed, 'options.restoreFailed', errorCode);
+                    protectCall(this.options.restoreFailed, 'options.restoreFailed', errorCode, errorMessage);
                 }
 
                 parseReceiptArgs(args: [string, string, string, number, string]):

@@ -112,7 +112,7 @@ namespace CdvPurchase {
                     });
 
                     plugin.addListener('restoreFailed', (data: any) => {
-                        this.restoreCompletedTransactionsFailed(data.errorCode);
+                        this.restoreCompletedTransactionsFailed(data.errorCode, data.errorMessage);
                     });
 
                     // Initialize the native plugin
@@ -320,9 +320,9 @@ namespace CdvPurchase {
                     }
                 }
 
-                private restoreCompletedTransactionsFailed(errorCode: number): void {
+                private restoreCompletedTransactionsFailed(errorCode: number, errorMessage?: string): void {
                     if (this.options.restoreFailed) {
-                        this.options.restoreFailed(errorCode);
+                        this.options.restoreFailed(errorCode, errorMessage);
                     }
                 }
 
