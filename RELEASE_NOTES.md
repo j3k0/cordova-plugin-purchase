@@ -11,6 +11,13 @@ With the Capacitor plugin, `store.restorePurchases()` on iOS returned the same e
 
 `store.restorePurchases()` doesn't change otherwise: it still resolves with an error instead of rejecting.
 
+#### (fix) Google Play: purchases of products Google Play didn't return are validated again
+
+Google Play doesn't return inactive products when the plugin loads them, but users who bought one keep renewing it. For those purchases, `transaction.verify()` sent nothing to the validator and fired neither `verified` nor `unverified`, so the app kept the old expiry date ([#1729](https://github.com/j3k0/cordova-plugin-purchase/issues/1729)). `transaction.finish()` failed the same way, with "unknown product".
+
+- The plugin now uses the type from `store.register()` when Google Play didn't return the product. Keep registering your old products and their renewals reach your validator. No other code change needed.
+- When the plugin can't build a validation request at all (on any platform, for example a product that was never registered), it logs a warning and fires `unverified` with `VERIFICATION_FAILED` and `transient: true`, instead of doing nothing. On Google Play, a purchase of a product you never registered keeps failing the same way until you add it with `store.register()`.
+
 ## 13.20
 
 ### 13.20.1
