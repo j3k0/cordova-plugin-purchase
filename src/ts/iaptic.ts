@@ -42,6 +42,13 @@ namespace CdvPurchase {
      *
      * Can be passed to the Braintree Adapter at initialization.
      *
+     * This provider authenticates with your app's **Public Key**, so the iaptic server does not
+     * attach a Braintree customer to the token it returns (since November 2026): the payment
+     * form shows no saved payment methods. `customerId` in the request is ignored with a
+     * Public Key — it is honored only with the Secret Key. To reuse saved payment methods,
+     * provide your own `clientTokenProvider` that requests the client token from your backend
+     * (authenticated with the Secret Key) instead of this one.
+     *
      * @example
      * store.initialize([
      *   {
