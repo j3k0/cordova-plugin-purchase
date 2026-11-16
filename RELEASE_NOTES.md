@@ -1,5 +1,4 @@
 # Release Notes - Cordova Plugin Purchase
-
 ## Unreleased
 
 #### (fix) Braintree: a customer ID is no longer sent for another user
@@ -27,6 +26,16 @@ Google Play doesn't return inactive products when the plugin loads them, but use
 
 - The plugin now uses the type from `store.register()` when Google Play didn't return the product. Keep registering your old products and their renewals reach your validator. No other code change needed.
 - When the plugin can't build a validation request at all (on any platform, for example a product that was never registered), it logs a warning and fires `unverified` with `VERIFICATION_FAILED` and `transient: true`, instead of doing nothing. On Google Play, a purchase of a product you never registered keeps failing the same way until you add it with `store.register()`.
+
+#### (fix) A failed setup no longer looks like a success
+
+When a platform failed to set up, the plugin still marked its adapter as ready, and calling `store.initialize()` again returned an empty error list without doing anything. Both looked like a working store ([#1720](https://github.com/j3k0/cordova-plugin-purchase/issues/1720), [#1721](https://github.com/j3k0/cordova-plugin-purchase/issues/1721)).
+
+- A platform whose setup fails is no longer marked ready (`store.getAdapter(platform).ready` stays `false`). The store treats it like a platform that isn't available: `store.restorePurchases()` skips it, `store.order()` returns `PAYMENT_NOT_ALLOWED`, `store.manageSubscriptions()` and `store.manageBilling()` return a `SETUP` error, and `store.getStorefront()` returns `undefined`. Setup failures this applies to: a blocked Play Store (`STORE_BLOCKED`), iOS with the Cordova StoreKit 1 plugin on a device that can't make payments (Screen Time restrictions), a missing native plugin, iOS older than 15 with Capacitor, and an iaptic-js SDK that isn't loaded. Before, purchases already failed in these cases; on the restricted iOS device, `store.manageSubscriptions()` and `store.manageBilling()` used to open the App Store page anyway.
+- Google Play setup errors that are retried (for example `SERVICE_DISCONNECTED`, see 13.20.1) are not affected: `store.initialize()` still waits for the retry, and the platform is ready once setup succeeds.
+- Calling `store.initialize()` more than once still initializes the plugin only once, but later calls now return the result of the first call, including its errors, instead of `[]`. If the first call is still running, later calls wait for it.
+
+`store.ready()` and `store.isReady` don't change: the ready callbacks still fire once `store.initialize()` is done, even when a platform failed.
 
 ## 13.20
 
@@ -1336,13 +1345,11 @@ See https://developer.android.com/google/play/billing/subscriptions#price-change
    }));
 ```
 
-
 #### `"IMMEDIATE_AND_CHARGE_FULL_PRICE"` proration mode
 
 The proration mode is passed to `store.order()`, in the `additionalData.prorationMode` field.
 
 If `IMMEDIATE_AND_CHARGE_FULL_PRICE` proration mode is used when upgrading / downgrading a subscription, the replacement takes effect immediately, and the user is charged full price of new plan and is given a full billing cycle of subscription, plus remaining prorated time from the old plan.
-
 
 ## 10.6.1
 
@@ -1350,7 +1357,6 @@ Bug fixes:
 
  * c5fdc88 (android) Fix #1223 - Product with no title
  * 0f828c6 (android) Fix issue in order() when `additionalData` is undefined
-
 
 ## 10.6.0
 
@@ -1366,7 +1372,6 @@ See 68a6c3f
 
  * 29af7bd (ios) Fix #1190 crash when order invalid product
  * 98f7323 (android) Fix #1201: Parsing of free trial periods
-
 
 ## 10.5.4
 
@@ -1395,18 +1400,15 @@ See 256a10e baae021
 
  * ad70db7 (android) Fix #1126 - DEFERRED prorationMode typo
 
-
 ## 10.5.2
 
  * 7e9d58b (ios) Fix #1142 - Wrong references to `storekit.ERR_*`
-
 
 ## 10.5.1
 
  * c98817e Fix type chek error on tsc `^4.0.5`
    * Contributed by @caiiiycuk
  * 08e271d Minor improvement to `store.order()`
-
 
 ## 10.5.0
 
@@ -1425,7 +1427,6 @@ Redeems a promotional offer from within the app.
 ```js
     store.redeem();
 ```
-
 
 ## 10.4.0
 
@@ -1454,7 +1455,6 @@ This fixes an issue where, for some users, the receipt was ever-refreshing becau
  * 9193479 Add `store.applicationUsername` to typescript definitions
  * c1612e6 (ios) Remove "const" from ios-adapter.js
    * Keep the plugin compatible with old javascript engines.
-
 
 ## 10.3.0
 
@@ -1498,7 +1498,6 @@ This code dates from the era before Apple was returning the `latest_receipt_info
 - (ios) #1092 Disable appStoreReceipt refresh on purchase
    - Calling refreshReceipt on iOS was triggering an unecessary password prompt, different from the fingerprint validation required by a purchase.
 
-
 ## 10.2.0
 
 ### (all) Add `product.device` to validation requests
@@ -1512,7 +1511,6 @@ See  f0da787
 ### (all) Set `ineligibleForIntroPrice` to all group members
 
 When a product is ineligible for introductory price, all members of the subscriptions group should be ineligible as well. See fc1b39e
-
 
 ## 10.1.2
 
@@ -1535,13 +1533,11 @@ function restorePurchases() {
 }
 ```
 
-
 ## 10.1.1
 
 * (ios) Refresh `appStoreReceipt` when purchase starts
 * (ios) Add `appStoreReceipt` to `approved` products
 * Fix `store.register()` when given an empty array
-
 
 ## 10.1.0
 
@@ -1583,13 +1579,11 @@ Default: `store.validator_privacy_policy = ['fraud', 'support', 'analytics']`
 
 See 58e24c3
 
-
 ## 10.0.1
 
 ### Android
 
 - (FIX) Purchases were reported incorrectly (See #967)
-
 
 ## 10.0.0
 
@@ -1664,7 +1658,6 @@ New error codes than have been introduced since iOS 11 are now reported, instead
 - (ios,osx) Remove support for XCode 9
 - update typescript
 
-
 ## 9.0.0
 
 ### Android full rewrite
@@ -1714,7 +1707,6 @@ See https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#store
 - `cordova-plugin-purchase` is now the official name for the plugin
 - Fix: Typescript definitions
 
-
 ## 8.1.1
 
 ### (android/windows) Auto-retry failed initialization
@@ -1726,7 +1718,6 @@ _Contributor: Jean-Christophe Hoelt_
 ### Documentation
 
 A lot of minor improvements to the documentation.
-
 
 ## 8.1.0
 
@@ -1752,7 +1743,6 @@ _Contributor: Dave Alden_
  * Backported some code from frostwire that fixes an occasional ANR at startup in `IabHelper`.
 
 _Contributors: Jean-Christophe Hoelt, Dave Alden_
-
 
 ## 8.0.0
 
