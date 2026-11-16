@@ -203,6 +203,19 @@ namespace CdvPurchase {
                         .catch(() => { if (callback) callback(false); });
                 }
 
+                redeemCode(options: string[],
+                           success: () => void,
+                           error: (code: ErrorCode, message: string) => void): void {
+                    this.plugin.redeemCode({ options })
+                        .then(() => success())
+                        .catch((err: any) => {
+                            // The native plugin rejects with a stringified numeric `code`.
+                            const code = parseInt(err?.code);
+                            error(Number.isNaN(code) ? ErrorCode.UNKNOWN : code,
+                                err?.message || 'redeemCode failed');
+                        });
+                }
+
                 refreshReceipts(successCb: (receipt: ApplicationReceipt) => void,
                                 errorCb: (code: ErrorCode, message: string) => void): void {
                     this.plugin.refreshReceipts()

@@ -238,6 +238,11 @@ For a more complete example with a backend integration, check:
 
  - [In-App Purchase Configuration Guide for AppStore Connect](https://developer.apple.com/support/app-store-connect/)
    - Learn how to set up and manage In-App Purchases with AppStore Connect.
+ - **Redeem offer codes** with `store.redeemCode()`. The redeemed transaction arrives
+   through the usual `approved` event, exactly like a purchase. On iOS 27+ the returned
+   promise reports user cancellation and errors; on earlier versions the sheet opens
+   fire-and-forget and cancel or errors are not reported. `Adapter.presentCodeRedemptionSheet()`
+   is deprecated — it now wraps `store.redeemCode()` and ignores the result.
 
 ### Extensions
 

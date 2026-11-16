@@ -458,6 +458,15 @@ namespace CdvPurchase {
                     exec('presentCodeRedemptionSheet', [], callback, callback);
                 }
 
+                redeemCode(options: string[],
+                           success: () => void,
+                           error: (code: ErrorCode, message: string) => void) {
+                    // StoreKit 1 has no result-based redemption API: present the sheet
+                    // fire-and-forget and resolve right away — no cancel or error reporting.
+                    void options;
+                    this.presentCodeRedemptionSheet(success);
+                }
+
                 /**
                  * Retrieves localized product data, including price (as localized
                  * string), name, description of multiple products.

@@ -40,6 +40,10 @@ namespace CdvPurchase {
                 manageSubscriptions(callback?: Callback<any>): void;
                 manageBilling(callback?: Callback<any>): void;
                 presentCodeRedemptionSheet(callback?: Callback<any>): void;
+                /** Redeem an offer code. On failure, `error` receives a CdvPurchase.ErrorCode and message. */
+                redeemCode(options: string[],
+                           success: () => void,
+                           error: (code: ErrorCode, message: string) => void): void;
                 refreshReceipts(successCb: (receipt: ApplicationReceipt) => void,
                                 errorCb: (code: ErrorCode, message: string) => void): void;
                 loadReceipts(callback: (receipt: ApplicationReceipt) => void,

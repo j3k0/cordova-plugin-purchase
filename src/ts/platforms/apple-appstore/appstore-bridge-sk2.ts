@@ -206,6 +206,21 @@ namespace CdvPurchase {
                     exec('presentCodeRedemptionSheet', [], callback, callback);
                 }
 
+                redeemCode(options: string[],
+                           success: () => void,
+                           error: (code: ErrorCode, message: string) => void) {
+                    // The native handler resolves with no argument on success, and
+                    // rejects with a [code, message] array on failure (iOS 27+).
+                    window.cordova.exec(() => success(), (err: any) => {
+                        if (Array.isArray(err) && err.length >= 2) {
+                            protectCall(error, 'redeemCode.error', err[0] as ErrorCode, String(err[1]));
+                        }
+                        else {
+                            protectCall(error, 'redeemCode.error', ErrorCode.UNKNOWN, String(err));
+                        }
+                    }, "StoreKit2Plugin", "redeemCode", [options]);
+                }
+
                 load(productIds: string[],
                      success: (validProducts: Bridge.ValidProduct[],
                                invalidProductIds: string[]) => void,

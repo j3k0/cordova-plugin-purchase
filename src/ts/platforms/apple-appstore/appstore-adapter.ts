@@ -864,7 +864,7 @@ namespace CdvPurchase {
             checkSupport(functionality: PlatformFunctionality): boolean {
                 if (functionality === 'order') return this._canMakePayments;
                 const supported: PlatformFunctionality[] = [
-                    'order', 'orderQuantity', 'manageBilling', 'manageSubscriptions', 'getStorefront'
+                    'order', 'orderQuantity', 'manageBilling', 'manageSubscriptions', 'redeemCode', 'getStorefront'
                 ];
                 return supported.indexOf(functionality) >= 0;
             }
@@ -884,10 +884,31 @@ namespace CdvPurchase {
                 });
             }
 
-            presentCodeRedemptionSheet(): Promise<void> {
-                return new Promise(resolve => {
-                    this.bridge.presentCodeRedemptionSheet(resolve);
+            /**
+             * Redeem an offer code through Apple's redemption sheet.
+             *
+             * The redeemed transaction is delivered through the usual `approved`
+             * event — same path as a purchase. Cancel and error reporting require
+             * iOS 27+; earlier versions present the sheet fire-and-forget and the
+             * promise resolves when the sheet is dismissed, with no result.
+             */
+            async redeemCode(options: string[]): Promise<IError | undefined> {
+                return new Promise<IError | undefined>(resolve => {
+                    this.bridge.redeemCode(options,
+                        () => resolve(undefined),
+                        (code, message) => resolve(appStoreError(code, message, null)));
                 });
+            }
+
+            /**
+             * Present the offer code redemption sheet.
+             *
+             * @deprecated Use {@link Store.redeemCode} instead — it reports user
+             * cancellation and errors on iOS 27+. This fire-and-forget variant is
+             * kept for backward compatibility and ignores the redemption result.
+             */
+            presentCodeRedemptionSheet(): Promise<void> {
+                return this.redeemCode([]).then(() => undefined);
             }
 
             async getStorefront(): Promise<string | undefined> {
