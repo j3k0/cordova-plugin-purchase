@@ -219,7 +219,15 @@ namespace CdvPurchase {
                 }
                 const body = await this.buildRequestBody(receipt);
                 if (!body) {
+                    // Don't fail silently: the app would wait forever for "verified" or "unverified".
+                    const message = 'Cannot build the receipt validation request, no request sent to the validator.';
+                    this.log.warn(`${message} Receipt: ${receipt.platform} ${receipt.transactions[0]?.products[0]?.id ?? ''}`);
                     this.incrResponsesCounter();
+                    this.controller.unverifiedCallbacks.trigger({ receipt, payload: {
+                        ok: false,
+                        code: ErrorCode.VERIFICATION_FAILED,
+                        message,
+                    }, transient: true }, 'no_request_body');
                     return;
                 }
 
