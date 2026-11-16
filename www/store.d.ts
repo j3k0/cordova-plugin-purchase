@@ -4958,14 +4958,14 @@ declare namespace CdvPurchase {
              */
             private scheduleRefreshesForSubscriptions;
             /**
-             * Called when the platform refreshes the purchase inventory
+             * Called when the platform reports some purchases
              */
             onSetPurchases(purchases: Bridge.Purchase[]): void;
             /**
              * Called when the platform reports updates for some purchases
              *
-             * Live billing events can contain only the changed purchases, so an omitted
-             * purchase does not indicate removal.
+             * Notice that purchases can be removed from the array, we should handle that so they stop
+             * being "owned" by the user.
              */
             onPurchasesUpdated(purchases: Bridge.Purchase[]): void;
             onPriceChangeConfirmationResult(result: "OK" | "UserCanceled" | "UnknownProduct"): void;
