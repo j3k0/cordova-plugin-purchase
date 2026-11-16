@@ -55,15 +55,17 @@ namespace CdvPurchase {
     get braintreeClientTokenProvider(): Braintree.ClientTokenProvider {
       return callback => {
         this.log.info('Calling Braintree clientTokenProvider');
+        const applicationUsername = this.store.getApplicationUsername();
         Utils.ajax(this.log, {
-          url: `${this.config.url}/v3/braintree/client-token?appName=${this.config.appName}&apiKey=${this.config.apiKey}`,
+          url: `${this.config.url}/v3/braintree/client-token?appName=${encodeURIComponent(this.config.appName)}&apiKey=${encodeURIComponent(this.config.apiKey)}`,
           method: 'POST',
           data: {
-            applicationUsername: this.store.getApplicationUsername(),
-            customerId: Braintree.customerId,
+            applicationUsername,
+            customerId: Braintree.getCustomerId(applicationUsername),
           },
           success: body => {
-            this.log.info('clientTokenProvider success: ' + JSON.stringify(body));
+            // do not log the response: it contains the client token
+            this.log.info('clientTokenProvider success');
             callback((body as any).clientToken);
           },
           error: err => {
@@ -139,7 +141,7 @@ namespace CdvPurchase {
 
     /** Validator URL */
     get validator() {
-      return `${this.config.url}/v1/validate?appName=${this.config.appName}&apiKey=${this.config.apiKey}`;
+      return `${this.config.url}/v1/validate?appName=${encodeURIComponent(this.config.appName)}&apiKey=${encodeURIComponent(this.config.apiKey)}`;
     }
   }
 
