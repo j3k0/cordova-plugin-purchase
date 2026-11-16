@@ -202,6 +202,20 @@ namespace CdvPurchase {
         manageBilling(): Promise<IError | undefined>;
 
         /**
+         * Redeem an offer code (Apple App Store).
+         *
+         * The resulting transaction is delivered through the adapter's usual
+         * purchase pipeline (the `approved` event) — the returned promise
+         * carries only the error, if any.
+         *
+         * `options` are Apple `RedeemOption` values — none are defined as of
+         * the iOS 27 SDK; reserved for future use.
+         *
+         * Optional: only adapters that support offer code redemption implement it.
+         */
+        redeemCode?(options: string[]): Promise<IError | undefined>;
+
+        /**
          * Returns true if the platform supports the given functionality.
          */
         checkSupport(functionality: PlatformFunctionality): boolean;
@@ -346,7 +360,7 @@ namespace CdvPurchase {
      *
      * @see {@link Store.checkSupport}
      */
-    export type PlatformFunctionality = 'requestPayment' | 'order' | 'orderQuantity' | 'manageSubscriptions' | 'manageBilling' | 'getStorefront';
+    export type PlatformFunctionality = 'requestPayment' | 'order' | 'orderQuantity' | 'manageSubscriptions' | 'manageBilling' | 'redeemCode' | 'getStorefront';
 
     /**
      * Possible states of a transaction.

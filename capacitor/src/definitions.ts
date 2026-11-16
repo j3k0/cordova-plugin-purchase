@@ -86,6 +86,17 @@ export interface PurchasePluginPlugin {
   /** Present the code redemption sheet (iOS) */
   presentCodeRedemptionSheet(): Promise<void>;
 
+  /**
+   * Redeem an offer code (iOS).
+   *
+   * Resolves when the sheet completes; on iOS 27+ rejects with
+   * `{ message, code }` on failure or user cancellation (`code` is the
+   * stringified CdvPurchase error code). Below iOS 27 the sheet opens
+   * fire-and-forget and the call resolves when the sheet is dismissed,
+   * with no result.
+   */
+  redeemCode(options?: { options?: string[] }): Promise<void>;
+
   /** Refresh App Store receipts (iOS) */
   refreshReceipts(): Promise<{ receipt: unknown }>;
 

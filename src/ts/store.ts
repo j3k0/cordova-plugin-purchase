@@ -863,6 +863,35 @@ namespace CdvPurchase {
         }
 
         /**
+         * Open the offer code redemption sheet (Apple App Store).
+         *
+         * Presents Apple's offer code redemption sheet. On success, the resulting
+         * transaction is delivered through the usual `approved` event — exactly as
+         * for `order()` — while the returned promise resolves to `undefined`.
+         * On failure (including user cancellation on iOS 27+) the promise resolves
+         * to an `IError` and the store's error handler is notified.
+         *
+         * Cancel and error reporting requires iOS 27 or later; on earlier versions
+         * the sheet opens fire-and-forget, with no cancel or error reporting, and
+         * the promise resolves when the sheet is dismissed.
+         *
+         * @param options Redeem options (Apple `RedeemOption` values — none are
+         * defined as of the iOS 27 SDK; reserved for future use). Default: empty.
+         *
+         * @example
+         * const error = await store.redeemCode();
+         * if (error) console.log('Redemption failed: ' + error.message);
+         */
+        async redeemCode(options?: string[]): Promise<IError | undefined> {
+            this.log.info('redeemCode()');
+            const adapter = this.adapters.list.filter(a => a.ready && a.redeemCode)[0];
+            if (!adapter?.redeemCode) return storeError(ErrorCode.SETUP, "Found no adapter ready to handle 'redeemCode'", null, null);
+            const ret = await adapter.redeemCode(options ?? []);
+            if (ret && 'isError' in ret) store.triggerError(ret);
+            return ret;
+        }
+
+        /**
          * Retrieve the billing country code from the platform's storefront.
          *
          * Returns a `Storefront` object with the platform and its ISO 3166-1
