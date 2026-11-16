@@ -513,6 +513,15 @@ public class PurchasePlugin extends Plugin implements
     public void init(PluginCall call) {
         Log.d(TAG, "init()");
 
+        // init() runs again on every page reload (Capacitor keeps this plugin instance),
+        // so release the previous client - otherwise each reload leaks a BillingClient
+        // with its Play Store service binding and PlayBillingLibrary thread pool.
+        if (mBillingClient != null) {
+          Log.d(TAG, "init() -> ending previous BillingClient");
+          mBillingClient.endConnection();
+          mIsServiceConnected = false;
+        }
+
         mBillingClient = BillingClient
                 .newBuilder(getContext())
                 .enablePendingPurchases(
