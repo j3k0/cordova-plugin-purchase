@@ -6787,10 +6787,17 @@ var CdvPurchase;
                 }
             }
             /**
-             * Called when the platform reports some purchases
+             * Called when the platform refreshes the purchase inventory
              */
             onSetPurchases(purchases) {
                 this.log.debug("onSetPurchases: " + JSON.stringify(purchases));
+                // Reconcile removed purchases when the platform refreshes the inventory.
+                const removedReceipts = this.receipts.filter(r => !purchases.find(p => p.purchaseToken === r.purchaseToken));
+                if (removedReceipts.length > 0) {
+                    this.log.debug("Removed purchases: " + removedReceipts.map(r => r.purchaseToken).join(', '));
+                    removedReceipts.forEach(receipt => receipt.removed());
+                    this.context.listener.receiptsUpdated(CdvPurchase.Platform.GOOGLE_PLAY, removedReceipts);
+                }
                 this.onPurchasesUpdated(purchases);
                 this.context.listener.receiptsReady(CdvPurchase.Platform.GOOGLE_PLAY);
                 // Schedule refreshes for subscriptions without expiration dates
@@ -6799,17 +6806,12 @@ var CdvPurchase;
             /**
              * Called when the platform reports updates for some purchases
              *
-             * Notice that purchases can be removed from the array, we should handle that so they stop
-             * being "owned" by the user.
+             * Live billing events can contain only the changed purchases, so an omitted
+             * purchase does not indicate removal.
              */
             onPurchasesUpdated(purchases) {
                 this.log.debug("onPurchaseUpdated: " + purchases.map(p => p.orderId).join(', '));
                 // GooglePlay generates one receipt for each purchase
-                const removedReceipts = this.receipts.filter(r => !purchases.find(p => p.purchaseToken === r.purchaseToken));
-                if (removedReceipts.length > 0) {
-                    this.log.debug("Removed purchases: " + removedReceipts.map(r => r.purchaseToken).join(', '));
-                    removedReceipts.forEach(receipt => receipt.removed());
-                }
                 purchases.forEach(purchase => {
                     var _a;
                     const existingReceipt = this.receipts.find(r => r.purchaseToken === purchase.purchaseToken);
