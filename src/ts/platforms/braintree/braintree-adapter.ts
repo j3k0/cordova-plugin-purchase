@@ -10,6 +10,14 @@ namespace CdvPurchase {
          *
          * A value you set yourself is sent as-is, whatever the current `applicationUsername`.
          * If you set it, reset it when the user changes (e.g. on logout).
+         *
+         * **Compatibility note (November 2026):** iaptic honors `customerId` only when the client
+         * token is requested with your app's **Secret Key** — that is, by your own backend using a
+         * custom {@link ClientTokenProvider}. Requests authenticated with the Public Key (including
+         * the default validator flow and `iaptic.braintreeClientTokenProvider`) get a client token
+         * without a customer, so the payment form shows no saved payment methods. If your app offers
+         * saved Braintree payment methods, request the client token from your backend with the Secret
+         * Key and hand it to the plugin through your own `clientTokenProvider`.
          */
         export let customerId: string | undefined;
 
